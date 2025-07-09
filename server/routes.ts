@@ -414,8 +414,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
             };
 
-            const handleQuickReply = (reply) => {
-                setInputValue(reply);
+            const handleQuickReply = async (reply) => {
+                setInputValue('');
+                setIsTyping(true);
+
+                try {
+                    const response = await fetch(`${apiUrl}/api/chat/${sessionId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: reply }),
+                    });
+
+                    const data = await response.json();
+                    setMessages(prev => [...prev, 
+                        { sender: 'user', content: reply, messageType: 'text', createdAt: new Date() },
+                        data
+                    ]);
+                } catch (error) {
+                    console.error('Error sending quick reply:', error);
+                } finally {
+                    setIsTyping(false);
+                }
             };
 
             const closeChat = () => {
