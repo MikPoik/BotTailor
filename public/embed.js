@@ -4,7 +4,7 @@
   // Chatbot Widget Embedder
   const ChatWidget = {
     config: {
-      apiUrl: window.location.origin,
+      apiUrl: null, // Must be provided
       sessionId: null,
       position: 'bottom-right',
       primaryColor: '#2563eb',
@@ -14,6 +14,12 @@
     init: function(options = {}) {
       // Merge options with default config
       this.config = { ...this.config, ...options };
+      
+      // Validate required config
+      if (!this.config.apiUrl) {
+        console.error('ChatWidget: apiUrl is required');
+        return;
+      }
       
       // Generate session ID if not provided
       if (!this.config.sessionId) {
