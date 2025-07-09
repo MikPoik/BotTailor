@@ -278,12 +278,19 @@
     }
   };
 
-  // Auto-initialize if config is provided
+  // Expose global API first
+  window.ChatWidget = ChatWidget;
+
+  // Auto-initialize if config is provided, or wait for manual init
   if (window.ChatWidgetConfig) {
     ChatWidget.init(window.ChatWidgetConfig);
+  } else {
+    // Check for config after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.ChatWidgetConfig) {
+        ChatWidget.init(window.ChatWidgetConfig);
+      }
+    });
   }
-
-  // Expose global API
-  window.ChatWidget = ChatWidget;
 
 })();
