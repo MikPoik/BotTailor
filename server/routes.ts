@@ -353,7 +353,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
         }
 
-        ReactDOM.render(<ChatWidget />, document.getElementById('chat-root'));
+        const root = ReactDOM.createRoot(document.getElementById('chat-root'));
+        root.render(<ChatWidget />);
     </script>
 </body>
 </html>`;
