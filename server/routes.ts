@@ -215,6 +215,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        function renderMessage(message) {
+            if (message.messageType === 'card' && message.metadata) {
+                return React.createElement('div', { 
+                    style: { 
+                        background: 'white', 
+                        borderRadius: '8px', 
+                        border: '1px solid #e5e7eb', 
+                        overflow: 'hidden',
+                        marginBottom: '0.5rem'
+                    }
+                }, [
+                    message.metadata.imageUrl && React.createElement('img', {
+                        key: 'image',
+                        src: message.metadata.imageUrl,
+                        alt: message.metadata.title || 'Card image',
+                        style: { width: '100%', height: '128px', objectFit: 'cover' }
+                    }),
+                    React.createElement('div', { key: 'content', style: { padding: '12px' } }, [
+                        message.metadata.title && React.createElement('h4', {
+                            key: 'title',
+                            style: { fontWeight: '600', marginBottom: '8px' }
+                        }, message.metadata.title),
+                        message.metadata.description && React.createElement('p', {
+                            key: 'desc',
+                            style: { fontSize: '14px', color: '#6b7280', marginBottom: '12px' }
+                        }, message.metadata.description),
+                        message.content && message.content !== message.metadata.title && React.createElement('p', {
+                            key: 'content',
+                            style: { marginBottom: '12px' }
+                        }, message.content),
+                        message.metadata.buttons && React.createElement('div', {
+                            key: 'buttons',
+                            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+                        }, message.metadata.buttons.map((button, idx) => 
+                            React.createElement('button', {
+                                key: idx,
+                                onClick: () => handleOptionSelect(button.id, button.payload),
+                                style: {
+                                    padding: '8px 12px',
+                                    border: '1px solid #d1d5db',
+                                    borderRadius: '6px',
+                                    background: 'white',
+                                    cursor: 'pointer',
+                                    textAlign: 'left'
+                                }
+                            }, button.text)
+                        ))
+                    ])
+                ]);
+            }
+
+            if (message.messageType === 'menu' && message.metadata?.options) {
+                return React.createElement('div', {
+                    style: {
+                        background: 'white',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb',
+                        padding: '12px',
+                        marginBottom: '0.5rem'
+                    }
+                }, [
+                    React.createElement('p', { key: 'content', style: { marginBottom: '12px' } }, message.content),
+                    React.createElement('div', { 
+                        key: 'options',
+                        style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+                    }, message.metadata.options.map((option, idx) =>
+                        React.createElement('button', {
+                            key: idx,
+                            onClick: () => handleOptionSelect(option.id, option.payload),
+                            style: {
+                                padding: '12px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '8px',
+                                background: 'white',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }
+                        }, option.text)
+                    ))
+                ]);
+            }
+
+            // Default text message with quick replies
+            return React.createElement('div', {}, [
+                React.createElement('p', { key: 'content' }, message.content),
+                message.metadata?.quickReplies && React.createElement('div', {
+                    key: 'quickReplies',
+                    style: {
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                        marginTop: '8px'
+                    }
+                }, message.metadata.quickReplies.map((reply, idx) =>
+                    React.createElement('button', {
+                        key: idx,
+                        onClick: () => handleQuickReply(reply),
+                        style: {
+                            padding: '4px 12px',
+                            background: '#f3f4f6',
+                            border: 'none',
+                            borderRadius: '16px',
+                            fontSize: '14px',
+                            cursor: 'pointer'
+                        }
+                    }, reply)
+                ))
+            ]);
+        }
+
         function ChatWidget() {
             const [messages, setMessages] = useState([]);
             const [inputValue, setInputValue] = useState('');
@@ -250,7 +363,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 e.preventDefault();
                 if (!inputValue.trim()) return;
 
-                const userMessage = { role: 'user', content: inputValue };
+                const userMessage = { 
+                    sender: 'user', 
+                    content: inputValue,
+                    messageType: 'text',
+                    createdAt: new Date()
+                };
                 setMessages(prev => [...prev, userMessage]);
                 setInputValue('');
                 setIsTyping(true);
@@ -269,12 +387,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 } catch (error) {
                     console.error('Error sending message:', error);
                     setMessages(prev => [...prev, { 
-                        role: 'assistant', 
-                        content: 'Sorry, I encountered an error. Please try again.' 
+                        sender: 'bot', 
+                        content: 'Sorry, I encountered an error. Please try again.',
+                        messageType: 'text',
+                        createdAt: new Date()
                     }]);
                 } finally {
                     setIsTyping(false);
                 }
+            };
+
+            const handleOptionSelect = async (optionId, payload) => {
+                try {
+                    const response = await fetch(\`\${apiUrl}/api/chat/\${sessionId}/select-option\`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ optionId, payload }),
+                    });
+
+                    const data = await response.json();
+                    setMessages(prev => [...prev, data.botMessage]);
+                } catch (error) {
+                    console.error('Error selecting option:', error);
+                }
+            };
+
+            const handleQuickReply = (reply) => {
+                setInputValue(reply);
             };
 
             const closeChat = () => {
@@ -322,8 +463,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                             </div>
                         ) : (
                             messages.map((message, index) => (
-                                <div key={index} className={\`message \${message.role}\`}>
-                                    {message.content}
+                                <div key={index} className={\`message \${message.sender}\`}>
+                                    {renderMessage(message)}
                                 </div>
                             ))
                         )}
@@ -362,13 +503,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.send(html);
   });
 
-  // Chat API routes
+  // Chat API routes for embedded widget
   app.get("/api/chat/:sessionId", async (req: Request, res: Response) => {
     try {
       const sessionId = req.params.sessionId;
-      const messages = await chatService.getMessages(sessionId);
+      
+      // Create session if it doesn't exist
+      let session = await storage.getChatSession(sessionId);
+      if (!session) {
+        session = await storage.createChatSession({ sessionId });
+        
+        // Generate AI welcome message
+        const welcomeResponse = await generateStructuredResponse(
+          "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
+          sessionId,
+          []
+        );
+
+        await storage.createMessage({
+          sessionId,
+          content: welcomeResponse.content,
+          sender: "bot",
+          messageType: welcomeResponse.messageType,
+          metadata: welcomeResponse.metadata
+        });
+      }
+      
+      const messages = await storage.getRecentMessages(sessionId, 100);
       res.json(messages);
     } catch (error) {
+      console.error("Error getting messages:", error);
       res.status(500).json({ error: "Failed to retrieve messages" });
     }
   });
@@ -382,8 +546,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Message is required" });
       }
 
-      const response = await chatService.sendMessage(sessionId, message);
-      res.json(response);
+      // Create user message
+      const userMessage = await storage.createMessage({
+        sessionId,
+        content: message,
+        sender: "user",
+        messageType: "text"
+      });
+
+      // Generate AI bot response using the full system
+      const botResponse = await generateBotResponse(message, sessionId);
+      const botMessage = await storage.createMessage(botResponse);
+
+      res.json(botMessage);
     } catch (error) {
       console.error("Chat error:", error);
       res.status(500).json({ error: "Failed to send message" });
