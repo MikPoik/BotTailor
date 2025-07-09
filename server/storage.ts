@@ -115,4 +115,40 @@ export class MemStorage implements IStorage {
   }
 }
 
+export class ChatService {
+  async getMessages(sessionId: string): Promise<any[]> {
+    const messages = await storage.getMessages(sessionId);
+    return messages.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+  }
+
+  async sendMessage(sessionId: string, message: string): Promise<any> {
+    // Create user message
+    await storage.createMessage({
+      sessionId,
+      content: message,
+      sender: 'user',
+      messageType: 'text'
+    });
+
+    // Generate bot response
+    const botResponse = {
+      role: 'assistant',
+      content: `I received your message: "${message}". How can I help you further?`
+    };
+
+    // Store bot response
+    await storage.createMessage({
+      sessionId,
+      content: botResponse.content,
+      sender: 'bot',
+      messageType: 'text'
+    });
+
+    return botResponse;
+  }
+}
+
 export const storage = new MemStorage();
