@@ -206,8 +206,13 @@
             const messagesEndRef = useRef(null);
 
             const sessionId = "{{SESSION_ID}}";
-            const apiUrl = "{{API_URL}}";
+            let apiUrl = "{{API_URL}}";
             const isMobile = {{IS_MOBILE}};
+
+            // Fix mixed content issues - use HTTPS if parent page is HTTPS
+            if (window.location.protocol === 'https:' && apiUrl.startsWith('http:')) {
+                apiUrl = apiUrl.replace('http:', 'https:');
+            }
 
             useEffect(() => {
                 loadMessages();
