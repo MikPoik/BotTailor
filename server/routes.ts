@@ -98,12 +98,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/:sessionId/select-option", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const { optionId, payload } = req.body;
+      const { optionId, payload, optionText } = req.body;
+
+      // Use the option text from the client (which comes from AI response) or fallback
+      const displayText = optionText || getOptionDisplayText(optionId);
 
       // Create user message for the selection
       await storage.createMessage({
         sessionId,
-        content: getOptionDisplayText(optionId),
+        content: displayText,
         sender: "user",
         messageType: "text",
       });
@@ -210,42 +213,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 }
 
 function getOptionDisplayText(optionId: string): string {
+  // Simplified fallback mappings for common patterns
   const optionTexts: Record<string, string> = {
-    // Main categories
+    // Basic categories - these are used as fallbacks only
     billing: "I have a question about my billing",
     technical: "I need technical support",
     sales: "I have a sales inquiry",
     payment: "I have payment issues",
     subscription: "I want to change my subscription",
-    invoice: "I need to download an invoice",
-    
-    // Payment-related options
-    payment_issues: "Payment Issues",
-    paymentIssues: "Payment Issues",
-    updatePaymentMethod: "Update Payment Method",
-    viewBilling: "View Billing History",
-    refund: "Request Refund",
-    
-    // Specific issues
-    issue1: "My payment was declined",
-    issue2: "I was charged incorrectly", 
-    issue3: "I need a refund",
-    
-    // Subscription options
-    upgrade: "Upgrade subscription",
-    downgrade: "Downgrade subscription",
-    cancel: "Cancel subscription",
-    
-    // Technical support
-    account: "Account issues",
-    password: "Password reset",
-    login: "Login problems",
-    
-    // General
-    other: "Other issues",
-    contact_agent: "Contact human agent"
+    invoice: "I need to download an invoice"
   };
-  return optionTexts[optionId] || "Selected option";
+  
+  // Return mapped text or generate a readable fallback from the optionId
+  return optionTexts[optionId] || optionId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
 }
 
 async function generateBotResponse(userMessage: string, sessionId: string) {

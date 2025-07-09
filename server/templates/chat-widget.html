@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -123,6 +122,10 @@
                 }
             };
 
+            const addMessage = (message) => {
+                setMessages(prev => [...prev, message]);
+            };
+
             const sendMessage = async (e) => {
                 e.preventDefault();
                 if (!inputValue.trim()) return;
@@ -131,9 +134,9 @@
                     sender: 'user', 
                     content: inputValue,
                     messageType: 'text',
-                    createdAt: new Date()
+                    createdAt: new Date().toISOString()
                 };
-                setMessages(prev => [...prev, userMessage]);
+                addMessage(userMessage);
                 setInputValue('');
                 setIsTyping(true);
 
@@ -147,51 +150,54 @@
                     });
 
                     const data = await response.json();
-                    setMessages(prev => [...prev, data]);
+                    addMessage(data);
                 } catch (error) {
                     console.error('Error sending message:', error);
-                    setMessages(prev => [...prev, { 
+                    addMessage({ 
                         sender: 'bot', 
                         content: 'Sorry, I encountered an error. Please try again.',
                         messageType: 'text',
-                        createdAt: new Date()
-                    }]);
+                        createdAt: new Date().toISOString()
+                    });
                 } finally {
                     setIsTyping(false);
                 }
             };
 
-            const handleOptionSelect = async (optionId, payload) => {
-                // Show user's selection first
-                const userSelectionText = getOptionDisplayText(optionId);
-                setMessages(prev => [...prev, {
+            const handleOptionSelect = async (optionId, payload, optionText) => {
+                // Use the actual option text from the button
+                const displayText = optionText || getOptionDisplayText(optionId);
+
+                // Show user's selection immediately
+                addMessage({
+                    content: displayText,
                     sender: 'user',
-                    content: userSelectionText,
                     messageType: 'text',
-                    createdAt: new Date()
-                }]);
-                
+                    createdAt: new Date().toISOString()
+                });
+
+                // Show typing indicator
                 setIsTyping(true);
 
                 try {
                     const response = await fetch(`${apiUrl}/api/chat/${sessionId}/select-option`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ optionId, payload }),
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ optionId, payload, optionText })
                     });
 
-                    const data = await response.json();
-                    setMessages(prev => [...prev, data.botMessage]);
+                    if (response.ok) {
+                        const data = await response.json();
+                        addMessage(data.botMessage);
+                    }
                 } catch (error) {
                     console.error('Error selecting option:', error);
-                    setMessages(prev => [...prev, {
+                    addMessage({
+                        content: 'Sorry, there was an error processing your selection.',
                         sender: 'bot',
-                        content: 'Sorry, I encountered an error. Please try again.',
                         messageType: 'text',
-                        createdAt: new Date()
-                    }]);
+                        createdAt: new Date().toISOString()
+                    });
                 } finally {
                     setIsTyping(false);
                 }
@@ -206,29 +212,29 @@
                     payment: "I have payment issues",
                     subscription: "I want to change my subscription",
                     invoice: "I need to download an invoice",
-                    
+
                     // Payment-related options
                     payment_issues: "Payment Issues",
                     paymentIssues: "Payment Issues",
                     updatePaymentMethod: "Update Payment Method",
                     viewBilling: "View Billing History",
                     refund: "Request Refund",
-                    
+
                     // Specific issues
                     issue1: "My payment was declined",
                     issue2: "I was charged incorrectly",
                     issue3: "I need a refund",
-                    
+
                     // Subscription options
                     upgrade: "Upgrade subscription",
                     downgrade: "Downgrade subscription",
                     cancel: "Cancel subscription",
-                    
+
                     // Technical support
                     account: "Account issues",
                     password: "Password reset",
                     login: "Login problems",
-                    
+
                     // General
                     other: "Other issues",
                     contact_agent: "Contact human agent"
@@ -250,10 +256,8 @@
                     });
 
                     const data = await response.json();
-                    setMessages(prev => [...prev, 
-                        { sender: 'user', content: reply, messageType: 'text', createdAt: new Date() },
-                        data
-                    ]);
+                    addMessage({ sender: 'user', content: reply, messageType: 'text', createdAt: new Date().toISOString() });
+                    addMessage(data);
                 } catch (error) {
                     console.error('Error sending quick reply:', error);
                 } finally {
@@ -303,7 +307,7 @@
                             }, message.metadata.buttons.map((button, idx) => 
                                 React.createElement('button', {
                                     key: idx,
-                                    onClick: () => handleOptionSelect(button.id, button.payload),
+                                    onClick: () => handleOptionSelect(button.id, button.payload, button.text),
                                     style: {
                                         padding: '8px 12px',
                                         border: '1px solid #d1d5db',
@@ -335,7 +339,7 @@
                         }, message.metadata.options.map((option, idx) =>
                             React.createElement('button', {
                                 key: idx,
-                                onClick: () => handleOptionSelect(option.id, option.payload),
+                                onClick: () => handleOptionSelect(option.id, option.payload, option.text),
                                 style: {
                                     padding: '12px',
                                     border: '1px solid #d1d5db',
