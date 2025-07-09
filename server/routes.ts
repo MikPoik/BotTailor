@@ -211,12 +211,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 function getOptionDisplayText(optionId: string): string {
   const optionTexts: Record<string, string> = {
+    // Main categories
     billing: "I have a question about my billing",
     technical: "I need technical support",
     sales: "I have a sales inquiry",
     payment: "I have payment issues",
     subscription: "I want to change my subscription",
-    invoice: "I need to download an invoice"
+    invoice: "I need to download an invoice",
+    
+    // Payment-related options
+    payment_issues: "Payment Issues",
+    paymentIssues: "Payment Issues",
+    updatePaymentMethod: "Update Payment Method",
+    viewBilling: "View Billing History",
+    refund: "Request Refund",
+    
+    // Specific issues
+    issue1: "My payment was declined",
+    issue2: "I was charged incorrectly", 
+    issue3: "I need a refund",
+    
+    // Subscription options
+    upgrade: "Upgrade subscription",
+    downgrade: "Downgrade subscription",
+    cancel: "Cancel subscription",
+    
+    // Technical support
+    account: "Account issues",
+    password: "Password reset",
+    login: "Login problems",
+    
+    // General
+    other: "Other issues",
+    contact_agent: "Contact human agent"
   };
   return optionTexts[optionId] || "Selected option";
 }
