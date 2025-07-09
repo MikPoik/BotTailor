@@ -115,6 +115,8 @@ export class MemStorage implements IStorage {
   }
 }
 
+export const storage = new MemStorage();
+
 export class ChatService {
   async getMessages(sessionId: string): Promise<any[]> {
     const messages = await storage.getMessages(sessionId);
@@ -150,5 +152,3 @@ export class ChatService {
     return botResponse;
   }
 }
-
-export const storage = new MemStorage();
