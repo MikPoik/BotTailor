@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(213, 93%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  --chat-bubble-bg: hsl(213, 93%, 54%);
+  --chat-user-bg: hsl(213, 93%, 54%);
+  --chat-bot-bg: hsl(0, 0%, 100%);
+  --chat-hover: hsl(213, 90%, 50%);
+  --neutral-50: hsl(210, 40%, 98%);
+  --neutral-100: hsl(210, 40%, 96%);
+  --neutral-200: hsl(214, 32%, 91%);
+  --neutral-300: hsl(213, 27%, 84%);
+  --neutral-400: hsl(215, 20%, 65%);
+  --neutral-500: hsl(215, 16%, 47%);
+  --neutral-600: hsl(215, 19%, 35%);
+  --neutral-700: hsl(215, 25%, 27%);
+  --neutral-800: hsl(217, 33%, 17%);
+  --neutral-900: hsl(222, 84%, 5%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(213, 93%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+  --chat-bubble-bg: hsl(213, 93%, 54%);
+  --chat-user-bg: hsl(213, 93%, 54%);
+  --chat-bot-bg: hsl(240, 10%, 3.9%);
+  --chat-hover: hsl(213, 90%, 50%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .chat-bubble {
+    @apply w-16 h-16 rounded-full shadow-lg cursor-pointer flex items-center justify-center transition-all duration-200 hover:scale-105;
+    background-color: var(--chat-bubble-bg);
+    animation: pulse 2s infinite;
+  }
+
+  .chat-bubble:hover {
+    background-color: var(--chat-hover);
+    animation: none;
+  }
+
+  .chat-interface {
+    @apply absolute bottom-0 right-0 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden;
+    width: 384px;
+    height: 600px;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .chat-message-user {
+    @apply rounded-lg rounded-tr-none p-3 shadow-sm text-white max-w-xs ml-auto;
+    background-color: var(--chat-user-bg);
+  }
+
+  .chat-message-bot {
+    @apply rounded-lg rounded-tl-none p-3 shadow-sm max-w-sm;
+    background-color: var(--chat-bot-bg);
+    border: 1px solid var(--border);
+  }
+
+  .chat-typing-dots {
+    @apply w-2 h-2 rounded-full animate-bounce;
+    background-color: var(--neutral-400);
+  }
+
+  .chat-typing-dots:nth-child(2) {
+    animation-delay: 150ms;
+  }
+
+  .chat-typing-dots:nth-child(3) {
+    animation-delay: 300ms;
+  }
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(100%); 
+  }
+  to { 
+    transform: translateY(0); 
+  }
+}
+
+@media (max-width: 1024px) {
+  .chat-interface-mobile {
+    @apply fixed inset-0 bg-white z-50 flex flex-col;
+    animation: slideUp 0.3s ease-out;
+  }
+}
