@@ -3,23 +3,24 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema } from "@shared/schema";
 import { z } from "zod";
+import { generateStructuredResponse, generateOptionResponse } from "./openai-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
   // Create or get chat session
   app.post("/api/chat/session", async (req, res) => {
     try {
       const { sessionId } = req.body;
-      
+
       if (!sessionId) {
         return res.status(400).json({ message: "Session ID is required" });
       }
 
       let session = await storage.getChatSession(sessionId);
-      
+
       if (!session) {
         session = await storage.createChatSession({ sessionId });
-        
+
         // Send welcome message
         await storage.createMessage({
           sessionId,
@@ -122,8 +123,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messageType: "text",
       });
 
-      // Generate appropriate response based on option
-      const botResponse = await generateOptionResponse(optionId, payload, sessionId);
+      // Generate bot response based on option selection
+      const botResponse = await generateAIOptionResponse(optionId, payload, sessionId);
       const botMessage = await storage.createMessage(botResponse);
 
       res.json({ botMessage });
@@ -150,178 +151,75 @@ function getOptionDisplayText(optionId: string): string {
 }
 
 async function generateBotResponse(userMessage: string, sessionId: string) {
-  // Simple keyword-based responses
-  const message = userMessage.toLowerCase();
-  
-  if (message.includes("billing") || message.includes("payment") || message.includes("invoice")) {
-    return {
-      sessionId,
-      content: "I can help you with billing questions, payment issues, or subscription changes.",
-      sender: "bot" as const,
-      messageType: "card" as const,
-      metadata: {
-        title: "Billing Support",
-        description: "I can help you with billing questions, payment issues, or subscription changes.",
-        imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200",
-        buttons: [
-          {
-            id: "payment",
-            text: "Payment Issues",
-            action: "select_option",
-            payload: { category: "payment" }
-          },
-          {
-            id: "subscription", 
-            text: "Subscription Changes",
-            action: "select_option",
-            payload: { category: "subscription" }
-          },
-          {
-            id: "invoice",
-            text: "Download Invoice", 
-            action: "select_option",
-            payload: { category: "invoice" }
-          }
-        ]
-      }
-    };
-  }
+  try {
+    // Get conversation history for context
+    const recentMessages = await storage.getRecentMessages(sessionId, 10);
+    const conversationHistory = recentMessages
+      .slice(-5) // Last 5 messages for context
+      .map(msg => ({
+        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+        content: msg.content
+      }));
 
-  if (message.includes("technical") || message.includes("support") || message.includes("help")) {
+    // Generate structured response using OpenAI
+    const aiResponse = await generateStructuredResponse(userMessage, sessionId, conversationHistory);
+
     return {
       sessionId,
-      content: "I'm here to help with technical issues. What specific problem are you experiencing?",
+      content: aiResponse.content,
+      sender: "bot" as const,
+      messageType: aiResponse.messageType,
+      metadata: aiResponse.metadata
+    };
+  } catch (error) {
+    console.error("Error generating AI response:", error);
+
+    // Fallback to simple response
+    return {
+      sessionId,
+      content: "I'm sorry, I'm having trouble processing your request right now. Please try again.",
       sender: "bot" as const,
       messageType: "text" as const,
       metadata: {
-        quickReplies: ["Login issues", "App not working", "Feature request", "Other"]
+        quickReplies: ["Try again", "Contact support", "Main menu"]
       }
     };
   }
-
-  if (message.includes("sales") || message.includes("pricing") || message.includes("buy")) {
-    return {
-      sessionId,
-      content: "I'd be happy to help with sales questions! What would you like to know about our products or services?",
-      sender: "bot" as const,
-      messageType: "text" as const,
-      metadata: {
-        quickReplies: ["Pricing", "Features", "Trial", "Contact sales"]
-      }
-    };
-  }
-
-  // Default response
-  return {
-    sessionId,
-    content: "I understand. Let me help you with that. Could you provide more details about what you need assistance with?",
-    sender: "bot" as const,
-    messageType: "text" as const,
-    metadata: {
-      quickReplies: ["Get help", "Contact agent", "More options"]
-    }
-  };
 }
 
-async function generateOptionResponse(optionId: string, payload: any, sessionId: string) {
-  switch (optionId) {
-    case "billing":
-      return {
-        sessionId,
-        content: "I can help you with billing questions, payment issues, or subscription changes.",
-        sender: "bot" as const,
-        messageType: "card" as const,
-        metadata: {
-          title: "Billing Support",
-          description: "I can help you with billing questions, payment issues, or subscription changes.",
-          imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200",
-          buttons: [
-            {
-              id: "payment",
-              text: "Payment Issues",
-              action: "select_option",
-              payload: { category: "payment" }
-            },
-            {
-              id: "subscription",
-              text: "Subscription Changes", 
-              action: "select_option",
-              payload: { category: "subscription" }
-            },
-            {
-              id: "invoice",
-              text: "Download Invoice",
-              action: "select_option", 
-              payload: { category: "invoice" }
-            }
-          ]
-        }
-      };
+async function generateAIOptionResponse(optionId: string, payload: any, sessionId: string) {
+  try {
+    // Get conversation history for context
+    const recentMessages = await storage.getRecentMessages(sessionId, 10);
+    const conversationHistory = recentMessages
+      .slice(-5) // Last 5 messages for context
+      .map(msg => ({
+        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+        content: msg.content
+      }));
 
-    case "technical":
-      return {
-        sessionId,
-        content: "I'm here to help with technical issues. What specific problem are you experiencing?",
-        sender: "bot" as const,
-        messageType: "text" as const,
-        metadata: {
-          quickReplies: ["Login issues", "App not working", "Feature request", "Contact support"]
-        }
-      };
+    // Generate structured response using OpenAI
+    const aiResponse = await generateOptionResponse(optionId, payload, sessionId, conversationHistory);
 
-    case "sales":
-      return {
-        sessionId,
-        content: "I'd be happy to help with sales questions! What would you like to know?",
-        sender: "bot" as const,
-        messageType: "text" as const,
-        metadata: {
-          quickReplies: ["Pricing info", "Product demo", "Contact sales", "Free trial"]
-        }
-      };
+    return {
+      sessionId,
+      content: aiResponse.content,
+      sender: "bot" as const,
+      messageType: aiResponse.messageType,
+      metadata: aiResponse.metadata
+    };
+  } catch (error) {
+    console.error("Error generating AI option response:", error);
 
-    case "payment":
-      return {
-        sessionId,
-        content: "I can help resolve payment issues. Are you experiencing problems with a recent payment or need to update your payment method?",
-        sender: "bot" as const,
-        messageType: "text" as const,
-        metadata: {
-          quickReplies: ["Failed payment", "Update card", "Payment history", "Contact billing"]
-        }
-      };
-
-    case "subscription":
-      return {
-        sessionId,
-        content: "I can help you change your subscription. Would you like to upgrade, downgrade, or cancel your current plan?",
-        sender: "bot" as const,
-        messageType: "text" as const,
-        metadata: {
-          quickReplies: ["Upgrade plan", "Downgrade plan", "Cancel subscription", "View current plan"]
-        }
-      };
-
-    case "invoice":
-      return {
-        sessionId,
-        content: "I can help you access your invoices. You can download your recent invoices from your account dashboard or I can email them to you.",
-        sender: "bot" as const,
-        messageType: "text" as const,
-        metadata: {
-          quickReplies: ["Download latest", "Email invoices", "View all invoices", "Need help accessing"]
-        }
-      };
-
-    default:
-      return {
-        sessionId,
-        content: "Thank you for your selection. How else can I assist you today?",
-        sender: "bot" as const,
-        messageType: "text" as const,
-        metadata: {
-          quickReplies: ["Start over", "Contact agent", "End chat"]
-        }
-      };
+    // Fallback to simple response
+    return {
+      sessionId,
+      content: "Thank you for your selection. How else can I assist you today?",
+      sender: "bot" as const,
+      messageType: "text" as const,
+      metadata: {
+        quickReplies: ["Start over", "Contact agent", "End chat"]
+      }
+    };
   }
 }
