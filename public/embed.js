@@ -1,3 +1,4 @@
+
 (function() {
   'use strict';
 
@@ -10,8 +11,14 @@
       primaryColor: '#2563eb',
       zIndex: 1000,
     },
+    _initialized: false,
 
     init: function(options = {}) {
+      // Prevent multiple initializations
+      if (this._initialized) {
+        return;
+      }
+
       // Merge options with default config
       this.config = { ...this.config, ...options };
       
@@ -25,6 +32,8 @@
       if (!this.config.sessionId) {
         this.config.sessionId = this.generateSessionId();
       }
+
+      this._initialized = true;
 
       // Wait for DOM to be ready
       if (document.readyState === 'loading') {
@@ -41,8 +50,6 @@
     generateSessionId: function() {
       return `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     },
-
-    
 
     createWidget: function() {
       // Create iframe container
@@ -257,10 +264,14 @@
 
     // Public API methods
     open: function() {
-      document.getElementById('chatwidget-bubble').click();
+      if (this._initialized) {
+        document.getElementById('chatwidget-bubble').click();
+      }
     },
 
     close: function() {
+      if (!this._initialized) return;
+      
       const closeEvent = new Event('click');
       if (window.innerWidth < 1024) {
         document.getElementById('chatwidget-overlay').dispatchEvent(closeEvent);
@@ -278,26 +289,28 @@
     }
   };
 
-  // Expose global API first
+  // Expose global API immediately
   window.ChatWidget = ChatWidget;
 
-  // Function to check for config and initialize
-  function tryInitialize() {
+  // Auto-initialize function
+  function autoInitialize() {
     if (window.ChatWidgetConfig && !ChatWidget._initialized) {
       ChatWidget.init(window.ChatWidgetConfig);
-      ChatWidget._initialized = true;
     }
   }
 
   // Try to initialize immediately
-  tryInitialize();
+  autoInitialize();
 
-  // Try again after DOM is loaded
+  // Try again when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', tryInitialize);
+    document.addEventListener('DOMContentLoaded', autoInitialize);
+  } else {
+    // DOM is already ready, try in next tick
+    setTimeout(autoInitialize, 0);
   }
 
-  // Also try after a short delay to catch configs defined after script load
-  setTimeout(tryInitialize, 100);
+  // Final fallback after a short delay
+  setTimeout(autoInitialize, 100);
 
 })();
