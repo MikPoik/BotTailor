@@ -162,6 +162,17 @@
             };
 
             const handleOptionSelect = async (optionId, payload) => {
+                // Show user's selection first
+                const userSelectionText = getOptionDisplayText(optionId);
+                setMessages(prev => [...prev, {
+                    sender: 'user',
+                    content: userSelectionText,
+                    messageType: 'text',
+                    createdAt: new Date()
+                }]);
+                
+                setIsTyping(true);
+
                 try {
                     const response = await fetch(`${apiUrl}/api/chat/${sessionId}/select-option`, {
                         method: 'POST',
@@ -175,7 +186,33 @@
                     setMessages(prev => [...prev, data.botMessage]);
                 } catch (error) {
                     console.error('Error selecting option:', error);
+                    setMessages(prev => [...prev, {
+                        sender: 'bot',
+                        content: 'Sorry, I encountered an error. Please try again.',
+                        messageType: 'text',
+                        createdAt: new Date()
+                    }]);
+                } finally {
+                    setIsTyping(false);
                 }
+            };
+
+            const getOptionDisplayText = (optionId) => {
+                const optionTexts = {
+                    billing: "I have a question about my billing",
+                    technical: "I need technical support", 
+                    sales: "I have a sales inquiry",
+                    payment: "I have payment issues",
+                    subscription: "I want to change my subscription",
+                    invoice: "I need to download an invoice",
+                    paymentIssues: "Payment Issues",
+                    updatePaymentMethod: "Update Payment Method",
+                    viewBilling: "View Billing History",
+                    issue1: "My payment was declined",
+                    issue2: "I was charged incorrectly",
+                    issue3: "I need a refund"
+                };
+                return optionTexts[optionId] || "Selected option";
             };
 
             const handleQuickReply = async (reply) => {
