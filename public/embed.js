@@ -281,16 +281,23 @@
   // Expose global API first
   window.ChatWidget = ChatWidget;
 
-  // Auto-initialize if config is provided, or wait for manual init
-  if (window.ChatWidgetConfig) {
-    ChatWidget.init(window.ChatWidgetConfig);
-  } else {
-    // Check for config after DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.ChatWidgetConfig) {
-        ChatWidget.init(window.ChatWidgetConfig);
-      }
-    });
+  // Function to check for config and initialize
+  function tryInitialize() {
+    if (window.ChatWidgetConfig && !ChatWidget._initialized) {
+      ChatWidget.init(window.ChatWidgetConfig);
+      ChatWidget._initialized = true;
+    }
   }
+
+  // Try to initialize immediately
+  tryInitialize();
+
+  // Try again after DOM is loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryInitialize);
+  }
+
+  // Also try after a short delay to catch configs defined after script load
+  setTimeout(tryInitialize, 100);
 
 })();
