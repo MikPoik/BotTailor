@@ -20,29 +20,23 @@
         this.config.sessionId = this.generateSessionId();
       }
 
-      // Load CSS if not already loaded
-      this.loadCSS();
-      
-      // Create widget container
-      this.createWidget();
-      
-      // Set up event listeners
-      this.setupEventListeners();
+      // Wait for DOM to be ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          this.createWidget();
+          this.setupEventListeners();
+        });
+      } else {
+        this.createWidget();
+        this.setupEventListeners();
+      }
     },
 
     generateSessionId: function() {
       return `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     },
 
-    loadCSS: function() {
-      if (document.getElementById('chatwidget-css')) return;
-      
-      const link = document.createElement('link');
-      link.id = 'chatwidget-css';
-      link.rel = 'stylesheet';
-      link.href = this.config.apiUrl + '/static/chatwidget.css';
-      document.head.appendChild(link);
-    },
+    
 
     createWidget: function() {
       // Create iframe container
@@ -102,7 +96,7 @@
       // Create iframe for chat interface
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
-      iframe.src = `${this.config.apiUrl}/widget?sessionId=${this.config.sessionId}&embedded=true`;
+      iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true`;
       iframe.style.cssText = `
         position: absolute;
         bottom: 0;
@@ -131,7 +125,7 @@
       // Mobile iframe
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
-      mobileIframe.src = `${this.config.apiUrl}/widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true`;
+      mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true`;
       mobileIframe.style.cssText = `
         position: fixed;
         inset: 0;

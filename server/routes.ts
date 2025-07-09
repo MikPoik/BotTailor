@@ -4,6 +4,12 @@ import { storage } from "./storage";
 import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateStructuredResponse, generateOptionResponse } from "./openai-service";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
@@ -106,6 +112,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error handling option selection:", error);
       res.status(500).json({ message: "Internal server error" });
     }
+  });
+
+  // Serve chat widget page for embedding
+  app.get("/chat-widget", (req, res) => {
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .widget-container {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="widget-container"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+        // Listen for close messages from parent
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'CLOSE_CHAT') {
+                // Handle close event if needed
+            }
+        });
+
+        // Function to send close message to parent
+        window.closeChat = function() {
+            window.parent.postMessage({ type: 'CLOSE_CHAT' }, '*');
+        };
+
+        // Function to notify parent of new message
+        window.notifyNewMessage = function() {
+            window.parent.postMessage({ type: 'NEW_MESSAGE' }, '*');
+        };
+    </script>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(htmlContent);
   });
 
   const httpServer = createServer(app);
