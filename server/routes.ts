@@ -21,45 +21,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!session) {
         session = await storage.createChatSession({ sessionId });
 
-        // Send welcome message
-        await storage.createMessage({
+        // Generate AI welcome message
+        const welcomeResponse = await generateStructuredResponse(
+          "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
           sessionId,
-          content: "Hi there! 👋 I'm your support assistant. How can I help you today?",
-          sender: "bot",
-          messageType: "text",
-        });
+          []
+        );
 
-        // Send menu options
         await storage.createMessage({
           sessionId,
-          content: "Choose from these quick options:",
+          content: welcomeResponse.content,
           sender: "bot",
-          messageType: "menu",
-          metadata: {
-            options: [
-              {
-                id: "billing",
-                text: "Billing Questions",
-                icon: "fas fa-credit-card",
-                action: "select_option",
-                payload: { category: "billing" }
-              },
-              {
-                id: "technical",
-                text: "Technical Support", 
-                icon: "fas fa-cog",
-                action: "select_option",
-                payload: { category: "technical" }
-              },
-              {
-                id: "sales",
-                text: "Sales Inquiry",
-                icon: "fas fa-shopping-cart", 
-                action: "select_option",
-                payload: { category: "sales" }
-              }
-            ]
-          }
+          messageType: welcomeResponse.messageType,
+          metadata: welcomeResponse.metadata
         });
       }
 

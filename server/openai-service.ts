@@ -11,6 +11,13 @@ export async function generateStructuredResponse(
   sessionId: string,
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
 ): Promise<AIResponse> {
+  console.log(`[OpenAI] Generating response for: "${userMessage}"`);
+  
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("[OpenAI] API key not found in environment variables");
+    throw new Error("OpenAI API key not configured");
+  }
+  
   try {
     const messages = [
       { role: 'system' as const, content: SYSTEM_PROMPT },
@@ -90,6 +97,8 @@ export async function generateStructuredResponse(
     
     // Validate the response using Zod
     const validatedResponse = AIResponseSchema.parse(parsedResponse);
+    
+    console.log(`[OpenAI] Successfully generated ${validatedResponse.messageType} response`);
     
     return validatedResponse;
   } catch (error) {
