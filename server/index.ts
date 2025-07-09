@@ -51,6 +51,11 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // ALWAYS serve static files from public directory first
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  app.use(express.static(path.join(__dirname, '..', 'public')));
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -59,11 +64,6 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  app.use(express.static(path.join(__dirname, '..', 'public')));
   const port = 5000;
   server.listen({
     port,
