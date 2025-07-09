@@ -109,7 +109,9 @@
       // Create iframe for chat interface
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
-      iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true`;
+      iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&v=${Date.now()}`;
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+      iframe.setAttribute('loading', 'lazy');
       iframe.style.cssText = `
         position: absolute;
         bottom: 0;
@@ -138,7 +140,9 @@
       // Mobile iframe
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
-      mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true`;
+      mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true&v=${Date.now()}`;
+      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+      mobileIframe.setAttribute('loading', 'lazy');
       mobileIframe.style.cssText = `
         position: fixed;
         inset: 0;
