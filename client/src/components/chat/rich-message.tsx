@@ -41,7 +41,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
                   key={button.id}
                   variant="outline"
                   size="sm"
-                  onClick={() => onOptionSelect(button.id, button.payload)}
+                  onClick={() => onOptionSelect(button.id, button.payload, button.text)}
                   className="w-full justify-start text-left"
                 >
                   {button.text}
@@ -62,7 +62,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
           {metadata.options.map((option) => (
             <button
               key={option.id}
-              onClick={() => onOptionSelect(option.id, option.payload)}
+              onClick={() => onOptionSelect(option.id, option.payload, option.text)}
               className="w-full text-left p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors flex items-center space-x-2"
             >
               {option.icon && (
