@@ -40,13 +40,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Create separate messages for each bubble
-        for (const bubble of welcomeResponse.bubbles) {
+        for (let i = 0; i < welcomeResponse.bubbles.length; i++) {
+          const bubble = welcomeResponse.bubbles[i];
           await storage.createMessage({
             sessionId,
             content: bubble.content,
             sender: "bot",
             messageType: bubble.messageType,
-            metadata: bubble.metadata
+            metadata: {
+              ...bubble.metadata || {},
+              isFollowUp: i > 0 // Mark all messages after the first as follow-up
+            }
           });
 
           // Add small delay between bubbles for realistic timing
