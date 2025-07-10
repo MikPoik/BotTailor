@@ -34,6 +34,22 @@ export function useChat(sessionId: string) {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
+      // Optimistically add user message to UI immediately
+      const optimisticUserMessage = {
+        id: Date.now(), // Temporary ID
+        sessionId,
+        content,
+        sender: 'user' as const,
+        messageType: 'text' as const,
+        createdAt: new Date().toISOString(),
+        metadata: {}
+      };
+
+      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+        if (!old) return { messages: [optimisticUserMessage] };
+        return { messages: [...old.messages, optimisticUserMessage] };
+      });
+
       const response = await apiRequest('POST', `/api/chat/${sessionId}/messages`, {
         content,
         messageType: 'text'
@@ -41,6 +57,7 @@ export function useChat(sessionId: string) {
       return response.json();
     },
     onSuccess: () => {
+      // Refresh to get the actual server response with bot message
       queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
     },
   });
