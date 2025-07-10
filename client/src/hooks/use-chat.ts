@@ -35,7 +35,8 @@ export function useChat(sessionId: string) {
     content: string,
     onBubbleReceived?: (message: Message) => void,
     onAllComplete?: (messages: Message[]) => void,
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    userMessageOverride?: string
   ) => {
     try {
       setIsTyping(true);
@@ -44,7 +45,7 @@ export function useChat(sessionId: string) {
       const optimisticUserMessage = {
         id: Date.now(),
         sessionId,
-        content,
+        content: userMessageOverride || content,
         sender: 'user' as const,
         messageType: 'text' as const,
         createdAt: new Date().toISOString(),
@@ -77,7 +78,7 @@ export function useChat(sessionId: string) {
       if (!reader) {
         throw new Error('No reader available');
       }
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -89,7 +90,7 @@ export function useChat(sessionId: string) {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
-              
+
               if (data.type === 'bubble' && data.message) {
                 // A complete bubble has arrived - show it immediately
                 onBubbleReceived?.(data.message);
@@ -140,7 +141,7 @@ export function useChat(sessionId: string) {
         messageType: 'text'
       });
       const result = await response.json();
-      
+
       // Add the new bot messages to the existing messages array instead of refetching
       if (result.messages && result.messages.length > 0) {
         queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
@@ -148,7 +149,7 @@ export function useChat(sessionId: string) {
           return { messages: [...old.messages, ...result.messages] };
         });
       }
-      
+
       return result;
     },
   });
@@ -178,7 +179,7 @@ export function useChat(sessionId: string) {
         optionText
       });
       const result = await response.json();
-      
+
       // Add the new bot messages to the existing messages array instead of refetching
       if (result.messages && result.messages.length > 0) {
         queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
@@ -186,7 +187,7 @@ export function useChat(sessionId: string) {
           return { messages: [...old.messages, ...result.messages] };
         });
       }
-      
+
       return result;
     },
   });
@@ -196,7 +197,8 @@ export function useChat(sessionId: string) {
   };
 
   const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
-    return selectOptionMutation.mutateAsync({ optionId, payload, optionText });
+    sendStreamingMessage(optionId, undefined, undefined, undefined, optionText)
+     
   };
 
   return {

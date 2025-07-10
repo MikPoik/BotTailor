@@ -106,74 +106,53 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
   const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
     if (isLoading || isStreaming) return;
 
-    // Add user message immediately for the selection
+    // Create the context message for option selection
     const displayText = optionText || optionId;
-    const optimisticUserMessage = {
-      id: Date.now(),
-      sessionId,
-      content: displayText,
-      sender: 'user' as const,
-      messageType: 'text' as const,
-      createdAt: new Date().toISOString(),
-      metadata: {}
-    };
-
-    queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-      if (!old) return { messages: [optimisticUserMessage] };
-      return { messages: [...old.messages, optimisticUserMessage] };
-    });
+    const contextMessage = `User selected option "${optionId}" with payload: ${JSON.stringify(payload)}. Provide a helpful response.`;
 
     setIsStreaming(true);
     streamingBubblesRef.current = [];
 
     try {
-      // Call the select-option endpoint to get the AI response
-      const response = await fetch(`/api/chat/${sessionId}/select-option`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          optionId,
-          payload,
-          optionText: displayText
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Option selection failed');
-      }
-
-      const result = await response.json();
-      
-      // Handle multi-bubble responses
-      if (result.allMessages && Array.isArray(result.allMessages)) {
-        // Add all bot messages with proper follow-up flags
-        result.allMessages.forEach((message: any, index: number) => {
-          const isFollowUp = index > 0;
-          const messageWithFlag = {
+      await sendStreamingMessage(
+        contextMessage,
+        // onBubbleReceived: Add each complete bubble directly to main messages
+        (message: Message) => {
+          // Mark as follow-up if this isn't the first bubble in this streaming sequence
+          const isFollowUp = streamingBubblesRef.current.length > 0;
+          const bubbleWithFlag = {
             ...message,
             metadata: {
               ...message.metadata,
-              isFollowUp
+              isFollowUp,
+              isStreaming: false // Mark as permanent message
             }
           };
           
+          // Add bubble directly to main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [messageWithFlag] };
-            return { messages: [...old.messages, messageWithFlag] };
+            if (!old) return { messages: [bubbleWithFlag] };
+            return { messages: [...old.messages, bubbleWithFlag] };
           });
-        });
-      } else if (result.botMessage) {
-        // Fallback for single message response
-        queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-          if (!old) return { messages: [result.botMessage] };
-          return { messages: [...old.messages, result.botMessage] };
-        });
-      }
-
-      setIsStreaming(false);
-      streamingBubblesRef.current = [];
+          
+          // Keep track of streaming bubbles for counting
+          streamingBubblesRef.current.push(bubbleWithFlag);
+        },
+        // onAllComplete: Streaming finished, just set streaming state to false
+        (messages: Message[]) => {
+          setIsStreaming(false);
+          // Clear the tracking ref since streaming is complete
+          streamingBubblesRef.current = [];
+        },
+        // onError: Handle errors
+        (error: string) => {
+          setIsStreaming(false);
+          streamingBubblesRef.current = [];
+          console.error("Option select streaming error:", error);
+        },
+        // Use displayText as the user message content instead of contextMessage
+        displayText
+      );
     } catch (error) {
       setIsStreaming(false);
       streamingBubblesRef.current = [];
