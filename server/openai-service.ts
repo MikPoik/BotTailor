@@ -264,8 +264,15 @@ export async function* generateStreamingResponse(
                       processedBubbles = i + 1;
                     }
                   }
+                } else if (bubble.messageType === 'text') {
+                  // For text bubbles, ensure content is not just empty string
+                  if (bubble.content && bubble.content.trim().length > 0) {
+                    console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
+                    yield { type: 'bubble', bubble };
+                    processedBubbles = i + 1;
+                  }
                 } else {
-                  // For text and other types, just check basic completion
+                  // For other types (card, image, quickReplies), just check basic completion
                   console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
                   yield { type: 'bubble', bubble };
                   processedBubbles = i + 1;
