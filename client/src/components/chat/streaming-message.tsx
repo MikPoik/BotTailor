@@ -96,7 +96,10 @@ export default function StreamingMessage({
                 ...message,
                 content: chunk.content,
                 messageType: chunk.messageType as any,
-                metadata: chunk.metadata
+                metadata: {
+                  ...message.metadata,
+                  ...chunk.metadata
+                }
               }}
               onOptionSelect={onOptionSelect}
               onQuickReply={onQuickReply}

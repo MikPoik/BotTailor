@@ -20,20 +20,20 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
             className="w-full h-32 object-cover"
           />
         )}
-        
+
         <div className="p-3">
           {metadata.title && (
             <h4 className="font-semibold text-neutral-800 mb-2">{metadata.title}</h4>
           )}
-          
+
           {metadata.description && (
             <p className="text-sm text-neutral-600 mb-3">{metadata.description}</p>
           )}
-          
+
           {content && content !== metadata.title && (
             <p className="text-neutral-800 mb-3">{content}</p>
           )}
-          
+
           {metadata.buttons && (
             <div className="space-y-2">
               {metadata.buttons.map((button) => (
