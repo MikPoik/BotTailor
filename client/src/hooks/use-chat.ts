@@ -198,8 +198,9 @@ export function useChat(sessionId: string) {
   };
 
   const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
-    sendStreamingMessage(optionText || optionId, undefined, undefined, undefined, optionId)
-
+    // This function is no longer needed since handleOptionSelect in chat-interface.tsx
+    // directly calls sendStreamingMessage with proper callbacks
+    return Promise.resolve();
   };
 
   return {
