@@ -104,12 +104,20 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
   };
 
   const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
-    setIsTyping(true);
+    if (isLoading || isStreaming) return;
+
+    setIsStreaming(true);
+    streamingBubblesRef.current = [];
+
     try {
+      // Use the selectOption function which sends the option data to the server
       await selectOption(optionId, payload, optionText);
-      setIsTyping(false);
+      setIsStreaming(false);
+      streamingBubblesRef.current = [];
     } catch (error) {
-      setIsTyping(false);
+      setIsStreaming(false);
+      streamingBubblesRef.current = [];
+      console.error("Option select error:", error);
     }
   };
 
