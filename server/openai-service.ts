@@ -243,10 +243,12 @@ export async function* generateStreamingResponse(
           
           if (parseResult.success && parseResult.data?.bubbles && Array.isArray(parseResult.data.bubbles)) {
             const bubbles = parseResult.data.bubbles;
+            console.log(`[OpenAI] Best-effort parser found ${bubbles.length} bubbles, processed: ${processedBubbles}`);
             
             // Check if we have new complete bubbles beyond what we've already processed
             for (let i = processedBubbles; i < bubbles.length; i++) {
               const bubble = bubbles[i];
+              console.log(`[OpenAI] Checking bubble ${i + 1}: ${JSON.stringify(bubble)}`);
               
               // Check if this bubble is complete (has required fields)
               if (bubble.messageType && bubble.content !== undefined) {
@@ -261,7 +263,11 @@ export async function* generateStreamingResponse(
                       console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`);
                       yield { type: 'bubble', bubble };
                       processedBubbles = i + 1;
+                    } else {
+                      console.log(`[OpenAI] Menu bubble ${i + 1} incomplete - options not fully formed`);
                     }
+                  } else {
+                    console.log(`[OpenAI] Menu bubble ${i + 1} incomplete - no options array`);
                   }
                 } else {
                   // For text and other types, just check basic completion
@@ -269,11 +275,19 @@ export async function* generateStreamingResponse(
                   yield { type: 'bubble', bubble };
                   processedBubbles = i + 1;
                 }
+              } else {
+                console.log(`[OpenAI] Bubble ${i + 1} incomplete - missing messageType or content`);
               }
+            }
+          } else {
+            if (!parseResult.success) {
+              console.log(`[OpenAI] Best-effort parser failed: ${parseResult.error}`);
+            } else if (!parseResult.data?.bubbles) {
+              console.log(`[OpenAI] Best-effort parser succeeded but no bubbles array found`);
             }
           }
         } catch (parseError) {
-          // Silently ignore parsing errors during streaming - we'll try again with more content
+          console.log(`[OpenAI] Parse error during streaming: ${parseError.message}`);
         }
       }
     }
