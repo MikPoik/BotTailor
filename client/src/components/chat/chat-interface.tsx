@@ -36,6 +36,21 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     scrollToBottom();
   }, [messages, streamingBubbles]);
 
+  // Clear streaming bubbles when new messages arrive (they're now in the main messages array)
+  useEffect(() => {
+    if (messages.length > 0 && streamingBubbles.length > 0) {
+      // Check if any of the streaming bubbles are now in the messages array
+      const streamingBubbleContents = streamingBubbles.map(b => b.content);
+      const hasStreamingBubblesInMessages = messages.some(msg => 
+        msg.sender === 'bot' && streamingBubbleContents.includes(msg.content)
+      );
+      
+      if (hasStreamingBubblesInMessages) {
+        setStreamingBubbles([]);
+      }
+    }
+  }, [messages, streamingBubbles]);
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || isStreaming) return;
 
@@ -62,17 +77,11 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             return [...prev, bubbleWithFlag];
           });
         },
-        // onAllComplete: Streaming finished, merge bubbles into main messages array
+        // onAllComplete: Streaming finished, keep bubbles visible without clearing
         (messages: Message[]) => {
           setIsStreaming(false);
-
-          // Merge streaming bubbles into the main messages query data
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [...streamingBubbles] };
-            return { messages: [...old.messages, ...streamingBubbles] };
-          });
-
-          setStreamingBubbles([]); // Clear streaming bubbles since they're now in main messages
+          // Keep streaming bubbles in state - they're already saved to DB
+          // Don't clear them as they need to stay visible until next message fetch
         },
         // onError: Handle errors
         (error: string) => {
