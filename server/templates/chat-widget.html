@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,6 +50,50 @@
             background: #f3f4f6;
             color: #1f2937;
         }
+        .message-group {
+            margin: 1rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        .message-group.user {
+            justify-content: flex-end;
+        }
+        .message-group .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .message-group .messages {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            max-width: 80%;
+        }
+        .message-group.user .messages {
+            align-items: flex-end;
+        }
+        .bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .bubble.user {
+            background: #2563eb;
+            color: white;
+        }
+        .bubble.assistant {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        .bubble.card, .bubble.menu {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0;
+            overflow: hidden;
+        }
         .input-container {
             padding: 1rem;
             border-top: 1px solid #e5e7eb;
@@ -73,9 +118,106 @@
         .input-container button:hover {
             background: #1d4ed8;
         }
-        .typing {
-            font-style: italic;
+        .input-container button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.75rem 1rem;
+            background: #f3f4f6;
+            border-radius: 0.75rem;
+            margin: 0.25rem 0;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #6b7280;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+        .card-content {
+            padding: 12px;
+        }
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .card-description {
+            font-size: 14px;
             color: #6b7280;
+            margin-bottom: 12px;
+        }
+        .card-image {
+            width: 100%;
+            height: 128px;
+            object-fit: cover;
+        }
+        .menu-content {
+            padding: 12px;
+        }
+        .menu-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            margin-bottom: 8px;
+            transition: background-color 0.2s;
+        }
+        .menu-option:hover {
+            background: #f9fafb;
+        }
+        .menu-option:last-child {
+            margin-bottom: 0;
+        }
+        .quick-reply {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 16px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 2px;
+            transition: background-color 0.2s;
+        }
+        .quick-reply:hover {
+            background: #e5e7eb;
+        }
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -89,6 +231,7 @@
             const [messages, setMessages] = useState([]);
             const [inputValue, setInputValue] = useState('');
             const [isTyping, setIsTyping] = useState(false);
+            const [isStreaming, setIsStreaming] = useState(false);
             const messagesEndRef = useRef(null);
 
             const sessionId = "{{SESSION_ID}}";
@@ -106,7 +249,7 @@
 
             useEffect(() => {
                 scrollToBottom();
-            }, [messages]);
+            }, [messages, isTyping]);
 
             const scrollToBottom = () => {
                 messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -126,46 +269,116 @@
                 setMessages(prev => [...prev, message]);
             };
 
-            const sendMessage = async (e) => {
-                e.preventDefault();
-                if (!inputValue.trim()) return;
+            const updateLastMessage = (updatedMessage) => {
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    if (newMessages.length > 0) {
+                        newMessages[newMessages.length - 1] = { ...newMessages[newMessages.length - 1], ...updatedMessage };
+                    }
+                    return newMessages;
+                });
+            };
 
+            const sendStreamingMessage = async (message) => {
                 const userMessage = { 
                     sender: 'user', 
-                    content: inputValue,
+                    content: message,
                     messageType: 'text',
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    metadata: {}
                 };
                 addMessage(userMessage);
                 setInputValue('');
+                setIsStreaming(true);
                 setIsTyping(true);
 
                 try {
-                    const response = await fetch(`${apiUrl}/api/chat/${sessionId}`, {
+                    const response = await fetch(`${apiUrl}/api/chat/${sessionId}/messages/stream`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ message: inputValue }),
+                        body: JSON.stringify({ content: message }),
                     });
 
-                    const data = await response.json();
-                    addMessage(data);
+                    if (!response.body) {
+                        throw new Error('No response body');
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+
+                                    if (data.type === 'bubble' && data.message) {
+                                        setIsTyping(false);
+                                        addMessage(data.message);
+                                        
+                                        // Add slight delay before next bubble can appear
+                                        setTimeout(() => {
+                                            setIsTyping(true);
+                                        }, 100);
+                                    } else if (data.type === 'complete') {
+                                        setIsTyping(false);
+                                        setIsStreaming(false);
+                                    } else if (data.type === 'error') {
+                                        setIsTyping(false);
+                                        setIsStreaming(false);
+                                        addMessage({
+                                            sender: 'bot',
+                                            content: data.message,
+                                            messageType: 'text',
+                                            createdAt: new Date().toISOString(),
+                                            metadata: {}
+                                        });
+                                    } else if (data.type === 'end') {
+                                        setIsTyping(false);
+                                        setIsStreaming(false);
+                                        break;
+                                    }
+                                } catch (parseError) {
+                                    console.warn('Failed to parse streaming data:', parseError);
+                                }
+                            }
+                        }
+                    }
                 } catch (error) {
-                    console.error('Error sending message:', error);
-                    addMessage({ 
-                        sender: 'bot', 
+                    console.error('Error in streaming:', error);
+                    setIsTyping(false);
+                    setIsStreaming(false);
+                    addMessage({
+                        sender: 'bot',
                         content: 'Sorry, I encountered an error. Please try again.',
                         messageType: 'text',
-                        createdAt: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        metadata: {}
                     });
-                } finally {
-                    setIsTyping(false);
                 }
             };
 
+            const sendMessage = async (e) => {
+                e.preventDefault();
+                if (!inputValue.trim() || isStreaming) return;
+
+                const message = inputValue.trim();
+                await sendStreamingMessage(message);
+            };
+
             const handleOptionSelect = async (optionId, payload, optionText) => {
-                // Use the actual option text from the button
+                if (isStreaming) return;
+
                 const displayText = optionText || getOptionDisplayText(optionId);
 
                 // Show user's selection immediately
@@ -173,10 +386,10 @@
                     content: displayText,
                     sender: 'user',
                     messageType: 'text',
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    metadata: {}
                 });
 
-                // Show typing indicator
                 setIsTyping(true);
 
                 try {
@@ -188,7 +401,12 @@
 
                     if (response.ok) {
                         const data = await response.json();
-                        addMessage(data.botMessage);
+                        if (data.allMessages && data.allMessages.length > 0) {
+                            // Add all messages from the response
+                            data.allMessages.forEach(message => addMessage(message));
+                        } else if (data.botMessage) {
+                            addMessage(data.botMessage);
+                        }
                     }
                 } catch (error) {
                     console.error('Error selecting option:', error);
@@ -196,7 +414,8 @@
                         content: 'Sorry, there was an error processing your selection.',
                         sender: 'bot',
                         messageType: 'text',
-                        createdAt: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        metadata: {}
                     });
                 } finally {
                     setIsTyping(false);
@@ -205,64 +424,34 @@
 
             const getOptionDisplayText = (optionId) => {
                 const optionTexts = {
-                    // Main categories
                     billing: "I have a question about my billing",
                     technical: "I need technical support", 
                     sales: "I have a sales inquiry",
                     payment: "I have payment issues",
                     subscription: "I want to change my subscription",
                     invoice: "I need to download an invoice",
-
-                    // Payment-related options
-                    payment_issues: "Payment Issues",
                     paymentIssues: "Payment Issues",
                     updatePaymentMethod: "Update Payment Method",
                     viewBilling: "View Billing History",
                     refund: "Request Refund",
-
-                    // Specific issues
                     issue1: "My payment was declined",
                     issue2: "I was charged incorrectly",
                     issue3: "I need a refund",
-
-                    // Subscription options
                     upgrade: "Upgrade subscription",
                     downgrade: "Downgrade subscription",
                     cancel: "Cancel subscription",
-
-                    // Technical support
                     account: "Account issues",
                     password: "Password reset",
                     login: "Login problems",
-
-                    // General
                     other: "Other issues",
                     contact_agent: "Contact human agent"
                 };
-                return optionTexts[optionId] || "Selected option";
+                return optionTexts[optionId] || optionId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
             };
 
             const handleQuickReply = async (reply) => {
-                setInputValue('');
-                setIsTyping(true);
-
-                try {
-                    const response = await fetch(`${apiUrl}/api/chat/${sessionId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ message: reply }),
-                    });
-
-                    const data = await response.json();
-                    addMessage({ sender: 'user', content: reply, messageType: 'text', createdAt: new Date().toISOString() });
-                    addMessage(data);
-                } catch (error) {
-                    console.error('Error sending quick reply:', error);
-                } finally {
-                    setIsTyping(false);
-                }
+                if (isStreaming) return;
+                await sendStreamingMessage(reply);
             };
 
             const closeChat = () => {
@@ -271,35 +460,42 @@
                 }
             };
 
-            const renderMessage = (message) => {
+            const formatTimeAgo = (dateString) => {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                
+                if (diffMins < 1) return 'just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24) return `${diffHours}h ago`;
+                const diffDays = Math.floor(diffHours / 24);
+                return `${diffDays}d ago`;
+            };
+
+            const renderRichMessage = (message) => {
                 if (message.messageType === 'card' && message.metadata) {
                     return React.createElement('div', { 
-                        style: { 
-                            background: 'white', 
-                            borderRadius: '8px', 
-                            border: '1px solid #e5e7eb', 
-                            overflow: 'hidden',
-                            marginBottom: '0.5rem'
-                        }
+                        className: 'bubble card'
                     }, [
                         message.metadata.imageUrl && React.createElement('img', {
                             key: 'image',
                             src: message.metadata.imageUrl,
                             alt: message.metadata.title || 'Card image',
-                            style: { width: '100%', height: '128px', objectFit: 'cover' }
+                            className: 'card-image'
                         }),
-                        React.createElement('div', { key: 'content', style: { padding: '12px' } }, [
+                        React.createElement('div', { key: 'content', className: 'card-content' }, [
                             message.metadata.title && React.createElement('h4', {
                                 key: 'title',
-                                style: { fontWeight: '600', marginBottom: '8px' }
+                                className: 'card-title'
                             }, message.metadata.title),
                             message.metadata.description && React.createElement('p', {
                                 key: 'desc',
-                                style: { fontSize: '14px', color: '#6b7280', marginBottom: '12px' }
+                                className: 'card-description'
                             }, message.metadata.description),
                             message.content && message.content !== message.metadata.title && React.createElement('p', {
-                                key: 'content',
-                                style: { marginBottom: '12px' }
+                                key: 'content'
                             }, message.content),
                             message.metadata.buttons && React.createElement('div', {
                                 key: 'buttons',
@@ -308,14 +504,7 @@
                                 React.createElement('button', {
                                     key: idx,
                                     onClick: () => handleOptionSelect(button.id, button.payload, button.text),
-                                    style: {
-                                        padding: '8px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        background: 'white',
-                                        cursor: 'pointer',
-                                        textAlign: 'left'
-                                    }
+                                    className: 'menu-option'
                                 }, button.text)
                             ))
                         ])
@@ -324,65 +513,83 @@
 
                 if (message.messageType === 'menu' && message.metadata?.options) {
                     return React.createElement('div', {
-                        style: {
-                            background: 'white',
-                            borderRadius: '8px',
-                            border: '1px solid #e5e7eb',
-                            padding: '12px',
-                            marginBottom: '0.5rem'
-                        }
+                        className: 'bubble menu'
                     }, [
-                        React.createElement('p', { key: 'content', style: { marginBottom: '12px' } }, message.content),
-                        React.createElement('div', { 
-                            key: 'options',
-                            style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-                        }, message.metadata.options.map((option, idx) =>
-                            React.createElement('button', {
-                                key: idx,
-                                onClick: () => handleOptionSelect(option.id, option.payload, option.text),
-                                style: {
-                                    padding: '12px',
-                                    border: '1px solid #d1d5db',
-                                    borderRadius: '8px',
-                                    background: 'white',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }
-                            }, option.text)
-                        ))
+                        React.createElement('div', { key: 'content', className: 'menu-content' }, [
+                            message.content && React.createElement('p', { key: 'text', style: { marginBottom: '12px' } }, message.content),
+                            React.createElement('div', { 
+                                key: 'options'
+                            }, message.metadata.options.map((option, idx) =>
+                                React.createElement('button', {
+                                    key: idx,
+                                    onClick: () => handleOptionSelect(option.id, option.payload, option.text),
+                                    className: 'menu-option'
+                                }, option.text)
+                            ))
+                        ])
                     ]);
                 }
 
-                // Default text message with quick replies
-                return React.createElement('div', {}, [
+                if (message.messageType === 'image' && message.metadata?.imageUrl) {
+                    return React.createElement('div', {
+                        className: 'bubble card'
+                    }, [
+                        React.createElement('img', {
+                            key: 'image',
+                            src: message.metadata.imageUrl,
+                            alt: message.metadata.title || 'Message image',
+                            className: 'card-image'
+                        }),
+                        message.content && React.createElement('div', {
+                            key: 'content',
+                            className: 'card-content'
+                        }, React.createElement('p', {}, message.content))
+                    ]);
+                }
+
+                // Default text message
+                return React.createElement('div', {
+                    className: `bubble ${message.sender}`
+                }, [
                     React.createElement('p', { key: 'content' }, message.content),
                     message.metadata?.quickReplies && React.createElement('div', {
                         key: 'quickReplies',
-                        style: {
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                            marginTop: '8px'
-                        }
+                        className: 'quick-replies'
                     }, message.metadata.quickReplies.map((reply, idx) =>
                         React.createElement('button', {
                             key: idx,
                             onClick: () => handleQuickReply(reply),
-                            style: {
-                                padding: '4px 12px',
-                                background: '#f3f4f6',
-                                border: 'none',
-                                borderRadius: '16px',
-                                fontSize: '14px',
-                                cursor: 'pointer'
-                            }
+                            className: 'quick-reply'
                         }, reply)
                     ))
                 ]);
             };
+
+            const groupMessages = (messages) => {
+                const groups = [];
+                let currentGroup = null;
+
+                messages.forEach(message => {
+                    const isFollowUp = message.metadata?.isFollowUp;
+                    
+                    if (!currentGroup || message.sender !== currentGroup.sender || !isFollowUp) {
+                        // Start new group
+                        currentGroup = {
+                            sender: message.sender,
+                            messages: [message],
+                            timestamp: message.createdAt
+                        };
+                        groups.push(currentGroup);
+                    } else {
+                        // Add to current group
+                        currentGroup.messages.push(message);
+                    }
+                });
+
+                return groups;
+            };
+
+            const messageGroups = groupMessages(messages);
 
             return (
                 <div className="chat-container">
@@ -391,7 +598,7 @@
                             <img 
                                 src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"
                                 alt="Support"
-                                style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+                                className="avatar"
                             />
                             <div>
                                 <h3 style={{ margin: 0, fontWeight: '600' }}>Support Assistant</h3>
@@ -429,21 +636,54 @@
                     </div>
 
                     <div className="chat-content">
-                        {messages.length === 0 ? (
+                        {messageGroups.length === 0 ? (
                             <div style={{ textAlign: 'center', color: '#6b7280', marginTop: '2rem' }}>
                                 <p>👋 Hi! How can I help you today?</p>
                             </div>
                         ) : (
-                            messages.map((message, index) => (
-                                <div key={index} className={`message ${message.sender}`}>
-                                    {renderMessage(message)}
-                                </div>
+                            messageGroups.map((group, groupIndex) => (
+                                React.createElement('div', {
+                                    key: groupIndex,
+                                    className: `message-group ${group.sender}`
+                                }, [
+                                    group.sender === 'bot' && React.createElement('img', {
+                                        key: 'avatar',
+                                        src: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256",
+                                        alt: "Bot avatar",
+                                        className: "avatar"
+                                    }),
+                                    React.createElement('div', {
+                                        key: 'messages',
+                                        className: 'messages'
+                                    }, [
+                                        ...group.messages.map((message, messageIndex) => (
+                                            React.createElement('div', {
+                                                key: `${groupIndex}-${messageIndex}`
+                                            }, renderRichMessage(message))
+                                        )),
+                                        React.createElement('div', {
+                                            key: 'timestamp',
+                                            className: 'timestamp'
+                                        }, formatTimeAgo(group.timestamp))
+                                    ])
+                                ])
                             ))
                         )}
 
                         {isTyping && (
-                            <div className="message assistant typing">
-                                Assistant is typing...
+                            <div className="message-group assistant">
+                                <img 
+                                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"
+                                    alt="Bot avatar"
+                                    className="avatar"
+                                />
+                                <div className="messages">
+                                    <div className="typing-indicator">
+                                        <div className="typing-dot"></div>
+                                        <div className="typing-dot"></div>
+                                        <div className="typing-dot"></div>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -456,9 +696,9 @@
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder="Type your message..."
-                            disabled={isTyping}
+                            disabled={isStreaming}
                         />
-                        <button type="submit" disabled={isTyping}>
+                        <button type="submit" disabled={isStreaming}>
                             Send
                         </button>
                     </form>
