@@ -106,12 +106,54 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
   const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
     if (isLoading || isStreaming) return;
 
+    // Add user message immediately for the selection
+    const displayText = optionText || optionId;
+    const optimisticUserMessage = {
+      id: Date.now(),
+      sessionId,
+      content: displayText,
+      sender: 'user' as const,
+      messageType: 'text' as const,
+      createdAt: new Date().toISOString(),
+      metadata: {}
+    };
+
+    queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+      if (!old) return { messages: [optimisticUserMessage] };
+      return { messages: [...old.messages, optimisticUserMessage] };
+    });
+
     setIsStreaming(true);
     streamingBubblesRef.current = [];
 
     try {
-      // Use the selectOption function which sends the option data to the server
-      await selectOption(optionId, payload, optionText);
+      // Call the select-option endpoint to get the AI response
+      const response = await fetch(`/api/chat/${sessionId}/select-option`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          optionId,
+          payload,
+          optionText: displayText
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Option selection failed');
+      }
+
+      const result = await response.json();
+      
+      // Add the bot response to the UI
+      if (result.botMessage) {
+        queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+          if (!old) return { messages: [result.botMessage] };
+          return { messages: [...old.messages, result.botMessage] };
+        });
+      }
+
       setIsStreaming(false);
       streamingBubblesRef.current = [];
     } catch (error) {
