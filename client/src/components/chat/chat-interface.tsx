@@ -115,7 +115,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
 
     try {
       await sendStreamingMessage(
-        contextMessage,
+        displayText, // Send displayText as the actual message content
         // onBubbleReceived: Add each complete bubble directly to main messages
         (message: Message) => {
           // Mark as follow-up if this isn't the first bubble in this streaming sequence
@@ -150,8 +150,8 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
           streamingBubblesRef.current = [];
           console.error("Option select streaming error:", error);
         },
-        // Use displayText as the user message content instead of contextMessage
-        displayText
+        // Pass contextMessage as the internal message for AI processing
+        contextMessage
       );
     } catch (error) {
       setIsStreaming(false);

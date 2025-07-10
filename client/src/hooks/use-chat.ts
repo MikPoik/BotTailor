@@ -32,24 +32,24 @@ export function useChat(sessionId: string) {
 
   // Streaming message function with real-time bubble parsing
   const sendStreamingMessage = async (
-    content: string,
+    userDisplayText: string,
     onBubbleReceived?: (message: Message) => void,
     onAllComplete?: (messages: Message[]) => void,
     onError?: (error: string) => void,
-    userMessageOverride?: string
+    internalMessage?: string
   ) => {
     try {
       setIsTyping(true);
 
-      // Optimistically add user message
-      const optimisticUserMessage = {
-        id: Date.now(),
+      // Add optimistic user message to messages array
+      const optimisticUserMessage: Message = {
+        id: Date.now().toString(),
         sessionId,
-        content: userMessageOverride || content,
-        sender: 'user' as const,
-        messageType: 'text' as const,
+        content: userDisplayText,
+        sender: 'user',
+        messageType: 'text',
+        metadata: {},
         createdAt: new Date().toISOString(),
-        metadata: {}
       };
 
       queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
@@ -62,10 +62,7 @@ export function useChat(sessionId: string) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          content,
-          messageType: 'text'
-        }),
+        body: JSON.stringify({ message: internalMessage || userDisplayText }),
       });
 
       if (!response.ok) {
@@ -197,8 +194,8 @@ export function useChat(sessionId: string) {
   };
 
   const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
-    sendStreamingMessage(optionId, undefined, undefined, undefined, optionText)
-     
+    sendStreamingMessage(optionText || optionId, undefined, undefined, undefined, optionId)
+
   };
 
   return {
