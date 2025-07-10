@@ -16,6 +16,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const streamingBubblesRef = useRef<any[]>([]);
   const queryClient = useQueryClient();
@@ -26,7 +27,6 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     sendStreamingMessage, 
     selectOption, 
     isLoading,
-    isTyping,
     isSessionLoading 
   } = useChat(sessionId);
 
