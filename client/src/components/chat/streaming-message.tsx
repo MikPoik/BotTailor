@@ -28,15 +28,23 @@ export default function StreamingMessage({
   // Parse chunks from message metadata
   const chunks: MessageChunk[] = message.metadata?.chunks || [];
   const isStreaming = message.metadata?.isStreaming || false;
+  const streamingComplete = message.metadata?.streamingComplete || false;
 
   useEffect(() => {
-    if (!isStreaming || chunks.length === 0) {
+    if ((!isStreaming && !streamingComplete) || chunks.length === 0) {
       // Not a streaming message, show as normal
       setVisibleChunks([{
         content: message.content,
         messageType: message.messageType,
         metadata: message.metadata
       }]);
+      return;
+    }
+
+    // If streaming is complete, show all chunks immediately
+    if (streamingComplete) {
+      setVisibleChunks(chunks);
+      setCurrentChunkIndex(chunks.length);
       return;
     }
 
@@ -61,7 +69,7 @@ export default function StreamingMessage({
     showNextChunk(0);
   }, [message.id, chunks.length, isStreaming]); // Use message.id instead of full message object
 
-  if (!isStreaming) {
+  if (!isStreaming && !streamingComplete) {
     // Render as normal message - avatar will be handled by MessageBubble
     return (
       <RichMessage
@@ -99,7 +107,7 @@ export default function StreamingMessage({
         )}
 
         {/* Show timestamp when streaming is complete */}
-        {currentChunkIndex >= chunks.length && (
+        {(currentChunkIndex >= chunks.length || streamingComplete) && (
           <span className="text-xs text-neutral-500 mt-1 block">
             {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
           </span>

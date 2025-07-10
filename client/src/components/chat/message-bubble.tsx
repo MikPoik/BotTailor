@@ -43,7 +43,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
       </div>
       <div className="flex-1">
         {/* Check if this is a streaming/multipart message */}
-        {message.metadata?.isStreaming || message.metadata?.chunks ? (
+        {message.metadata?.isStreaming || message.metadata?.streamingComplete || message.metadata?.chunks ? (
           <StreamingMessage 
             message={message} 
             onOptionSelect={onOptionSelect}
@@ -62,7 +62,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
         )}
 
         {/* Quick replies for text messages (only for non-streaming) */}
-        {!message.metadata?.isStreaming && !message.metadata?.chunks && message.messageType === 'text' && message.metadata?.quickReplies && (
+        {!message.metadata?.isStreaming && !message.metadata?.streamingComplete && !message.metadata?.chunks && message.messageType === 'text' && message.metadata?.quickReplies && (
           <div className="flex flex-wrap gap-2 mt-2">
             {message.metadata.quickReplies.map((reply: string, index: number) => (
               <button
@@ -77,7 +77,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
         )}
 
         {/* Timestamp (only for non-streaming messages) */}
-        {!message.metadata?.isStreaming && !message.metadata?.chunks && (
+        {!message.metadata?.isStreaming && !message.metadata?.streamingComplete && !message.metadata?.chunks && (
           <span className="text-xs text-neutral-500 mt-1 block">
             {timeAgo}
           </span>
