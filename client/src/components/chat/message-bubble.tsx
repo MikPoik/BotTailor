@@ -21,9 +21,9 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
           <div className="chat-message-user">
             <p>{message.content}</p>
           </div>
-          <span className="text-xs text-neutral-500 mt-1 block text-right">
+          {!message.metadata?.isFollowUp && (<span className="text-xs text-neutral-500 mt-1 block text-right">
             {timeAgo}
-          </span>
+          </span>)}
         </div>
       </div>
     );
@@ -77,7 +77,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
         )}
 
         {/* Timestamp (only for non-streaming messages) */}
-        {!message.metadata?.isStreaming && !message.metadata?.streamingComplete && !message.metadata?.chunks && (
+        {!message.metadata?.isStreaming && !message.metadata?.streamingComplete && !message.metadata?.chunks && !message.metadata?.isFollowUp && (
           <span className="text-xs text-neutral-500 mt-1 block">
             {timeAgo}
           </span>
