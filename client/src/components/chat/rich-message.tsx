@@ -56,8 +56,8 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
 
   if (messageType === 'menu' && metadata?.options) {
     return (
-      <div className="bg-white rounded-lg rounded-tl-none p-3 shadow-sm border">
-        <p className="text-neutral-800 mb-3">{content}</p>
+      <div className="space-y-2">
+        {content && <p className="text-neutral-800 mb-3">{content}</p>}
         <div className="space-y-2">
           {metadata.options.map((option, index) => (
             <button
@@ -95,8 +95,8 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
 
   if (messageType === 'quickReplies' && metadata?.quickReplies) {
     return (
-      <div className="bg-white rounded-lg rounded-tl-none p-3 shadow-sm border">
-        <p className="text-neutral-800 mb-3">{content}</p>
+      <div className="space-y-3">
+        {content && <p className="text-neutral-800">{content}</p>}
         <div className="flex flex-wrap gap-2">
           {metadata.quickReplies.map((reply: string, index: number) => (
             <button
