@@ -3,6 +3,7 @@ import { MessageCircle, X, Minimize2 } from "lucide-react";
 import ChatInterface from "./chat-interface";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatWidgetProps {
   sessionId: string;
