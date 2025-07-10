@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { AIResponseSchema, SYSTEM_PROMPT, type AIResponse } from "./ai-response-schema";
-import { safeJsonParse } from "best-effort-json-parser";
+import bestEffortJsonParser from "best-effort-json-parser";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -26,9 +26,10 @@ export async function generateMultiBubbleResponse(
       { role: 'user' as const, content: userMessage }
     ];
 
-    const completion = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: "gpt-4o",
       messages,
+      stream: true,
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -100,13 +101,17 @@ export async function generateMultiBubbleResponse(
       max_tokens: 1500
     });
 
-    const response = completion.choices[0]?.message?.content;
-    if (!response) {
-      throw new Error("No response from OpenAI");
+    let accumulatedContent = '';
+    
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content || '';
+      if (delta) {
+        accumulatedContent += delta;
+      }
     }
 
-    const parsedResponse = JSON.parse(response);
-    console.log(`[OpenAI] Raw response: ${response}`);
+    const parsedResponse = JSON.parse(accumulatedContent);
+    console.log(`[OpenAI] Raw response: ${accumulatedContent}`);
     
     // Validate against schema
     const validated = AIResponseSchema.parse(parsedResponse);
@@ -230,7 +235,7 @@ export async function* generateStreamingResponse(
         accumulatedContent += delta;
         
         // Try to parse the accumulated content as JSON
-        const parseResult = safeJsonParse(accumulatedContent);
+        const parseResult = bestEffortJsonParser(accumulatedContent);
         
         if (parseResult.success && parseResult.data?.bubbles && Array.isArray(parseResult.data.bubbles)) {
           const bubbles = parseResult.data.bubbles;
@@ -269,7 +274,7 @@ export async function* generateStreamingResponse(
 
     // Final parse to ensure we got everything
     try {
-      const finalParseResult = safeJsonParse(accumulatedContent);
+      const finalParseResult = bestEffortJsonParser(accumulatedContent);
       if (finalParseResult.success) {
         const validated = AIResponseSchema.parse(finalParseResult.data);
         
