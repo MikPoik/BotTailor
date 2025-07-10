@@ -80,14 +80,14 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
           setIsStreaming(false);
           // Use ref to get current streaming bubbles to avoid closure issues
           const currentStreamingBubbles = streamingBubblesRef.current;
+          // Clear streaming bubbles FIRST to avoid flash/overlap rendering
+          setStreamingBubbles([]);
+          streamingBubblesRef.current = [];
           // Add streaming bubbles to the main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
             if (!old) return { messages: [...currentStreamingBubbles] };
             return { messages: [...old.messages, ...currentStreamingBubbles] };
           });
-          // Clear streaming bubbles since they're now in main messages
-          setStreamingBubbles([]);
-          streamingBubblesRef.current = [];
         },
         // onError: Handle errors
         (error: string) => {
