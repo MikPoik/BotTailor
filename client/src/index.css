@@ -108,6 +108,12 @@
     border: 1px solid var(--border);
   }
 
+  .chat-message-bot.no-background {
+    @apply p-0 shadow-none;
+    background: transparent;
+    border: none;
+  }
+
   .chat-typing-dots {
     @apply w-2 h-2 rounded-full animate-bounce;
     background-color: var(--neutral-400);

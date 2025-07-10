@@ -114,7 +114,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
 
   // Fallback to regular message
   return (
-    <div className="chat-message-bot">
+    <div className={`chat-message-bot ${(message.messageType === 'menu' || message.messageType === 'quickReplies') ? 'no-background' : ''}`}>
       <p className="text-neutral-800">{content}</p>
     </div>
   );

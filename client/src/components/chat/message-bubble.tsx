@@ -63,7 +63,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
 
         {/* Quick replies for text messages (only for non-streaming) */}
         {!message.metadata?.isStreaming && !message.metadata?.streamingComplete && !message.metadata?.chunks && message.messageType === 'text' && message.metadata?.quickReplies && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2 pl-0">
             {message.metadata.quickReplies.map((reply: string, index: number) => (
               <button
                 key={index}
