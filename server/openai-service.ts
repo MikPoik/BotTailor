@@ -237,43 +237,13 @@ export async function* generateStreamingResponse(
         console.log(`[OpenAI] Delta: "${delta}"`);
         accumulatedContent += delta;
         
-        // Use best-effort parser to extract any complete bubbles from incomplete JSON
-        try {
-          const parseResult = parse(accumulatedContent);
-          
-          if (parseResult.success && parseResult.data?.bubbles && Array.isArray(parseResult.data.bubbles)) {
-            const bubbles = parseResult.data.bubbles;
-            
-            // Check if we have new complete bubbles beyond what we've already processed
-            for (let i = processedBubbles; i < bubbles.length; i++) {
-              const bubble = bubbles[i];
-              
-              // Check if this bubble is complete (has required fields)
-              if (bubble.messageType && bubble.content !== undefined) {
-                // For menu type, also check if metadata.options is complete
-                if (bubble.messageType === 'menu') {
-                  if (bubble.metadata?.options && Array.isArray(bubble.metadata.options) && bubble.metadata.options.length > 0) {
-                    // Check if all options have required fields
-                    const allOptionsComplete = bubble.metadata.options.every(opt => 
-                      opt.id && opt.text && opt.action
-                    );
-                    if (allOptionsComplete) {
-                      console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`);
-                      yield { type: 'bubble', bubble };
-                      processedBubbles = i + 1;
-                    }
-                  }
-                } else {
-                  // For text and other types, just check basic completion
-                  console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
-                  yield { type: 'bubble', bubble };
-                  processedBubbles = i + 1;
-                }
-              }
-            }
-          }
-        } catch (parseError) {
-          // Silently ignore parsing errors during streaming - we'll try again with more content
+        // Try progressive bubble detection using pattern matching
+        const detectedBubbles = detectStreamingBubbles(accumulatedContent, processedBubbles);
+        
+        for (const bubble of detectedBubbles) {
+          console.log(`[OpenAI] Streaming bubble ${processedBubbles + 1}: ${bubble.messageType} - "${bubble.content}"`);
+          yield { type: 'bubble', bubble };
+          processedBubbles++;
         }
       }
     }
