@@ -236,13 +236,17 @@ export async function* generateStreamingResponse(
       if (delta) {
         console.log(`[OpenAI] Delta: ${delta}`);
         accumulatedContent += delta;
+        let jsonEnded = false;
+        if (delta.includes("},{")) {
+          jsonEnded = true;
+        }
         
         // Use best-effort parser to extract any complete bubbles from incomplete JSON
         try {
           const parseResult = parse(accumulatedContent);
-          console.log(`[OpenAI] Parse result: ${JSON.stringify(parseResult)}`);
+          //console.log(`[OpenAI] Parse result: ${JSON.stringify(parseResult)}`);
           console.log(`[OpenAI] Data: ${JSON.stringify(parseResult.bubbles)}`)
-          if (parseResult.bubbles && Array.isArray(parseResult.bubbles)) {
+          if (parseResult.bubbles && Array.isArray(parseResult.bubbles) && jsonEnded) {
             const bubbles = parseResult.bubbles;
             
             // Check if we have new complete bubbles beyond what we've already processed
