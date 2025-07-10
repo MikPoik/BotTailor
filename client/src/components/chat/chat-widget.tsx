@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { MessageCircle, X, Minimize2 } from "lucide-react";
-import ChatInterface from "./chat-interface";
+import TabbedChatInterface from "./tabbed-chat-interface";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -96,7 +96,7 @@ export default function ChatWidget({
           </div>
 
           {/* Chat content */}
-          <ChatInterface sessionId={sessionId} isMobile={true} />
+          <TabbedChatInterface sessionId={sessionId} isMobile={true} />
         </div>
       </>
     );
@@ -153,7 +153,7 @@ export default function ChatWidget({
           </div>
 
           {/* Chat content */}
-          <ChatInterface sessionId={sessionId} isMobile={false} />
+          <TabbedChatInterface sessionId={sessionId} isMobile={false} />
         </div>
       )}
     </div>
