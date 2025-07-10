@@ -234,20 +234,21 @@ export async function* generateStreamingResponse(
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || '';
       if (delta) {
-        console.log(`[OpenAI] Delta: "${delta}"`);
+        console.log(`[OpenAI] Delta: ${delta}`);
         accumulatedContent += delta;
         
         // Use best-effort parser to extract any complete bubbles from incomplete JSON
         try {
           const parseResult = parse(accumulatedContent);
-          
-          if (parseResult.success && parseResult.data?.bubbles && Array.isArray(parseResult.data.bubbles)) {
-            const bubbles = parseResult.data.bubbles;
+          console.log(`[OpenAI] Parse result: ${JSON.stringify(parseResult)}`);
+          console.log(`[OpenAI] Data: ${JSON.stringify(parseResult.bubbles)}`)
+          if (parseResult.bubbles && Array.isArray(parseResult.bubbles)) {
+            const bubbles = parseResult.bubbles;
             
             // Check if we have new complete bubbles beyond what we've already processed
             for (let i = processedBubbles; i < bubbles.length; i++) {
               const bubble = bubbles[i];
-              
+              console.log(JSON.stringify(bubble));
               // Check if this bubble is complete (has required fields)
               if (bubble.messageType && bubble.content !== undefined) {
                 // For menu type, also check if metadata.options is complete
