@@ -113,9 +113,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate bot response based on option selection
       const botResponse = await generateAIOptionResponse(optionId, payload, sessionId);
-      const botMessage = await storage.createMessage(botResponse);
+      
+      // Create separate messages for each bubble and return the last one
+      let lastMessage;
+      for (const bubble of botResponse.bubbles) {
+        lastMessage = await storage.createMessage({
+          sessionId,
+          content: bubble.content,
+          sender: "bot",
+          messageType: bubble.messageType,
+          metadata: bubble.metadata
+        });
+        
+        // Add small delay between bubbles for realistic timing
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
 
-      res.json({ botMessage });
+      res.json({ botMessage: lastMessage });
     } catch (error) {
       console.error("Error handling option selection:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -156,20 +170,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!session) {
         session = await storage.createChatSession({ sessionId });
         
-        // Generate AI welcome message
+        // Generate AI welcome message bubbles
         const welcomeResponse = await generateStructuredResponse(
           "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
           sessionId,
           []
         );
 
-        await storage.createMessage({
-          sessionId,
-          content: welcomeResponse.content,
-          sender: "bot",
-          messageType: welcomeResponse.messageType,
-          metadata: welcomeResponse.metadata
-        });
+        // Create separate messages for each bubble
+        for (const bubble of welcomeResponse.bubbles) {
+          await storage.createMessage({
+            sessionId,
+            content: bubble.content,
+            sender: "bot",
+            messageType: bubble.messageType,
+            metadata: bubble.metadata
+          });
+          
+          // Add small delay between bubbles for realistic timing
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
       
       const messages = await storage.getRecentMessages(sessionId, 100);
@@ -199,9 +219,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate AI bot response using the full system
       const botResponse = await generateBotResponse(message, sessionId);
-      const botMessage = await storage.createMessage(botResponse);
+      
+      // Create separate messages for each bubble and return the last one
+      let lastMessage;
+      for (const bubble of botResponse.bubbles) {
+        lastMessage = await storage.createMessage({
+          sessionId,
+          content: bubble.content,
+          sender: "bot",
+          messageType: bubble.messageType,
+          metadata: bubble.metadata
+        });
+        
+        // Add small delay between bubbles for realistic timing
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
 
-      res.json(botMessage);
+      res.json(lastMessage);
     } catch (error) {
       console.error("Chat error:", error);
       res.status(500).json({ error: "Failed to send message" });
@@ -242,25 +276,25 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
     // Generate structured response using OpenAI
     const aiResponse = await generateStructuredResponse(userMessage, sessionId, conversationHistory);
 
-    return {
-      sessionId,
-      content: aiResponse.content,
-      sender: "bot" as const,
-      messageType: aiResponse.messageType,
-      metadata: aiResponse.metadata
-    };
+    return aiResponse;
   } catch (error) {
     console.error("Error generating AI response:", error);
 
-    // Fallback to simple response
+    // Fallback to simple multi-bubble response
     return {
-      sessionId,
-      content: "I'm sorry, I'm having trouble processing your request right now. Please try again.",
-      sender: "bot" as const,
-      messageType: "text" as const,
-      metadata: {
-        quickReplies: ["Try again", "Contact support", "Main menu"]
-      }
+      bubbles: [
+        {
+          messageType: "text" as const,
+          content: "I'm sorry, I'm having trouble processing your request right now.",
+        },
+        {
+          messageType: "quickReplies" as const,
+          content: "Would you like to:",
+          metadata: {
+            quickReplies: ["Try again", "Contact support", "Main menu"]
+          }
+        }
+      ]
     };
   }
 }
@@ -279,25 +313,25 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
     // Generate structured response using OpenAI
     const aiResponse = await generateOptionResponse(optionId, payload, sessionId, conversationHistory);
 
-    return {
-      sessionId,
-      content: aiResponse.content,
-      sender: "bot" as const,
-      messageType: aiResponse.messageType,
-      metadata: aiResponse.metadata
-    };
+    return aiResponse;
   } catch (error) {
     console.error("Error generating AI option response:", error);
 
-    // Fallback to simple response
+    // Fallback to simple multi-bubble response
     return {
-      sessionId,
-      content: "Thank you for your selection. How else can I assist you today?",
-      sender: "bot" as const,
-      messageType: "text" as const,
-      metadata: {
-        quickReplies: ["Start over", "Contact agent", "End chat"]
-      }
+      bubbles: [
+        {
+          messageType: "text" as const,
+          content: "Thank you for your selection!",
+        },
+        {
+          messageType: "quickReplies" as const,
+          content: "How else can I assist you today?",
+          metadata: {
+            quickReplies: ["Start over", "Contact agent", "End chat"]
+          }
+        }
+      ]
     };
   }
 }
