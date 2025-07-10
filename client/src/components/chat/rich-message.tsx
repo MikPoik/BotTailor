@@ -36,9 +36,9 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
 
           {metadata.buttons && (
             <div className="space-y-2">
-              {metadata.buttons.map((button) => (
+              {metadata.buttons.map((button, index) => (
                 <Button
-                  key={button.id}
+                  key={`${button.id}-${index}`}
                   variant="outline"
                   size="sm"
                   onClick={() => onOptionSelect(button.id, button.payload, button.text)}
@@ -59,9 +59,9 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
       <div className="bg-white rounded-lg rounded-tl-none p-3 shadow-sm border">
         <p className="text-neutral-800 mb-3">{content}</p>
         <div className="space-y-2">
-          {metadata.options.map((option) => (
+          {metadata.options.map((option, index) => (
             <button
-              key={option.id}
+              key={`${option.id}-${index}`}
               onClick={() => onOptionSelect(option.id, option.payload, option.text)}
               className="w-full text-left p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors flex items-center space-x-2"
             >

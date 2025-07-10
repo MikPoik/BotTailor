@@ -62,7 +62,10 @@ export function useChat(sessionId: string) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: internalMessage || userDisplayText }),
+        body: JSON.stringify({ 
+          content: internalMessage || userDisplayText,
+          messageType: 'text'
+        }),
       });
 
       if (!response.ok) {
