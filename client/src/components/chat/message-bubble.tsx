@@ -2,6 +2,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import RichMessage from "./rich-message";
+import RichMessage from "./rich-message";
 
 interface MessageBubbleProps {
   message: Message;
