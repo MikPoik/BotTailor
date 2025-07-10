@@ -44,9 +44,12 @@ export default function ChatWidget({
   }, [primaryColor]);
 
   const toggleChat = () => {
+    const wasOpen = isOpen;
     setIsOpen(!isOpen);
     if (!isOpen) {
       setHasNewMessage(false);
+      // Refetch messages when opening chat to sync with any new messages
+      queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
     }
   };
 

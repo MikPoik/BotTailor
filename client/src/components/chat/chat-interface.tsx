@@ -71,13 +71,16 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             return [...prev, bubbleWithFlag];
           });
         },
-        // onAllComplete: Streaming finished, invalidate messages query to refetch from database
+        // onAllComplete: Streaming finished, add streaming bubbles to main messages
         (messages: Message[]) => {
           setIsStreaming(false);
-          // Clear streaming bubbles since they're now saved in the database
+          // Add streaming bubbles to the main messages query cache
+          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+            if (!old) return { messages: [...streamingBubbles] };
+            return { messages: [...old.messages, ...streamingBubbles] };
+          });
+          // Clear streaming bubbles since they're now in main messages
           setStreamingBubbles([]);
-          // Invalidate and refetch messages from database to get the latest saved messages
-          queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
         },
         // onError: Handle errors
         (error: string) => {
