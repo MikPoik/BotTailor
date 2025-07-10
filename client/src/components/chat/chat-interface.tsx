@@ -36,16 +36,20 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     scrollToBottom();
   }, [messages, streamingBubbles]);
 
-  // Clear streaming bubbles when new messages arrive (they're now in the main messages array)
+  // Clear streaming bubbles when the same messages appear in the main messages array
   useEffect(() => {
     if (messages.length > 0 && streamingBubbles.length > 0) {
-      // Check if any of the streaming bubbles are now in the messages array
+      // Check if we have the same number of recent bot messages as streaming bubbles
+      const recentBotMessages = messages.filter(msg => msg.sender === 'bot').slice(-streamingBubbles.length);
       const streamingBubbleContents = streamingBubbles.map(b => b.content);
-      const hasStreamingBubblesInMessages = messages.some(msg => 
-        msg.sender === 'bot' && streamingBubbleContents.includes(msg.content)
+      
+      // If all streaming bubble contents are found in recent bot messages, clear them
+      const allBubblesInMessages = streamingBubbleContents.every(content => 
+        recentBotMessages.some(msg => msg.content === content)
       );
       
-      if (hasStreamingBubblesInMessages) {
+      if (allBubblesInMessages && recentBotMessages.length === streamingBubbles.length) {
+        console.log('Clearing streaming bubbles - they are now in main messages');
         setStreamingBubbles([]);
       }
     }
@@ -71,7 +75,8 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
               ...message,
               metadata: {
                 ...message.metadata,
-                isFollowUp
+                isFollowUp,
+                isStreaming: true // Mark as streaming to help with deduplication
               }
             };
             return [...prev, bubbleWithFlag];

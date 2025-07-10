@@ -48,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             messageType: bubble.messageType,
             metadata: bubble.metadata
           });
-          
+
           // Add small delay between bubbles for realistic timing
         }
       }
@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create user message first
       const userMessage = await storage.createMessage(messageData);
-      
+
       // Send user message confirmation
       res.write(`data: ${JSON.stringify({ 
         type: 'user_message', 
@@ -117,12 +117,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       const createdMessages = [];
-      
+
       for await (const chunk of streamingGenerator) {
         if (chunk.type === 'bubble' && chunk.bubble) {
           // Mark as follow-up if this isn't the first bubble in this sequence
           const isFollowUp = createdMessages.length > 0;
-          
+
           // Create and store each bubble as it becomes complete
           const message = await storage.createMessage({
             sessionId,
@@ -134,15 +134,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               isFollowUp
             }
           });
-          
+
           createdMessages.push(message);
-          
+
           // Send the completed bubble immediately
           res.write(`data: ${JSON.stringify({ 
             type: 'bubble', 
             message: message
           })}\n\n`);
-          
+
         } else if (chunk.type === 'complete') {
           // All bubbles processed, send final completion
           res.write(`data: ${JSON.stringify({ 
@@ -179,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate bot response based on message content
       const botResponse = await generateBotResponse(messageData.content, sessionId);
-      
+
       // Create separate messages for each bubble and return the last one
       let lastMessage;
       for (const bubble of botResponse.bubbles) {
@@ -222,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate bot response based on option selection
       const botResponse = await generateAIOptionResponse(optionId, payload, sessionId);
-      
+
       // Create separate messages for each bubble and return the last one
       let lastMessage;
       for (const bubble of botResponse.bubbles) {
@@ -233,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           messageType: bubble.messageType,
           metadata: bubble.metadata
         });
-        
+
         // Add small delay between bubbles for realistic timing
       }
 
@@ -272,12 +272,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/chat/:sessionId", async (req: Request, res: Response) => {
     try {
       const sessionId = req.params.sessionId;
-      
+
       // Create session if it doesn't exist
       let session = await storage.getChatSession(sessionId);
       if (!session) {
         session = await storage.createChatSession({ sessionId });
-        
+
         // Generate AI welcome message bubbles
         const welcomeResponse = await generateStructuredResponse(
           "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
@@ -294,11 +294,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             messageType: bubble.messageType,
             metadata: bubble.metadata
           });
-          
+
           // Add small delay between bubbles for realistic timing
         }
       }
-      
+
       const messages = await storage.getRecentMessages(sessionId, 100);
       res.json(messages);
     } catch (error) {
@@ -326,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate AI bot response using the full system
       const botResponse = await generateBotResponse(message, sessionId);
-      
+
       // Create separate messages for each bubble and return the last one
       let lastMessage;
       for (const bubble of botResponse.bubbles) {
@@ -337,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           messageType: bubble.messageType,
           metadata: bubble.metadata
         });
-        
+
         // Add small delay between bubbles for realistic timing
       }
 
@@ -363,7 +363,7 @@ function getOptionDisplayText(optionId: string): string {
     subscription: "I want to change my subscription",
     invoice: "I need to download an invoice"
   };
-  
+
   // Return mapped text or generate a readable fallback from the optionId
   return optionTexts[optionId] || optionId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
 }
