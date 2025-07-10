@@ -41,7 +41,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
           />
         )}
       </div>
-      <div className="flex-1"></div>
+      <div className="flex-1">
         {/* Check if this is a streaming/multipart message */}
         {message.metadata?.isStreaming || message.metadata?.chunks ? (
           <StreamingMessage 
