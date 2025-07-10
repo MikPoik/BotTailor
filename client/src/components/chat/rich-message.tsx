@@ -93,6 +93,25 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
     );
   }
 
+  if (messageType === 'quickReplies' && metadata?.quickReplies) {
+    return (
+      <div className="chat-message-bot">
+        <p className="text-neutral-800 mb-3">{content}</p>
+        <div className="flex flex-wrap gap-2">
+          {metadata.quickReplies.map((reply: string, index: number) => (
+            <button
+              key={index}
+              onClick={() => onQuickReply(reply)}
+              className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   // Fallback to regular message
   return (
     <div className="chat-message-bot">
