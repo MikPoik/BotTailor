@@ -146,8 +146,26 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
 
       const result = await response.json();
       
-      // Add the bot response to the UI
-      if (result.botMessage) {
+      // Handle multi-bubble responses
+      if (result.allMessages && Array.isArray(result.allMessages)) {
+        // Add all bot messages with proper follow-up flags
+        result.allMessages.forEach((message: any, index: number) => {
+          const isFollowUp = index > 0;
+          const messageWithFlag = {
+            ...message,
+            metadata: {
+              ...message.metadata,
+              isFollowUp
+            }
+          };
+          
+          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+            if (!old) return { messages: [messageWithFlag] };
+            return { messages: [...old.messages, messageWithFlag] };
+          });
+        });
+      } else if (result.botMessage) {
+        // Fallback for single message response
         queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
           if (!old) return { messages: [result.botMessage] };
           return { messages: [...old.messages, result.botMessage] };

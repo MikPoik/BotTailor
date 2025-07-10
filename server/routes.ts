@@ -224,24 +224,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messageType: "text",
       });
 
-      // Generate bot response based on option selection
-      const botResponse = await generateAIOptionResponse(optionId, payload, sessionId);
+      // Generate response for the option selection
+      const response = await generateOptionResponse(optionId, payload, sessionId, conversationHistory);
 
-      // Create separate messages for each bubble and return the last one
-      let lastMessage;
-      for (const bubble of botResponse.bubbles) {
-        lastMessage = await storage.createMessage({
+      if (response.bubbles && response.bubbles.length > 0) {
+        // Create and store all bubbles as bot messages
+        const allMessages = [];
+
+        for (let i = 0; i < response.bubbles.length; i++) {
+          const bubble = response.bubbles[i];
+          const isFollowUp = i > 0;
+
+          const botMessage = await storage.createMessage({
+            sessionId,
+            content: bubble.content,
+            sender: "bot",
+            messageType: bubble.messageType,
+            metadata: {
+              ...bubble.metadata || {},
+              isFollowUp
+            }
+          });
+
+          allMessages.push(botMessage);
+        }
+
+        res.json({ 
+          success: true, 
+          userMessage, 
+          botMessage: allMessages[0], // First message for backward compatibility
+          allMessages // All messages for multi-bubble handling
+        });
+      } else {
+        // Fallback response
+        const botMessage = await storage.createMessage({
           sessionId,
-          content: bubble.content,
+          content: "Thank you for your selection. How else can I help you?",
           sender: "bot",
-          messageType: bubble.messageType,
-          metadata: bubble.metadata
+          messageType: "text",
+          metadata: {}
         });
 
-        // Add small delay between bubbles for realistic timing
+        res.json({ 
+          success: true, 
+          userMessage, 
+          botMessage,
+          allMessages: [botMessage]
+        });
       }
-
-      res.json({ botMessage: lastMessage });
     } catch (error) {
       console.error("Error handling option selection:", error);
       res.status(500).json({ message: "Internal server error" });
