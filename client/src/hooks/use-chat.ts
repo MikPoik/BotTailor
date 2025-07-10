@@ -96,8 +96,6 @@ export function useChat(sessionId: string) {
               } else if (data.type === 'complete') {
                 setIsTyping(false);
                 onAllComplete?.(data.messages);
-                // Refetch messages to ensure consistency
-                queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
               } else if (data.type === 'error') {
                 setIsTyping(false);
                 onError?.(data.message);
