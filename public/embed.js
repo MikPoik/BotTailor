@@ -106,12 +106,12 @@
       badge.textContent = '1';
       bubble.appendChild(badge);
 
-      // Create iframe for chat interface
+      // Create iframe for chat interface (preload in background)
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
       iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&v=${Date.now()}`;
       iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
-      iframe.setAttribute('loading', 'lazy');
+      // Remove lazy loading to preload iframe
       iframe.style.cssText = `
         position: absolute;
         bottom: 0;
@@ -123,6 +123,7 @@
         box-shadow: 0 25px 50px rgba(0,0,0,0.15);
         background: white;
         display: none;
+        visibility: hidden;
         z-index: 1001;
       `;
 
@@ -137,12 +138,12 @@
         z-index: 999;
       `;
 
-      // Mobile iframe
+      // Mobile iframe (preload in background)
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
       mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true&v=${Date.now()}`;
       mobileIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
-      mobileIframe.setAttribute('loading', 'lazy');
+      // Remove lazy loading to preload iframe
       mobileIframe.style.cssText = `
         position: fixed;
         inset: 0;
@@ -151,6 +152,7 @@
         border: none;
         background: white;
         display: none;
+        visibility: hidden;
         z-index: 1001;
       `;
 
@@ -220,9 +222,11 @@
         
         if (isMobile()) {
           overlay.style.display = 'block';
+          mobileIframe.style.visibility = 'visible';
           mobileIframe.classList.add('show');
         } else {
           bubble.style.display = 'none';
+          iframe.style.visibility = 'visible';
           iframe.classList.add('show');
         }
       };
@@ -233,9 +237,11 @@
         if (isMobile()) {
           overlay.style.display = 'none';
           mobileIframe.classList.remove('show');
+          mobileIframe.style.visibility = 'hidden';
         } else {
           bubble.style.display = 'flex';
           iframe.classList.remove('show');
+          iframe.style.visibility = 'hidden';
         }
       };
 
@@ -260,7 +266,9 @@
           // Switch from mobile to desktop view
           overlay.style.display = 'none';
           mobileIframe.classList.remove('show');
+          mobileIframe.style.visibility = 'hidden';
           bubble.style.display = 'none';
+          iframe.style.visibility = 'visible';
           iframe.classList.add('show');
         }
       });
