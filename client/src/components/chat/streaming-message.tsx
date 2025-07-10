@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
@@ -80,6 +79,14 @@ export default function StreamingMessage({
     );
   }
 
+  const [displayedChunks, setDisplayedChunks] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (message.metadata?.chunks) {
+      setDisplayedChunks(message.metadata.chunks);
+    }
+  }, [message.metadata?.chunks]);
+
   return (
     <div className="space-y-2">
         {visibleChunks.map((chunk, index) => (
@@ -96,7 +103,7 @@ export default function StreamingMessage({
             />
           </div>
         ))}
-        
+
         {/* Show typing indicator if more chunks are coming */}
         {currentChunkIndex < chunks.length && (
           <div className="flex space-x-1 p-3 max-w-sm">
