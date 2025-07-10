@@ -97,14 +97,13 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
       <div className="flex flex-wrap gap-2">
         {metadata.quickReplies.map((reply: string, index: number) => (
           <button
-              key={index}
-              onClick={() => onQuickReply(reply)}
-              className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
-            >
-              {reply}
-            </button>
-          ))}
-        </div>
+            key={index}
+            onClick={() => onQuickReply(reply)}
+            className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
+          >
+            {reply}
+          </button>
+        ))}
       </div>
     );
   }
