@@ -231,7 +231,7 @@ export async function* generateStreamingResponse(
     let accumulatedContent = '';
     let processedBubbles = 0;
     let lastBubbleTime = 0;
-    const BUBBLE_DELAY_MS = 500; // 500ms delay between bubbles
+    const BUBBLE_DELAY_MS = 1000; // 500ms delay between bubbles
     
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || '';
