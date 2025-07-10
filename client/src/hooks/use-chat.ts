@@ -30,11 +30,11 @@ export function useChat(sessionId: string) {
 
   const messages: Message[] = messagesData?.messages || [];
 
-  // Streaming message function
+  // Streaming message function with proper JSON parsing
   const sendStreamingMessage = async (
     content: string,
-    onChunk?: (chunk: string, accumulated: string) => void,
-    onComplete?: (messages: Message[]) => void,
+    onBubbleComplete?: (bubble: any) => void,
+    onAllComplete?: (messages: Message[]) => void,
     onError?: (error: string) => void
   ) => {
     try {
@@ -78,6 +78,9 @@ export function useChat(sessionId: string) {
         throw new Error('No reader available');
       }
 
+      let accumulatedJson = '';
+      let bubbleIndex = 0;
+      
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -91,10 +94,29 @@ export function useChat(sessionId: string) {
               const data = JSON.parse(line.slice(6));
               
               if (data.type === 'chunk') {
-                onChunk?.(data.content, data.accumulated);
+                accumulatedJson += data.content;
+                
+                // Try to parse and extract complete bubbles
+                try {
+                  const parsed = JSON.parse(accumulatedJson);
+                  if (parsed.bubbles && Array.isArray(parsed.bubbles)) {
+                    // Check if we have more complete bubbles than before
+                    while (bubbleIndex < parsed.bubbles.length) {
+                      const bubble = parsed.bubbles[bubbleIndex];
+                      if (bubble.messageType && bubble.content !== undefined) {
+                        onBubbleComplete?.(bubble);
+                        bubbleIndex++;
+                      } else {
+                        break; // Bubble is incomplete
+                      }
+                    }
+                  }
+                } catch (jsonError) {
+                  // JSON not complete yet, continue accumulating
+                }
               } else if (data.type === 'complete') {
                 setIsTyping(false);
-                onComplete?.(data.messages);
+                onAllComplete?.(data.messages);
                 // Refetch messages to ensure consistency
                 queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
               } else if (data.type === 'error') {
