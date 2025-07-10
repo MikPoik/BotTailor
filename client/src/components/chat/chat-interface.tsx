@@ -47,16 +47,9 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     try {
       await sendStreamingMessage(
         message,
-        // onBubbleComplete: Show each bubble as it's parsed
-        (bubble: any) => {
-          setStreamingBubbles(prev => [...prev, {
-            id: `streaming-${Date.now()}-${prev.length}`,
-            content: bubble.content,
-            messageType: bubble.messageType,
-            metadata: bubble.metadata || {},
-            sender: 'bot',
-            createdAt: new Date().toISOString()
-          }]);
+        // onBubbleReceived: Show each complete bubble as it arrives
+        (message: Message) => {
+          setStreamingBubbles(prev => [...prev, message]);
         },
         // onAllComplete: Streaming finished, clear temp content
         (messages: Message[]) => {

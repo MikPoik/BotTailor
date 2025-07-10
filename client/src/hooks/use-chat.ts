@@ -30,10 +30,10 @@ export function useChat(sessionId: string) {
 
   const messages: Message[] = messagesData?.messages || [];
 
-  // Streaming message function with proper JSON parsing
+  // Streaming message function with real-time bubble parsing
   const sendStreamingMessage = async (
     content: string,
-    onBubbleComplete?: (bubble: any) => void,
+    onBubbleReceived?: (message: Message) => void,
     onAllComplete?: (messages: Message[]) => void,
     onError?: (error: string) => void
   ) => {
@@ -77,9 +77,6 @@ export function useChat(sessionId: string) {
       if (!reader) {
         throw new Error('No reader available');
       }
-
-      let accumulatedJson = '';
-      let bubbleIndex = 0;
       
       while (true) {
         const { done, value } = await reader.read();
@@ -93,27 +90,9 @@ export function useChat(sessionId: string) {
             try {
               const data = JSON.parse(line.slice(6));
               
-              if (data.type === 'chunk') {
-                accumulatedJson += data.content;
-                
-                // Try to parse and extract complete bubbles
-                try {
-                  const parsed = JSON.parse(accumulatedJson);
-                  if (parsed.bubbles && Array.isArray(parsed.bubbles)) {
-                    // Check if we have more complete bubbles than before
-                    while (bubbleIndex < parsed.bubbles.length) {
-                      const bubble = parsed.bubbles[bubbleIndex];
-                      if (bubble.messageType && bubble.content !== undefined) {
-                        onBubbleComplete?.(bubble);
-                        bubbleIndex++;
-                      } else {
-                        break; // Bubble is incomplete
-                      }
-                    }
-                  }
-                } catch (jsonError) {
-                  // JSON not complete yet, continue accumulating
-                }
+              if (data.type === 'bubble' && data.message) {
+                // A complete bubble has arrived - show it immediately
+                onBubbleReceived?.(data.message);
               } else if (data.type === 'complete') {
                 setIsTyping(false);
                 onAllComplete?.(data.messages);

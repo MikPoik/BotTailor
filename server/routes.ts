@@ -116,54 +116,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         conversationHistory
       );
 
-      let currentChunk = '';
+      const createdMessages = [];
       
       for await (const chunk of streamingGenerator) {
-        if (chunk.type === 'chunk') {
-          currentChunk += chunk.content;
-          // Send chunk to client
+        if (chunk.type === 'bubble' && chunk.bubble) {
+          // Create and store each bubble as it becomes complete
+          const message = await storage.createMessage({
+            sessionId,
+            content: chunk.bubble.content,
+            sender: "bot",
+            messageType: chunk.bubble.messageType,
+            metadata: chunk.bubble.metadata || {}
+          });
+          
+          createdMessages.push(message);
+          
+          // Send the completed bubble immediately
           res.write(`data: ${JSON.stringify({ 
-            type: 'chunk', 
-            content: chunk.content,
-            accumulated: currentChunk
+            type: 'bubble', 
+            message: message
           })}\n\n`);
+          
         } else if (chunk.type === 'complete') {
-          // Parse bubbles and create messages
-          if (chunk.messageType === 'multi_bubble' && chunk.metadata?.bubbles) {
-            const bubbles = chunk.metadata.bubbles;
-            const createdMessages = [];
-            
-            for (const bubble of bubbles) {
-              const message = await storage.createMessage({
-                sessionId,
-                content: bubble.content,
-                sender: "bot",
-                messageType: bubble.messageType,
-                metadata: bubble.metadata
-              });
-              createdMessages.push(message);
-            }
-            
-            // Send completion with all created messages
-            res.write(`data: ${JSON.stringify({ 
-              type: 'complete', 
-              messages: createdMessages
-            })}\n\n`);
-          } else {
-            // Single message fallback
-            const message = await storage.createMessage({
-              sessionId,
-              content: chunk.content,
-              sender: "bot",
-              messageType: chunk.messageType || "text",
-              metadata: chunk.metadata || {}
-            });
-            
-            res.write(`data: ${JSON.stringify({ 
-              type: 'complete', 
-              messages: [message]
-            })}\n\n`);
-          }
+          // All bubbles processed, send final completion
+          res.write(`data: ${JSON.stringify({ 
+            type: 'complete', 
+            messages: createdMessages
+          })}\n\n`);
         }
       }
 
