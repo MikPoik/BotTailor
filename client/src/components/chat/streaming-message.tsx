@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
 import RichMessage from "./rich-message";
 
@@ -110,6 +111,13 @@ export default function StreamingMessage({
             <div className="chat-typing-dots"></div>
             <div className="chat-typing-dots"></div>
           </div>
+        )}
+
+        {/* Show timestamp when streaming is complete */}
+        {currentChunkIndex >= chunks.length && (
+          <span className="text-xs text-neutral-500 mt-1 block">
+            {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
+          </span>
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import RichMessage from "./rich-message";
+import StreamingMessage from "./streaming-message";
 
 interface MessageBubbleProps {
   message: Message;
@@ -36,7 +37,14 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
         className="w-8 h-8 rounded-full flex-shrink-0"
       />
       <div className="flex-1">
-        {message.messageType === 'text' ? (
+        {/* Check if this is a streaming/multipart message */}
+        {message.metadata?.isStreaming || message.metadata?.chunks ? (
+          <StreamingMessage 
+            message={message} 
+            onOptionSelect={onOptionSelect}
+            onQuickReply={onQuickReply}
+          />
+        ) : message.messageType === 'text' ? (
           <div className="chat-message-bot">
             <p className="text-neutral-800">{message.content}</p>
           </div>
@@ -48,8 +56,8 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
           />
         )}
 
-        {/* Quick replies for text messages */}
-        {message.messageType === 'text' && message.metadata?.quickReplies && (
+        {/* Quick replies for text messages (only for non-streaming) */}
+        {!message.metadata?.isStreaming && !message.metadata?.chunks && message.messageType === 'text' && message.metadata?.quickReplies && (
           <div className="flex flex-wrap gap-2 mt-2">
             {message.metadata.quickReplies.map((reply: string, index: number) => (
               <button
@@ -63,9 +71,12 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
           </div>
         )}
 
-        <span className="text-xs text-neutral-500 mt-1 block">
-          {timeAgo}
-        </span>
+        {/* Timestamp (only for non-streaming messages) */}
+        {!message.metadata?.isStreaming && !message.metadata?.chunks && (
+          <span className="text-xs text-neutral-500 mt-1 block">
+            {timeAgo}
+          </span>
+        )}
       </div>
     </div>
   );
