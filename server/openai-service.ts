@@ -311,7 +311,7 @@ export async function* generateStreamingResponse(
 
     // Final parse to ensure we got everything
     try {
-      console.log(`[OpenAI] Final accumulated content length: ${accumulatedContent.length}`);
+      console.log(`[OpenAI] Final accumulated content length: ${accumulatedContent.length}, content: ${accumulatedContent}`);
       const finalParseResult = JSON.parse(accumulatedContent);
       console.log(`[OpenAI] Final parse successful, validating schema...`);
       
