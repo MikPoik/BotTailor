@@ -286,17 +286,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Create separate messages for each bubble
-        for (const bubble of welcomeResponse.bubbles) {
-          await storage.createMessage({
-            sessionId,
+        const welcomeMessages = welcomeResponse.bubbles.map((bubble, index) => 
+          storage.createMessage({
+            sessionId: session.sessionId,
             content: bubble.content,
             sender: "bot",
             messageType: bubble.messageType,
-            metadata: bubble.metadata
-          });
+            metadata: {
+              ...bubble.metadata || {},
+              isFollowUp: index > 0 // Mark all messages after the first as follow-up
+            }
+          })
+        );
 
-          // Add small delay between bubbles for realistic timing
-        }
+        // Add small delay between bubbles for realistic timing
       }
 
       const messages = await storage.getRecentMessages(sessionId, 100);
