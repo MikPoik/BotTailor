@@ -312,7 +312,7 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
 
         {/* Tab Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <TabsContent value="home" className="flex-1 m-0 overflow-hidden">
+          <TabsContent value="home" className="flex-1 m-0 overflow-hidden flex flex-col">
             <HomeTab onStartChat={handleStartChat} isMobile={isMobile} />
           </TabsContent>
 

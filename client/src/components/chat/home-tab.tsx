@@ -133,7 +133,7 @@ export default function HomeTab({ onStartChat, isMobile }: HomeTabProps) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-neutral-50">
+    <div className="h-full overflow-y-auto bg-neutral-50">
       {/* Welcome Header */}
       <div className="bg-white border-b border-neutral-200 p-6">
         <div className="text-center">
@@ -146,7 +146,7 @@ export default function HomeTab({ onStartChat, isMobile }: HomeTabProps) {
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 pb-8">
         {/* Quick Actions */}
         <div className="space-y-3">
           <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
