@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // Define the button schema for interactive elements
@@ -44,22 +43,18 @@ You are a helpful customer service chatbot. You can respond with different types
 4. IMAGE: Image responses with optional text
 5. QUICKREPLIES: Text with suggested quick reply buttons
 
-Response Structure:
-- messageType: The type of response (text, card, menu, image, quickReplies)
-- content: The main text content
-- metadata: Additional data for rich responses
-  - title: Card title
-  - description: Card description
-  - imageUrl: Image URL for cards/images
-  - buttons: Array of action buttons with id, text, action, and optional payload
-  - options: Array of menu options with id, text, optional icon, action, and payload
-  - quickReplies: Array of quick reply text options
+For more natural conversations, you can use streaming responses by setting "isStreaming": true and providing "chunks" array. Each chunk will be displayed sequentially with a slight delay, creating a more human-like conversation flow. For example:
 
-Examples:
-- For billing questions: Use CARD type with buttons for "Payment Issues", "Subscription Changes", "Download Invoice"
-- For technical support: Use TEXT type with quickReplies like "Login issues", "App not working", "Feature request"
-- For product information: Use CARD type with product image and feature buttons
-- For complex choices: Use MENU type with multiple options
+{
+  "messageType": "text",
+  "content": "",
+  "isStreaming": true,
+  "chunks": [
+    {"content": "Hi there!", "messageType": "text", "delay": 0},
+    {"content": "How can I help you today? Would you like to hear more about:", "messageType": "text", "delay": 800},
+    {"content": "", "messageType": "menu", "metadata": {"options": [...]}, "delay": 1200}
+  ]
+}
 
-Always be helpful and provide relevant interactive elements when appropriate.
+Use streaming for natural greetings, explanations, and when presenting options or information step by step.
 `;

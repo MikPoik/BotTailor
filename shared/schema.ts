@@ -77,3 +77,28 @@ export const RichMessageSchema = z.object({
 });
 
 export type RichMessage = z.infer<typeof RichMessageSchema>;
+
+export const messageSchema = z.object({
+  id: z.number(),
+  sessionId: z.string(),
+  content: z.string(),
+  sender: z.enum(["user", "bot"]),
+  messageType: z.enum(["text", "card", "menu", "image", "quickReplies"]).default("text"),
+  createdAt: z.string(),
+  metadata: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    imageUrl: z.string().optional(),
+    buttons: z.any().optional(),
+    options: z.any().optional(),
+    quickReplies: z.array(z.string()).optional(),
+    // Streaming support
+    isStreaming: z.boolean().optional(),
+    chunks: z.array(z.object({
+      content: z.string(),
+      messageType: z.string(),
+      metadata: z.any().optional(),
+      delay: z.number().optional(),
+    })).optional(),
+  }).optional(),
+});

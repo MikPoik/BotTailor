@@ -133,6 +133,10 @@
   }
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}
+
 @keyframes slideUp {
   from { 
     transform: translateY(100%); 

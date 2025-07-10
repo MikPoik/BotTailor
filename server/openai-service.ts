@@ -1,4 +1,3 @@
-
 import OpenAI from "openai";
 import { AIResponseSchema, SYSTEM_PROMPT, type AIResponse } from "./ai-response-schema";
 
@@ -12,12 +11,12 @@ export async function generateStructuredResponse(
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
 ): Promise<AIResponse> {
   console.log(`[OpenAI] Generating response for: "${userMessage}"`);
-  
+
   if (!process.env.OPENAI_API_KEY) {
     console.error("[OpenAI] API key not found in environment variables");
     throw new Error("OpenAI API key not configured");
   }
-  
+
   try {
     const messages = [
       { role: 'system' as const, content: SYSTEM_PROMPT },
@@ -31,60 +30,117 @@ export async function generateStructuredResponse(
       response_format: {
         type: "json_schema",
         json_schema: {
-          name: "chat_response",
-          schema: {
-            type: "object",
-            properties: {
-              messageType: {
-                type: "string",
-                enum: ["text", "card", "menu", "image", "quickReplies"]
-              },
-              content: {
-                type: "string"
-              },
-              metadata: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  description: { type: "string" },
-                  imageUrl: { type: "string" },
-                  buttons: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        text: { type: "string" },
-                        action: { type: "string" },
-                        payload: {}
+            name: "chat_response",
+            schema: {
+              type: "object",
+              properties: {
+                messageType: {
+                  type: "string",
+                  enum: ["text", "card", "menu", "image", "quickReplies"]
+                },
+                content: {
+                  type: "string"
+                },
+                isStreaming: {
+                  type: "boolean"
+                },
+                chunks: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      content: { type: "string" },
+                      messageType: {
+                        type: "string",
+                        enum: ["text", "card", "menu", "image", "quickReplies"]
                       },
-                      required: ["id", "text", "action"]
+                      delay: { type: "number" },
+                      metadata: {
+                        type: "object",
+                        properties: {
+                          title: { type: "string" },
+                          description: { type: "string" },
+                          imageUrl: { type: "string" },
+                          buttons: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                id: { type: "string" },
+                                text: { type: "string" },
+                                action: { type: "string" },
+                                payload: {}
+                              },
+                              required: ["id", "text", "action"]
+                            }
+                          },
+                          options: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                id: { type: "string" },
+                                text: { type: "string" },
+                                icon: { type: "string" },
+                                action: { type: "string" },
+                                payload: {}
+                              },
+                              required: ["id", "text", "action"]
+                            }
+                          },
+                          quickReplies: {
+                            type: "array",
+                            items: { type: "string" }
+                          }
+                        }
+                      }
+                    },
+                    required: ["content", "messageType"]
+                  }
+                },
+                metadata: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    description: { type: "string" },
+                    imageUrl: { type: "string" },
+                    buttons: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          text: { type: "string" },
+                          action: { type: "string" },
+                          payload: {}
+                        },
+                        required: ["id", "text", "action"]
+                      }
+                    },
+                    options: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          text: { type: "string" },
+                          icon: { type: "string" },
+                          action: { type: "string" },
+                          payload: {}
+                        },
+                        required: ["id", "text", "action"]
+                      }
+                    },
+                    quickReplies: {
+                      type: "array",
+                      items: { type: "string" }
                     }
-                  },
-                  options: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        text: { type: "string" },
-                        icon: { type: "string" },
-                        action: { type: "string" },
-                        payload: {}
-                      },
-                      required: ["id", "text", "action"]
-                    }
-                  },
-                  quickReplies: {
-                    type: "array",
-                    items: { type: "string" }
                   }
                 }
-              }
-            },
-            required: ["messageType", "content"]
+              },
+              required: ["messageType", "content"]
+            }
           }
-        }
       }
     });
 
@@ -94,16 +150,16 @@ export async function generateStructuredResponse(
     }
 
     const parsedResponse = JSON.parse(responseContent);
-    
+
     // Validate the response using Zod
     const validatedResponse = AIResponseSchema.parse(parsedResponse);
-    
+
     console.log(`[OpenAI] Successfully generated ${validatedResponse.messageType} response`);
-    
+
     return validatedResponse;
   } catch (error) {
     console.error("Error generating structured response:", error);
-    
+
     // Fallback response
     return {
       messageType: "text",
@@ -122,6 +178,6 @@ export async function generateOptionResponse(
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
 ): Promise<AIResponse> {
   const userMessage = `User selected option: ${optionId}${payload ? ` with payload: ${JSON.stringify(payload)}` : ''}`;
-  
+
   return generateStructuredResponse(userMessage, sessionId, conversationHistory);
 }
