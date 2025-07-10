@@ -41,12 +41,8 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
     scrollToBottom();
   }, [messages]);
 
-  // Switch to chat tab when messages exist and we're currently on home
-  useEffect(() => {
-    if (messages.length > 0 && activeTab === "home") {
-      setActiveTab("chat");
-    }
-  }, [messages.length, activeTab]);
+  // Only auto-switch to chat tab when starting a new conversation, not when manually switching tabs
+  // This effect is removed to allow free navigation between tabs
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || isStreaming) return;
