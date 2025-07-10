@@ -15,7 +15,6 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
-  const [streamingBubbles, setStreamingBubbles] = useState<any[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const streamingBubblesRef = useRef<any[]>([]);
@@ -37,7 +36,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingBubbles]);
+  }, [messages]);
 
   // Clear streaming bubbles only when we start a new message
   useEffect(() => {
@@ -51,55 +50,48 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     const message = inputMessage.trim();
     setInputMessage("");
     setIsStreaming(true);
-    setStreamingBubbles([]);
     streamingBubblesRef.current = [];
 
     try {
       await sendStreamingMessage(
         message,
-        // onBubbleReceived: Show each complete bubble as it arrives
+        // onBubbleReceived: Add each complete bubble directly to main messages
         (message: Message) => {
-          setStreamingBubbles(prev => {
-            // Mark as follow-up if this isn't the first bubble in this streaming sequence
-            const isFollowUp = prev.length > 0;
-            const bubbleWithFlag = {
-              ...message,
-              metadata: {
-                ...message.metadata,
-                isFollowUp,
-                isStreaming: true // Mark as streaming to help with deduplication
-              }
-            };
-            const newBubbles = [...prev, bubbleWithFlag];
-            streamingBubblesRef.current = newBubbles; // Keep ref in sync
-            return newBubbles;
+          // Mark as follow-up if this isn't the first bubble in this streaming sequence
+          const isFollowUp = streamingBubblesRef.current.length > 0;
+          const bubbleWithFlag = {
+            ...message,
+            metadata: {
+              ...message.metadata,
+              isFollowUp,
+              isStreaming: false // Mark as permanent message
+            }
+          };
+          
+          // Add bubble directly to main messages query cache
+          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+            if (!old) return { messages: [bubbleWithFlag] };
+            return { messages: [...old.messages, bubbleWithFlag] };
           });
+          
+          // Keep track of streaming bubbles for counting
+          streamingBubblesRef.current.push(bubbleWithFlag);
         },
-        // onAllComplete: Streaming finished, add streaming bubbles to main messages
+        // onAllComplete: Streaming finished, just set streaming state to false
         (messages: Message[]) => {
           setIsStreaming(false);
-          // Use ref to get current streaming bubbles to avoid closure issues
-          const currentStreamingBubbles = streamingBubblesRef.current;
-          // Clear streaming bubbles FIRST to avoid flash/overlap rendering
-          setStreamingBubbles([]);
+          // Clear the tracking ref since streaming is complete
           streamingBubblesRef.current = [];
-          // Add streaming bubbles to the main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [...currentStreamingBubbles] };
-            return { messages: [...old.messages, ...currentStreamingBubbles] };
-          });
         },
         // onError: Handle errors
         (error: string) => {
           setIsStreaming(false);
-          setStreamingBubbles([]);
           streamingBubblesRef.current = [];
           console.error("Streaming error:", error);
         }
       );
     } catch (error) {
       setIsStreaming(false);
-      setStreamingBubbles([]);
       streamingBubblesRef.current = [];
     }
   };
@@ -152,17 +144,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
           />
         ))}
 
-        {/* Show streaming bubbles as they arrive */}
-        {streamingBubbles.map((bubble, index) => (
-          <MessageBubble
-            key={bubble.id}
-            message={bubble}
-            onOptionSelect={handleOptionSelect}
-            onQuickReply={handleQuickReply}
-          />
-        ))}
-
-        {(isTyping || isStreaming) && streamingBubbles.length === 0 && <TypingIndicator />}
+        {(isTyping || isStreaming) && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
 
