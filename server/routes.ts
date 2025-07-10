@@ -268,9 +268,10 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
     const recentMessages = await storage.getRecentMessages(sessionId, 10);
     const conversationHistory = recentMessages
       .slice(-5) // Last 5 messages for context
+      .filter(msg => msg.content !== null && msg.content !== undefined) // Filter out null/undefined content
       .map(msg => ({
         role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-        content: msg.content
+        content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
       }));
 
     // Generate structured response using OpenAI
@@ -305,9 +306,10 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
     const recentMessages = await storage.getRecentMessages(sessionId, 10);
     const conversationHistory = recentMessages
       .slice(-5) // Last 5 messages for context
+      .filter(msg => msg.content !== null && msg.content !== undefined) // Filter out null/undefined content
       .map(msg => ({
         role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-        content: msg.content
+        content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
       }));
 
     // Generate structured response using OpenAI
