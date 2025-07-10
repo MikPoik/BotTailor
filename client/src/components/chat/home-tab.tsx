@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { 
   MessageCircle, 
   ShoppingCart, 
@@ -189,31 +187,26 @@ export default function HomeTab({ onStartChat, isMobile }: HomeTabProps) {
           </div>
           <div className="grid grid-cols-1 gap-3">
             {popularTopics.map((topic) => (
-              <Card 
+              <div 
                 key={topic.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-primary"
+                className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-primary rounded-lg border bg-white shadow-sm p-4"
                 onClick={() => handleTopicClick(topic)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="text-primary mt-1">
-                      {topic.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-gray-900">{topic.title}</h4>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${categoryColors[topic.category]}`}
-                        >
-                          {topic.category}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600">{topic.description}</p>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-primary mt-1">
+                    {topic.icon}
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-gray-900">{topic.title}</h4>
+                      <span className={`text-xs px-2 py-1 rounded-full border ${categoryColors[topic.category]}`}>
+                        {topic.category}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{topic.description}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -245,36 +238,31 @@ export default function HomeTab({ onStartChat, isMobile }: HomeTabProps) {
           </h3>
           <div className="grid grid-cols-1 gap-3">
             {filteredTopics.map((topic) => (
-              <Card 
+              <div 
                 key={topic.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer hover:shadow-md transition-shadow rounded-lg border bg-white shadow-sm p-4"
                 onClick={() => handleTopicClick(topic)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="text-gray-600 mt-1">
-                      {topic.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-gray-900">{topic.title}</h4>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${categoryColors[topic.category]}`}
-                        >
-                          {topic.category}
-                        </Badge>
-                        {topic.popular && (
-                          <Badge variant="secondary" className="text-xs">
-                            Popular
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600">{topic.description}</p>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-gray-600 mt-1">
+                    {topic.icon}
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-gray-900">{topic.title}</h4>
+                      <span className={`text-xs px-2 py-1 rounded-full border ${categoryColors[topic.category]}`}>
+                        {topic.category}
+                      </span>
+                      {topic.popular && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600">{topic.description}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
