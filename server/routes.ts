@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema } from "@shared/schema";
 import { z } from "zod";
-import { generateStructuredResponse, generateOptionResponse } from "./openai-service";
+import { generateStructuredResponse, generateOptionResponse, generateStreamingResponse } from "./openai-service";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -72,7 +72,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Send a message
+  // Send a message with streaming response
+  app.post("/api/chat/:sessionId/messages/stream", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const messageData = insertMessageSchema.parse({
+        ...req.body,
+        sessionId,
+        sender: "user"
+      });
+
+      // Set headers for Server-Sent Events
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control',
+      });
+
+      // Create user message first
+      const userMessage = await storage.createMessage(messageData);
+      
+      // Send user message confirmation
+      res.write(`data: ${JSON.stringify({ 
+        type: 'user_message', 
+        message: userMessage 
+      })}\n\n`);
+
+      // Get conversation history for context
+      const recentMessages = await storage.getRecentMessages(sessionId, 10);
+      const conversationHistory = recentMessages
+        .filter(msg => msg.id !== userMessage.id) // Exclude the message we just created
+        .map(msg => ({
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content
+        }));
+
+      // Generate streaming response
+      const streamingGenerator = generateStreamingResponse(
+        messageData.content,
+        sessionId,
+        conversationHistory
+      );
+
+      let currentChunk = '';
+      
+      for await (const chunk of streamingGenerator) {
+        if (chunk.type === 'chunk') {
+          currentChunk += chunk.content;
+          // Send chunk to client
+          res.write(`data: ${JSON.stringify({ 
+            type: 'chunk', 
+            content: chunk.content,
+            accumulated: currentChunk
+          })}\n\n`);
+        } else if (chunk.type === 'complete') {
+          // Parse bubbles and create messages
+          if (chunk.messageType === 'multi_bubble' && chunk.metadata?.bubbles) {
+            const bubbles = chunk.metadata.bubbles;
+            const createdMessages = [];
+            
+            for (const bubble of bubbles) {
+              const message = await storage.createMessage({
+                sessionId,
+                content: bubble.content,
+                sender: "bot",
+                messageType: bubble.messageType,
+                metadata: bubble.metadata
+              });
+              createdMessages.push(message);
+            }
+            
+            // Send completion with all created messages
+            res.write(`data: ${JSON.stringify({ 
+              type: 'complete', 
+              messages: createdMessages
+            })}\n\n`);
+          } else {
+            // Single message fallback
+            const message = await storage.createMessage({
+              sessionId,
+              content: chunk.content,
+              sender: "bot",
+              messageType: chunk.messageType || "text",
+              metadata: chunk.metadata || {}
+            });
+            
+            res.write(`data: ${JSON.stringify({ 
+              type: 'complete', 
+              messages: [message]
+            })}\n\n`);
+          }
+        }
+      }
+
+      res.write(`data: ${JSON.stringify({ type: 'end' })}\n\n`);
+      res.end();
+
+    } catch (error) {
+      console.error("Error in streaming message:", error);
+      res.write(`data: ${JSON.stringify({ 
+        type: 'error', 
+        message: 'Internal server error' 
+      })}\n\n`);
+      res.end();
+    }
+  });
+
+  // Send a message (non-streaming fallback)
   app.post("/api/chat/:sessionId/messages", async (req, res) => {
     try {
       const { sessionId } = req.params;
@@ -97,8 +205,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           messageType: bubble.messageType,
           metadata: bubble.metadata
         });
-        
-        // Add small delay between bubbles for realistic timing
       }
 
       res.json({ userMessage, botMessage: lastMessage });

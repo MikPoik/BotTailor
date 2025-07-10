@@ -30,7 +30,94 @@ export function useChat(sessionId: string) {
 
   const messages: Message[] = messagesData?.messages || [];
 
-  // Send message mutation
+  // Streaming message function
+  const sendStreamingMessage = async (
+    content: string,
+    onChunk?: (chunk: string, accumulated: string) => void,
+    onComplete?: (messages: Message[]) => void,
+    onError?: (error: string) => void
+  ) => {
+    try {
+      setIsTyping(true);
+
+      // Optimistically add user message
+      const optimisticUserMessage = {
+        id: Date.now(),
+        sessionId,
+        content,
+        sender: 'user' as const,
+        messageType: 'text' as const,
+        createdAt: new Date().toISOString(),
+        metadata: {}
+      };
+
+      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+        if (!old) return { messages: [optimisticUserMessage] };
+        return { messages: [...old.messages, optimisticUserMessage] };
+      });
+
+      const response = await fetch(`/api/chat/${sessionId}/messages/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          messageType: 'text'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Stream request failed');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.type === 'chunk') {
+                onChunk?.(data.content, data.accumulated);
+              } else if (data.type === 'complete') {
+                setIsTyping(false);
+                onComplete?.(data.messages);
+                // Refetch messages to ensure consistency
+                queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+              } else if (data.type === 'error') {
+                setIsTyping(false);
+                onError?.(data.message);
+              } else if (data.type === 'end') {
+                setIsTyping(false);
+                break;
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse streaming data:', parseError);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      setIsTyping(false);
+      console.error('Streaming error:', error);
+      onError?.('Failed to send message');
+    }
+  };
+
+  // Send message mutation (non-streaming fallback)
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       // Optimistically add user message to UI immediately
@@ -106,8 +193,10 @@ export function useChat(sessionId: string) {
   return {
     messages,
     sendMessage,
+    sendStreamingMessage,
     selectOption,
     isLoading: sendMessageMutation.isPending || selectOptionMutation.isPending,
+    isTyping,
     isSessionLoading,
     isMessagesLoading,
     session: session?.session,

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import MessageBubble from "./message-bubble";
 import TypingIndicator from "./typing-indicator";
 import { useChat } from "@/hooks/use-chat";
+import { Message } from "@shared/schema";
 
 interface ChatInterfaceProps {
   sessionId: string;
@@ -13,14 +14,17 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [streamingContent, setStreamingContent] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { 
     messages, 
-    sendMessage, 
+    sendMessage,
+    sendStreamingMessage, 
     selectOption, 
     isLoading,
+    isTyping,
     isSessionLoading 
   } = useChat(sessionId);
 
@@ -30,20 +34,38 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, streamingContent]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || isStreaming) return;
 
     const message = inputMessage.trim();
     setInputMessage("");
-    setIsTyping(true);
+    setIsStreaming(true);
+    setStreamingContent("");
 
     try {
-      await sendMessage(message);
-      setIsTyping(false);
+      await sendStreamingMessage(
+        message,
+        // onChunk: Show streaming text as it arrives
+        (chunk: string, accumulated: string) => {
+          setStreamingContent(accumulated);
+        },
+        // onComplete: Streaming finished, clear temp content
+        (messages: Message[]) => {
+          setIsStreaming(false);
+          setStreamingContent("");
+        },
+        // onError: Handle errors
+        (error: string) => {
+          setIsStreaming(false);
+          setStreamingContent("");
+          console.error("Streaming error:", error);
+        }
+      );
     } catch (error) {
-      setIsTyping(false);
+      setIsStreaming(false);
+      setStreamingContent("");
     }
   };
 
@@ -95,7 +117,19 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
           />
         ))}
         
-        {isTyping && <TypingIndicator />}
+        {/* Show streaming content as temporary message */}
+        {isStreaming && streamingContent && (
+          <div className="flex justify-start">
+            <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-white border shadow-sm">
+              <div className="text-sm text-gray-800">
+                {streamingContent}
+                <span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {(isTyping || isStreaming) && !streamingContent && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
 
