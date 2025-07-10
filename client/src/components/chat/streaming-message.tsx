@@ -62,33 +62,18 @@ export default function StreamingMessage({
   }, [message, chunks, isStreaming]);
 
   if (!isStreaming) {
-    // Render as normal message
+    // Render as normal message - avatar will be handled by MessageBubble
     return (
-      <div className="flex items-start space-x-3">
-        <img 
-          src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
-          alt="Assistant" 
-          className="w-8 h-8 rounded-full flex-shrink-0"
-        />
-        <div className="flex-1 space-y-2">
-          <RichMessage
-            message={message}
-            onOptionSelect={onOptionSelect}
-            onQuickReply={onQuickReply}
-          />
-        </div>
-      </div>
+      <RichMessage
+        message={message}
+        onOptionSelect={onOptionSelect}
+        onQuickReply={onQuickReply}
+      />
     );
   }
 
   return (
-    <div className="flex items-start space-x-3">
-      <img 
-        src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
-        alt="Assistant" 
-        className="w-8 h-8 rounded-full flex-shrink-0"
-      />
-      <div className="flex-1 space-y-2">
+    <div className="space-y-2">
         {visibleChunks.map((chunk, index) => (
           <div key={index} className="animate-fadeIn">
             <RichMessage
@@ -119,7 +104,6 @@ export default function StreamingMessage({
             {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
           </span>
         )}
-      </div>
     </div>
   );
 }
