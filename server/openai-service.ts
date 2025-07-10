@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { AIResponseSchema, SYSTEM_PROMPT, type AIResponse } from "./ai-response-schema";
-import bestEffortJsonParser from "best-effort-json-parser";
+import { parse } from "best-effort-json-parser";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -232,41 +232,49 @@ export async function* generateStreamingResponse(
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || '';
       if (delta) {
+        console.log(`[OpenAI] Delta: "${delta}"`);
         accumulatedContent += delta;
         
         // Try to parse the accumulated content as JSON
-        const parseResult = bestEffortJsonParser(accumulatedContent);
-        
-        if (parseResult.success && parseResult.data?.bubbles && Array.isArray(parseResult.data.bubbles)) {
-          const bubbles = parseResult.data.bubbles;
-          console.log(`[OpenAI] Parsed JSON successfully, found ${bubbles.length} bubbles, processed: ${processedBubbles}`);
-          
-          // Check if we have new complete bubbles
-          for (let i = processedBubbles; i < bubbles.length; i++) {
-            const bubble = bubbles[i];
+        // Only attempt parsing if we have some structure that looks like JSON
+        if (accumulatedContent.trim().startsWith('{') && accumulatedContent.includes('"bubbles"') && accumulatedContent.includes(']')) {
+          try {
+            const parseResult = parse(accumulatedContent);
             
-            // Check if this bubble is complete (has required fields)
-            if (bubble.messageType && bubble.content !== undefined) {
-              // For menu type, also check if metadata.options is complete
-              if (bubble.messageType === 'menu') {
-                if (bubble.metadata?.options && Array.isArray(bubble.metadata.options) && bubble.metadata.options.length > 0) {
-                  // Check if all options have required fields
-                  const allOptionsComplete = bubble.metadata.options.every(opt => 
-                    opt.id && opt.text && opt.action
-                  );
-                  if (allOptionsComplete) {
-                    console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`);
+            if (parseResult.success && parseResult.data?.bubbles && Array.isArray(parseResult.data.bubbles)) {
+              const bubbles = parseResult.data.bubbles;
+              console.log(`[OpenAI] Parsed JSON successfully, found ${bubbles.length} bubbles, processed: ${processedBubbles}`);
+              
+              // Check if we have new complete bubbles
+              for (let i = processedBubbles; i < bubbles.length; i++) {
+                const bubble = bubbles[i];
+                
+                // Check if this bubble is complete (has required fields)
+                if (bubble.messageType && bubble.content !== undefined) {
+                  // For menu type, also check if metadata.options is complete
+                  if (bubble.messageType === 'menu') {
+                    if (bubble.metadata?.options && Array.isArray(bubble.metadata.options) && bubble.metadata.options.length > 0) {
+                      // Check if all options have required fields
+                      const allOptionsComplete = bubble.metadata.options.every(opt => 
+                        opt.id && opt.text && opt.action
+                      );
+                      if (allOptionsComplete) {
+                        console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`);
+                        yield { type: 'bubble', bubble };
+                        processedBubbles = i + 1;
+                      }
+                    }
+                  } else {
+                    // For text and other types, just check basic completion
+                    console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
                     yield { type: 'bubble', bubble };
                     processedBubbles = i + 1;
                   }
                 }
-              } else {
-                // For text and other types, just check basic completion
-                console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
-                yield { type: 'bubble', bubble };
-                processedBubbles = i + 1;
               }
             }
+          } catch (parseError) {
+            // Silently ignore parsing errors during streaming - we'll try again with more content
           }
         }
       }
@@ -274,24 +282,25 @@ export async function* generateStreamingResponse(
 
     // Final parse to ensure we got everything
     try {
-      const finalParseResult = bestEffortJsonParser(accumulatedContent);
-      if (finalParseResult.success) {
-        const validated = AIResponseSchema.parse(finalParseResult.data);
-        
-        // Yield any remaining bubbles that weren't processed during streaming
-        for (let i = processedBubbles; i < validated.bubbles.length; i++) {
-          const bubble = validated.bubbles[i];
-          console.log(`[OpenAI] Final bubble ${i + 1}: ${bubble.messageType}`);
-          yield { type: 'bubble', bubble };
-        }
-        
-        console.log(`[OpenAI] Streaming complete. Generated ${validated.bubbles.length} bubbles total`);
-        yield { type: 'complete', content: 'streaming_complete' };
-      } else {
-        throw new Error("Failed to parse final JSON");
+      console.log(`[OpenAI] Final accumulated content length: ${accumulatedContent.length}`);
+      const finalParseResult = JSON.parse(accumulatedContent);
+      console.log(`[OpenAI] Final parse successful, validating schema...`);
+      
+      const validated = AIResponseSchema.parse(finalParseResult);
+      
+      // Yield any remaining bubbles that weren't processed during streaming
+      for (let i = processedBubbles; i < validated.bubbles.length; i++) {
+        const bubble = validated.bubbles[i];
+        console.log(`[OpenAI] Final bubble ${i + 1}: ${bubble.messageType}`);
+        yield { type: 'bubble', bubble };
       }
+      
+      console.log(`[OpenAI] Streaming complete. Generated ${validated.bubbles.length} bubbles total`);
+      yield { type: 'complete', content: 'streaming_complete' };
+      
     } catch (parseError) {
       console.error("[OpenAI] Error parsing final response:", parseError);
+      console.error("[OpenAI] Accumulated content:", accumulatedContent);
       yield { 
         type: 'complete', 
         content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
