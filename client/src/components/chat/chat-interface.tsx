@@ -50,7 +50,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
         // onBubbleReceived: Show each complete bubble as it arrives
         (message: Message) => {
           setStreamingBubbles(prev => {
-            // Mark as follow-up if this isn't the first bubble
+            // Mark as follow-up if this isn't the first bubble in this streaming sequence
             const isFollowUp = prev.length > 0;
             const bubbleWithFlag = {
               ...message,
