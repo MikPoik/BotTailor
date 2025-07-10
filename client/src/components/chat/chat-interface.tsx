@@ -71,24 +71,26 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             return [...prev, bubbleWithFlag];
           });
         },
-        // onAllComplete: Streaming finished, keep bubbles visible and transition smoothly
+        // onAllComplete: Streaming finished, merge streaming bubbles into main messages
         (messages: Message[]) => {
           setIsStreaming(false);
-          // Mark streaming bubbles as completed instead of clearing them
-          setStreamingBubbles(prev => 
-            prev.map(bubble => ({
+          // Merge streaming bubbles into main messages array
+          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+            if (!old) return { messages: streamingBubbles };
+            // Add the streaming bubbles to existing messages
+            const existingMessages = old.messages || [];
+            const newMessages = streamingBubbles.map(bubble => ({
               ...bubble,
               metadata: {
                 ...bubble.metadata,
                 isStreaming: false,
-                streamingComplete: true
+                streamingComplete: false
               }
-            }))
-          );
-          // Clear bubbles after a longer delay to allow natural message loading
-          setTimeout(() => {
-            setStreamingBubbles([]);
-          }, 2000);
+            }));
+            return { messages: [...existingMessages, ...newMessages] };
+          });
+          // Clear streaming bubbles since they're now in main messages
+          setStreamingBubbles([]);
         },
         // onError: Handle errors
         (error: string) => {

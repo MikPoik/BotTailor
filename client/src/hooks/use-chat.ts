@@ -141,8 +141,13 @@ export function useChat(sessionId: string) {
       });
       const result = await response.json();
       
-      // After successful response, refetch all messages to get the full multi-bubble conversation
-      await queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+      // Add the new bot messages to the existing messages array instead of refetching
+      if (result.messages && result.messages.length > 0) {
+        queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+          if (!old) return { messages: result.messages };
+          return { messages: [...old.messages, ...result.messages] };
+        });
+      }
       
       return result;
     },
@@ -174,8 +179,13 @@ export function useChat(sessionId: string) {
       });
       const result = await response.json();
       
-      // After successful response, refetch all messages to get the full multi-bubble conversation
-      await queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+      // Add the new bot messages to the existing messages array instead of refetching
+      if (result.messages && result.messages.length > 0) {
+        queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+          if (!old) return { messages: result.messages };
+          return { messages: [...old.messages, ...result.messages] };
+        });
+      }
       
       return result;
     },

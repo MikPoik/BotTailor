@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { MessageCircle, Minus, X } from "lucide-react";
+import { MessageCircle, X, Minimize2 } from "lucide-react";
 import ChatInterface from "./chat-interface";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ChatWidgetProps {
   sessionId: string;
@@ -15,7 +16,10 @@ export default function ChatWidget({
   primaryColor = '#2563eb' 
 }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [hasNewMessage, setHasNewMessage] = useState(true);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Generate a unique session ID for this chat widget instance
   const isMobile = useIsMobile();
 
   const positionClasses = {
@@ -57,7 +61,7 @@ export default function ChatWidget({
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={closeChat}
         />
-        
+
         {/* Mobile chat interface */}
         <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slideUp">
           {/* Mobile header */}
@@ -104,7 +108,7 @@ export default function ChatWidget({
           style={{ backgroundColor: primaryColor }}
         >
           <MessageCircle className="text-white h-6 w-6" />
-          
+
           {/* Notification badge */}
           {hasNewMessage && (
             <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
@@ -140,7 +144,7 @@ export default function ChatWidget({
               onClick={toggleChat}
               className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
             >
-              <Minus className="h-4 w-4" />
+              <Minimize2 className="h-4 w-4" />
             </button>
           </div>
 
