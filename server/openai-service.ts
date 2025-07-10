@@ -230,6 +230,8 @@ export async function* generateStreamingResponse(
 
     let accumulatedContent = '';
     let processedBubbles = 0;
+    let lastBubbleTime = 0;
+    const BUBBLE_DELAY_MS = 500; // 500ms delay between bubbles
     
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || '';
@@ -256,6 +258,20 @@ export async function* generateStreamingResponse(
               // Check if this bubble is complete (has required fields)
               if (bubble.messageType && bubble.content !== undefined) {
                 // For menu type, also check if metadata.options is complete
+                const shouldYieldBubble = async () => {
+                  const now = Date.now();
+                  const timeSinceLastBubble = now - lastBubbleTime;
+                  
+                  // If this isn't the first bubble and we haven't waited long enough, add delay
+                  if (processedBubbles > 0 && timeSinceLastBubble < BUBBLE_DELAY_MS) {
+                    const remainingDelay = BUBBLE_DELAY_MS - timeSinceLastBubble;
+                    await new Promise(resolve => setTimeout(resolve, remainingDelay));
+                  }
+                  
+                  lastBubbleTime = Date.now();
+                  return true;
+                };
+
                 if (bubble.messageType === 'menu') {
                   if (bubble.metadata?.options && Array.isArray(bubble.metadata.options) && bubble.metadata.options.length > 0) {
                     // Check if all options have required fields
@@ -264,6 +280,7 @@ export async function* generateStreamingResponse(
                     );
                     if (allOptionsComplete) {
                       console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`);
+                      await shouldYieldBubble();
                       yield { type: 'bubble', bubble };
                       processedBubbles = i + 1;
                     }
@@ -272,12 +289,14 @@ export async function* generateStreamingResponse(
                   // For text bubbles, ensure content is not just empty string
                   if (bubble.content && bubble.content.trim().length > 0) {
                     console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
+                    await shouldYieldBubble();
                     yield { type: 'bubble', bubble };
                     processedBubbles = i + 1;
                   }
                 } else {
                   // For other types (card, image, quickReplies), just check basic completion
                   console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
+                  await shouldYieldBubble();
                   yield { type: 'bubble', bubble };
                   processedBubbles = i + 1;
                 }
@@ -302,6 +321,12 @@ export async function* generateStreamingResponse(
       for (let i = processedBubbles; i < validated.bubbles.length; i++) {
         const bubble = validated.bubbles[i];
         console.log(`[OpenAI] Final bubble ${i + 1}: ${bubble.messageType}`);
+        
+        // Apply delay for remaining bubbles too
+        if (i > processedBubbles) {
+          await new Promise(resolve => setTimeout(resolve, BUBBLE_DELAY_MS));
+        }
+        
         yield { type: 'bubble', bubble };
       }
       
