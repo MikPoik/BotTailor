@@ -114,12 +114,52 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
   };
 
   const handleQuickReply = async (reply: string) => {
-    setIsTyping(true);
+    if (isLoading || isStreaming) return;
+
+    setIsStreaming(true);
+    streamingBubblesRef.current = [];
+
     try {
-      await sendMessage(reply);
-      setIsTyping(false);
+      await sendStreamingMessage(
+        reply,
+        // onBubbleReceived: Add each complete bubble directly to main messages
+        (message: Message) => {
+          // Mark as follow-up if this isn't the first bubble in this streaming sequence
+          const isFollowUp = streamingBubblesRef.current.length > 0;
+          const bubbleWithFlag = {
+            ...message,
+            metadata: {
+              ...message.metadata,
+              isFollowUp,
+              isStreaming: false // Mark as permanent message
+            }
+          };
+          
+          // Add bubble directly to main messages query cache
+          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+            if (!old) return { messages: [bubbleWithFlag] };
+            return { messages: [...old.messages, bubbleWithFlag] };
+          });
+          
+          // Keep track of streaming bubbles for counting
+          streamingBubblesRef.current.push(bubbleWithFlag);
+        },
+        // onAllComplete: Streaming finished, just set streaming state to false
+        (messages: Message[]) => {
+          setIsStreaming(false);
+          // Clear the tracking ref since streaming is complete
+          streamingBubblesRef.current = [];
+        },
+        // onError: Handle errors
+        (error: string) => {
+          setIsStreaming(false);
+          streamingBubblesRef.current = [];
+          console.error("Quick reply streaming error:", error);
+        }
+      );
     } catch (error) {
-      setIsTyping(false);
+      setIsStreaming(false);
+      streamingBubblesRef.current = [];
     }
   };
 
