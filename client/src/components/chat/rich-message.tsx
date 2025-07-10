@@ -95,7 +95,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
 
   if (messageType === 'quickReplies' && metadata?.quickReplies) {
     return (
-      <div className="chat-message-bot">
+      <div className="bg-white rounded-lg rounded-tl-none p-3 shadow-sm border">
         <p className="text-neutral-800 mb-3">{content}</p>
         <div className="flex flex-wrap gap-2">
           {metadata.quickReplies.map((reply: string, index: number) => (
