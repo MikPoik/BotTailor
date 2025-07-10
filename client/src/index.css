@@ -91,9 +91,8 @@
   .chat-interface {
     @apply absolute bottom-0 right-0 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden;
     width: 384px;
-    height: 50vh;
-    min-height: 400px;
-    max-height: 80vh;
+    min-height:700px;
+    max-height: 100vh;
     animation: fadeIn 0.3s ease-in-out;
   }
 
