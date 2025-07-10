@@ -236,7 +236,7 @@ export async function* generateStreamingResponse(
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || '';
       if (delta) {
-        console.log(`[OpenAI] Delta: ${delta}`);
+        //console.log(`[OpenAI] Delta: ${delta}`);
         accumulatedContent += delta;
         let jsonEnded = false;
         if (delta.includes("},{")) {
@@ -247,7 +247,7 @@ export async function* generateStreamingResponse(
         try {
           const parseResult = parse(accumulatedContent);
           //console.log(`[OpenAI] Parse result: ${JSON.stringify(parseResult)}`);
-          console.log(`[OpenAI] Data: ${JSON.stringify(parseResult.bubbles)}`)
+          //console.log(`[OpenAI] Data: ${JSON.stringify(parseResult.bubbles)}`)
           if (parseResult.bubbles && Array.isArray(parseResult.bubbles) && jsonEnded) {
             const bubbles = parseResult.bubbles;
             
