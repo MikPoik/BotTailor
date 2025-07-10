@@ -100,5 +100,7 @@ export const messageSchema = z.object({
       metadata: z.any().optional(),
       delay: z.number().optional(),
     })).optional(),
+    // Follow-up message support
+    isFollowUp: z.boolean().optional(),
   }).optional(),
 });

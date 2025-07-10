@@ -120,13 +120,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for await (const chunk of streamingGenerator) {
         if (chunk.type === 'bubble' && chunk.bubble) {
+          // Mark as follow-up if this isn't the first bubble in this sequence
+          const isFollowUp = createdMessages.length > 0;
+          
           // Create and store each bubble as it becomes complete
           const message = await storage.createMessage({
             sessionId,
             content: chunk.bubble.content,
             sender: "bot",
             messageType: chunk.bubble.messageType,
-            metadata: chunk.bubble.metadata || {}
+            metadata: {
+              ...chunk.bubble.metadata,
+              isFollowUp
+            }
           });
           
           createdMessages.push(message);
