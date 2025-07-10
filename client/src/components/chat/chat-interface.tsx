@@ -18,6 +18,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
   const [streamingBubbles, setStreamingBubbles] = useState<any[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const streamingBubblesRef = useRef<any[]>([]);
   const queryClient = useQueryClient();
 
   const { 
@@ -51,6 +52,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     setInputMessage("");
     setIsStreaming(true);
     setStreamingBubbles([]);
+    streamingBubblesRef.current = [];
 
     try {
       await sendStreamingMessage(
@@ -68,30 +70,37 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
                 isStreaming: true // Mark as streaming to help with deduplication
               }
             };
-            return [...prev, bubbleWithFlag];
+            const newBubbles = [...prev, bubbleWithFlag];
+            streamingBubblesRef.current = newBubbles; // Keep ref in sync
+            return newBubbles;
           });
         },
         // onAllComplete: Streaming finished, add streaming bubbles to main messages
         (messages: Message[]) => {
           setIsStreaming(false);
+          // Use ref to get current streaming bubbles to avoid closure issues
+          const currentStreamingBubbles = streamingBubblesRef.current;
           // Add streaming bubbles to the main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [...streamingBubbles] };
-            return { messages: [...old.messages, ...streamingBubbles] };
+            if (!old) return { messages: [...currentStreamingBubbles] };
+            return { messages: [...old.messages, ...currentStreamingBubbles] };
           });
           // Clear streaming bubbles since they're now in main messages
           setStreamingBubbles([]);
+          streamingBubblesRef.current = [];
         },
         // onError: Handle errors
         (error: string) => {
           setIsStreaming(false);
           setStreamingBubbles([]);
+          streamingBubblesRef.current = [];
           console.error("Streaming error:", error);
         }
       );
     } catch (error) {
       setIsStreaming(false);
       setStreamingBubbles([]);
+      streamingBubblesRef.current = [];
     }
   };
 
