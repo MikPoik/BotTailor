@@ -59,7 +59,7 @@ export default function StreamingMessage({
     };
 
     showNextChunk(0);
-  }, [message, chunks, isStreaming]);
+  }, [message.id, chunks.length, isStreaming]); // Use message.id instead of full message object
 
   if (!isStreaming) {
     // Render as normal message - avatar will be handled by MessageBubble

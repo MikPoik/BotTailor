@@ -6,6 +6,7 @@ import MessageBubble from "./message-bubble";
 import TypingIndicator from "./typing-indicator";
 import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ChatInterfaceProps {
   sessionId: string;
@@ -17,6 +18,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
   const [streamingBubbles, setStreamingBubbles] = useState<any[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const { 
     messages, 
@@ -36,24 +38,11 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     scrollToBottom();
   }, [messages, streamingBubbles]);
 
-  // Clear streaming bubbles when the same messages appear in the main messages array
+  // Clear streaming bubbles only when we start a new message
   useEffect(() => {
-    if (messages.length > 0 && streamingBubbles.length > 0) {
-      // Check if we have the same number of recent bot messages as streaming bubbles
-      const recentBotMessages = messages.filter(msg => msg.sender === 'bot').slice(-streamingBubbles.length);
-      const streamingBubbleContents = streamingBubbles.map(b => b.content);
-      
-      // If all streaming bubble contents are found in recent bot messages, clear them
-      const allBubblesInMessages = streamingBubbleContents.every(content => 
-        recentBotMessages.some(msg => msg.content === content)
-      );
-      
-      if (allBubblesInMessages && recentBotMessages.length === streamingBubbles.length) {
-        console.log('Clearing streaming bubbles - they are now in main messages');
-        setStreamingBubbles([]);
-      }
-    }
-  }, [messages, streamingBubbles]);
+    // Don't clear bubbles based on message matching since they're already saved to DB
+    // They will be cleared when starting a new streaming sequence
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || isStreaming) return;
@@ -82,11 +71,15 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             return [...prev, bubbleWithFlag];
           });
         },
-        // onAllComplete: Streaming finished, keep bubbles visible without clearing
+        // onAllComplete: Streaming finished, clear bubbles since they're now saved to DB
         (messages: Message[]) => {
           setIsStreaming(false);
-          // Keep streaming bubbles in state - they're already saved to DB
-          // Don't clear them as they need to stay visible until next message fetch
+          // Clear streaming bubbles after a delay to allow for smooth transition
+          setTimeout(() => {
+            setStreamingBubbles([]);
+            // Invalidate messages query to fetch the latest from DB
+            queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+          }, 500);
         },
         // onError: Handle errors
         (error: string) => {
