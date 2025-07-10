@@ -91,7 +91,9 @@
   .chat-interface {
     @apply absolute bottom-0 right-0 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden;
     width: 384px;
-    height: 600px;
+    height: 50vh;
+    min-height: 400px;
+    max-height: 80vh;
     animation: fadeIn 0.3s ease-in-out;
   }
 
@@ -143,6 +145,7 @@
 @media (max-width: 1024px) {
   .chat-interface-mobile {
     @apply fixed inset-0 bg-white z-50 flex flex-col;
+    height: 100vh;
     animation: slideUp 0.3s ease-out;
   }
 }
