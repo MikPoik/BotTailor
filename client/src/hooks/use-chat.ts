@@ -26,7 +26,6 @@ export function useChat(sessionId: string) {
       return response.json();
     },
     enabled: !!sessionId && !!session,
-    refetchInterval: 1000, // Poll for new messages
   });
 
   const messages: Message[] = messagesData?.messages || [];
@@ -54,25 +53,55 @@ export function useChat(sessionId: string) {
         content,
         messageType: 'text'
       });
-      return response.json();
-    },
-    onSuccess: () => {
-      // Refresh to get the actual server response with bot message
-      queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+      const result = await response.json();
+      
+      // Immediately update with both user and bot messages
+      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+        if (!old) return { messages: [result.userMessage, result.botMessage] };
+        // Replace the optimistic message with real ones
+        const otherMessages = old.messages.filter((msg: any) => msg.id !== optimisticUserMessage.id);
+        return { messages: [...otherMessages, result.userMessage, result.botMessage] };
+      });
+      
+      return result;
     },
   });
 
   // Select option mutation
   const selectOptionMutation = useMutation({
-    mutationFn: async ({ optionId, payload }: { optionId: string; payload?: any }) => {
+    mutationFn: async ({ optionId, payload, optionText }: { optionId: string; payload?: any; optionText?: string }) => {
+      // Optimistically add user selection message
+      const optimisticUserMessage = {
+        id: Date.now(),
+        sessionId,
+        content: optionText || optionId,
+        sender: 'user' as const,
+        messageType: 'text' as const,
+        createdAt: new Date().toISOString(),
+        metadata: {}
+      };
+
+      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+        if (!old) return { messages: [optimisticUserMessage] };
+        return { messages: [...old.messages, optimisticUserMessage] };
+      });
+
       const response = await apiRequest('POST', `/api/chat/${sessionId}/select-option`, {
         optionId,
-        payload
+        payload,
+        optionText
       });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+      const result = await response.json();
+      
+      // Update with the actual bot response
+      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+        if (!old) return { messages: [result.botMessage] };
+        // Replace optimistic message and add bot response
+        const otherMessages = old.messages.filter((msg: any) => msg.id !== optimisticUserMessage.id);
+        return { messages: [...otherMessages, optimisticUserMessage, result.botMessage] };
+      });
+      
+      return result;
     },
   });
 
@@ -80,8 +109,8 @@ export function useChat(sessionId: string) {
     return sendMessageMutation.mutateAsync(content);
   };
 
-  const selectOption = async (optionId: string, payload?: any) => {
-    return selectOptionMutation.mutateAsync({ optionId, payload });
+  const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
+    return selectOptionMutation.mutateAsync({ optionId, payload, optionText });
   };
 
   return {

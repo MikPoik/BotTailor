@@ -41,7 +41,9 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
 
     try {
       await sendMessage(message);
-    } finally {
+      // Keep typing indicator for a brief moment to show AI is responding
+      setTimeout(() => setIsTyping(false), 500);
+    } catch (error) {
       setIsTyping(false);
     }
   };
@@ -53,11 +55,12 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     }
   };
 
-  const handleOptionSelect = async (optionId: string, payload?: any) => {
+  const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
     setIsTyping(true);
     try {
-      await selectOption(optionId, payload);
-    } finally {
+      await selectOption(optionId, payload, optionText);
+      setTimeout(() => setIsTyping(false), 500);
+    } catch (error) {
       setIsTyping(false);
     }
   };
@@ -66,7 +69,8 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
     setIsTyping(true);
     try {
       await sendMessage(reply);
-    } finally {
+      setTimeout(() => setIsTyping(false), 500);
+    } catch (error) {
       setIsTyping(false);
     }
   };

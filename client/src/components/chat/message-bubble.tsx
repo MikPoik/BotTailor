@@ -1,10 +1,10 @@
 import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
-import RichMessage from "./rich-message";
+import { Button } from "@/components/ui/button";
 
 interface MessageBubbleProps {
   message: Message;
-  onOptionSelect: (optionId: string, payload?: any) => void;
+  onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
   onQuickReply: (reply: string) => void;
 }
 
@@ -46,7 +46,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
             onQuickReply={onQuickReply}
           />
         )}
-        
+
         {/* Quick replies for text messages */}
         {message.messageType === 'text' && message.metadata?.quickReplies && (
           <div className="flex flex-wrap gap-2 mt-2">
@@ -61,7 +61,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
             ))}
           </div>
         )}
-        
+
         <span className="text-xs text-neutral-500 mt-1 block">
           {timeAgo}
         </span>
