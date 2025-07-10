@@ -32,20 +32,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!session) {
         session = await storage.createChatSession({ sessionId });
 
-        // Generate AI welcome message
+        // Generate AI welcome message bubbles
         const welcomeResponse = await generateStructuredResponse(
           "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
           sessionId,
           []
         );
 
-        await storage.createMessage({
-          sessionId,
-          content: welcomeResponse.content,
-          sender: "bot",
-          messageType: welcomeResponse.messageType,
-          metadata: welcomeResponse.metadata
-        });
+        // Create separate messages for each bubble
+        for (const bubble of welcomeResponse.bubbles) {
+          await storage.createMessage({
+            sessionId,
+            content: bubble.content,
+            sender: "bot",
+            messageType: bubble.messageType,
+            metadata: bubble.metadata
+          });
+          
+          // Add small delay between bubbles for realistic timing
+        }
       }
 
       res.json({ session });
@@ -81,9 +86,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate bot response based on message content
       const botResponse = await generateBotResponse(messageData.content, sessionId);
-      const botMessage = await storage.createMessage(botResponse);
+      
+      // Create separate messages for each bubble and return the last one
+      let lastMessage;
+      for (const bubble of botResponse.bubbles) {
+        lastMessage = await storage.createMessage({
+          sessionId,
+          content: bubble.content,
+          sender: "bot",
+          messageType: bubble.messageType,
+          metadata: bubble.metadata
+        });
+        
+        // Add small delay between bubbles for realistic timing
+      }
 
-      res.json({ userMessage, botMessage });
+      res.json({ userMessage, botMessage: lastMessage });
     } catch (error) {
       console.error("Error sending message:", error);
       if (error instanceof z.ZodError) {
@@ -126,7 +144,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Add small delay between bubbles for realistic timing
-        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
       res.json({ botMessage: lastMessage });
@@ -188,7 +205,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           // Add small delay between bubbles for realistic timing
-          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
       
@@ -232,7 +248,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Add small delay between bubbles for realistic timing
-        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
       res.json(lastMessage);

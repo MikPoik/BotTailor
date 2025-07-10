@@ -55,13 +55,8 @@ export function useChat(sessionId: string) {
       });
       const result = await response.json();
       
-      // Immediately update with both user and bot messages
-      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-        if (!old) return { messages: [result.userMessage, result.botMessage] };
-        // Replace the optimistic message with real ones
-        const otherMessages = old.messages.filter((msg: any) => msg.id !== optimisticUserMessage.id);
-        return { messages: [...otherMessages, result.userMessage, result.botMessage] };
-      });
+      // After successful response, refetch all messages to get the full multi-bubble conversation
+      await queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
       
       return result;
     },
@@ -93,13 +88,8 @@ export function useChat(sessionId: string) {
       });
       const result = await response.json();
       
-      // Update with the actual bot response
-      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-        if (!old) return { messages: [result.botMessage] };
-        // Replace optimistic message and add bot response
-        const otherMessages = old.messages.filter((msg: any) => msg.id !== optimisticUserMessage.id);
-        return { messages: [...otherMessages, optimisticUserMessage, result.botMessage] };
-      });
+      // After successful response, refetch all messages to get the full multi-bubble conversation
+      await queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
       
       return result;
     },
