@@ -17,7 +17,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
   const [streamingBubbles, setStreamingBubbles] = useState<any[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   const { 
     messages, 
     sendMessage,
@@ -62,10 +62,11 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             return [...prev, bubbleWithFlag];
           });
         },
-        // onAllComplete: Streaming finished, clear temp content
+        // onAllComplete: Streaming finished, keep bubbles in place
         (messages: Message[]) => {
           setIsStreaming(false);
-          setStreamingBubbles([]);
+          // Keep the streaming bubbles - they're already complete and saved
+          // No need to clear or refetch since they're already being displayed
         },
         // onError: Handle errors
         (error: string) => {
@@ -127,7 +128,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             onQuickReply={handleQuickReply}
           />
         ))}
-        
+
         {/* Show streaming bubbles as they arrive */}
         {streamingBubbles.map((bubble, index) => (
           <MessageBubble
@@ -137,7 +138,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             onQuickReply={handleQuickReply}
           />
         ))}
-        
+
         {(isTyping || isStreaming) && streamingBubbles.length === 0 && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
@@ -148,7 +149,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
           <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
             <Paperclip className="h-5 w-5" />
           </button>
-          
+
           <div className="flex-1 relative">
             <Input
               type="text"
@@ -169,7 +170,7 @@ export default function ChatInterface({ sessionId, isMobile }: ChatInterfaceProp
             </Button>
           </div>
         </div>
-        
+
         {/* Quick replies */}
         <div className="flex flex-wrap gap-2 mt-3">
           <Button
