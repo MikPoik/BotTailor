@@ -6,139 +6,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Function to detect complete bubbles from incomplete JSON using brace matching
-function detectCompleteBubbles(accumulatedContent: string, alreadyProcessed: number): any[] {
-  const completeBubbles: any[] = [];
-  
-  // Look for the bubbles array start
-  const bubblesStart = accumulatedContent.indexOf('"bubbles":[');
-  if (bubblesStart === -1) {
-    return completeBubbles;
-  }
-  
-  // Find the start of the bubbles array content
-  let searchStart = bubblesStart + '"bubbles":['.length;
-  let bubbleCount = 0;
-  
-  // Skip already processed bubbles
-  while (bubbleCount < alreadyProcessed) {
-    const nextBubbleStart = accumulatedContent.indexOf('{', searchStart);
-    if (nextBubbleStart === -1) break;
-    
-    const nextBubbleEnd = findMatchingBrace(accumulatedContent, nextBubbleStart);
-    if (nextBubbleEnd === -1) break;
-    
-    searchStart = nextBubbleEnd + 1;
-    bubbleCount++;
-  }
-  
-  // Now look for new complete bubbles
-  while (true) {
-    const bubbleStart = accumulatedContent.indexOf('{', searchStart);
-    if (bubbleStart === -1) break;
-    
-    const bubbleEnd = findMatchingBrace(accumulatedContent, bubbleStart);
-    if (bubbleEnd === -1) {
-      // Bubble is incomplete - check if we have a simple text bubble ending pattern
-      const simpleTextPattern = /"content":"[^"]*"}/;
-      const remainingContent = accumulatedContent.substring(bubbleStart);
-      const simpleMatch = remainingContent.match(simpleTextPattern);
-      
-      if (simpleMatch) {
-        // Try to extract up to the closing brace
-        const possibleEnd = bubbleStart + simpleMatch.index + simpleMatch[0].length - 1;
-        const candidateJson = accumulatedContent.substring(bubbleStart, possibleEnd + 1);
-        
-        try {
-          const bubble = JSON.parse(candidateJson);
-          if (bubble.messageType && bubble.content !== undefined) {
-            console.log(`[DEBUG] Found complete ${bubble.messageType} bubble via pattern: "${bubble.content}"`);
-            completeBubbles.push(bubble);
-            searchStart = possibleEnd + 1;
-            continue;
-          }
-        } catch (e) {
-          // Pattern didn't work, bubble is truly incomplete
-        }
-      }
-      break; // No more complete bubbles
-    }
-    
-    // Extract the bubble JSON
-    const bubbleJson = accumulatedContent.substring(bubbleStart, bubbleEnd + 1);
-    
-    try {
-      const bubble = JSON.parse(bubbleJson);
-      
-      // Check if bubble is complete based on messageType
-      if (bubble.messageType && bubble.content !== undefined) {
-        if (bubble.messageType === 'menu') {
-          // For menu type, check if metadata.options is complete
-          if (bubble.metadata?.options && Array.isArray(bubble.metadata.options) && bubble.metadata.options.length > 0) {
-            const allOptionsComplete = bubble.metadata.options.every(opt => 
-              opt.id && opt.text && opt.action
-            );
-            if (allOptionsComplete) {
-              console.log(`[DEBUG] Found complete menu bubble: ${bubble.content}`);
-              completeBubbles.push(bubble);
-            }
-          }
-        } else {
-          // For text and other types, just check basic completion
-          console.log(`[DEBUG] Found complete ${bubble.messageType} bubble: "${bubble.content}"`);
-          completeBubbles.push(bubble);
-        }
-      }
-    } catch (parseError) {
-      // If we can't parse this bubble, it's incomplete
-      console.log(`[DEBUG] Failed to parse bubble JSON: ${bubbleJson.substring(0, 50)}...`);
-      break;
-    }
-    
-    searchStart = bubbleEnd + 1;
-  }
-  
-  return completeBubbles;
-}
 
-// Helper function to find matching closing brace
-function findMatchingBrace(content: string, startPos: number): number {
-  let braceCount = 0;
-  let inString = false;
-  let escapeNext = false;
-  
-  for (let i = startPos; i < content.length; i++) {
-    const char = content[i];
-    
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-    
-    if (char === '\\') {
-      escapeNext = true;
-      continue;
-    }
-    
-    if (char === '"') {
-      inString = !inString;
-      continue;
-    }
-    
-    if (!inString) {
-      if (char === '{') {
-        braceCount++;
-      } else if (char === '}') {
-        braceCount--;
-        if (braceCount === 0) {
-          return i;
-        }
-      }
-    }
-  }
-  
-  return -1; // No matching brace found
-}
 
 // Non-streaming function for multi-bubble responses
 export async function generateMultiBubbleResponse(
@@ -369,17 +237,43 @@ export async function* generateStreamingResponse(
         console.log(`[OpenAI] Delta: "${delta}"`);
         accumulatedContent += delta;
         
-        // Try to detect complete bubbles as they arrive
-        const completeBubbles = detectCompleteBubbles(accumulatedContent, processedBubbles);
-        
-        if (completeBubbles.length > 0) {
-          console.log(`[OpenAI] Found ${completeBubbles.length} complete bubbles during streaming`);
-        }
-        
-        for (const bubble of completeBubbles) {
-          console.log(`[OpenAI] Streaming bubble ${processedBubbles + 1}: ${bubble.messageType} - "${bubble.content}"`);
-          yield { type: 'bubble', bubble };
-          processedBubbles++;
+        // Use best-effort parser to extract any complete bubbles from incomplete JSON
+        try {
+          const parseResult = parse(accumulatedContent);
+          
+          if (parseResult.success && parseResult.data?.bubbles && Array.isArray(parseResult.data.bubbles)) {
+            const bubbles = parseResult.data.bubbles;
+            
+            // Check if we have new complete bubbles beyond what we've already processed
+            for (let i = processedBubbles; i < bubbles.length; i++) {
+              const bubble = bubbles[i];
+              
+              // Check if this bubble is complete (has required fields)
+              if (bubble.messageType && bubble.content !== undefined) {
+                // For menu type, also check if metadata.options is complete
+                if (bubble.messageType === 'menu') {
+                  if (bubble.metadata?.options && Array.isArray(bubble.metadata.options) && bubble.metadata.options.length > 0) {
+                    // Check if all options have required fields
+                    const allOptionsComplete = bubble.metadata.options.every(opt => 
+                      opt.id && opt.text && opt.action
+                    );
+                    if (allOptionsComplete) {
+                      console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`);
+                      yield { type: 'bubble', bubble };
+                      processedBubbles = i + 1;
+                    }
+                  }
+                } else {
+                  // For text and other types, just check basic completion
+                  console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`);
+                  yield { type: 'bubble', bubble };
+                  processedBubbles = i + 1;
+                }
+              }
+            }
+          }
+        } catch (parseError) {
+          // Silently ignore parsing errors during streaming - we'll try again with more content
         }
       }
     }
