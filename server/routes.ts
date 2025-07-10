@@ -80,8 +80,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/:sessionId/messages/stream", async (req, res) => {
     try {
       const { sessionId } = req.params;
+      const { content, internalMessage, ...otherData } = req.body;
+      
       const messageData = insertMessageSchema.parse({
-        ...req.body,
+        ...otherData,
+        content, // Use the display text for the user message
         sessionId,
         sender: "user"
       });
@@ -113,9 +116,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: msg.content
         }));
 
-      // Generate streaming response
+      // Generate streaming response using internal message if provided, otherwise use display text
+      const aiInputMessage = internalMessage || messageData.content;
       const streamingGenerator = generateStreamingResponse(
-        messageData.content,
+        aiInputMessage,
         sessionId,
         conversationHistory
       );

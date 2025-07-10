@@ -63,8 +63,9 @@ export function useChat(sessionId: string) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          content: internalMessage || userDisplayText,
-          messageType: 'text'
+          content: userDisplayText,
+          messageType: 'text',
+          internalMessage: internalMessage !== userDisplayText ? internalMessage : undefined
         }),
       });
 
