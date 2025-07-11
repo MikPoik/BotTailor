@@ -141,6 +141,8 @@ export default function ChatbotForm() {
 
       <Form {...form}>
         <form onSubmit={(e) => {
+          e.preventDefault();
+          
           console.log("Form submit event triggered");
           console.log("Form is valid:", form.formState.isValid);
           console.log("Form errors:", JSON.stringify(form.formState.errors, null, 2));
@@ -156,7 +158,8 @@ export default function ChatbotForm() {
             return; // Don't submit if validation fails
           }
           
-          form.handleSubmit(onSubmit)(e);
+          // Since manual validation passes, submit the validated data directly
+          onSubmit(validationResult.data);
         }} className="space-y-8">
           {/* Basic Information */}
           <Card>
