@@ -76,13 +76,22 @@ export default function ChatbotForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest(`/api/chatbots`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      console.log("Making API request to create chatbot with data:", data);
+      try {
+        const response = await apiRequest(`/api/chatbots`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        console.log("API response:", response);
+        return response;
+      } catch (error) {
+        console.error("API request failed:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Mutation successful:", data);
       toast({
         title: "Success",
         description: "Chatbot configuration created successfully!",
@@ -91,6 +100,7 @@ export default function ChatbotForm() {
       setLocation("/dashboard");
     },
     onError: (error) => {
+      console.error("Mutation error:", error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -113,6 +123,13 @@ export default function ChatbotForm() {
   const onSubmit = (data: FormData) => {
     console.log("Form submitted with data:", data);
     console.log("Form errors:", form.formState.errors);
+    console.log("About to call createMutation.mutate");
+    console.log("Mutation status:", {
+      isIdle: createMutation.isIdle,
+      isPending: createMutation.isPending,
+      isError: createMutation.isError,
+      isSuccess: createMutation.isSuccess
+    });
     createMutation.mutate(data);
   };
 
