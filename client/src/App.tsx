@@ -11,6 +11,7 @@ function Router() {
     <Switch>
       <Route path="/" component={ChatWidget} />
       <Route path="/widget" component={ChatWidget} />
+      <Route path="/chat-widget" component={ChatWidget} />
       <Route component={NotFound} />
     </Switch>
   );

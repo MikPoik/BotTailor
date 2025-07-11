@@ -21,7 +21,13 @@ export function useChat(sessionId: string) {
   const { data: messagesData, isLoading: isMessagesLoading } = useQuery({
     queryKey: ['/api/chat', sessionId, 'messages'],
     queryFn: async () => {
-      const response = await fetch(`/api/chat/${sessionId}/messages`);
+      // Use absolute URL when widget is embedded
+      const config = (window as any).__CHAT_WIDGET_CONFIG__;
+      const baseUrl = config?.apiUrl || '';
+      const url = `/api/chat/${sessionId}/messages`;
+      const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+      
+      const response = await fetch(fullUrl);
       if (!response.ok) throw new Error('Failed to fetch messages');
       return response.json();
     },
@@ -57,7 +63,13 @@ export function useChat(sessionId: string) {
         return { messages: [...old.messages, optimisticUserMessage] };
       });
 
-      const response = await fetch(`/api/chat/${sessionId}/messages/stream`, {
+      // Use absolute URL when widget is embedded
+      const config = (window as any).__CHAT_WIDGET_CONFIG__;
+      const baseUrl = config?.apiUrl || '';
+      const url = `/api/chat/${sessionId}/messages/stream`;
+      const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+      
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
