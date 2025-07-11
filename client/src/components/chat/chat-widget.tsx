@@ -4,6 +4,7 @@ import TabbedChatInterface from "./tabbed-chat-interface";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useChat } from "@/hooks/use-chat";
 
 interface ChatWidgetProps {
   sessionId: string;
@@ -22,6 +23,9 @@ export default function ChatWidget({
 
   // Generate a unique session ID for this chat widget instance
   const isMobile = useIsMobile();
+  
+  // Preload chat data in background when widget mounts
+  const { isSessionLoading, isMessagesLoading } = useChat(sessionId);
 
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
@@ -97,7 +101,11 @@ export default function ChatWidget({
 
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
-            <TabbedChatInterface sessionId={sessionId} isMobile={true} />
+            <TabbedChatInterface 
+              sessionId={sessionId} 
+              isMobile={true} 
+              isPreloaded={!isSessionLoading && !isMessagesLoading}
+            />
           </div>
         </div>
       </>
@@ -156,7 +164,11 @@ export default function ChatWidget({
 
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
-            <TabbedChatInterface sessionId={sessionId} isMobile={false} />
+            <TabbedChatInterface 
+              sessionId={sessionId} 
+              isMobile={false} 
+              isPreloaded={!isSessionLoading && !isMessagesLoading}
+            />
           </div>
         </div>
       )}

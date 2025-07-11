@@ -16,6 +16,7 @@ import {
 interface HomeTabProps {
   onStartChat: (topic: string, message?: string) => void;
   isMobile: boolean;
+  isPreloaded?: boolean;
 }
 
 interface ChatTopic {
@@ -113,7 +114,7 @@ const quickActions = [
   }
 ];
 
-export default function HomeTab({ onStartChat, isMobile }: HomeTabProps) {
+export default function HomeTab({ onStartChat, isMobile, isPreloaded = false }: HomeTabProps) {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'support' | 'sales' | 'billing'>('all');
 
   const filteredTopics = selectedCategory === 'all' 

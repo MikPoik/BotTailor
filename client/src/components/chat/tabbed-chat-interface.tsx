@@ -13,9 +13,10 @@ import { useQueryClient } from "@tanstack/react-query";
 interface TabbedChatInterfaceProps {
   sessionId: string;
   isMobile: boolean;
+  isPreloaded?: boolean;
 }
 
-export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatInterfaceProps) {
+export default function TabbedChatInterface({ sessionId, isMobile, isPreloaded }: TabbedChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -70,13 +71,13 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
               isStreaming: false // Mark as permanent message
             }
           };
-          
+
           // Add bubble directly to main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
             if (!old) return { messages: [bubbleWithFlag] };
             return { messages: [...old.messages, bubbleWithFlag] };
           });
-          
+
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
@@ -131,13 +132,13 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
               isStreaming: false // Mark as permanent message
             }
           };
-          
+
           // Add bubble directly to main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
             if (!old) return { messages: [bubbleWithFlag] };
             return { messages: [...old.messages, bubbleWithFlag] };
           });
-          
+
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
@@ -184,13 +185,13 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
               isStreaming: false // Mark as permanent message
             }
           };
-          
+
           // Add bubble directly to main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
             if (!old) return { messages: [bubbleWithFlag] };
             return { messages: [...old.messages, bubbleWithFlag] };
           });
-          
+
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
@@ -216,11 +217,11 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
   const handleStartChat = async (topic: string, message?: string) => {
     // Switch to chat tab
     setActiveTab("chat");
-    
+
     if (message) {
       // If a specific message is provided, send it
       setInputMessage(message);
-      
+
       // Small delay to ensure the tab switch and input update, then send
       setTimeout(() => {
         setIsStreaming(true);
@@ -240,13 +241,13 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
                 isStreaming: false // Mark as permanent message
               }
             };
-            
+
             // Add bubble directly to main messages query cache
             queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
               if (!old) return { messages: [bubbleWithFlag] };
               return { messages: [...old.messages, bubbleWithFlag] };
             });
-            
+
             // Keep track of streaming bubbles for counting
             streamingBubblesRef.current.push(bubbleWithFlag);
           },
@@ -298,7 +299,11 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
             margin: 0
           }}
         >
-          <HomeTab onStartChat={handleStartChat} isMobile={isMobile} />
+          <HomeTab 
+              onStartChat={handleStartChat} 
+              isMobile={isMobile}
+              isPreloaded={isPreloaded}
+            />
         </TabsContent>
 
         <TabsContent 
