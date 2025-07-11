@@ -148,7 +148,7 @@ export default function ChatWidget({
             onClick={handleEmbeddedClose}
             className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
           >
-            <X className="h-4 w-4" />
+            <Minimize2 className="h-4 w-4" />
           </button>
         </div>
 
