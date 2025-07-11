@@ -29,26 +29,119 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-shrink: 0;
         }
+        .tab-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .tab-content.hidden {
+            display: none !important;
+        }
+        .tab-navigation {
+            border-top: 1px solid #e5e7eb;
+            background: white;
+            flex-shrink: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 56px;
+            padding: 4px;
+        }
+        .tab-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 100%;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .tab-button.active {
+            border-color: #2563eb;
+            background: rgba(37, 99, 235, 0.05);
+            color: #2563eb;
+        }
+        .tab-badge {
+            background: #2563eb;
+            color: white;
+            font-size: 12px;
+            border-radius: 50%;
+            padding: 2px 6px;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Home tab styles */
+        .home-content {
+            flex: 1;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow-y: auto;
+        }
+        .welcome-section {
+            max-width: 400px;
+            margin-bottom: 2rem;
+        }
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            width: 100%;
+            max-width: 600px;
+        }
+        .topic-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .topic-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+        }
+        .topic-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 24px;
+        }
+        /* Chat tab styles */
         .chat-content {
             flex: 1;
             padding: 1rem;
             overflow-y: auto;
+            min-height: 0;
         }
-        .message {
-            margin: 0.5rem 0;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            max-width: 80%;
-        }
-        .message.user {
-            background: #2563eb;
-            color: white;
-            margin-left: auto;
-        }
-        .message.assistant {
-            background: #f3f4f6;
-            color: #1f2937;
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #6b7280;
         }
         .message-group {
             margin: 1rem 0;
@@ -83,7 +176,7 @@
             background: #2563eb;
             color: white;
         }
-        .bubble.assistant {
+        .bubble.bot {
             background: #f3f4f6;
             color: #1f2937;
         }
@@ -99,6 +192,7 @@
             border-top: 1px solid #e5e7eb;
             display: flex;
             gap: 0.5rem;
+            flex-shrink: 0;
         }
         .input-container input {
             flex: 1;
@@ -121,6 +215,24 @@
         .input-container button:disabled {
             background: #9ca3af;
             cursor: not-allowed;
+        }
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .quick-reply {
+            padding: 0.25rem 0.75rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 1rem;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .quick-reply:hover {
+            background: #e5e7eb;
         }
         .typing-indicator {
             display: flex;
@@ -147,12 +259,8 @@
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes bounce {
-            0%, 80%, 100% {
-                transform: scale(0);
-            }
-            40% {
-                transform: scale(1);
-            }
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
         }
         .card-content {
             padding: 12px;
@@ -194,26 +302,6 @@
         .menu-option:last-child {
             margin-bottom: 0;
         }
-        .quick-reply {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #f3f4f6;
-            border: none;
-            border-radius: 16px;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 2px;
-            transition: background-color 0.2s;
-        }
-        .quick-reply:hover {
-            background: #e5e7eb;
-        }
-        .quick-replies {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 8px;
-        }
         .timestamp {
             font-size: 12px;
             color: #6b7280;
@@ -227,18 +315,183 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // Home Tab Component
+        function HomeTab({ onStartChat, isMobile }) {
+            const topics = [
+                {
+                    id: 'billing',
+                    title: 'Billing & Payments',
+                    description: 'Questions about invoices, payments, and billing',
+                    icon: '💳',
+                    message: 'I have a question about billing and payments'
+                },
+                {
+                    id: 'technical',
+                    title: 'Technical Support',
+                    description: 'Help with technical issues and troubleshooting',
+                    icon: '🔧',
+                    message: 'I need technical support'
+                },
+                {
+                    id: 'sales',
+                    title: 'Sales Questions',
+                    description: 'Product information and sales inquiries',
+                    icon: '💼',
+                    message: 'I have sales questions'
+                },
+                {
+                    id: 'general',
+                    title: 'General Support',
+                    description: 'General questions and other topics',
+                    icon: '💬',
+                    message: 'I need general support'
+                }
+            ];
+
+            return (
+                <div className="home-content">
+                    <div className="welcome-section">
+                        <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>
+                            Welcome to Support
+                        </h2>
+                        <p style={{ color: '#6b7280', marginBottom: '32px' }}>
+                            How can we help you today? Choose a topic below to get started.
+                        </p>
+                    </div>
+                    
+                    <div className="topic-grid">
+                        {topics.map(topic => (
+                            <div 
+                                key={topic.id}
+                                className="topic-card"
+                                onClick={() => onStartChat(topic.id, topic.message)}
+                            >
+                                <div className="topic-icon">
+                                    {topic.icon}
+                                </div>
+                                <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: '#1f2937' }}>
+                                    {topic.title}
+                                </h3>
+                                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
+                                    {topic.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Message Bubble Component
+        function MessageBubble({ message, onOptionSelect, onQuickReply }) {
+            const renderRichMessage = (message) => {
+                if (message.messageType === 'card' && message.metadata) {
+                    return React.createElement('div', { 
+                        className: 'bubble card'
+                    }, [
+                        message.metadata.imageUrl && React.createElement('img', {
+                            key: 'image',
+                            src: message.metadata.imageUrl,
+                            alt: message.metadata.title || 'Card image',
+                            className: 'card-image'
+                        }),
+                        React.createElement('div', { key: 'content', className: 'card-content' }, [
+                            message.metadata.title && React.createElement('h4', {
+                                key: 'title',
+                                className: 'card-title'
+                            }, message.metadata.title),
+                            message.metadata.description && React.createElement('p', {
+                                key: 'desc',
+                                className: 'card-description'
+                            }, message.metadata.description),
+                            message.content && message.content !== message.metadata.title && React.createElement('p', {
+                                key: 'content'
+                            }, message.content),
+                            message.metadata.buttons && React.createElement('div', {
+                                key: 'buttons',
+                                style: { display: 'flex', flexDirection: 'column', gap: '8px' }
+                            }, message.metadata.buttons.map((button, idx) => 
+                                React.createElement('button', {
+                                    key: idx,
+                                    onClick: () => onOptionSelect(button.id, button.payload, button.text),
+                                    className: 'menu-option'
+                                }, button.text)
+                            ))
+                        ])
+                    ]);
+                }
+
+                if (message.messageType === 'menu' && message.metadata?.options) {
+                    return React.createElement('div', {
+                        className: 'bubble menu'
+                    }, [
+                        React.createElement('div', { key: 'content', className: 'menu-content' }, [
+                            message.content && React.createElement('p', { key: 'text', style: { marginBottom: '12px' } }, message.content),
+                            React.createElement('div', { 
+                                key: 'options'
+                            }, message.metadata.options.map((option, idx) =>
+                                React.createElement('button', {
+                                    key: idx,
+                                    onClick: () => onOptionSelect(option.id, option.payload, option.text),
+                                    className: 'menu-option'
+                                }, option.text)
+                            ))
+                        ])
+                    ]);
+                }
+
+                if (message.messageType === 'image' && message.metadata?.imageUrl) {
+                    return React.createElement('div', {
+                        className: 'bubble card'
+                    }, [
+                        React.createElement('img', {
+                            key: 'image',
+                            src: message.metadata.imageUrl,
+                            alt: message.metadata.title || 'Message image',
+                            className: 'card-image'
+                        }),
+                        message.content && React.createElement('div', {
+                            key: 'content',
+                            className: 'card-content'
+                        }, React.createElement('p', {}, message.content))
+                    ]);
+                }
+
+                // Default text message
+                return React.createElement('div', {
+                    className: `bubble ${message.sender}`
+                }, [
+                    React.createElement('p', { key: 'content' }, message.content),
+                    message.metadata?.quickReplies && React.createElement('div', {
+                        key: 'quickReplies',
+                        className: 'quick-replies'
+                    }, message.metadata.quickReplies.map((reply, idx) =>
+                        React.createElement('button', {
+                            key: idx,
+                            onClick: () => onQuickReply(reply),
+                            className: 'quick-reply'
+                        }, reply)
+                    ))
+                ]);
+            };
+
+            return renderRichMessage(message);
+        }
+
+        // Main Chat Widget Component
         function ChatWidget() {
             const [messages, setMessages] = useState([]);
             const [inputValue, setInputValue] = useState('');
             const [isTyping, setIsTyping] = useState(false);
             const [isStreaming, setIsStreaming] = useState(false);
+            const [activeTab, setActiveTab] = useState('home');
             const messagesEndRef = useRef(null);
 
             const sessionId = "{{SESSION_ID}}";
             let apiUrl = "{{API_URL}}";
             const isMobile = {{IS_MOBILE}};
 
-            // Fix mixed content issues - use HTTPS if parent page is HTTPS
+            // Fix mixed content issues
             if (window.location.protocol === 'https:' && apiUrl.startsWith('http:')) {
                 apiUrl = apiUrl.replace('http:', 'https:');
             }
@@ -267,16 +520,6 @@
 
             const addMessage = (message) => {
                 setMessages(prev => [...prev, message]);
-            };
-
-            const updateLastMessage = (updatedMessage) => {
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    if (newMessages.length > 0) {
-                        newMessages[newMessages.length - 1] = { ...newMessages[newMessages.length - 1], ...updatedMessage };
-                    }
-                    return newMessages;
-                });
             };
 
             const sendStreamingMessage = async (message) => {
@@ -326,7 +569,6 @@
                                         setIsTyping(false);
                                         addMessage(data.message);
                                         
-                                        // Add slight delay before next bubble can appear
                                         setTimeout(() => {
                                             setIsTyping(true);
                                         }, 100);
@@ -373,6 +615,7 @@
                 if (!inputValue.trim() || isStreaming) return;
 
                 const message = inputValue.trim();
+                setActiveTab('chat');
                 await sendStreamingMessage(message);
             };
 
@@ -380,8 +623,6 @@
                 if (isStreaming) return;
 
                 const displayText = optionText || getOptionDisplayText(optionId);
-
-                // Show user's selection immediately
                 addMessage({
                     content: displayText,
                     sender: 'user',
@@ -402,7 +643,6 @@
                     if (response.ok) {
                         const data = await response.json();
                         if (data.allMessages && data.allMessages.length > 0) {
-                            // Add all messages from the response
                             data.allMessages.forEach(message => addMessage(message));
                         } else if (data.botMessage) {
                             addMessage(data.botMessage);
@@ -430,28 +670,24 @@
                     payment: "I have payment issues",
                     subscription: "I want to change my subscription",
                     invoice: "I need to download an invoice",
-                    paymentIssues: "Payment Issues",
-                    updatePaymentMethod: "Update Payment Method",
-                    viewBilling: "View Billing History",
-                    refund: "Request Refund",
-                    issue1: "My payment was declined",
-                    issue2: "I was charged incorrectly",
-                    issue3: "I need a refund",
-                    upgrade: "Upgrade subscription",
-                    downgrade: "Downgrade subscription",
-                    cancel: "Cancel subscription",
-                    account: "Account issues",
-                    password: "Password reset",
-                    login: "Login problems",
-                    other: "Other issues",
-                    contact_agent: "Contact human agent"
+                    general: "I need general support"
                 };
                 return optionTexts[optionId] || optionId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
             };
 
             const handleQuickReply = async (reply) => {
                 if (isStreaming) return;
+                setActiveTab('chat');
                 await sendStreamingMessage(reply);
+            };
+
+            const handleStartChat = async (topic, message) => {
+                setActiveTab('chat');
+                if (message) {
+                    setTimeout(() => {
+                        sendStreamingMessage(message);
+                    }, 100);
+                }
             };
 
             const closeChat = () => {
@@ -474,97 +710,6 @@
                 return `${diffDays}d ago`;
             };
 
-            const renderRichMessage = (message) => {
-                if (message.messageType === 'card' && message.metadata) {
-                    return React.createElement('div', { 
-                        className: 'bubble card'
-                    }, [
-                        message.metadata.imageUrl && React.createElement('img', {
-                            key: 'image',
-                            src: message.metadata.imageUrl,
-                            alt: message.metadata.title || 'Card image',
-                            className: 'card-image'
-                        }),
-                        React.createElement('div', { key: 'content', className: 'card-content' }, [
-                            message.metadata.title && React.createElement('h4', {
-                                key: 'title',
-                                className: 'card-title'
-                            }, message.metadata.title),
-                            message.metadata.description && React.createElement('p', {
-                                key: 'desc',
-                                className: 'card-description'
-                            }, message.metadata.description),
-                            message.content && message.content !== message.metadata.title && React.createElement('p', {
-                                key: 'content'
-                            }, message.content),
-                            message.metadata.buttons && React.createElement('div', {
-                                key: 'buttons',
-                                style: { display: 'flex', flexDirection: 'column', gap: '8px' }
-                            }, message.metadata.buttons.map((button, idx) => 
-                                React.createElement('button', {
-                                    key: idx,
-                                    onClick: () => handleOptionSelect(button.id, button.payload, button.text),
-                                    className: 'menu-option'
-                                }, button.text)
-                            ))
-                        ])
-                    ]);
-                }
-
-                if (message.messageType === 'menu' && message.metadata?.options) {
-                    return React.createElement('div', {
-                        className: 'bubble menu'
-                    }, [
-                        React.createElement('div', { key: 'content', className: 'menu-content' }, [
-                            message.content && React.createElement('p', { key: 'text', style: { marginBottom: '12px' } }, message.content),
-                            React.createElement('div', { 
-                                key: 'options'
-                            }, message.metadata.options.map((option, idx) =>
-                                React.createElement('button', {
-                                    key: idx,
-                                    onClick: () => handleOptionSelect(option.id, option.payload, option.text),
-                                    className: 'menu-option'
-                                }, option.text)
-                            ))
-                        ])
-                    ]);
-                }
-
-                if (message.messageType === 'image' && message.metadata?.imageUrl) {
-                    return React.createElement('div', {
-                        className: 'bubble card'
-                    }, [
-                        React.createElement('img', {
-                            key: 'image',
-                            src: message.metadata.imageUrl,
-                            alt: message.metadata.title || 'Message image',
-                            className: 'card-image'
-                        }),
-                        message.content && React.createElement('div', {
-                            key: 'content',
-                            className: 'card-content'
-                        }, React.createElement('p', {}, message.content))
-                    ]);
-                }
-
-                // Default text message
-                return React.createElement('div', {
-                    className: `bubble ${message.sender}`
-                }, [
-                    React.createElement('p', { key: 'content' }, message.content),
-                    message.metadata?.quickReplies && React.createElement('div', {
-                        key: 'quickReplies',
-                        className: 'quick-replies'
-                    }, message.metadata.quickReplies.map((reply, idx) =>
-                        React.createElement('button', {
-                            key: idx,
-                            onClick: () => handleQuickReply(reply),
-                            className: 'quick-reply'
-                        }, reply)
-                    ))
-                ]);
-            };
-
             const groupMessages = (messages) => {
                 const groups = [];
                 let currentGroup = null;
@@ -573,7 +718,6 @@
                     const isFollowUp = message.metadata?.isFollowUp;
                     
                     if (!currentGroup || message.sender !== currentGroup.sender || !isFollowUp) {
-                        // Start new group
                         currentGroup = {
                             sender: message.sender,
                             messages: [message],
@@ -581,7 +725,6 @@
                         };
                         groups.push(currentGroup);
                     } else {
-                        // Add to current group
                         currentGroup.messages.push(message);
                     }
                 });
@@ -608,100 +751,150 @@
                                 </div>
                             </div>
                         </div>
-                        {isMobile ? (
-                            React.createElement('button', {
-                                onClick: closeChat,
-                                style: { background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '0.5rem' }
-                            }, React.createElement('svg', {
-                                width: '20',
-                                height: '20',
-                                fill: 'currentColor',
-                                viewBox: '0 0 24 24'
-                            }, React.createElement('path', {
-                                d: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
-                            })))
-                        ) : (
-                            React.createElement('button', {
-                                onClick: closeChat,
-                                style: { background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '0.5rem' }
-                            }, React.createElement('svg', {
-                                width: '16',
-                                height: '16',
-                                fill: 'currentColor',
-                                viewBox: '0 0 24 24'
-                            }, React.createElement('path', {
-                                d: 'M19 13H5v-2h14v2z'
-                            })))
-                        )}
+                        <button onClick={closeChat} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '0.5rem' }}>
+                            {isMobile ? (
+                                React.createElement('svg', { width: '20', height: '20', fill: 'currentColor', viewBox: '0 0 24 24' }, 
+                                    React.createElement('path', { d: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z' })
+                                )
+                            ) : (
+                                React.createElement('svg', { width: '16', height: '16', fill: 'currentColor', viewBox: '0 0 24 24' }, 
+                                    React.createElement('path', { d: 'M19 13H5v-2h14v2z' })
+                                )
+                            )}
+                        </button>
                     </div>
 
-                    <div className="chat-content">
-                        {messageGroups.length === 0 ? (
-                            <div style={{ textAlign: 'center', color: '#6b7280', marginTop: '2rem' }}>
-                                <p>👋 Hi! How can I help you today?</p>
-                            </div>
-                        ) : (
-                            messageGroups.map((group, groupIndex) => (
-                                React.createElement('div', {
-                                    key: groupIndex,
-                                    className: `message-group ${group.sender}`
-                                }, [
-                                    group.sender === 'bot' && React.createElement('img', {
-                                        key: 'avatar',
-                                        src: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256",
-                                        alt: "Bot avatar",
-                                        className: "avatar"
-                                    }),
-                                    React.createElement('div', {
-                                        key: 'messages',
-                                        className: 'messages'
-                                    }, [
-                                        ...group.messages.map((message, messageIndex) => (
-                                            React.createElement('div', {
-                                                key: `${groupIndex}-${messageIndex}`
-                                            }, renderRichMessage(message))
-                                        )),
-                                        React.createElement('div', {
-                                            key: 'timestamp',
-                                            className: 'timestamp'
-                                        }, formatTimeAgo(group.timestamp))
-                                    ])
-                                ])
-                            ))
-                        )}
+                    {/* Home Tab Content */}
+                    <div className={`tab-content ${activeTab !== 'home' ? 'hidden' : ''}`}>
+                        <HomeTab onStartChat={handleStartChat} isMobile={isMobile} />
+                    </div>
 
-                        {isTyping && (
-                            <div className="message-group assistant">
-                                <img 
-                                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"
-                                    alt="Bot avatar"
-                                    className="avatar"
-                                />
-                                <div className="messages">
-                                    <div className="typing-indicator">
-                                        <div className="typing-dot"></div>
-                                        <div className="typing-dot"></div>
-                                        <div className="typing-dot"></div>
+                    {/* Chat Tab Content */}
+                    <div className={`tab-content ${activeTab !== 'chat' ? 'hidden' : ''}`}>
+                        <div className="chat-content">
+                            {messageGroups.length === 0 ? (
+                                <div className="empty-state">
+                                    <div style={{ fontSize: '48px', marginBottom: '1rem' }}>💬</div>
+                                    <h3 style={{ fontWeight: '500', marginBottom: '0.5rem' }}>No messages yet</h3>
+                                    <p style={{ fontSize: '14px' }}>Start a conversation or go to Home to choose a topic</p>
+                                </div>
+                            ) : (
+                                messageGroups.map((group, groupIndex) => (
+                                    React.createElement('div', {
+                                        key: groupIndex,
+                                        className: `message-group ${group.sender}`
+                                    }, [
+                                        group.sender === 'bot' && React.createElement('img', {
+                                            key: 'avatar',
+                                            src: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256",
+                                            alt: "Bot avatar",
+                                            className: "avatar"
+                                        }),
+                                        React.createElement('div', {
+                                            key: 'messages',
+                                            className: 'messages'
+                                        }, [
+                                            ...group.messages.map((message, messageIndex) => (
+                                                React.createElement(MessageBubble, {
+                                                    key: `${groupIndex}-${messageIndex}`,
+                                                    message: message,
+                                                    onOptionSelect: handleOptionSelect,
+                                                    onQuickReply: handleQuickReply
+                                                })
+                                            )),
+                                            React.createElement('div', {
+                                                key: 'timestamp',
+                                                className: 'timestamp'
+                                            }, formatTimeAgo(group.timestamp))
+                                        ])
+                                    ])
+                                ))
+                            )}
+
+                            {isTyping && (
+                                <div className="message-group bot">
+                                    <img 
+                                        src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"
+                                        alt="Bot avatar"
+                                        className="avatar"
+                                    />
+                                    <div className="messages">
+                                        <div className="typing-indicator">
+                                            <div className="typing-dot"></div>
+                                            <div className="typing-dot"></div>
+                                            <div className="typing-dot"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        <div ref={messagesEndRef} />
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        <form onSubmit={sendMessage} className="input-container">
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                placeholder="Type your message..."
+                                disabled={isStreaming}
+                            />
+                            <button type="submit" disabled={isStreaming}>
+                                Send
+                            </button>
+                        </form>
+
+                        <div className="quick-replies">
+                            <button 
+                                className="quick-reply"
+                                onClick={() => handleQuickReply("Thank you")}
+                                disabled={isStreaming}
+                            >
+                                Thank you
+                            </button>
+                            <button 
+                                className="quick-reply"
+                                onClick={() => handleQuickReply("I need more help")}
+                                disabled={isStreaming}
+                            >
+                                I need more help
+                            </button>
+                            <button 
+                                className="quick-reply"
+                                onClick={() => handleQuickReply("Contact human agent")}
+                                disabled={isStreaming}
+                            >
+                                Contact agent
+                            </button>
+                        </div>
                     </div>
 
-                    <form onSubmit={sendMessage} className="input-container">
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Type your message..."
-                            disabled={isStreaming}
-                        />
-                        <button type="submit" disabled={isStreaming}>
-                            Send
+                    {/* Tab Navigation */}
+                    <div className="tab-navigation">
+                        <button 
+                            className={`tab-button ${activeTab === 'home' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('home')}
+                        >
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            </svg>
+                            {!isMobile && <span>Home</span>}
                         </button>
-                    </form>
+                        <button 
+                            className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('chat')}
+                        >
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                            </svg>
+                            {!isMobile && <span>Chat</span>}
+                            {messages.length > 0 && (
+                                <span className="tab-badge">
+                                    {messages.length}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </div>
             );
         }
