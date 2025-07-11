@@ -73,6 +73,20 @@ export const RichMessageSchema = z.object({
       payload: z.any().optional(),
     })).optional(),
     quickReplies: z.array(z.string()).optional(),
+    formFields: z.array(z.object({
+      id: z.string(),
+      label: z.string(),
+      type: z.enum(['text', 'email', 'textarea']),
+      placeholder: z.string().optional(),
+      required: z.boolean().optional(),
+      value: z.string().optional(),
+    })).optional(),
+    submitButton: z.object({
+      id: z.string(),
+      text: z.string(),
+      action: z.string(),
+      payload: z.any().optional(),
+    }).optional(),
   }).optional(),
 });
 
@@ -92,6 +106,20 @@ export const messageSchema = z.object({
     buttons: z.any().optional(),
     options: z.any().optional(),
     quickReplies: z.array(z.string()).optional(),
+    formFields: z.array(z.object({
+      id: z.string(),
+      label: z.string(),
+      type: z.enum(['text', 'email', 'textarea']),
+      placeholder: z.string().optional(),
+      required: z.boolean().optional(),
+      value: z.string().optional(),
+    })).optional(),
+    submitButton: z.object({
+      id: z.string(),
+      text: z.string(),
+      action: z.string(),
+      payload: z.any().optional(),
+    }).optional(),
     // Streaming support
     isStreaming: z.boolean().optional(),
     chunks: z.array(z.object({
@@ -104,3 +132,4 @@ export const messageSchema = z.object({
     isFollowUp: z.boolean().optional(),
   }).optional(),
 });
+`

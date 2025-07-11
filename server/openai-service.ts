@@ -46,7 +46,7 @@ export async function generateMultiBubbleResponse(
                   properties: {
                     messageType: {
                       type: "string",
-                      enum: ["text", "card", "menu", "image", "quickReplies"]
+                      enum: ["text", "card", "menu", "image", "quickReplies", "form"]
                     },
                     content: {
                       type: "string"
@@ -87,6 +87,34 @@ export async function generateMultiBubbleResponse(
                         quickReplies: {
                           type: "array",
                           items: { type: "string" }
+                        },
+                        formFields: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string" },
+                              label: { type: "string" },
+                              type: { 
+                                type: "string",
+                                enum: ["text", "email", "textarea"]
+                              },
+                              placeholder: { type: "string" },
+                              required: { type: "boolean" },
+                              value: { type: "string" }
+                            },
+                            required: ["id", "label", "type"]
+                          }
+                        },
+                        submitButton: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string" },
+                            text: { type: "string" },
+                            action: { type: "string" },
+                            payload: {}
+                          },
+                          required: ["id", "text", "action"]
                         }
                       }
                     }
@@ -104,7 +132,7 @@ export async function generateMultiBubbleResponse(
     });
 
     let accumulatedContent = '';
-    
+
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || '';
       if (delta) {
@@ -114,11 +142,11 @@ export async function generateMultiBubbleResponse(
 
     const parsedResponse = JSON.parse(accumulatedContent);
     console.log(`[OpenAI] Raw response: ${accumulatedContent}`);
-    
+
     // Validate against schema
     const validated = AIResponseSchema.parse(parsedResponse);
     console.log(`[OpenAI] Successfully generated ${validated.bubbles.length} message bubbles`);
-    
+
     return validated;
   } catch (error) {
     console.error("[OpenAI] Error generating response:", error);
@@ -171,7 +199,7 @@ export async function* generateStreamingResponse(
                   properties: {
                     messageType: {
                       type: "string",
-                      enum: ["text", "card", "menu", "image", "quickReplies"]
+                      enum: ["text", "card", "menu", "image", "quickReplies", "form"]
                     },
                     content: {
                       type: "string"
@@ -212,6 +240,34 @@ export async function* generateStreamingResponse(
                         quickReplies: {
                           type: "array",
                           items: { type: "string" }
+                        },
+                        formFields: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string" },
+                              label: { type: "string" },
+                              type: { 
+                                type: "string",
+                                enum: ["text", "email", "textarea"]
+                              },
+                              placeholder: { type: "string" },
+                              required: { type: "boolean" },
+                              value: { type: "string" }
+                            },
+                            required: ["id", "label", "type"]
+                          }
+                        },
+                        submitButton: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string" },
+                            text: { type: "string" },
+                            action: { type: "string" },
+                            payload: {}
+                          },
+                          required: ["id", "text", "action"]
                         }
                       }
                     }
@@ -232,7 +288,7 @@ export async function* generateStreamingResponse(
     let processedBubbles = 0;
     let lastBubbleTime = 0;
     const BUBBLE_DELAY_MS = 1000; // 500ms delay between bubbles
-    
+
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || '';
       if (delta) {
@@ -242,7 +298,7 @@ export async function* generateStreamingResponse(
         if (delta.includes("},{")) {
           jsonEnded = true;
         }
-        
+
         // Use best-effort parser to extract any complete bubbles from incomplete JSON
         try {
           const parseResult = parse(accumulatedContent);
@@ -250,7 +306,7 @@ export async function* generateStreamingResponse(
           //console.log(`[OpenAI] Data: ${JSON.stringify(parseResult.bubbles)}`)
           if (parseResult.bubbles && Array.isArray(parseResult.bubbles) && jsonEnded) {
             const bubbles = parseResult.bubbles;
-            
+
             // Check if we have new complete bubbles beyond what we've already processed
             for (let i = processedBubbles; i < bubbles.length; i++) {
               const bubble = bubbles[i];
@@ -261,13 +317,13 @@ export async function* generateStreamingResponse(
                 const shouldYieldBubble = async () => {
                   const now = Date.now();
                   const timeSinceLastBubble = now - lastBubbleTime;
-                  
+
                   // If this isn't the first bubble and we haven't waited long enough, add delay
                   if (processedBubbles > 0 && timeSinceLastBubble < BUBBLE_DELAY_MS) {
                     const remainingDelay = BUBBLE_DELAY_MS - timeSinceLastBubble;
                     await new Promise(resolve => setTimeout(resolve, remainingDelay));
                   }
-                  
+
                   lastBubbleTime = Date.now();
                   return true;
                 };
@@ -314,25 +370,25 @@ export async function* generateStreamingResponse(
       console.log(`[OpenAI] Final accumulated content length: ${accumulatedContent.length}, content: ${accumulatedContent}`);
       const finalParseResult = JSON.parse(accumulatedContent);
       console.log(`[OpenAI] Final parse successful, validating schema...`);
-      
+
       const validated = AIResponseSchema.parse(finalParseResult);
-      
+
       // Yield any remaining bubbles that weren't processed during streaming
       for (let i = processedBubbles; i < validated.bubbles.length; i++) {
         const bubble = validated.bubbles[i];
         console.log(`[OpenAI] Final bubble ${i + 1}: ${bubble.messageType}`);
-        
+
         // Apply delay for remaining bubbles too
         if (i > processedBubbles) {
           await new Promise(resolve => setTimeout(resolve, BUBBLE_DELAY_MS));
         }
-        
+
         yield { type: 'bubble', bubble };
       }
-      
+
       console.log(`[OpenAI] Streaming complete. Generated ${validated.bubbles.length} bubbles total`);
       yield { type: 'complete', content: 'streaming_complete' };
-      
+
     } catch (parseError) {
       console.error("[OpenAI] Error parsing final response:", parseError);
       console.error("[OpenAI] Accumulated content:", accumulatedContent);

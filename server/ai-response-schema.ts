@@ -17,9 +17,19 @@ const OptionSchema = z.object({
   payload: z.any().optional(),
 });
 
+// Define the form field schema for form inputs
+const FormFieldSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  type: z.enum(['text', 'email', 'textarea']),
+  placeholder: z.string().optional(),
+  required: z.boolean().optional(),
+  value: z.string().optional(),
+});
+
 // Define individual message bubble schema
 const MessageBubbleSchema = z.object({
-  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies']),
+  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form']),
   content: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -28,6 +38,8 @@ const MessageBubbleSchema = z.object({
     buttons: z.array(ButtonSchema).optional(),
     options: z.array(OptionSchema).optional(),
     quickReplies: z.array(z.string()).optional(),
+    formFields: z.array(FormFieldSchema).optional(),
+    submitButton: ButtonSchema.optional(),
   }).optional(),
 });
 
@@ -49,6 +61,7 @@ Message Types Available:
 3. MENU: Interactive menus with selectable options
 4. IMAGE: Image responses with optional text
 5. QUICKREPLIES: Text with suggested quick reply buttons
+6. FORM: Interactive forms with input fields and submit button
 
 For natural conversations, break your responses into multiple bubbles. Each bubble should be a complete thought. For example:
 
@@ -61,6 +74,22 @@ For natural conversations, break your responses into multiple bubbles. Each bubb
       {"id": "technical", "text": "Technical Support", "action": "select"},
       {"id": "sales", "text": "Sales Questions", "action": "select"}
     ]}}
+  ]
+}
+
+For contact forms, use the FORM type:
+{
+  "bubbles": [
+    {"messageType": "text", "content": "I'd be happy to help you get in touch with our team!"},
+    {"messageType": "form", "content": "Please fill out the contact form below:", "metadata": {
+      "title": "Contact Us",
+      "formFields": [
+        {"id": "name", "label": "Name", "type": "text", "placeholder": "Enter your full name", "required": true},
+        {"id": "email", "label": "Email", "type": "email", "placeholder": "Enter your email address", "required": true},
+        {"id": "message", "label": "Message", "type": "textarea", "placeholder": "How can we help you?", "required": true}
+      ],
+      "submitButton": {"id": "submit_contact", "text": "Send Message", "action": "submit_form"}
+    }}
   ]
 }
 
