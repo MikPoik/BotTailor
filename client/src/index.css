@@ -88,12 +88,12 @@
     animation: none;
   }
 
-  /* Tab content styling */
-  [data-state="inactive"] {
+  /* Tab content styling - only target TabsContent, not TabsTrigger */
+  [data-radix-tabs-content][data-state="inactive"] {
     display: none !important;
   }
   
-  [data-state="active"] {
+  [data-radix-tabs-content][data-state="active"] {
     display: flex !important;
   }
 
