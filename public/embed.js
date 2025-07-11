@@ -216,22 +216,22 @@
         badge.style.display = 'none';
 
         if (isMobile()) {
-          // Lazy load mobile iframe if not already loaded
-          if (!mobileIframe.src) {
-            mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true&v=${Date.now()}`;
+            // Lazy load mobile iframe if not already loaded
+            if (!mobileIframe.src) {
+              mobileIframe.src = `${this.config.apiUrl}/widget-prod/${this.config.sessionId}?mobile=true&embedded=true`;
+            }
+            overlay.style.display = 'block';
+            mobileIframe.style.visibility = 'visible';
+            mobileIframe.classList.add('show');
+          } else {
+            // Lazy load desktop iframe if not already loaded
+            if (!iframe.src) {
+              iframe.src = `${this.config.apiUrl}/widget-prod/${this.config.sessionId}?mobile=${isMobile()}&embedded=true`;
+            }
+            bubble.style.display = 'none';
+            iframe.style.visibility = 'visible';
+            iframe.classList.add('show');
           }
-          overlay.style.display = 'block';
-          mobileIframe.style.visibility = 'visible';
-          mobileIframe.classList.add('show');
-        } else {
-          // Lazy load desktop iframe if not already loaded
-          if (!iframe.src) {
-            iframe.src = `${this.config.apiUrl}/widget-prod/${this.config.sessionId}?mobile=${isMobile()}&embedded=true`;
-          }
-          bubble.style.display = 'none';
-          iframe.style.visibility = 'visible';
-          iframe.classList.add('show');
-        }
       };
 
       const closeChat = () => {
