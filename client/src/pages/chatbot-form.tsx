@@ -20,9 +20,16 @@ import { z } from "zod";
 import { ArrowLeft, Bot, Save } from "lucide-react";
 import { Link } from "wouter";
 
-const formSchema = insertChatbotConfigSchema.omit({ userId: true }).extend({
+// Create a more explicit form schema to ensure proper typing
+const formSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  systemPrompt: z.string().min(1, "System prompt is required"),
+  model: z.string().min(1, "Model is required"),
   temperature: z.number().min(0).max(10).default(7),
   maxTokens: z.number().min(100).max(4000).default(1000),
+  welcomeMessage: z.string().optional(),
+  fallbackMessage: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -137,6 +144,13 @@ export default function ChatbotForm() {
           console.log("Form submit event triggered");
           console.log("Form is valid:", form.formState.isValid);
           console.log("Form errors:", form.formState.errors);
+          console.log("Form values:", form.getValues());
+          
+          // Try to validate the form data manually
+          const formData = form.getValues();
+          const validationResult = formSchema.safeParse(formData);
+          console.log("Manual validation result:", validationResult);
+          
           form.handleSubmit(onSubmit)(e);
         }} className="space-y-8">
           {/* Basic Information */}
