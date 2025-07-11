@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, MessageSquare, Plus, Settings } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +24,7 @@ export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [sessionId, setSessionId] = useState<string>("");
+  const [, setLocation] = useLocation();
 
   // Generate session ID for chat widget
   useEffect(() => {
@@ -130,11 +131,12 @@ export default function Dashboard() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Your Chatbots</h2>
-          <Button asChild>
-            <Link href="/chatbots/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Chatbot
-            </Link>
+          <Button onClick={() => {
+            console.log("Create Chatbot clicked");
+            setLocation("/chatbots/new");
+          }}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Chatbot
           </Button>
         </div>
 
