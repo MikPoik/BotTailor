@@ -178,6 +178,17 @@
     max-height: 90vh;
     animation: fadeIn 0.3s ease-in-out;
   }
+
+  /* Embedded widget styling */
+  .chat-widget-embedded {
+    @apply w-full h-full flex flex-col overflow-hidden bg-white;
+  }
+
+  .chat-widget-embedded .chat-header {
+    @apply flex-shrink-0 sticky top-0 z-50;
+    position: sticky !important;
+    top: 0 !important;
+  }
   
   /* Force tabs navigation to stay at bottom for desktop */
   .chat-interface div[data-radix-tabs-list] {
@@ -264,6 +275,13 @@
     flex-direction: column;
     height: 100vh;
     animation: slideUp 0.3s ease-out;
+  }
+
+  /* Mobile embedded widget styling */
+  .chat-widget-embedded .chat-header {
+    @apply flex-shrink-0 sticky top-0 z-50;
+    position: sticky !important;
+    top: 0 !important;
   }
   
   /* Ensure tab navigation is always visible on mobile */

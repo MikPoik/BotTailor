@@ -116,44 +116,49 @@ export default function ChatWidget({
 
   // If embedded (iframe), show the full chat interface
   if (isEmbedded) {
+    const handleEmbeddedClose = () => {
+      // Send close message to parent window
+      if (window.parent) {
+        window.parent.postMessage({ type: 'CLOSE_CHAT' }, '*');
+      }
+    };
+
     return (
-      <div className="w-full h-full">
-        <div className="bg-white overflow-hidden flex flex-col h-full w-full">
-          {/* Desktop header */}
-          <div 
-            className="text-white p-4 flex items-center justify-between flex-shrink-0"
-            style={{ backgroundColor: primaryColor }}
-          >
-            <div className="flex items-center space-x-3">
-              <img 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
-                alt="Support agent avatar" 
-                className="w-10 h-10 rounded-full border-2 border-white"
-              />
-              <div>
-                <h3 className="font-semibold">Support Assistant</h3>
-                <div className="flex items-center space-x-1 text-xs text-blue-100">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span>Online</span>
-                </div>
+      <div className="chat-widget-embedded">
+        {/* Desktop header - sticky at top */}
+        <div 
+          className="chat-header text-white p-4 flex items-center justify-between"
+          style={{ backgroundColor: primaryColor }}
+        >
+          <div className="flex items-center space-x-3">
+            <img 
+              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
+              alt="Support agent avatar" 
+              className="w-10 h-10 rounded-full border-2 border-white"
+            />
+            <div>
+              <h3 className="font-semibold">Support Assistant</h3>
+              <div className="flex items-center space-x-1 text-xs text-blue-100">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span>Online</span>
               </div>
             </div>
-            <button 
-              onClick={closeChat}
-              className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
+          <button 
+            onClick={handleEmbeddedClose}
+            className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-          {/* Chat content - takes remaining space */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <TabbedChatInterface 
-              sessionId={sessionId} 
-              isMobile={false} 
-              isPreloaded={!isSessionLoading && !isMessagesLoading}
-            />
-          </div>
+        {/* Chat content - takes remaining space */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <TabbedChatInterface 
+            sessionId={sessionId} 
+            isMobile={false} 
+            isPreloaded={!isSessionLoading && !isMessagesLoading}
+          />
         </div>
       </div>
     );
