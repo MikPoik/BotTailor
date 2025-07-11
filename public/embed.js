@@ -218,7 +218,7 @@
         if (isMobile()) {
                 // Lazy load mobile iframe if not already loaded
                 if (!mobileIframe.src) {
-                  mobileIframe.src = `${this.config.apiUrl}/widget-prod/${this.config.sessionId}?mobile=true&embedded=true`;
+                  mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&mobile=true&embedded=true`;
                 }
                 overlay.style.display = 'block';
                 mobileIframe.style.visibility = 'visible';
@@ -226,7 +226,7 @@
               } else {
                 // Lazy load desktop iframe if not already loaded
                 if (!iframe.src) {
-                  iframe.src = `${this.config.apiUrl}/widget-prod/${this.config.sessionId}?mobile=false&embedded=true`;
+                  iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&mobile=false&embedded=true`;
                 }
                 bubble.style.display = 'none';
                 iframe.style.visibility = 'visible';

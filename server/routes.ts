@@ -356,75 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve production chat widget (compiled React version)
-  app.get('/widget-prod/:sessionId', async (req: Request, res: Response) => {
-    try {
-      const sessionId = req.params.sessionId as string;
-      const isMobile = req.query.mobile === 'true';
-      const embedded = req.query.embedded === 'true';
-
-      console.log(`Loading production chat widget - SessionId: ${sessionId}, Mobile: ${isMobile}, Embedded: ${embedded}`);
-
-      // In production, serve the built React app
-      if (app.get("env") === "production") {
-        // Read the built index.html
-        const distPath = path.resolve(import.meta.dirname, "../dist");
-        let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
-
-        // Inject session data into the HTML
-        const apiUrl = req.protocol + '://' + req.get('host');
-        const sessionData = `
-          <script>
-            window.__CHAT_WIDGET_CONFIG__ = {
-              sessionId: "${sessionId}",
-              apiUrl: "${apiUrl}",
-              isMobile: ${isMobile},
-              embedded: ${embedded}
-            };
-          </script>
-        `;
-
-        // Insert session data before closing head tag
-        html = html.replace('</head>', `${sessionData}</head>`);
-
-        console.log(`Production chat widget served - API URL: ${apiUrl}`);
-        res.setHeader('Content-Type', 'text/html');
-        res.send(html);
-      } else {
-        // In development, redirect to the React dev route with embedded config
-        const apiUrl = req.protocol + '://' + req.get('host');
-        let html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Widget</title>
-    <script>
-      window.__CHAT_WIDGET_CONFIG__ = {
-        sessionId: "${sessionId}",
-        apiUrl: "${apiUrl}",
-        isMobile: ${isMobile},
-        embedded: ${embedded}
-      };
-    </script>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-</body>
-</html>
-        `;
-        
-        console.log(`Development chat widget served - API URL: ${apiUrl}`);
-        res.setHeader('Content-Type', 'text/html');
-        res.send(html);
-      }
-    } catch (error) {
-      console.error('Error serving production chat widget:', error);
-      res.status(500).send('Internal server error');
-    }
-  });
+  
 
   // Serve chat widget styles
   app.get('/styles.css', (req, res) => {
