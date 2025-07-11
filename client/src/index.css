@@ -98,6 +98,31 @@
     flex-direction: column !important;
     flex: 1 !important;
     min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Remove default padding and margin from TabsContent */
+  [data-radix-tabs-content] {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Fix any potential overlay issues */
+  .chat-interface .tabs-content,
+  .chat-interface-mobile .tabs-content {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: auto !important;
+    transform: none !important;
   }
 
   .chat-interface {
