@@ -1,10 +1,29 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, MessageSquare, Settings, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import ChatWidget from "@/components/chat/chat-widget";
 
 export default function Landing() {
+  const [sessionId, setSessionId] = useState<string>("");
+
+  useEffect(() => {
+    const generateSessionId = () => {
+      return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    };
+
+    const storedSessionId = localStorage.getItem('landing_chat_session_id');
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+    } else {
+      const newSessionId = generateSessionId();
+      localStorage.setItem('landing_chat_session_id', newSessionId);
+      setSessionId(newSessionId);
+    }
+  }, []);
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
       {/* Hero Section */}
       <section className="flex-1 flex items-center justify-center px-4 py-12 md:py-24">
         <div className="container max-w-4xl text-center">
@@ -101,6 +120,15 @@ export default function Landing() {
           </Button>
         </div>
       </section>
+
+      {/* Chat Widget */}
+      {sessionId && (
+        <ChatWidget 
+          sessionId={sessionId}
+          position="bottom-right"
+          primaryColor="#3b82f6"
+        />
+      )}
     </div>
   );
 }

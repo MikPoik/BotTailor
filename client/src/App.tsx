@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import Home from "@/pages/home";
 
 function AuthenticatedRouter() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -25,14 +26,16 @@ function AuthenticatedRouter() {
     <Switch>
       {!isAuthenticated ? (
         <>
-          <Route path="/" component={Landing} />
+          <Route path="/" component={Home} />
+          <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
         </>
       ) : (
         <>
-          <Route path="/" component={Dashboard} />
+          <Route path="/" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
         </>

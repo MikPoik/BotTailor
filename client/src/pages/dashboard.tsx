@@ -7,7 +7,8 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import ChatWidget from "@/components/chat/chat-widget";
 
 interface ChatbotConfig {
   id: number;
@@ -22,6 +23,23 @@ interface ChatbotConfig {
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [sessionId, setSessionId] = useState<string>("");
+
+  // Generate session ID for chat widget
+  useEffect(() => {
+    const generateSessionId = () => {
+      return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    };
+
+    const storedSessionId = localStorage.getItem('dashboard_chat_session_id');
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+    } else {
+      const newSessionId = generateSessionId();
+      localStorage.setItem('dashboard_chat_session_id', newSessionId);
+      setSessionId(newSessionId);
+    }
+  }, []);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -222,6 +240,15 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Chat Widget */}
+      {sessionId && (
+        <ChatWidget 
+          sessionId={sessionId}
+          position="bottom-right"
+          primaryColor="#3b82f6"
+        />
+      )}
     </div>
   );
 }
