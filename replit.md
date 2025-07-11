@@ -6,7 +6,13 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
-- **July 11, 2025**: Fixed production deployment issue where chat widget couldn't serve static files. Updated paths in `server/routes.ts` and `server/index.ts` to correctly point to `./dist/public` directory instead of `../public`.
+- **July 11, 2025**: Successfully completed embeddable chat widget functionality:
+  - Fixed widget embedding to show only chat interface instead of full demo page when `embedded=true`
+  - Resolved mixed content errors by forcing HTTPS protocol in production environments
+  - Updated API client to use absolute URLs when widget configuration is available
+  - Enhanced embed.js script to properly pass configuration to iframe content
+  - Fixed production deployment paths for static files and chat-widget route
+  - Widget now works seamlessly when embedded on external HTTPS websites
 
 ## User Preferences
 
