@@ -49,8 +49,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // Validate request body
-      const validationResult = insertChatbotConfigSchema.safeParse(req.body);
+      // Create a client-side schema that excludes userId since it comes from auth
+      const clientChatbotSchema = insertChatbotConfigSchema.omit({ userId: true });
+      
+      // Validate request body (without userId)
+      const validationResult = clientChatbotSchema.safeParse(req.body);
       if (!validationResult.success) {
         return res.status(400).json({ 
           message: "Invalid request data", 
