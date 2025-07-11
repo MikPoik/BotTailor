@@ -285,14 +285,13 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
       {/* Tab Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <TabsContent 
           value="home" 
-          className="flex-1 m-0 p-0 flex flex-col overflow-hidden h-full"
+          className="flex-1 m-0 p-0 flex flex-col overflow-hidden min-h-0"
           style={{ 
             position: 'static',
             width: '100%',
-            height: '100%',
             background: 'transparent',
             border: 'none',
             padding: 0,
@@ -304,11 +303,10 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
 
         <TabsContent 
           value="chat" 
-          className="flex-1 m-0 p-0 flex flex-col overflow-hidden h-full"
+          className="flex-1 m-0 p-0 flex flex-col overflow-hidden min-h-0"
           style={{ 
             position: 'static',
             width: '100%',
-            height: '100%',
             background: 'transparent',
             border: 'none',
             padding: 0,
