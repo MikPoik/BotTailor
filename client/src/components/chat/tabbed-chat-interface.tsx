@@ -283,127 +283,125 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
   }
 
   return (
-    <div className={`flex flex-col h-full ${isMobile ? 'chat-interface-mobile' : 'chat-interface'}`}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        {/* Tab Navigation */}
-        <div className="border-b border-neutral-200 bg-white">
-          <TabsList className="grid w-full grid-cols-2 h-12 bg-transparent p-0">
-            <TabsTrigger 
-              value="home" 
-              className="flex items-center gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              <Home className="h-4 w-4" />
-              <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="chat" 
-              className="flex items-center gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
-              {messages.length > 0 && (
-                <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
-                  {messages.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
-        </div>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+      {/* Tab Navigation */}
+      <div className="border-b border-neutral-200 bg-white">
+        <TabsList className="grid w-full grid-cols-2 h-12 bg-transparent p-0">
+          <TabsTrigger 
+            value="home" 
+            className="flex items-center gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          >
+            <Home className="h-4 w-4" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="chat" 
+            className="flex items-center gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
+            {messages.length > 0 && (
+              <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+                {messages.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <TabsContent value="home" className="flex-1 m-0 flex flex-col overflow-hidden">
-            <HomeTab onStartChat={handleStartChat} isMobile={isMobile} />
-          </TabsContent>
+      {/* Tab Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TabsContent value="home" className="flex-1 m-0 flex flex-col overflow-hidden">
+          <HomeTab onStartChat={handleStartChat} isMobile={isMobile} />
+        </TabsContent>
 
-          <TabsContent value="chat" className="flex-1 m-0 flex flex-col overflow-hidden">
-            {/* Messages area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center text-gray-500">
-                    <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <h3 className="font-medium mb-2">No messages yet</h3>
-                    <p className="text-sm">Start a conversation or go to Home to choose a topic</p>
-                  </div>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    onOptionSelect={handleOptionSelect}
-                    onQuickReply={handleQuickReply}
-                  />
-                ))
-              )}
-
-              {(isTyping || isStreaming) && <TypingIndicator />}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input area */}
-            <div className="border-t border-neutral-200 p-4 bg-white">
-              <div className="flex items-center space-x-3">
-                <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
-                  <Paperclip className="h-5 w-5" />
-                </button>
-
-                <div className="flex-1 relative">
-                  <Input
-                    type="text"
-                    placeholder="Type your message..."
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="rounded-full pr-12 border-neutral-300 focus:ring-2 focus:ring-primary focus:border-transparent"
-                    disabled={isLoading}
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isLoading}
-                    size="sm"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+        <TabsContent value="chat" className="flex-1 m-0 flex flex-col overflow-hidden">
+          {/* Messages area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <h3 className="font-medium mb-2">No messages yet</h3>
+                  <p className="text-sm">Start a conversation or go to Home to choose a topic</p>
                 </div>
               </div>
+            ) : (
+              messages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  onOptionSelect={handleOptionSelect}
+                  onQuickReply={handleQuickReply}
+                />
+              ))
+            )}
 
-              {/* Quick replies */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickReply("Thank you")}
-                  className="rounded-full text-xs px-3 py-1 h-auto"
+            {(isTyping || isStreaming) && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input area */}
+          <div className="border-t border-neutral-200 p-4 bg-white">
+            <div className="flex items-center space-x-3">
+              <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
+                <Paperclip className="h-5 w-5" />
+              </button>
+
+              <div className="flex-1 relative">
+                <Input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="rounded-full pr-12 border-neutral-300 focus:ring-2 focus:ring-primary focus:border-transparent"
                   disabled={isLoading}
-                >
-                  Thank you
-                </Button>
+                />
                 <Button
-                  variant="outline"
+                  onClick={handleSendMessage}
+                  disabled={!inputMessage.trim() || isLoading}
                   size="sm"
-                  onClick={() => handleQuickReply("I need more help")}
-                  className="rounded-full text-xs px-3 py-1 h-auto"
-                  disabled={isLoading}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
                 >
-                  I need more help
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickReply("Contact human agent")}
-                  className="rounded-full text-xs px-3 py-1 h-auto"
-                  disabled={isLoading}
-                >
-                  Contact agent
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          </TabsContent>
-        </div>
-      </Tabs>
-    </div>
+
+            {/* Quick replies */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickReply("Thank you")}
+                className="rounded-full text-xs px-3 py-1 h-auto"
+                disabled={isLoading}
+              >
+                Thank you
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickReply("I need more help")}
+                className="rounded-full text-xs px-3 py-1 h-auto"
+                disabled={isLoading}
+              >
+                I need more help
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickReply("Contact human agent")}
+                className="rounded-full text-xs px-3 py-1 h-auto"
+                disabled={isLoading}
+              >
+                Contact agent
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+      </div>
+    </Tabs>
   );
 }

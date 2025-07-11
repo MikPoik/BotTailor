@@ -88,14 +88,12 @@
     animation: none;
   }
 
-  /* Tab content styling - only target TabsContent within chat interface, not mobile overlays */
-  .chat-interface [data-radix-tabs-content][data-state="inactive"],
-  .chat-interface-mobile [data-radix-tabs-content][data-state="inactive"] {
+  /* Tab content styling - ensure proper tab display and flex layout */
+  [data-radix-tabs-content][data-state="inactive"] {
     display: none !important;
   }
   
-  .chat-interface [data-radix-tabs-content][data-state="active"],
-  .chat-interface-mobile [data-radix-tabs-content][data-state="active"] {
+  [data-radix-tabs-content][data-state="active"] {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 !important;
