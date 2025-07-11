@@ -53,7 +53,7 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
 // Rich message types
 export const RichMessageSchema = z.object({
-  type: z.enum(['text', 'card', 'menu', 'image', 'quickReplies']),
+  type: z.enum(['text', 'card', 'menu', 'image', 'quickReplies','form']),
   content: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -76,7 +76,7 @@ export const RichMessageSchema = z.object({
     formFields: z.array(z.object({
       id: z.string(),
       label: z.string(),
-      type: z.enum(['text', 'email', 'textarea']),
+      type: z.enum(['text', 'email', 'textarea','form']),
       placeholder: z.string().optional(),
       required: z.boolean().optional(),
       value: z.string().optional(),
@@ -97,7 +97,7 @@ export const messageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   sender: z.enum(["user", "bot"]),
-  messageType: z.enum(["text", "card", "menu", "image", "quickReplies"]).default("text"),
+  messageType: z.enum(["text", "card", "menu", "image", "quickReplies","form"]).default("text"),
   createdAt: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -132,4 +132,5 @@ export const messageSchema = z.object({
     isFollowUp: z.boolean().optional(),
   }).optional(),
 });
-`
+
+export type MessageSchema = z.infer<typeof messageSchema>;
