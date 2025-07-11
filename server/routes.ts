@@ -283,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In production, serve the built React app
       if (app.get("env") === "production") {
         // Read the built index.html
-        const distPath = path.resolve(__dirname, "../public");
+        const distPath = path.resolve(__dirname, "./public");
         let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
 
         // Inject session data into the HTML

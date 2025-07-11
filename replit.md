@@ -4,6 +4,10 @@
 
 This is a full-stack React chat widget application built with Express.js backend and React frontend. The application provides an embeddable chat widget that can be integrated into any website to provide customer support functionality with rich messaging features including text, cards, menus, and interactive options.
 
+## Recent Changes
+
+- **July 11, 2025**: Fixed production deployment issue where chat widget couldn't serve static files. Updated paths in `server/routes.ts` and `server/index.ts` to correctly point to `./dist/public` directory instead of `../public`.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
