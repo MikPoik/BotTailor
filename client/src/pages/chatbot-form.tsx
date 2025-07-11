@@ -143,13 +143,18 @@ export default function ChatbotForm() {
         <form onSubmit={(e) => {
           console.log("Form submit event triggered");
           console.log("Form is valid:", form.formState.isValid);
-          console.log("Form errors:", form.formState.errors);
-          console.log("Form values:", form.getValues());
+          console.log("Form errors:", JSON.stringify(form.formState.errors, null, 2));
+          console.log("Form values:", JSON.stringify(form.getValues(), null, 2));
           
           // Try to validate the form data manually
           const formData = form.getValues();
           const validationResult = formSchema.safeParse(formData);
-          console.log("Manual validation result:", validationResult);
+          console.log("Manual validation result:", JSON.stringify(validationResult, null, 2));
+          
+          if (!validationResult.success) {
+            console.log("Validation errors:", validationResult.error.errors);
+            return; // Don't submit if validation fails
+          }
           
           form.handleSubmit(onSubmit)(e);
         }} className="space-y-8">
