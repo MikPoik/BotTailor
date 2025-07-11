@@ -174,9 +174,26 @@
     @apply absolute bottom-0 right-0 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden;
     width: 500px;
     height: 70vh;
-    min-height: 600px;
+    min-height: 500px;
     max-height: 80vh;
     animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  /* Force tabs navigation to stay at bottom for desktop */
+  .chat-interface div[data-radix-tabs-list] {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+    z-index: 1000 !important;
+    border-top: 1px solid #e5e7eb !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Make sure tab content doesn't overflow on desktop */
+  .chat-interface div[data-radix-tabs-content] {
+    overflow-y: auto !important;
+    flex: 1 !important;
+    min-height: 0 !important;
   }
 
   .chat-message-user {
