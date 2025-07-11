@@ -304,7 +304,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Loading chat widget - SessionId: ${sessionId}, Mobile: ${isMobile}, Embedded: ${embedded}`);
 
-      const apiUrl = req.protocol + '://' + req.get('host');
+      // Force HTTPS in production environments
+      const protocol = app.get("env") === "production" ? 'https' : req.protocol;
+      const apiUrl = protocol + '://' + req.get('host');
 
       // In production, serve the built React app
       if (app.get("env") === "production") {
