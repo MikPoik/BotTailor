@@ -69,6 +69,11 @@ export default function ChatbotForm() {
     },
   });
 
+  // Force validation on mount to consider default values as valid
+  useEffect(() => {
+    form.trigger(); // This forces validation of all fields
+  }, [form]);
+
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
       return await apiRequest(`/api/chatbots`, {
@@ -141,31 +146,16 @@ export default function ChatbotForm() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={(e) => {
+        <form onSubmit={async (e) => {
           e.preventDefault();
           
           console.log("=== FORM DEBUG INFO ===");
           console.log("Form submit event triggered");
-          console.log("Form is valid:", form.formState.isValid);
-          console.log("Form is submitted:", form.formState.isSubmitted);
-          console.log("Form is validating:", form.formState.isValidating);
-          console.log("Form is dirty:", form.formState.isDirty);
-          console.log("Form is touched:", form.formState.isTouched);
-          console.log("Form errors:", JSON.stringify(form.formState.errors, null, 2));
-          console.log("Form values:", JSON.stringify(form.getValues(), null, 2));
-          console.log("Form field states:", Object.keys(form.getFieldState ? form.getFieldState : {}));
           
-          // Check each field state
-          const fieldNames = ['name', 'description', 'systemPrompt', 'model', 'temperature', 'maxTokens', 'welcomeMessage', 'fallbackMessage'];
-          fieldNames.forEach(fieldName => {
-            const fieldState = form.getFieldState(fieldName);
-            console.log(`Field ${fieldName}:`, {
-              invalid: fieldState.invalid,
-              isDirty: fieldState.isDirty,
-              isTouched: fieldState.isTouched,
-              error: fieldState.error
-            });
-          });
+          // Force validation before submit
+          const isValid = await form.trigger();
+          console.log("Form is valid after trigger:", isValid);
+          console.log("Form is valid (original):", form.formState.isValid);
           
           // Try to validate the form data manually
           const formData = form.getValues();
@@ -178,6 +168,7 @@ export default function ChatbotForm() {
           }
           
           // Since manual validation passes, submit the validated data directly
+          console.log("Submitting form with validated data");
           onSubmit(validationResult.data);
         }} className="space-y-8">
           {/* Basic Information */}
