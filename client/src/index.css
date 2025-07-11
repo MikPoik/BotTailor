@@ -89,11 +89,27 @@
   }
 
   /* Tab content styling - ensure proper tab display and flex layout */
-  [data-radix-tabs-content][data-state="inactive"] {
+  [role="tabpanel"][data-state="inactive"] {
     display: none !important;
   }
   
-  [data-radix-tabs-content][data-state="active"] {
+  [role="tabpanel"][data-state="active"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Additional fallback selectors for TabsContent */
+  [data-radix-tabs-content][data-state="inactive"],
+  .TabsContent[data-state="inactive"] {
+    display: none !important;
+  }
+  
+  [data-radix-tabs-content][data-state="active"],
+  .TabsContent[data-state="active"] {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 !important;
@@ -111,6 +127,40 @@
     position: static !important;
     width: 100% !important;
     height: 100% !important;
+  }
+
+  /* Target specific Radix TabsContent IDs */
+  [id*="radix"][id*="content"][data-state="inactive"] {
+    display: none !important;
+  }
+  
+  [id*="radix"][id*="content"][data-state="active"] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* High specificity selectors for the exact TabsContent behavior */
+  .chat-interface [role="tabpanel"][data-state="inactive"],
+  .chat-interface-mobile [role="tabpanel"][data-state="inactive"],
+  div[role="tabpanel"][data-state="inactive"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  .chat-interface [role="tabpanel"][data-state="active"],
+  .chat-interface-mobile [role="tabpanel"][data-state="active"],
+  div[role="tabpanel"][data-state="active"] {
+    display: flex !important;
+    visibility: visible !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
   }
 
   /* Fix any potential overlay issues */
