@@ -341,6 +341,20 @@ export async function* generateStreamingResponse(
                       processedBubbles = i + 1;
                     }
                   }
+                } else if (bubble.messageType === 'form') {
+                  // For form bubbles, ensure all required form fields are complete
+                  if (bubble.metadata?.formFields && Array.isArray(bubble.metadata.formFields) && bubble.metadata.formFields.length > 0) {
+                    // Check if all form fields have required properties
+                    const allFieldsComplete = bubble.metadata.formFields.every(field => 
+                      field && field.id && field.label && field.type
+                    );
+                    if (allFieldsComplete) {
+                      console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (form with ${bubble.metadata.formFields.length} fields)`);
+                      await shouldYieldBubble();
+                      yield { type: 'bubble', bubble };
+                      processedBubbles = i + 1;
+                    }
+                  }
                 } else if (bubble.messageType === 'text') {
                   // For text bubbles, ensure content is not just empty string
                   if (bubble.content && bubble.content.trim().length > 0) {
