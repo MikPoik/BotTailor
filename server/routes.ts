@@ -278,19 +278,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Loading chat widget - SessionId: ${sessionId}, Mobile: ${isMobile}, Embedded: ${embedded}`);
 
-      let html = fs.readFileSync(path.join(__dirname, 'templates/chat-widget.html'), 'utf8');
-
-      // Replace placeholders with actual values
       const apiUrl = req.protocol + '://' + req.get('host');
-      html = html.replace(/{{SESSION_ID}}/g, sessionId as string);
-      html = html.replace(/{{API_URL}}/g, apiUrl);
-      html = html.replace(/{{IS_MOBILE}}/g, isMobile.toString());
 
-      console.log(`Chat widget served - API URL: ${apiUrl}`);
-      res.setHeader('Content-Type', 'text/html');
-      res.send(html);
+      // In production, serve the built React app
+      if (app.get("env") === "production") {
+        // Read the built index.html
+        const distPath = path.resolve(__dirname, "../public");
+        let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
+
+        // Inject session data into the HTML
+        const sessionData = `
+          <script>
+            window.__CHAT_WIDGET_CONFIG__ = {
+              sessionId: "${sessionId}",
+              apiUrl: "${apiUrl}",
+              isMobile: ${isMobile},
+              embedded: ${embedded}
+            };
+          </script>
+        `;
+
+        // Insert session data before closing head tag
+        html = html.replace('</head>', `${sessionData}</head>`);
+
+        console.log(`Production chat widget served - API URL: ${apiUrl}`);
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+      } else {
+        // In development, serve with Vite dev server integration
+        let html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget</title>
+    <script>
+      window.__CHAT_WIDGET_CONFIG__ = {
+        sessionId: "${sessionId}",
+        apiUrl: "${apiUrl}",
+        isMobile: ${isMobile},
+        embedded: ${embedded}
+      };
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
+        `;
+        
+        console.log(`Development chat widget served - API URL: ${apiUrl}`);
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+      }
     } catch (error) {
-      console.error('Error reading chat widget template:', error);
+      console.error('Error serving chat widget:', error);
       res.status(500).send('Internal server error');
     }
   });
