@@ -53,7 +53,7 @@ export default function ChatbotForm() {
       name: "",
       description: "",
       systemPrompt: "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       temperature: 7,
       maxTokens: 1000,
       welcomeMessage: "Hello! How can I help you today?",
@@ -203,9 +203,8 @@ export default function ChatbotForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Fast & Cost-effective)</SelectItem>
-                        <SelectItem value="gpt-4">GPT-4 (Advanced Reasoning)</SelectItem>
-                        <SelectItem value="gpt-4-turbo">GPT-4 Turbo (Balanced Performance)</SelectItem>
+                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cost-effective)</SelectItem>
+                        <SelectItem value="gpt-4o">GPT-4o (Advanced Performance)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>

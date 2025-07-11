@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema } from "@shared/schema";
+import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateStructuredResponse, generateOptionResponse, generateStreamingResponse } from "./openai-service";
 import fs from "fs";
@@ -48,7 +48,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/chatbots', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const configData = { ...req.body, userId };
+      
+      // Validate request body
+      const validationResult = insertChatbotConfigSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: fromZodError(validationResult.error).toString() 
+        });
+      }
+      
+      const configData = { ...validationResult.data, userId };
       const config = await storage.createChatbotConfig(configData);
       res.json(config);
     } catch (error) {
