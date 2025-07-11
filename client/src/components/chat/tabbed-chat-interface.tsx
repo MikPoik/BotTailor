@@ -283,9 +283,9 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-screen">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full max-h-full">
       {/* Tab Content */}
-      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ height: 'calc(100% - 60px)' }}>
         <TabsContent 
           value="home" 
           className="flex-1 m-0 p-0 flex flex-col overflow-hidden min-h-0"
@@ -401,7 +401,7 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
       </div>
 
       {/* Tab Navigation - moved to bottom */}
-      <div className="border-t border-neutral-200 bg-white flex-shrink-0">
+      <div className="border-t border-neutral-200 bg-white flex-shrink-0" style={{ height: '60px' }}>
         <TabsList className="grid w-full grid-cols-2 h-14 bg-transparent p-1">
           <TabsTrigger 
             value="home" 
