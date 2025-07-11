@@ -405,20 +405,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve chat widget styles
   app.get('/styles.css', (req, res) => {
     const stylesPath = path.join(__dirname, 'templates', 'styles.css');
-    res.setHeader('Content-Type', 'text/css');
-    res.sendFile(stylesPath);
+    
+    if (fs.existsSync(stylesPath)) {
+      res.setHeader('Content-Type', 'text/css');
+      res.setHeader('Cache-Control', 'no-cache');
+      const fileContent = fs.readFileSync(stylesPath, 'utf8');
+      res.send(fileContent);
+    } else {
+      res.status(404).send('/* Styles not found */');
+    }
   });
 
   // Serve JavaScript component files
   app.get('/components/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'templates', 'components', filename);
-    res.setHeader('Content-Type', 'application/javascript');
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        res.status(404).send('Component not found');
-      }
-    });
+    
+    // Check if file exists and serve it
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', 'application/javascript');
+      res.setHeader('Cache-Control', 'no-cache');
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      res.send(fileContent);
+    } else {
+      res.status(404).send('// Component not found');
+    }
   });
 
   const httpServer = createServer(app);
