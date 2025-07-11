@@ -106,12 +106,10 @@
       badge.textContent = '1';
       bubble.appendChild(badge);
 
-      // Create iframe for chat interface (preload in background)
+      // Create iframe placeholder for chat interface (lazy load)
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
-      iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&v=${Date.now()}`;
       iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
-      // Remove lazy loading to preload iframe
       iframe.style.cssText = `
         position: absolute;
         bottom: 0;
@@ -138,12 +136,10 @@
         z-index: 999;
       `;
 
-      // Mobile iframe (preload in background)
+      // Mobile iframe placeholder (lazy load)
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
-      mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true&v=${Date.now()}`;
       mobileIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
-      // Remove lazy loading to preload iframe
       mobileIframe.style.cssText = `
         position: fixed;
         inset: 0;
@@ -221,10 +217,18 @@
         badge.style.display = 'none';
         
         if (isMobile()) {
+          // Lazy load mobile iframe if not already loaded
+          if (!mobileIframe.src) {
+            mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&mobile=true&v=${Date.now()}`;
+          }
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
           mobileIframe.classList.add('show');
         } else {
+          // Lazy load desktop iframe if not already loaded
+          if (!iframe.src) {
+            iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&v=${Date.now()}`;
+          }
           bubble.style.display = 'none';
           iframe.style.visibility = 'visible';
           iframe.classList.add('show');

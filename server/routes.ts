@@ -323,38 +323,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = req.params.sessionId;
 
-      // Create session if it doesn't exist
+      // Create session if it doesn't exist, but don't generate welcome messages yet
       let session = await storage.getChatSession(sessionId);
       if (!session) {
         session = await storage.createChatSession({ sessionId });
+      }
 
-        // Generate AI welcome message bubbles
+      const messages = await storage.getRecentMessages(sessionId, 100);
+
+      // If this is a new session with no messages, generate welcome messages now
+      if (messages.length === 0) {
         const welcomeResponse = await generateStructuredResponse(
           "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
           sessionId,
           []
         );
 
-        // Create separate messages for each bubble
-        for (let i = 0; welcomeResponse.bubbles && i < welcomeResponse.bubbles.length; i++) {
-          const bubble = welcomeResponse.bubbles[i];
-          await storage.createMessage({
-            sessionId,
-            content: bubble.content,
-            sender: "bot",
-            messageType: bubble.messageType,
-            metadata: {
-              ...bubble.metadata || {},
-              isFollowUp: i > 0 // Mark all messages after the first as follow-up
-            }
-          });
-
-          // Add small delay between bubbles for realistic timing
+        if (welcomeResponse.bubbles && welcomeResponse.bubbles.length > 0) {
+          for (let i = 0; i < welcomeResponse.bubbles.length; i++) {
+            const bubble = welcomeResponse.bubbles[i];
+            await storage.createMessage({
+              sessionId,
+              content: bubble.content,
+              sender: "bot",
+              messageType: bubble.messageType,
+              metadata: {
+                ...bubble.metadata || {},
+                isFollowUp: i > 0
+              }
+            });
+          }
         }
       }
 
-      const messages = await storage.getRecentMessages(sessionId, 100);
-      res.json(messages);
+      res.json({ messages });
     } catch (error) {
       console.error("Error getting messages:", error);
       res.status(500).json({ error: "Failed to retrieve messages" });
@@ -405,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve chat widget styles
   app.get('/styles.css', (req, res) => {
     const stylesPath = path.join(__dirname, 'templates', 'styles.css');
-    
+
     if (fs.existsSync(stylesPath)) {
       res.setHeader('Content-Type', 'text/css');
       res.setHeader('Cache-Control', 'no-cache');
@@ -420,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/components/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'templates', 'components', filename);
-    
+
     // Check if file exists and serve it
     if (fs.existsSync(filePath)) {
       res.setHeader('Content-Type', 'application/javascript');
