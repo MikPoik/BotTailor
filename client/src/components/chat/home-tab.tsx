@@ -133,7 +133,7 @@ export default function HomeTab({ onStartChat, isMobile }: HomeTabProps) {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-neutral-50">
+    <div className="h-full overflow-y-auto">
       {/* Welcome Header */}
       <div className="bg-white border-b border-neutral-200 p-6">
         <div className="text-center">
