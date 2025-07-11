@@ -1,0 +1,76 @@
+2025-07-11 15:31:51.48
+a2f3b9c2
+User
+12:31:51 PM [express] POST /api/chat/session 200 in 1ms :: {"session":{"id":1,"sessionId":"session_17…
+2025-07-11 15:31:51.70
+a2f3b9c2
+User
+12:31:51 PM [express] GET /api/chat/session_1752237108367_sc9afy45u/messages 200 in 1ms :: {"messages…
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+Loading chat widget - SessionId: embed_1752237118138_4vo71pylu, Mobile: false, Embedded: false
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+Error serving chat widget: Error: ENOENT: no such file or directory, open '/home/runner/workspace/public/index.html'
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at Object.readFileSync (node:fs:448:20)
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at file:///home/runner/workspace/dist/index.js:795:23
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+at file:///home/runner/workspace/dist/index.js:1092:3 {
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+errno: -2,
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+code: 'ENOENT',
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+syscall: 'open',
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+path: '/home/runner/workspace/public/index.html'
+2025-07-11 15:31:58.13
+a2f3b9c2
+User
+}
