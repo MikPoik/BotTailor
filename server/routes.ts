@@ -336,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Create separate messages for each bubble
-        for (let i = 0; i < welcomeResponse.bubbles.length; i++) {
+        for (let i = 0; welcomeResponse.bubbles && i < welcomeResponse.bubbles.length; i++) {
           const bubble = welcomeResponse.bubbles[i];
           await storage.createMessage({
             sessionId,
@@ -400,6 +400,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Chat error:", error);
       res.status(500).json({ error: "Failed to send message" });
     }
+  });
+
+  // Serve chat widget styles
+  app.get('/styles.css', (req, res) => {
+    const stylesPath = path.join(__dirname, 'templates', 'styles.css');
+    res.setHeader('Content-Type', 'text/css');
+    res.sendFile(stylesPath);
+  });
+
+  // Serve JavaScript component files
+  app.get('/components/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'templates', 'components', filename);
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        res.status(404).send('Component not found');
+      }
+    });
   });
 
   const httpServer = createServer(app);
