@@ -17,6 +17,12 @@ function groupMessages(messages) {
     const groups = [];
     let currentGroup = null;
 
+    // Safety check to ensure messages is an array
+    if (!Array.isArray(messages)) {
+        console.warn('groupMessages: messages is not an array:', messages);
+        return [];
+    }
+
     messages.forEach(message => {
         const isFollowUp = message.metadata?.isFollowUp;
         
