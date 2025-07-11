@@ -283,12 +283,12 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full max-h-full">
-      {/* Tab Content */}
-      <div className="flex-1 flex flex-col overflow-hidden" style={{ height: 'calc(100% - 60px)' }}>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+      {/* Tab Content - takes remaining space above navigation */}
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <TabsContent 
           value="home" 
-          className="flex-1 m-0 p-0 flex flex-col overflow-hidden min-h-0"
+          className="flex-1 m-0 p-0 flex flex-col overflow-hidden"
           style={{ 
             position: 'static',
             width: '100%',
@@ -303,7 +303,7 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
 
         <TabsContent 
           value="chat" 
-          className="flex-1 m-0 p-0 flex flex-col overflow-hidden min-h-0"
+          className="flex-1 m-0 p-0 flex flex-col overflow-hidden"
           style={{ 
             position: 'static',
             width: '100%',
@@ -313,8 +313,8 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
             margin: 0
           }}
         >
-          {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Messages area - takes remaining space above input */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center text-gray-500">
@@ -338,8 +338,8 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input area */}
-          <div className="border-t border-neutral-200 p-4 bg-white">
+          {/* Input area - fixed height */}
+          <div className="border-t border-neutral-200 p-4 bg-white flex-shrink-0">
             <div className="flex items-center space-x-3">
               <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
                 <Paperclip className="h-5 w-5" />
@@ -400,8 +400,8 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
         </TabsContent>
       </div>
 
-      {/* Tab Navigation - moved to bottom */}
-      <div className="border-t border-neutral-200 bg-white flex-shrink-0" style={{ height: '60px' }}>
+      {/* Tab Navigation - fixed at bottom */}
+      <div className="border-t border-neutral-200 bg-white flex-shrink-0">
         <TabsList className="grid w-full grid-cols-2 h-14 bg-transparent p-1">
           <TabsTrigger 
             value="home" 
