@@ -10,6 +10,7 @@ import ChatWidget from "@/pages/chat-widget";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
+import ChatbotForm from "@/pages/chatbot-form";
 
 function AuthenticatedRouter() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,6 +36,7 @@ function AuthenticatedRouter() {
         <>
           <Route path="/" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/chatbots/new" component={ChatbotForm} />
           <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
