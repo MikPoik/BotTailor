@@ -301,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Loading chat widget - SessionId: ${sessionId}, Mobile: ${isMobile}, Embedded: ${embedded}`);
 
-      let html = await fs.readFile(path.join(__dirname, 'templates/chat-widget.html'), 'utf8');
+      let html = fs.readFileSync(path.join(__dirname, 'templates/chat-widget.html'), 'utf8');
 
       // Replace placeholders with actual values
       const apiUrl = req.protocol + '://' + req.get('host');
