@@ -108,9 +108,73 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
     );
   }
 
+  if (messageType === 'form' && metadata?.formFields) {
+    return (
+      <div className="bg-white rounded-lg rounded-tl-none shadow-sm border overflow-hidden">
+        <div className="p-4">
+          {metadata.title && (
+            <h4 className="font-semibold text-neutral-800 mb-3">{metadata.title}</h4>
+          )}
+          
+          {content && (
+            <p className="text-neutral-600 mb-4">{content}</p>
+          )}
+
+          <form className="space-y-4">
+            {metadata.formFields.map((field, index) => (
+              <div key={`${field.id}-${index}`} className="space-y-2">
+                <label 
+                  htmlFor={field.id} 
+                  className="block text-sm font-medium text-neutral-700"
+                >
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+                
+                {field.type === 'textarea' ? (
+                  <textarea
+                    id={field.id}
+                    name={field.id}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                ) : (
+                  <input
+                    id={field.id}
+                    name={field.id}
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                )}
+              </div>
+            ))}
+
+            {metadata.submitButton && (
+              <Button
+                type="submit"
+                className="w-full mt-4"
+                onClick={(e) => {
+                  e.preventDefault();
+                  // TODO: Implement form submission logic
+                  console.log('Form submitted - logic to be implemented');
+                }}
+              >
+                {metadata.submitButton.text}
+              </Button>
+            )}
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   // Fallback to regular message
   return (
-    <div className={`chat-message-bot ${(message.messageType === 'menu' || message.messageType === 'quickReplies') ? 'no-background' : ''}`}>
+    <div className={`chat-message-bot ${(message.messageType === 'menu' || message.messageType === 'quickReplies' || message.messageType === 'form') ? 'no-background' : ''}`}>
       <p className="text-neutral-800">{content}</p>
     </div>
   );
