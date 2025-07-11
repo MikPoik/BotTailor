@@ -77,14 +77,31 @@ export default function ChatbotForm() {
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
       console.log("Making API request to create chatbot with data:", data);
+      console.log("API URL:", "/api/chatbots");
+      console.log("API request options:", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      
       try {
-        const response = await apiRequest(`/api/chatbots`, {
+        const response = await fetch("/api/chatbots", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
-        console.log("API response:", response);
-        return response;
+        
+        console.log("Raw response:", response);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API error response:", errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log("API response:", result);
+        return result;
       } catch (error) {
         console.error("API request failed:", error);
         throw error;
