@@ -18,6 +18,32 @@ const chatService = new ChatService();
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
+  // Serve embed.js with explicit CORS headers for cross-origin embedding
+  app.get('/embed.js', (req, res) => {
+    try {
+      // In development, serve from project root; in production, serve from dist
+      const embedPath = app.get("env") === "production" 
+        ? path.join(__dirname, 'public', 'embed.js')
+        : path.join(__dirname, '..', 'public', 'embed.js');
+      
+      if (fs.existsSync(embedPath)) {
+        res.setHeader('Content-Type', 'application/javascript');
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        const fileContent = fs.readFileSync(embedPath, 'utf8');
+        res.send(fileContent);
+      } else {
+        console.error('Embed.js not found at:', embedPath);
+        res.status(404).send('// Embed script not found');
+      }
+    } catch (error) {
+      console.error('Error serving embed.js:', error);
+      res.status(500).send('// Error loading embed script');
+    }
+  });
+
   // Create or get chat session
   app.post("/api/chat/session", async (req, res) => {
     try {
@@ -402,30 +428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   
 
-  // Serve embed.js with explicit CORS headers for cross-origin embedding
-  app.get('/embed.js', (req, res) => {
-    try {
-      // In development, serve from project root; in production, serve from dist
-      const embedPath = app.get("env") === "production" 
-        ? path.join(__dirname, 'public', 'embed.js')
-        : path.join(__dirname, '..', 'public', 'embed.js');
-      
-      if (fs.existsSync(embedPath)) {
-        res.setHeader('Content-Type', 'application/javascript');
-        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-        const fileContent = fs.readFileSync(embedPath, 'utf8');
-        res.send(fileContent);
-      } else {
-        res.status(404).send('// Embed script not found');
-      }
-    } catch (error) {
-      console.error('Error serving embed.js:', error);
-      res.status(500).send('// Error loading embed script');
-    }
-  });
+
 
   // Serve chat widget styles
   app.get('/styles.css', (req, res) => {
