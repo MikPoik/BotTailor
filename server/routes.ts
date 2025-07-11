@@ -81,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sessionId } = req.params;
       const { content, internalMessage, ...otherData } = req.body;
-      
+
       const messageData = insertMessageSchema.parse({
         ...otherData,
         content, // Use the display text for the user message
@@ -292,23 +292,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve chat widget page for embedding
-  app.get("/chat-widget", (req: Request, res: Response) => {
-    const { sessionId, embedded, mobile } = req.query;
-
-    const isMobile = mobile === 'true';
-    const isEmbedded = embedded === 'true';
-
+  // Chat widget page
+  app.get("/chat-widget", async (req: Request, res: Response) => {
     try {
-      // Read the template file
-      const templatePath = path.join(__dirname, 'templates', 'chat-widget.html');
-      let html = fs.readFileSync(templatePath, 'utf-8');
+      const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const isMobile = req.query.mobile === 'true';
+      const embedded = req.query.embedded === 'true';
+
+      console.log(`Loading chat widget - SessionId: ${sessionId}, Mobile: ${isMobile}, Embedded: ${embedded}`);
+
+      let html = await fs.readFile(path.join(__dirname, 'templates/chat-widget.html'), 'utf8');
 
       // Replace placeholders with actual values
+      const apiUrl = req.protocol + '://' + req.get('host');
       html = html.replace(/{{SESSION_ID}}/g, sessionId as string);
-      html = html.replace(/{{API_URL}}/g, req.protocol + '://' + req.get('host'));
+      html = html.replace(/{{API_URL}}/g, apiUrl);
       html = html.replace(/{{IS_MOBILE}}/g, isMobile.toString());
 
+      console.log(`Chat widget served - API URL: ${apiUrl}`);
+      res.setHeader('Content-Type', 'text/html');
       res.send(html);
     } catch (error) {
       console.error('Error reading chat widget template:', error);

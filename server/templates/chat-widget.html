@@ -11,7 +11,18 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="chat-root"></div>
+    <div id="chat-root">
+        <div style="padding: 20px; text-align: center; font-family: system-ui;">
+            <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-radius: 50%; border-top: 2px solid #2563eb; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 10px;">Loading chat...</p>
+        </div>
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </div>
 
     <!-- Load utility functions -->
     <script src="components/chat-utils.js"></script>
@@ -21,6 +32,17 @@
     <script type="text/babel" src="components/message-bubble.js"></script>
 
     <script type="text/babel">
+        // Add error handling
+        window.addEventListener('error', function(e) {
+            console.error('Chat Widget Error:', e.error);
+        });
+
+        // Check if React is loaded
+        if (typeof React === 'undefined') {
+            console.error('React is not loaded');
+            document.getElementById('chat-root').innerHTML = '<div style="padding: 20px; text-align: center;">Error loading chat widget</div>';
+        }
+
         const { useState, useEffect, useRef } = React;
 
         // Main Chat Widget Component
@@ -42,6 +64,7 @@
             }
 
             useEffect(() => {
+                console.log('ChatWidget mounted with sessionId:', sessionId);
                 loadMessages();
             }, []);
 
@@ -55,11 +78,24 @@
 
             const loadMessages = async () => {
                 try {
+                    console.log('Loading messages from:', `${apiUrl}/api/chat/${sessionId}`);
                     const response = await fetch(`${apiUrl}/api/chat/${sessionId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
                     const data = await response.json();
+                    console.log('Loaded messages:', data);
                     setMessages(data);
                 } catch (error) {
                     console.error('Error loading messages:', error);
+                    // Add a user-visible error message
+                    setMessages([{
+                        sender: 'bot',
+                        content: 'Sorry, there was an error loading the chat. Please try refreshing the page.',
+                        messageType: 'text',
+                        createdAt: new Date().toISOString(),
+                        metadata: {}
+                    }]);
                 }
             };
 
@@ -395,8 +431,19 @@
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('chat-root'));
-        root.render(React.createElement(ChatWidget));
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('chat-root'));
+            root.render(React.createElement(ChatWidget));
+        } catch (error) {
+            console.error('Error rendering ChatWidget:', error);
+            document.getElementById('chat-root').innerHTML = `
+                <div style="padding: 20px; text-align: center; font-family: system-ui;">
+                    <h3>Chat Widget Error</h3>
+                    <p>Unable to load chat interface. Please refresh the page.</p>
+                    <button onclick="window.location.reload()" style="padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Refresh</button>
+                </div>
+            `;
+        }
     </script>
 </body>
 </html>
