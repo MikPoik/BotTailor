@@ -284,31 +284,6 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-      {/* Tab Navigation */}
-      <div className="border-b border-neutral-200 bg-white">
-        <TabsList className="grid w-full grid-cols-2 h-12 bg-transparent p-0">
-          <TabsTrigger 
-            value="home" 
-            className="flex items-center gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-          >
-            <Home className="h-4 w-4" />
-            <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="chat" 
-            className="flex items-center gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
-            {messages.length > 0 && (
-              <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
-                {messages.length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
-      </div>
-
       {/* Tab Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <TabsContent 
@@ -425,6 +400,31 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
             </div>
           </div>
         </TabsContent>
+      </div>
+
+      {/* Tab Navigation - moved to bottom */}
+      <div className="border-t border-neutral-200 bg-white">
+        <TabsList className="grid w-full grid-cols-2 h-12 bg-transparent p-0">
+          <TabsTrigger 
+            value="home" 
+            className="flex items-center gap-2 h-full rounded-none border-t-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          >
+            <Home className="h-4 w-4" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="chat" 
+            className="flex items-center gap-2 h-full rounded-none border-t-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
+            {messages.length > 0 && (
+              <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+                {messages.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
       </div>
     </Tabs>
   );
