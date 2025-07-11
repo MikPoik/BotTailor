@@ -56,6 +56,7 @@ export default function ChatbotForm() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    mode: "onChange", // This will validate on every change
     defaultValues: {
       name: "",
       description: "",
@@ -143,10 +144,28 @@ export default function ChatbotForm() {
         <form onSubmit={(e) => {
           e.preventDefault();
           
+          console.log("=== FORM DEBUG INFO ===");
           console.log("Form submit event triggered");
           console.log("Form is valid:", form.formState.isValid);
+          console.log("Form is submitted:", form.formState.isSubmitted);
+          console.log("Form is validating:", form.formState.isValidating);
+          console.log("Form is dirty:", form.formState.isDirty);
+          console.log("Form is touched:", form.formState.isTouched);
           console.log("Form errors:", JSON.stringify(form.formState.errors, null, 2));
           console.log("Form values:", JSON.stringify(form.getValues(), null, 2));
+          console.log("Form field states:", Object.keys(form.getFieldState ? form.getFieldState : {}));
+          
+          // Check each field state
+          const fieldNames = ['name', 'description', 'systemPrompt', 'model', 'temperature', 'maxTokens', 'welcomeMessage', 'fallbackMessage'];
+          fieldNames.forEach(fieldName => {
+            const fieldState = form.getFieldState(fieldName);
+            console.log(`Field ${fieldName}:`, {
+              invalid: fieldState.invalid,
+              isDirty: fieldState.isDirty,
+              isTouched: fieldState.isTouched,
+              error: fieldState.error
+            });
+          });
           
           // Try to validate the form data manually
           const formData = form.getValues();
