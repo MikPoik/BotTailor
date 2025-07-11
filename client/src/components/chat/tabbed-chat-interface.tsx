@@ -283,7 +283,7 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-screen">
       {/* Tab Content */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <TabsContent 
