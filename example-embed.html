@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External Website with Chat Widget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Our Website</h1>
+        <p>This is an example of how to embed the chat widget on any external website.</p>
+        <p>The chat widget will appear in the bottom-right corner of the page.</p>
+        <p>Click on the chat bubble to start a conversation with our support team!</p>
+        
+        <h2>Features</h2>
+        <ul>
+            <li>Real-time chat support</li>
+            <li>AI-powered responses</li>
+            <li>Mobile-friendly interface</li>
+            <li>Quick reply options</li>
+        </ul>
+    </div>
+
+    <!-- Chat Widget Integration -->
+    <script>
+        // Configure the chat widget before loading
+        window.ChatWidgetConfig = {
+            apiUrl: 'YOUR_REPLIT_URL_HERE', // Replace with your actual Replit URL
+            sessionId: null, // Will auto-generate if not provided
+            position: 'bottom-right', // or 'bottom-left'
+            primaryColor: '#2563eb',
+            zIndex: 1000
+        };
+    </script>
+    
+    <!-- Load the chat widget script -->
+    <script src="YOUR_REPLIT_URL_HERE/embed.js"></script>
+</body>
+</html>
