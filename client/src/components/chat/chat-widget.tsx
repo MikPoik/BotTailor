@@ -158,6 +158,7 @@ export default function ChatWidget({
             sessionId={sessionId} 
             isMobile={false} 
             isPreloaded={!isSessionLoading && !isMessagesLoading}
+            isEmbedded={true}
           />
         </div>
       </div>

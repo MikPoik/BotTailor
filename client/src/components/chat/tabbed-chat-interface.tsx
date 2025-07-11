@@ -292,7 +292,7 @@ export default function TabbedChatInterface({
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className={`flex flex-col h-full ${isEmbedded ? 'embedded-tabs' : ''}`}>
       {/* Tab Content - takes remaining space above navigation */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <TabsContent 
@@ -327,7 +327,7 @@ export default function TabbedChatInterface({
           }}
         >
           {/* Messages area - takes remaining space above input */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+          <div className={`flex-1 overflow-y-auto p-4 space-y-4 min-h-0 ${isEmbedded ? 'embedded-messages-area' : ''}`}
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center text-gray-500">
