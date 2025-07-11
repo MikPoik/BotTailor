@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { Request, Response } from "express";
 import { ChatService } from "./storage";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,82 @@ const __dirname = path.dirname(__filename);
 const chatService = new ChatService();
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Chatbot config routes
+  app.get('/api/chatbots', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const configs = await storage.getChatbotConfigs(userId);
+      res.json(configs);
+    } catch (error) {
+      console.error("Error fetching chatbot configs:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot configs" });
+    }
+  });
+
+  app.post('/api/chatbots', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const configData = { ...req.body, userId };
+      const config = await storage.createChatbotConfig(configData);
+      res.json(config);
+    } catch (error) {
+      console.error("Error creating chatbot config:", error);
+      res.status(500).json({ message: "Failed to create chatbot config" });
+    }
+  });
+
+  app.put('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      
+      // Verify ownership
+      const existingConfig = await storage.getChatbotConfig(parseInt(id));
+      if (!existingConfig || existingConfig.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+      
+      const config = await storage.updateChatbotConfig(parseInt(id), req.body);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating chatbot config:", error);
+      res.status(500).json({ message: "Failed to update chatbot config" });
+    }
+  });
+
+  app.delete('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      
+      // Verify ownership
+      const existingConfig = await storage.getChatbotConfig(parseInt(id));
+      if (!existingConfig || existingConfig.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+      
+      await storage.deleteChatbotConfig(parseInt(id));
+      res.json({ message: "Chatbot config deleted" });
+    } catch (error) {
+      console.error("Error deleting chatbot config:", error);
+      res.status(500).json({ message: "Failed to delete chatbot config" });
+    }
+  });
 
   // Serve embed.js with explicit CORS headers for cross-origin embedding
   app.get('/embed.js', (req, res) => {

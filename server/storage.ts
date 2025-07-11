@@ -2,18 +2,23 @@ import {
   users, 
   chatSessions, 
   messages,
+  chatbotConfigs,
   type User, 
-  type InsertUser,
+  type UpsertUser,
   type ChatSession,
   type InsertChatSession,
   type Message,
-  type InsertMessage
+  type InsertMessage,
+  type ChatbotConfig,
+  type InsertChatbotConfig,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Chat session methods
   getChatSession(sessionId: string): Promise<ChatSession | undefined>;
@@ -24,98 +29,114 @@ export interface IStorage {
   getMessages(sessionId: string): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   getRecentMessages(sessionId: string, limit?: number): Promise<Message[]>;
+  
+  // Chatbot config methods
+  getChatbotConfigs(userId: string): Promise<ChatbotConfig[]>;
+  getChatbotConfig(id: number): Promise<ChatbotConfig | undefined>;
+  createChatbotConfig(config: InsertChatbotConfig): Promise<ChatbotConfig>;
+  updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined>;
+  deleteChatbotConfig(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private chatSessions: Map<string, ChatSession>;
-  private messages: Map<string, Message[]>;
-  private currentUserId: number;
-  private currentMessageId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.chatSessions = new Map();
-    this.messages = new Map();
-    this.currentUserId = 1;
-    this.currentMessageId = 1;
+export class DatabaseStorage implements IStorage {
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
     return user;
   }
 
+  // Chat session methods
   async getChatSession(sessionId: string): Promise<ChatSession | undefined> {
-    return this.chatSessions.get(sessionId);
+    const [session] = await db.select().from(chatSessions).where(eq(chatSessions.sessionId, sessionId));
+    return session || undefined;
   }
 
-  async createChatSession(insertSession: InsertChatSession): Promise<ChatSession> {
-    const id = this.currentUserId++;
-    const now = new Date();
-    const session: ChatSession = {
-      id,
-      sessionId: insertSession.sessionId,
-      userId: insertSession.userId || null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.chatSessions.set(insertSession.sessionId, session);
-    this.messages.set(insertSession.sessionId, []);
+  async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {
+    const [session] = await db
+      .insert(chatSessions)
+      .values(sessionData)
+      .returning();
     return session;
   }
 
   async updateChatSession(sessionId: string, data: Partial<ChatSession>): Promise<ChatSession | undefined> {
-    const session = this.chatSessions.get(sessionId);
-    if (!session) return undefined;
-    
-    const updatedSession = { ...session, ...data, updatedAt: new Date() };
-    this.chatSessions.set(sessionId, updatedSession);
-    return updatedSession;
+    const [session] = await db
+      .update(chatSessions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(chatSessions.sessionId, sessionId))
+      .returning();
+    return session || undefined;
   }
 
+  // Message methods
   async getMessages(sessionId: string): Promise<Message[]> {
-    return this.messages.get(sessionId) || [];
+    return await db.select().from(messages).where(eq(messages.sessionId, sessionId));
   }
 
-  async createMessage(insertMessage: InsertMessage): Promise<Message> {
-    const id = this.currentMessageId++;
-    const message: Message = {
-      id,
-      sessionId: insertMessage.sessionId,
-      content: insertMessage.content,
-      sender: insertMessage.sender,
-      messageType: insertMessage.messageType || "text",
-      metadata: insertMessage.metadata || null,
-      createdAt: new Date(),
-    };
-
-    const sessionMessages = this.messages.get(insertMessage.sessionId) || [];
-    sessionMessages.push(message);
-    this.messages.set(insertMessage.sessionId, sessionMessages);
-
+  async createMessage(messageData: InsertMessage): Promise<Message> {
+    const [message] = await db
+      .insert(messages)
+      .values(messageData)
+      .returning();
     return message;
   }
 
   async getRecentMessages(sessionId: string, limit: number = 50): Promise<Message[]> {
-    const sessionMessages = this.messages.get(sessionId) || [];
-    return sessionMessages.slice(-limit);
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.sessionId, sessionId))
+      .limit(limit);
+  }
+
+  // Chatbot config methods
+  async getChatbotConfigs(userId: string): Promise<ChatbotConfig[]> {
+    return await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.userId, userId));
+  }
+
+  async getChatbotConfig(id: number): Promise<ChatbotConfig | undefined> {
+    const [config] = await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.id, id));
+    return config || undefined;
+  }
+
+  async createChatbotConfig(configData: InsertChatbotConfig): Promise<ChatbotConfig> {
+    const [config] = await db
+      .insert(chatbotConfigs)
+      .values(configData)
+      .returning();
+    return config;
+  }
+
+  async updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined> {
+    const [config] = await db
+      .update(chatbotConfigs)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(chatbotConfigs.id, id))
+      .returning();
+    return config || undefined;
+  }
+
+  async deleteChatbotConfig(id: number): Promise<void> {
+    await db.delete(chatbotConfigs).where(eq(chatbotConfigs.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
 
 export class ChatService {
   async getMessages(sessionId: string): Promise<any[]> {

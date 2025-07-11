@@ -1,17 +1,61 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  serial,
+  integer,
+  boolean,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table for Replit Auth (required)
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for Replit Auth (required)
 export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// AI Chatbot Configuration table
+export const chatbotConfigs = pgTable("chatbot_configs", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  systemPrompt: text("system_prompt").notNull(),
+  model: text("model").notNull().default("gpt-3.5-turbo"),
+  temperature: integer("temperature").default(7), // 0-10 scale (will divide by 10)
+  maxTokens: integer("max_tokens").default(1000),
+  isActive: boolean("is_active").default(true),
+  welcomeMessage: text("welcome_message"),
+  fallbackMessage: text("fallback_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const chatSessions = pgTable("chat_sessions", {
   id: serial("id").primaryKey(),
   sessionId: text("session_id").notNull().unique(),
-  userId: integer("user_id").references(() => users.id),
+  userId: varchar("user_id").references(() => users.id),
+  chatbotConfigId: integer("chatbot_config_id").references(() => chatbotConfigs.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -26,14 +70,32 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+// Replit Auth user upsert schema
+export const upsertUserSchema = createInsertSchema(users).pick({
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
+});
+
+// Chatbot config schemas
+export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick({
+  userId: true,
+  name: true,
+  description: true,
+  systemPrompt: true,
+  model: true,
+  temperature: true,
+  maxTokens: true,
+  welcomeMessage: true,
+  fallbackMessage: true,
 });
 
 export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
   sessionId: true,
   userId: true,
+  chatbotConfigId: true,
 });
 
 export const insertMessageSchema = createInsertSchema(messages).pick({
@@ -44,8 +106,11 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   metadata: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
+// Type exports
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type ChatbotConfig = typeof chatbotConfigs.$inferSelect;
+export type InsertChatbotConfig = z.infer<typeof insertChatbotConfigSchema>;
 export type ChatSession = typeof chatSessions.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
