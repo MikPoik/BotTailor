@@ -3,8 +3,14 @@ import ChatWidget from "@/components/chat/chat-widget";
 
 export default function ChatWidgetPage() {
   const [sessionId, setSessionId] = useState<string>("");
+  const [isEmbedded, setIsEmbedded] = useState<boolean>(false);
 
   useEffect(() => {
+    // Check if we're in embedded mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const embedded = urlParams.get('embedded') === 'true';
+    setIsEmbedded(embedded);
+
     // Check if we have injected config from production widget
     const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     
@@ -12,7 +18,6 @@ export default function ChatWidgetPage() {
       setSessionId(injectedConfig.sessionId);
     } else {
       // Generate or get session ID from URL params or localStorage
-      const urlParams = new URLSearchParams(window.location.search);
       const paramSessionId = urlParams.get('sessionId');
       
       if (paramSessionId) {
@@ -33,6 +38,16 @@ export default function ChatWidgetPage() {
     );
   }
 
+  // If embedded, show only the chat widget
+  if (isEmbedded) {
+    return (
+      <div className="w-full h-full">
+        <ChatWidget sessionId={sessionId} />
+      </div>
+    );
+  }
+
+  // Otherwise show the full demo page
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Demo website content */}

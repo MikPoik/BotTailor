@@ -215,10 +215,24 @@
         isOpen = true;
         badge.style.display = 'none';
 
+        // Set global config for iframe
+        if (!window.__CHAT_WIDGET_CONFIG__) {
+          window.__CHAT_WIDGET_CONFIG__ = {
+            sessionId: this.config.sessionId,
+            apiUrl: this.config.apiUrl,
+            position: this.config.position,
+            primaryColor: this.config.primaryColor
+          };
+        }
+
         if (isMobile()) {
                 // Lazy load mobile iframe if not already loaded
                 if (!mobileIframe.src) {
                   mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&mobile=true&embedded=true`;
+                  // Set config for iframe content
+                  mobileIframe.onload = () => {
+                    mobileIframe.contentWindow.__CHAT_WIDGET_CONFIG__ = window.__CHAT_WIDGET_CONFIG__;
+                  };
                 }
                 overlay.style.display = 'block';
                 mobileIframe.style.visibility = 'visible';
@@ -227,6 +241,10 @@
                 // Lazy load desktop iframe if not already loaded
                 if (!iframe.src) {
                   iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&mobile=false&embedded=true`;
+                  // Set config for iframe content
+                  iframe.onload = () => {
+                    iframe.contentWindow.__CHAT_WIDGET_CONFIG__ = window.__CHAT_WIDGET_CONFIG__;
+                  };
                 }
                 bubble.style.display = 'none';
                 iframe.style.visibility = 'visible';
