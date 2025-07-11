@@ -70,7 +70,7 @@ export default function ChatWidget({
         <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slideUp">
           {/* Mobile header */}
           <div 
-            className="text-white p-4 flex items-center justify-between"
+            className="text-white p-4 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
           >
             <div className="flex items-center space-x-3">
@@ -95,8 +95,10 @@ export default function ChatWidget({
             </button>
           </div>
 
-          {/* Chat content */}
-          <TabbedChatInterface sessionId={sessionId} isMobile={true} />
+          {/* Chat content - takes remaining space */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <TabbedChatInterface sessionId={sessionId} isMobile={true} />
+          </div>
         </div>
       </>
     );
