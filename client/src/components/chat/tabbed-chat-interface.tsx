@@ -403,18 +403,18 @@ export default function TabbedChatInterface({ sessionId, isMobile }: TabbedChatI
       </div>
 
       {/* Tab Navigation - moved to bottom */}
-      <div className="border-t border-neutral-200 bg-white">
-        <TabsList className="grid w-full grid-cols-2 h-12 bg-transparent p-0">
+      <div className="border-t border-neutral-200 bg-white flex-shrink-0">
+        <TabsList className="grid w-full grid-cols-2 h-14 bg-transparent p-1">
           <TabsTrigger 
             value="home" 
-            className="flex items-center gap-2 h-full rounded-none border-t-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            className="flex items-center gap-2 h-full rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
           >
             <Home className="h-4 w-4" />
             <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
           </TabsTrigger>
           <TabsTrigger 
             value="chat" 
-            className="flex items-center gap-2 h-full rounded-none border-t-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            className="flex items-center gap-2 h-full rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
           >
             <MessageCircle className="h-4 w-4" />
             <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
