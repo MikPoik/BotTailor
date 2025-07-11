@@ -114,24 +114,81 @@ export default function ChatWidget({
     );
   }
 
-  return (
-    <div className={cn(
-      isEmbedded 
-        ? "w-full h-full" 
-        : "fixed z-50 transition-all duration-300 ease-in-out",
-      !isEmbedded && (isOpen ? "opacity-100 visible" : "opacity-0 invisible"),
-      !isEmbedded && (isMobile 
-        ? "inset-0" 
-        : "bottom-6 right-6 w-80 h-96")
-    )}>
-      <div className={cn(
-        "bg-white overflow-hidden flex flex-col",
-        isEmbedded 
-          ? "h-full w-full" 
-          : "rounded-lg shadow-xl border",
-        isMobile || isEmbedded ? "h-full" : "h-full"
-      )}>
+  // If embedded (iframe), show the full chat interface
+  if (isEmbedded) {
+    return (
+      <div className="w-full h-full">
+        <div className="bg-white overflow-hidden flex flex-col h-full w-full">
           {/* Desktop header */}
+          <div 
+            className="text-white p-4 flex items-center justify-between flex-shrink-0"
+            style={{ backgroundColor: primaryColor }}
+          >
+            <div className="flex items-center space-x-3">
+              <img 
+                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
+                alt="Support agent avatar" 
+                className="w-10 h-10 rounded-full border-2 border-white"
+              />
+              <div>
+                <h3 className="font-semibold">Support Assistant</h3>
+                <div className="flex items-center space-x-1 text-xs text-blue-100">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>Online</span>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={closeChat}
+              className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Chat content - takes remaining space */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <TabbedChatInterface 
+              sessionId={sessionId} 
+              isMobile={false} 
+              isPreloaded={!isSessionLoading && !isMessagesLoading}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // For non-embedded (development page), show floating widget
+  return (
+    <div className={`fixed ${positionClasses[position]} z-50 font-sans`}>
+      {/* Chat Bubble */}
+      {!isOpen && (
+        <div className="relative">
+          <button
+            onClick={toggleChat}
+            className="w-16 h-16 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center animate-pulse"
+            style={{ backgroundColor: primaryColor }}
+          >
+            <MessageCircle className="w-6 h-6 text-white" />
+          </button>
+
+          {hasNewMessage && (
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">1</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chat Interface */}
+      {isOpen && (
+        <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden ${
+          isMobile 
+            ? 'fixed inset-4 z-50' 
+            : 'w-96 h-[600px]'
+        }`}>
+          {/* Chat header */}
           <div 
             className="text-white p-4 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
@@ -162,11 +219,12 @@ export default function ChatWidget({
           <div className="flex-1 flex flex-col min-h-0">
             <TabbedChatInterface 
               sessionId={sessionId} 
-              isMobile={false} 
+              isMobile={isMobile}
               isPreloaded={!isSessionLoading && !isMessagesLoading}
             />
           </div>
         </div>
+      )}
     </div>
   );
 }

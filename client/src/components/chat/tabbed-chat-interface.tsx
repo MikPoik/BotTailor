@@ -14,9 +14,17 @@ interface TabbedChatInterfaceProps {
   sessionId: string;
   isMobile: boolean;
   isPreloaded?: boolean;
+  onClose?: () => void;
+  isEmbedded?: boolean;
 }
 
-export default function TabbedChatInterface({ sessionId, isMobile, isPreloaded }: TabbedChatInterfaceProps) {
+export default function TabbedChatInterface({ 
+  sessionId, 
+  isMobile,
+  isPreloaded = false,
+  onClose,
+  isEmbedded = false
+}: TabbedChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
