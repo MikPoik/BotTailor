@@ -20,7 +20,7 @@ import { z } from "zod";
 import { ArrowLeft, Bot, Save } from "lucide-react";
 import { Link } from "wouter";
 
-const formSchema = insertChatbotConfigSchema.extend({
+const formSchema = insertChatbotConfigSchema.omit({ userId: true }).extend({
   temperature: z.number().min(0).max(10).default(7),
   maxTokens: z.number().min(100).max(4000).default(1000),
 });
@@ -98,6 +98,8 @@ export default function ChatbotForm() {
   });
 
   const onSubmit = (data: FormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("Form errors:", form.formState.errors);
     createMutation.mutate(data);
   };
 
@@ -131,7 +133,12 @@ export default function ChatbotForm() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={(e) => {
+          console.log("Form submit event triggered");
+          console.log("Form is valid:", form.formState.isValid);
+          console.log("Form errors:", form.formState.errors);
+          form.handleSubmit(onSubmit)(e);
+        }} className="space-y-8">
           {/* Basic Information */}
           <Card>
             <CardHeader>
