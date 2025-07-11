@@ -12,7 +12,7 @@
 </head>
 <body>
     <div id="chat-root">
-        <div style="padding: 20px; text-align: center; font-family: system-ui;">
+        <div id="initial-loading" style="padding: 20px; text-align: center; font-family: system-ui;">
             <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-radius: 50%; border-top: 2px solid #2563eb; animation: spin 1s linear infinite;"></div>
             <p style="margin-top: 10px;">Loading chat...</p>
         </div>
@@ -24,18 +24,47 @@
         </style>
     </div>
 
-    <!-- Load utility functions -->
+    <!-- Preload utility functions immediately -->
     <script src="components/chat-utils.js"></script>
 
-    <!-- Load component modules -->
-    <script type="text/babel" src="components/home-tab.js"></script>
-    <script type="text/babel" src="components/message-bubble.js"></script>
+    <!-- Preload component modules in background -->
+    <script>
+        // Preload components in background without blocking
+        const preloadComponents = () => {
+            const components = [
+                'components/home-tab.js',
+                'components/message-bubble.js'
+            ];
+            
+            components.forEach(src => {
+                const script = document.createElement('script');
+                script.type = 'text/babel';
+                script.src = src;
+                script.async = true;
+                document.head.appendChild(script);
+            });
+        };
+        
+        // Start preloading after a short delay to not block initial render
+        setTimeout(preloadComponents, 100);
+    </script>
 
     <script type="text/babel">
         // Add error handling
         window.addEventListener('error', function(e) {
             console.error('Chat Widget Error:', e.error);
         });
+
+        // Component readiness tracker
+        window.chatWidgetReadiness = {
+            react: typeof React !== 'undefined',
+            utils: typeof window.groupMessages !== 'undefined',
+            homeTab: typeof window.HomeTab !== 'undefined',
+            messageBubble: typeof window.MessageBubble !== 'undefined',
+            isReady: function() {
+                return this.react && this.utils && this.homeTab && this.messageBubble;
+            }
+        };
 
         // Check if React is loaded
         if (typeof React === 'undefined') {
@@ -45,6 +74,42 @@
 
         const { useState, useEffect, useRef } = React;
 
+        // Enhanced loading state management
+        function LoadingScreen({ message }) {
+            return React.createElement('div', {
+                style: {
+                    padding: '40px 20px',
+                    textAlign: 'center',
+                    fontFamily: 'system-ui',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    minHeight: '200px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }
+            }, [
+                React.createElement('div', {
+                    key: 'spinner',
+                    style: {
+                        display: 'inline-block',
+                        width: '32px',
+                        height: '32px',
+                        border: '3px solid rgba(255,255,255,0.3)',
+                        borderRadius: '50%',
+                        borderTop: '3px solid white',
+                        animation: 'spin 1s linear infinite',
+                        marginBottom: '16px'
+                    }
+                }),
+                React.createElement('p', {
+                    key: 'message',
+                    style: { margin: 0, fontSize: '16px', fontWeight: '500' }
+                }, message || 'Loading chat...')
+            ]);
+        }
+
         // Main Chat Widget Component
         function ChatWidget() {
             const [messages, setMessages] = useState([]);
@@ -52,6 +117,8 @@
             const [isTyping, setIsTyping] = useState(false);
             const [isStreaming, setIsStreaming] = useState(false);
             const [activeTab, setActiveTab] = useState('home');
+            const [isComponentsReady, setIsComponentsReady] = useState(false);
+            const [loadingMessage, setLoadingMessage] = useState('Loading chat...');
             const messagesEndRef = useRef(null);
 
             const sessionId = "{{SESSION_ID}}";
@@ -63,10 +130,60 @@
                 apiUrl = apiUrl.replace('http:', 'https:');
             }
 
+            // Check component readiness
             useEffect(() => {
-                console.log('ChatWidget mounted with sessionId:', sessionId);
-                loadMessages();
+                const checkReadiness = () => {
+                    if (window.chatWidgetReadiness.isReady()) {
+                        setIsComponentsReady(true);
+                        return true;
+                    }
+                    return false;
+                };
+
+                // Immediate check
+                if (checkReadiness()) return;
+
+                // Progressive loading messages
+                const loadingSteps = [
+                    { delay: 0, message: 'Loading chat...' },
+                    { delay: 500, message: 'Preparing components...' },
+                    { delay: 1000, message: 'Almost ready...' }
+                ];
+
+                loadingSteps.forEach(({ delay, message }) => {
+                    setTimeout(() => {
+                        if (!isComponentsReady) {
+                            setLoadingMessage(message);
+                        }
+                    }, delay);
+                });
+
+                // Check readiness periodically
+                const interval = setInterval(() => {
+                    if (checkReadiness()) {
+                        clearInterval(interval);
+                    }
+                }, 100);
+
+                // Fallback timeout
+                const timeout = setTimeout(() => {
+                    console.warn('Components taking longer than expected to load');
+                    setIsComponentsReady(true);
+                    clearInterval(interval);
+                }, 3000);
+
+                return () => {
+                    clearInterval(interval);
+                    clearTimeout(timeout);
+                };
             }, []);
+
+            useEffect(() => {
+                if (isComponentsReady) {
+                    console.log('ChatWidget mounted with sessionId:', sessionId);
+                    loadMessages();
+                }
+            }, [isComponentsReady]);
 
             useEffect(() => {
                 scrollToBottom();
@@ -268,7 +385,13 @@
                 }
             };
 
-            const messageGroups = groupMessages(messages);
+            // Don't try to group messages until components are ready
+            const messageGroups = isComponentsReady && typeof groupMessages === 'function' ? groupMessages(messages) : [];
+
+            // Show loading screen until components are ready
+            if (!isComponentsReady) {
+                return React.createElement(LoadingScreen, { message: loadingMessage });
+            }
 
             return (
                 <div className="chat-container">
@@ -302,7 +425,13 @@
 
                     {/* Home Tab Content */}
                     <div className={`tab-content ${activeTab !== 'home' ? 'hidden' : ''}`}>
-                        <HomeTab onStartChat={handleStartChat} isMobile={isMobile} />
+                        {typeof HomeTab !== 'undefined' ? (
+                            React.createElement(HomeTab, { onStartChat: handleStartChat, isMobile: isMobile })
+                        ) : (
+                            React.createElement('div', {
+                                style: { padding: '20px', textAlign: 'center' }
+                            }, 'Loading home...')
+                        )}
                     </div>
 
                     {/* Chat Tab Content */}
@@ -330,14 +459,21 @@
                                             key: 'messages',
                                             className: 'messages'
                                         }, [
-                                            ...group.messages.map((message, messageIndex) => (
-                                                React.createElement(MessageBubble, {
-                                                    key: `${groupIndex}-${messageIndex}`,
-                                                    message: message,
-                                                    onOptionSelect: handleOptionSelect,
-                                                    onQuickReply: handleQuickReply
-                                                })
-                                            )),
+                                            ...group.messages.map((message, messageIndex) => 
+                                                typeof MessageBubble !== 'undefined' ? (
+                                                    React.createElement(MessageBubble, {
+                                                        key: `${groupIndex}-${messageIndex}`,
+                                                        message: message,
+                                                        onOptionSelect: handleOptionSelect,
+                                                        onQuickReply: handleQuickReply
+                                                    })
+                                                ) : (
+                                                    React.createElement('div', {
+                                                        key: `${groupIndex}-${messageIndex}`,
+                                                        style: { padding: '8px 12px', margin: '4px 0', background: message.sender === 'user' ? '#e3f2fd' : '#f5f5f5', borderRadius: '12px' }
+                                                    }, message.content)
+                                                )
+                                            ),
                                             React.createElement('div', {
                                                 key: 'timestamp',
                                                 className: 'timestamp'
@@ -435,18 +571,43 @@
             );
         }
 
-        try {
-            const root = ReactDOM.createRoot(document.getElementById('chat-root'));
-            root.render(React.createElement(ChatWidget));
-        } catch (error) {
-            console.error('Error rendering ChatWidget:', error);
-            document.getElementById('chat-root').innerHTML = `
-                <div style="padding: 20px; text-align: center; font-family: system-ui;">
-                    <h3>Chat Widget Error</h3>
-                    <p>Unable to load chat interface. Please refresh the page.</p>
-                    <button onclick="window.location.reload()" style="padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Refresh</button>
-                </div>
-            `;
+        // Initialize chat widget with retry logic
+        function initializeChatWidget() {
+            try {
+                // Wait for minimum required dependencies
+                if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
+                    throw new Error('React dependencies not loaded');
+                }
+
+                const root = ReactDOM.createRoot(document.getElementById('chat-root'));
+                root.render(React.createElement(ChatWidget));
+                
+                // Remove initial loading indicator
+                const initialLoading = document.getElementById('initial-loading');
+                if (initialLoading) {
+                    initialLoading.style.display = 'none';
+                }
+
+                console.log('Chat widget initialized successfully');
+            } catch (error) {
+                console.error('Error rendering ChatWidget:', error);
+                document.getElementById('chat-root').innerHTML = `
+                    <div style="padding: 20px; text-align: center; font-family: system-ui; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; border-radius: 8px;">
+                        <h3 style="margin-top: 0;">Chat Widget Error</h3>
+                        <p>Unable to load chat interface. Please refresh the page.</p>
+                        <button onclick="window.location.reload()" style="padding: 8px 16px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; cursor: pointer;">Refresh</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize with small delay to ensure DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initializeChatWidget, 50);
+            });
+        } else {
+            setTimeout(initializeChatWidget, 50);
         }
     </script>
 </body>

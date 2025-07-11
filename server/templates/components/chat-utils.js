@@ -1,10 +1,9 @@
-
 function formatTimeAgo(dateString) {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
@@ -25,7 +24,7 @@ function groupMessages(messages) {
 
     messages.forEach(message => {
         const isFollowUp = message.metadata?.isFollowUp;
-        
+
         if (!currentGroup || message.sender !== currentGroup.sender || !isFollowUp) {
             currentGroup = {
                 sender: message.sender,
@@ -52,4 +51,13 @@ function getOptionDisplayText(optionId) {
         general: "I need general support"
     };
     return optionTexts[optionId] || optionId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+}
+
+window.getOptionDisplayText = getOptionDisplayText;
+window.formatTimeAgo = formatTimeAgo;
+window.groupMessages = groupMessages;
+
+// Signal utilities readiness
+if (window.chatWidgetReadiness) {
+    window.chatWidgetReadiness.utils = true;
 }

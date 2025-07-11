@@ -1,4 +1,3 @@
-
 function MessageBubble({ message, onOptionSelect, onQuickReply }) {
     const renderRichMessage = (message) => {
         if (message.messageType === 'card' && message.metadata) {
@@ -92,4 +91,9 @@ function MessageBubble({ message, onOptionSelect, onQuickReply }) {
     };
 
     return renderRichMessage(message);
+}
+
+// Signal component readiness
+if (window.chatWidgetReadiness) {
+    window.chatWidgetReadiness.messageBubble = true;
 }

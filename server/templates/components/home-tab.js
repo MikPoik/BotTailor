@@ -1,7 +1,6 @@
-
 // HomeTab component for external widget
 window.HomeTab = function({ onStartChat, isMobile }) {
-    const { useState } = React;
+    const { useState, useEffect } = React;
     const [selectedCategory, setSelectedCategory] = useState('all');
 
     const chatTopics = [
@@ -93,6 +92,12 @@ window.HomeTab = function({ onStartChat, isMobile }) {
         return colors[category] || 'bg-gray-50 text-gray-700 border-gray-200';
     };
 
+    useEffect(() => {
+        // Dispatch a custom event when the component is mounted to signal readiness.
+        const event = new Event('HomeTabReady');
+        window.dispatchEvent(event);
+    }, []);
+
     return React.createElement('div', {
         className: 'h-full overflow-y-auto'
     }, [
@@ -115,7 +120,7 @@ window.HomeTab = function({ onStartChat, isMobile }) {
                 }, 'Choose a topic below or start a free conversation')
             ])
         ]),
-        
+
         // Content
         React.createElement('div', {
             key: 'content',
