@@ -1,4 +1,3 @@
-
 (function() {
   'use strict';
 
@@ -21,13 +20,13 @@
 
       // Merge options with default config
       this.config = { ...this.config, ...options };
-      
+
       // Validate required config
       if (!this.config.apiUrl) {
         console.error('ChatWidget: apiUrl is required');
         return;
       }
-      
+
       // Generate session ID if not provided
       if (!this.config.sessionId) {
         this.config.sessionId = this.generateSessionId();
@@ -78,7 +77,7 @@
         transition: all 0.2s ease;
         animation: pulse 2s infinite;
       `;
-      
+
       bubble.innerHTML = `
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
           <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
@@ -164,7 +163,7 @@
 
     addAnimations: function() {
       if (document.getElementById('chatwidget-animations')) return;
-      
+
       const style = document.createElement('style');
       style.id = 'chatwidget-animations';
       style.textContent = `
@@ -172,27 +171,27 @@
           0%, 100% { opacity: 1; }
           50% { opacity: 0.8; }
         }
-        
+
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px) scale(0.95); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        
+
         @keyframes slideUp {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
         }
-        
+
         #chatwidget-bubble:hover {
           transform: scale(1.05);
           animation: none;
         }
-        
+
         #chatwidget-iframe.show {
           display: block !important;
           animation: fadeIn 0.3s ease-out;
         }
-        
+
         #chatwidget-mobile-iframe.show {
           display: block !important;
           animation: slideUp 0.3s ease-out;
@@ -215,7 +214,7 @@
       const openChat = () => {
         isOpen = true;
         badge.style.display = 'none';
-        
+
         if (isMobile()) {
           // Lazy load mobile iframe if not already loaded
           if (!mobileIframe.src) {
@@ -227,7 +226,7 @@
         } else {
           // Lazy load desktop iframe if not already loaded
           if (!iframe.src) {
-            iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&embedded=true&v=${Date.now()}`;
+            iframe.src = `${this.config.apiUrl}/widget-prod/${this.config.sessionId}?mobile=${isMobile()}&embedded=true`;
           }
           bubble.style.display = 'none';
           iframe.style.visibility = 'visible';
@@ -237,7 +236,7 @@
 
       const closeChat = () => {
         isOpen = false;
-        
+
         if (isMobile()) {
           overlay.style.display = 'none';
           mobileIframe.classList.remove('show');
@@ -287,7 +286,7 @@
 
     close: function() {
       if (!this._initialized) return;
-      
+
       const closeEvent = new Event('click');
       if (window.innerWidth < 1024) {
         document.getElementById('chatwidget-overlay').dispatchEvent(closeEvent);

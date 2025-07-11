@@ -23,7 +23,9 @@ export default function ChatWidget({
 
   // Generate a unique session ID for this chat widget instance
   const isMobile = useIsMobile();
-  
+  const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
+  const isEmbedded = injectedConfig?.embedded || false;
+
   // Preload chat data in background when widget mounts
   const { isSessionLoading, isMessagesLoading } = useChat(sessionId);
 
@@ -113,28 +115,22 @@ export default function ChatWidget({
   }
 
   return (
-    <div className={`fixed ${positionClasses[position]} z-50 font-sans`}>
-      {/* Chat bubble (minimized state) */}
-      {!isOpen && (
-        <div 
-          className="chat-bubble relative"
-          onClick={toggleChat}
-          style={{ backgroundColor: primaryColor }}
-        >
-          <MessageCircle className="text-white h-6 w-6" />
-
-          {/* Notification badge */}
-          {hasNewMessage && (
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-medium">1</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Chat interface (expanded state) */}
-      {isOpen && !isMobile && (
-        <div className="chat-interface">
+    <div className={cn(
+      isEmbedded 
+        ? "w-full h-full" 
+        : "fixed z-50 transition-all duration-300 ease-in-out",
+      !isEmbedded && (isOpen ? "opacity-100 visible" : "opacity-0 invisible"),
+      !isEmbedded && (isMobile 
+        ? "inset-0" 
+        : "bottom-6 right-6 w-80 h-96")
+    )}>
+      <div className={cn(
+        "bg-white overflow-hidden flex flex-col",
+        isEmbedded 
+          ? "h-full w-full" 
+          : "rounded-lg shadow-xl border",
+        isMobile || isEmbedded ? "h-full" : "h-full"
+      )}>
           {/* Desktop header */}
           <div 
             className="text-white p-4 flex items-center justify-between flex-shrink-0"
@@ -171,7 +167,6 @@ export default function ChatWidget({
             />
           </div>
         </div>
-      )}
     </div>
   );
 }

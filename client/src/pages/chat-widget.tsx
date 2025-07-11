@@ -5,16 +5,23 @@ export default function ChatWidgetPage() {
   const [sessionId, setSessionId] = useState<string>("");
 
   useEffect(() => {
-    // Generate or get session ID from URL params or localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramSessionId = urlParams.get('sessionId');
+    // Check if we have injected config from production widget
+    const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     
-    if (paramSessionId) {
-      setSessionId(paramSessionId);
+    if (injectedConfig && injectedConfig.sessionId) {
+      setSessionId(injectedConfig.sessionId);
     } else {
-      // Generate a new session ID
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setSessionId(newSessionId);
+      // Generate or get session ID from URL params or localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramSessionId = urlParams.get('sessionId');
+      
+      if (paramSessionId) {
+        setSessionId(paramSessionId);
+      } else {
+        // Generate a new session ID
+        const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setSessionId(newSessionId);
+      }
     }
   }, []);
 
