@@ -31,30 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!session) {
         session = await storage.createChatSession({ sessionId });
-
-        // Generate AI welcome message bubbles
-        const welcomeResponse = await generateStructuredResponse(
-          "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
-          sessionId,
-          []
-        );
-
-        // Create separate messages for each bubble
-        for (let i = 0; i < welcomeResponse.bubbles.length; i++) {
-          const bubble = welcomeResponse.bubbles[i];
-          await storage.createMessage({
-            sessionId,
-            content: bubble.content,
-            sender: "bot",
-            messageType: bubble.messageType,
-            metadata: {
-              ...bubble.metadata || {},
-              isFollowUp: i > 0 // Mark all messages after the first as follow-up
-            }
-          });
-
-          // Add small delay between bubbles for realistic timing
-        }
+        // Session created without any initial messages
       }
 
       res.json({ session });
@@ -323,38 +300,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = req.params.sessionId;
 
-      // Create session if it doesn't exist, but don't generate welcome messages yet
+      // Create session if it doesn't exist
       let session = await storage.getChatSession(sessionId);
       if (!session) {
         session = await storage.createChatSession({ sessionId });
       }
 
       const messages = await storage.getRecentMessages(sessionId, 100);
-
-      // If this is a new session with no messages, generate welcome messages now
-      if (messages.length === 0) {
-        const welcomeResponse = await generateStructuredResponse(
-          "User has just started a new chat session. Provide a friendly welcome message and ask how you can help them today.",
-          sessionId,
-          []
-        );
-
-        if (welcomeResponse.bubbles && welcomeResponse.bubbles.length > 0) {
-          for (let i = 0; i < welcomeResponse.bubbles.length; i++) {
-            const bubble = welcomeResponse.bubbles[i];
-            await storage.createMessage({
-              sessionId,
-              content: bubble.content,
-              sender: "bot",
-              messageType: bubble.messageType,
-              metadata: {
-                ...bubble.metadata || {},
-                isFollowUp: i > 0
-              }
-            });
-          }
-        }
-      }
 
       res.json({ messages });
     } catch (error) {
