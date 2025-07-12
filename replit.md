@@ -6,6 +6,14 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 12, 2025**: Added Avatar Upload Functionality:
+  - Enhanced chatbot schema with `avatarUrl` field for storing avatar image URLs
+  - Added comprehensive avatar upload UI to chatbot creation form with live preview
+  - Implemented URL-based avatar input with clear functionality
+  - Added placeholder for future file upload functionality with object storage
+  - Fixed server-side validation to properly handle client requests without userId
+  - Streamlined form submission process and removed debugging code
+
 - **July 11, 2025**: Successfully integrated Replit Authentication and Database:
   - Added PostgreSQL database connection and schema migration
   - Implemented Replit Auth with OpenID Connect integration

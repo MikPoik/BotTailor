@@ -40,8 +40,9 @@ export const chatbotConfigs = pgTable("chatbot_configs", {
   userId: varchar("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   description: text("description"),
+  avatarUrl: varchar("avatar_url"),
   systemPrompt: text("system_prompt").notNull(),
-  model: text("model").notNull().default("gpt-3.5-turbo"),
+  model: text("model").notNull().default("gpt-4o-mini"),
   temperature: integer("temperature").default(7), // 0-10 scale (will divide by 10)
   maxTokens: integer("max_tokens").default(1000),
   isActive: boolean("is_active").default(true),
@@ -84,6 +85,7 @@ export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick
   userId: true,
   name: true,
   description: true,
+  avatarUrl: true,
   systemPrompt: true,
   model: true,
   temperature: true,

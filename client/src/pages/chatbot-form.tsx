@@ -17,13 +17,16 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { insertChatbotConfigSchema } from "@shared/schema";
 import { z } from "zod";
-import { ArrowLeft, Bot, Save } from "lucide-react";
+import { ArrowLeft, Bot, Save, Upload, User, X } from "lucide-react";
 import { Link } from "wouter";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
 
 // Create a more explicit form schema to ensure proper typing
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
+  avatarUrl: z.string().optional(),
   systemPrompt: z.string().min(1, "System prompt is required"),
   model: z.string().min(1, "Model is required"),
   temperature: z.number().min(0).max(10).default(7),
@@ -38,6 +41,7 @@ export default function ChatbotForm() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -60,6 +64,7 @@ export default function ChatbotForm() {
     defaultValues: {
       name: "",
       description: "",
+      avatarUrl: "",
       systemPrompt: "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
       model: "gpt-4o-mini",
       temperature: 7,
@@ -76,39 +81,20 @@ export default function ChatbotForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      console.log("Making API request to create chatbot with data:", data);
-      console.log("API URL:", "/api/chatbots");
-      console.log("API request options:", {
+      const response = await fetch("/api/chatbots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       
-      try {
-        const response = await fetch("/api/chatbots", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        
-        console.log("Raw response:", response);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("API error response:", errorText);
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log("API response:", result);
-        return result;
-      } catch (error) {
-        console.error("API request failed:", error);
-        throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
+      
+      return response.json();
     },
-    onSuccess: (data) => {
-      console.log("Mutation successful:", data);
+    onSuccess: () => {
       toast({
         title: "Success",
         description: "Chatbot configuration created successfully!",
@@ -117,7 +103,6 @@ export default function ChatbotForm() {
       setLocation("/dashboard");
     },
     onError: (error) => {
-      console.error("Mutation error:", error);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -138,15 +123,6 @@ export default function ChatbotForm() {
   });
 
   const onSubmit = (data: FormData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Form errors:", form.formState.errors);
-    console.log("About to call createMutation.mutate");
-    console.log("Mutation status:", {
-      isIdle: createMutation.isIdle,
-      isPending: createMutation.isPending,
-      isError: createMutation.isError,
-      isSuccess: createMutation.isSuccess
-    });
     createMutation.mutate(data);
   };
 
@@ -180,31 +156,7 @@ export default function ChatbotForm() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={async (e) => {
-          e.preventDefault();
-          
-          console.log("=== FORM DEBUG INFO ===");
-          console.log("Form submit event triggered");
-          
-          // Force validation before submit
-          const isValid = await form.trigger();
-          console.log("Form is valid after trigger:", isValid);
-          console.log("Form is valid (original):", form.formState.isValid);
-          
-          // Try to validate the form data manually
-          const formData = form.getValues();
-          const validationResult = formSchema.safeParse(formData);
-          console.log("Manual validation result:", JSON.stringify(validationResult, null, 2));
-          
-          if (!validationResult.success) {
-            console.log("Validation errors:", validationResult.error.errors);
-            return; // Don't submit if validation fails
-          }
-          
-          // Since manual validation passes, submit the validated data directly
-          console.log("Submitting form with validated data");
-          onSubmit(validationResult.data);
-        }} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -246,6 +198,75 @@ export default function ChatbotForm() {
                     </FormControl>
                     <FormDescription>
                       Describe what this chatbot is designed to do
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="avatarUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Avatar</FormLabel>
+                    <FormControl>
+                      <div className="space-y-4">
+                        {/* Avatar Preview */}
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={field.value || avatarPreview} />
+                            <AvatarFallback>
+                              <User className="h-8 w-8" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Chatbot Avatar</p>
+                            <p className="text-xs text-muted-foreground">
+                              Optional image for your chatbot
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Avatar URL Input */}
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://example.com/avatar.jpg"
+                            value={field.value}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              setAvatarPreview(e.target.value);
+                            }}
+                          />
+                          {field.value && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                field.onChange("");
+                                setAvatarPreview("");
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* File Upload Option */}
+                        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground mb-2">
+                            File upload will be available after object storage setup
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            For now, enter an image URL above
+                          </p>
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Choose an avatar image for your chatbot. You can enter a URL or upload a file (coming soon).
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
