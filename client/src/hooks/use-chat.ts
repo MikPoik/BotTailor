@@ -3,15 +3,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Message, ChatSession } from "@shared/schema";
 
-export function useChat(sessionId: string) {
+export function useChat(sessionId: string, chatbotConfigId?: number) {
   const [isTyping, setIsTyping] = useState(false);
   const queryClient = useQueryClient();
 
   // Initialize session
   const { data: session, isLoading: isSessionLoading } = useQuery({
-    queryKey: ['/api/chat/session'],
+    queryKey: ['/api/chat/session', chatbotConfigId],
     queryFn: async () => {
-      const response = await apiRequest('POST', '/api/chat/session', { sessionId });
+      const response = await apiRequest('POST', '/api/chat/session', { 
+        sessionId,
+        chatbotConfigId: chatbotConfigId || null
+      });
       return response.json();
     },
     enabled: !!sessionId,

@@ -16,6 +16,7 @@ interface TabbedChatInterfaceProps {
   isPreloaded?: boolean;
   onClose?: () => void;
   isEmbedded?: boolean;
+  chatbotConfigId?: number;
 }
 
 export default function TabbedChatInterface({ 
@@ -23,7 +24,8 @@ export default function TabbedChatInterface({
   isMobile,
   isPreloaded = false,
   onClose,
-  isEmbedded = false
+  isEmbedded = false,
+  chatbotConfigId
 }: TabbedChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -40,7 +42,7 @@ export default function TabbedChatInterface({
     selectOption, 
     isLoading,
     isSessionLoading 
-  } = useChat(sessionId);
+  } = useChat(sessionId, chatbotConfigId);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
