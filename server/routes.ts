@@ -197,6 +197,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      // Verify ownership
+      const existingConfig = await storage.getChatbotConfig(parseInt(id));
+      if (!existingConfig || existingConfig.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+
+      // For PATCH, we only update the provided fields
+      const config = await storage.updateChatbotConfig(parseInt(id), req.body);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating chatbot config:", error);
+      res.status(500).json({ message: "Failed to update chatbot config" });
+    }
+  });
+
   app.delete('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
