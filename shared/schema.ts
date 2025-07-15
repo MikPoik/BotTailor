@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { v4 as uuidv4 } from "uuid";
 
 // Session storage table for Replit Auth (required)
 export const sessions = pgTable(
@@ -38,7 +39,7 @@ export const users = pgTable("users", {
 export const chatbotConfigs = pgTable("chatbot_configs", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
-  guid: varchar("guid").notNull().unique().default("RandomGuid"), // Unique identifier for public URLs
+  guid: varchar("guid").notNull().unique().$defaultFn(() => uuidv4()), // Unique identifier for public URLs
   name: text("name").notNull(),
   description: text("description"),
   avatarUrl: varchar("avatar_url"),
