@@ -112,6 +112,7 @@ export default function ChatWidget({
               sessionId={sessionId} 
               isMobile={true} 
               isPreloaded={!isSessionLoading && !isMessagesLoading}
+              chatbotConfig={chatbotConfig}
             />
           </div>
         </div>
@@ -164,6 +165,7 @@ export default function ChatWidget({
             isMobile={false} 
             isPreloaded={!isSessionLoading && !isMessagesLoading}
             isEmbedded={true}
+            chatbotConfig={chatbotConfig}
           />
         </div>
       </div>
@@ -232,6 +234,7 @@ export default function ChatWidget({
               sessionId={sessionId} 
               isMobile={isMobile}
               isPreloaded={!isSessionLoading && !isMessagesLoading}
+              chatbotConfig={chatbotConfig}
             />
           </div>
         </div>

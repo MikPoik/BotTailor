@@ -6,6 +6,15 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 15, 2025**: Implemented AI-Powered UI Designer for Custom Home Screens:
+  - Created complete component registry system with dynamic home screen rendering
+  - Built AI-powered UI designer service using OpenAI for generating layouts from natural language
+  - Implemented three-panel UI designer page with chat interface, live preview, and JSON code view
+  - Added comprehensive schema support for home screen components (text, cards, quick actions, chat topics)
+  - Integrated custom home screen loading throughout chat widget system for personalized user experiences
+  - Extended database schema with homeScreenConfig field for storing custom UI layouts
+  - Updated public API endpoints to include home screen configurations for widget embedding
+
 - **July 15, 2025**: Fixed Chatbot Testing and Embed Code Issues:
   - Fixed chatbot testing feature to properly use updated configuration during testing
   - Enhanced session management to update chatbot configuration when testing

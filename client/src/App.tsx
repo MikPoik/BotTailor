@@ -13,6 +13,7 @@ import Home from "@/pages/home";
 import ChatbotForm from "@/pages/chatbot-form";
 import ChatbotEdit from "@/pages/chatbot-edit";
 import ChatbotTest from "@/pages/chatbot-test";
+import UIDesigner from "@/pages/ui-designer";
 
 function AuthenticatedRouter() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -40,6 +41,7 @@ function AuthenticatedRouter() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/chatbots/new" component={ChatbotForm} />
           <Route path="/chatbots/:id/test" component={ChatbotTest} />
+          <Route path="/chatbots/:id/ui-designer" component={UIDesigner} />
           <Route path="/chatbots/:id" component={ChatbotEdit} />
           <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />

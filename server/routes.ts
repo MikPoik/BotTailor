@@ -1,9 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema } from "@shared/schema";
+import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateStructuredResponse, generateOptionResponse, generateStreamingResponse } from "./openai-service";
+import { generateHomeScreenConfig, modifyHomeScreenConfig, getDefaultHomeScreenConfig } from "./ui-designer-service";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -103,7 +104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: config.temperature,
         maxTokens: config.maxTokens,
         systemPrompt: config.systemPrompt,
-        isActive: config.isActive
+        isActive: config.isActive,
+        homeScreenConfig: config.homeScreenConfig
       };
 
       res.json(publicConfig);
@@ -140,7 +142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: config.temperature,
         maxTokens: config.maxTokens,
         systemPrompt: config.systemPrompt,
-        isActive: config.isActive
+        isActive: config.isActive,
+        homeScreenConfig: config.homeScreenConfig
       };
 
       res.json(publicConfig);
@@ -735,6 +738,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.send(fileContent);
     } else {
       res.status(404).send('// Component not found');
+    }
+  });
+
+  // UI Designer API routes
+  app.post('/api/ui-designer/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      const config = await generateHomeScreenConfig(prompt);
+      res.json({ config });
+    } catch (error) {
+      console.error("Error generating UI config:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate UI" });
+    }
+  });
+
+  app.post('/api/ui-designer/modify', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, currentConfig } = req.body;
+      
+      if (!prompt || !currentConfig) {
+        return res.status(400).json({ message: "Prompt and current config are required" });
+      }
+
+      const config = await modifyHomeScreenConfig(currentConfig, prompt);
+      res.json({ config });
+    } catch (error) {
+      console.error("Error modifying UI config:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to modify UI" });
+    }
+  });
+
+  app.get('/api/ui-designer/default', isAuthenticated, async (req: any, res) => {
+    try {
+      const config = getDefaultHomeScreenConfig();
+      res.json({ config });
+    } catch (error) {
+      console.error("Error getting default config:", error);
+      res.status(500).json({ message: "Failed to get default configuration" });
     }
   });
 

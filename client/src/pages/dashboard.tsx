@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, MessageSquare, Plus, Settings } from "lucide-react";
+import { Bot, MessageSquare, Plus, Settings, Palette } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -172,7 +172,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                     <span>Model: {chatbot.model}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/chatbots/${chatbot.id}`}>
                         <Settings className="mr-2 h-3 w-3" />
@@ -183,6 +183,12 @@ export default function Dashboard() {
                       <Link href={`/chatbots/${chatbot.id}/test`}>
                         <MessageSquare className="mr-2 h-3 w-3" />
                         Test
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/chatbots/${chatbot.id}/ui-designer`}>
+                        <Palette className="mr-2 h-3 w-3" />
+                        UI Designer
                       </Link>
                     </Button>
                   </div>

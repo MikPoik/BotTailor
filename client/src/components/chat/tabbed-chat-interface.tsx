@@ -17,6 +17,7 @@ interface TabbedChatInterfaceProps {
   onClose?: () => void;
   isEmbedded?: boolean;
   chatbotConfigId?: number;
+  chatbotConfig?: any;
 }
 
 export default function TabbedChatInterface({ 
@@ -25,7 +26,8 @@ export default function TabbedChatInterface({
   isPreloaded = false,
   onClose,
   isEmbedded = false,
-  chatbotConfigId
+  chatbotConfigId,
+  chatbotConfig
 }: TabbedChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -313,6 +315,7 @@ export default function TabbedChatInterface({
               onStartChat={handleStartChat} 
               isMobile={isMobile}
               isPreloaded={isPreloaded}
+              chatbotConfig={chatbotConfig}
             />
         </TabsContent>
 

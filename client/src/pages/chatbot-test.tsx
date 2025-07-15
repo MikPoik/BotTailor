@@ -242,6 +242,7 @@ export default function ChatbotTest() {
                       onClose={() => {}} // No close needed for test interface
                       isEmbedded={false}
                       chatbotConfigId={chatbot.id}
+                      chatbotConfig={chatbot}
                     />
                   </div>
                 )}

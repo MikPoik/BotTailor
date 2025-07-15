@@ -1,0 +1,44 @@
+import React from "react";
+import { renderComponent } from "./component-registry";
+import type { HomeScreenConfig } from "@shared/schema";
+
+interface DynamicHomeScreenProps {
+  config: HomeScreenConfig;
+  onTopicClick?: (topic: any) => void;
+  onActionClick?: (action: any) => void;
+  className?: string;
+}
+
+export default function DynamicHomeScreen({ 
+  config, 
+  onTopicClick, 
+  onActionClick, 
+  className 
+}: DynamicHomeScreenProps) {
+  if (!config || !config.components) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        No home screen configuration found
+      </div>
+    );
+  }
+
+  // Sort components by order
+  const sortedComponents = [...config.components]
+    .filter(component => component.visible)
+    .sort((a, b) => a.order - b.order);
+
+  return (
+    <div 
+      className={`bg-background min-h-full ${className || ''}`}
+      style={{
+        backgroundColor: config.theme?.backgroundColor,
+        color: config.theme?.textColor,
+      }}
+    >
+      {sortedComponents.map((component) => 
+        renderComponent(component, onTopicClick, onActionClick)
+      )}
+    </div>
+  );
+}

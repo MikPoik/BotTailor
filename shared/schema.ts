@@ -50,6 +50,7 @@ export const chatbotConfigs = pgTable("chatbot_configs", {
   isActive: boolean("is_active").default(true),
   welcomeMessage: text("welcome_message"),
   fallbackMessage: text("fallback_message"),
+  homeScreenConfig: jsonb("home_screen_config"), // Dynamic UI configuration
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -95,6 +96,7 @@ export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick
   maxTokens: true,
   welcomeMessage: true,
   fallbackMessage: true,
+  homeScreenConfig: true,
 });
 
 export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
@@ -161,6 +163,59 @@ export const RichMessageSchema = z.object({
 });
 
 export type RichMessage = z.infer<typeof RichMessageSchema>;
+
+// Home Screen UI Designer schemas
+export const HomeScreenComponentSchema = z.object({
+  id: z.string(),
+  type: z.enum(['header', 'category_tabs', 'topic_grid', 'quick_actions', 'footer']),
+  props: z.object({
+    title: z.string().optional(),
+    subtitle: z.string().optional(),
+    categories: z.array(z.string()).optional(),
+    topics: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      icon: z.string(),
+      message: z.string().optional(),
+      category: z.string(),
+      popular: z.boolean().optional(),
+    })).optional(),
+    actions: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      action: z.string(),
+    })).optional(),
+    style: z.object({
+      backgroundColor: z.string().optional(),
+      textColor: z.string().optional(),
+      layout: z.enum(['grid', 'list', 'carousel']).optional(),
+      columns: z.number().optional(),
+    }).optional(),
+  }),
+  order: z.number(),
+  visible: z.boolean().default(true),
+});
+
+export const HomeScreenConfigSchema = z.object({
+  version: z.string().default('1.0'),
+  components: z.array(HomeScreenComponentSchema),
+  theme: z.object({
+    primaryColor: z.string().optional(),
+    backgroundColor: z.string().optional(),
+    textColor: z.string().optional(),
+    borderRadius: z.string().optional(),
+  }).optional(),
+  settings: z.object({
+    enableSearch: z.boolean().default(false),
+    enableCategories: z.boolean().default(true),
+    defaultCategory: z.string().optional(),
+  }).optional(),
+});
+
+export type HomeScreenComponent = z.infer<typeof HomeScreenComponentSchema>;
+export type HomeScreenConfig = z.infer<typeof HomeScreenConfigSchema>;
 
 export const messageSchema = z.object({
   id: z.number(),

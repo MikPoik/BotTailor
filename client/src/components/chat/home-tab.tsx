@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import DynamicHomeScreen from "@/components/ui-designer/dynamic-home-screen";
 import { 
   MessageCircle, 
   ShoppingCart, 
@@ -12,11 +13,13 @@ import {
   Shield,
   Phone
 } from "lucide-react";
+import type { HomeScreenConfig } from "@shared/schema";
 
 interface HomeTabProps {
   onStartChat: (topic: string, message?: string) => void;
   isMobile: boolean;
   isPreloaded?: boolean;
+  chatbotConfig?: any;
 }
 
 interface ChatTopic {
@@ -114,9 +117,34 @@ const quickActions = [
   }
 ];
 
-export default function HomeTab({ onStartChat, isMobile, isPreloaded = false }: HomeTabProps) {
+export default function HomeTab({ onStartChat, isMobile, isPreloaded = false, chatbotConfig }: HomeTabProps) {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'support' | 'sales' | 'billing'>('all');
 
+  // Check if chatbot has custom home screen configuration
+  const hasCustomHomeScreen = chatbotConfig?.homeScreenConfig;
+
+  // If there's a custom config, use dynamic rendering
+  if (hasCustomHomeScreen) {
+    const handleTopicClick = (topic: any) => {
+      onStartChat(topic.title, topic.message);
+    };
+
+    const handleActionClick = (action: any) => {
+      if (action.action === 'start_chat') {
+        onStartChat(action.title);
+      }
+    };
+
+    return (
+      <DynamicHomeScreen 
+        config={chatbotConfig.homeScreenConfig as HomeScreenConfig}
+        onTopicClick={handleTopicClick}
+        onActionClick={handleActionClick}
+      />
+    );
+  }
+
+  // Fallback to default home screen
   const filteredTopics = selectedCategory === 'all' 
     ? chatTopics 
     : chatTopics.filter(topic => topic.category === selectedCategory);
