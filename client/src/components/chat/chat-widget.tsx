@@ -10,12 +10,17 @@ interface ChatWidgetProps {
   sessionId: string;
   position?: 'bottom-right' | 'bottom-left';
   primaryColor?: string;
+  chatbotConfig?: {
+    name?: string;
+    avatarUrl?: string;
+  };
 }
 
 export default function ChatWidget({ 
   sessionId, 
   position = 'bottom-right',
-  primaryColor = '#2563eb' 
+  primaryColor = '#2563eb',
+  chatbotConfig
 }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
@@ -81,12 +86,12 @@ export default function ChatWidget({
           >
             <div className="flex items-center space-x-3">
               <img 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
-                alt="Support agent avatar" 
+                src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
+                alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
                 className="w-10 h-10 rounded-full border-2 border-white"
               />
               <div>
-                <h3 className="font-semibold">Support Assistant</h3>
+                <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
                 <div className="flex items-center space-x-1 text-xs text-blue-100">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                   <span>Online</span>
@@ -132,12 +137,12 @@ export default function ChatWidget({
         >
           <div className="flex items-center space-x-3">
             <img 
-              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
-              alt="Support agent avatar" 
+              src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
+              alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
               className="w-10 h-10 rounded-full border-2 border-white"
             />
             <div>
-              <h3 className="font-semibold">Support Assistant</h3>
+              <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
               <div className="flex items-center space-x-1 text-xs text-blue-100">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                 <span>Online</span>
@@ -201,12 +206,12 @@ export default function ChatWidget({
           >
             <div className="flex items-center space-x-3">
               <img 
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
-                alt="Support agent avatar" 
+                src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
+                alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
                 className="w-10 h-10 rounded-full border-2 border-white"
               />
               <div>
-                <h3 className="font-semibold">Support Assistant</h3>
+                <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
                 <div className="flex items-center space-x-1 text-xs text-blue-100">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                   <span>Online</span>

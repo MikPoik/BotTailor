@@ -1,8 +1,36 @@
 import ChatWidget from "@/components/chat/chat-widget";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+
+interface ChatbotConfig {
+  id: number;
+  guid: string;
+  name: string;
+  description: string;
+  model: string;
+  isActive: boolean;
+  systemPrompt: string;
+  temperature: number;
+  maxTokens: number;
+  welcomeMessage: string;
+  fallbackMessage: string;
+  avatarUrl?: string;
+}
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string>("");
+  const { isAuthenticated } = useAuth();
+
+  // Fetch available chatbot configs
+  const { data: chatbots } = useQuery<ChatbotConfig[]>({
+    queryKey: ["/api/chatbots"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  // Select the first active chatbot config or fallback to default
+  const selectedChatbot = chatbots?.find(bot => bot.isActive) || chatbots?.[0];
 
   useEffect(() => {
     // Generate or get session ID
@@ -71,6 +99,7 @@ export default function Home() {
         sessionId={sessionId}
         position="bottom-right"
         primaryColor="#3b82f6"
+        chatbotConfig={selectedChatbot}
       />
     </div>
   );
