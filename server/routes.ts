@@ -166,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/public/default-chatbot', async (req: Request, res: Response) => {
     try {
       const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
-      
+
       if (!defaultGuid) {
         return res.status(404).json({ message: "No default chatbot configured" });
       }
@@ -651,16 +651,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Force HTTPS in production environments
       const protocol = app.get("env") === "production" ? 'https' : req.protocol;
       const apiUrl = protocol + '://' + req.get('host');
-      
+
       console.log(`Environment: ${app.get("env")}, Protocol: ${protocol}, API URL: ${apiUrl}`);
-      
+
       if (app.get("env") === "production") {
         const distPath = path.resolve(__dirname, "../dist/public");
         const htmlPath = path.join(distPath, 'index.html');
-        
+
         console.log(`Looking for HTML file at: ${htmlPath}`);
         console.log(`File exists: ${fs.existsSync(htmlPath)}`);
-        
+
         let html;
         if (!fs.existsSync(htmlPath)) {
           console.log(`HTML file not found, trying alternative paths...`);
@@ -671,7 +671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             path.resolve(__dirname, "dist/public/index.html"),
             path.resolve(process.cwd(), "dist/public/index.html")
           ];
-          
+
           let found = false;
           for (const altPath of alternativePaths) {
             console.log(`Trying: ${altPath} - exists: ${fs.existsSync(altPath)}`);
@@ -682,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               break;
             }
           }
-          
+
           if (!found) {
             return res.status(500).send('HTML template not found');
           }
@@ -895,7 +895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/ui-designer/generate', isAuthenticated, async (req: any, res) => {
     try {
       const { prompt } = req.body;
-      
+
       if (!prompt) {
         return res.status(400).json({ message: "Prompt is required" });
       }
@@ -911,7 +911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/ui-designer/modify', isAuthenticated, async (req: any, res) => {
     try {
       const { prompt, currentConfig } = req.body;
-      
+
       if (!prompt || !currentConfig) {
         return res.status(400).json({ message: "Prompt and current config are required" });
       }
@@ -933,6 +933,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get default configuration" });
     }
   });
+
+  app.get('/api/callback', passport.authenticate('local', { 
+    failureRedirect: '/',
+    successRedirect: '/dashboard'
+  }));
 
   const httpServer = createServer(app);
   return httpServer;
