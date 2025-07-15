@@ -600,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const protocol = app.get("env") === "production" ? 'https' : req.protocol;
       const apiUrl = protocol + '://' + req.get('host');
       if (app.get("env") === "production") {
-        const distPath = path.resolve(__dirname, "./public");
+        const distPath = path.resolve(__dirname, "../dist/public");
         let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
 
         // Inject session data and chatbot config into the HTML
@@ -653,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In production, serve the built React app
       if (app.get("env") === "production") {
         // Read the built index.html
-        const distPath = path.resolve(__dirname, "./public");
+        const distPath = path.resolve(__dirname, "../dist/public");
         let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
 
         // Inject session data into the HTML

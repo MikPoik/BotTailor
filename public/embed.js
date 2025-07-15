@@ -106,7 +106,7 @@
       // Create iframe placeholder for chat interface (lazy load)
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
-      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
       iframe.style.cssText = `
         position: absolute;
         bottom: 0;
@@ -136,7 +136,7 @@
       // Mobile iframe placeholder (lazy load)
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
-      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
       mobileIframe.style.cssText = `
         position: fixed;
         inset: 0;

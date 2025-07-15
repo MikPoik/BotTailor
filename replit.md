@@ -6,6 +6,13 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 15, 2025**: Fixed Embedded Widget Production Path and Security Issues:
+  - Fixed production deployment path resolution for widget routes (`../dist/public` instead of `./public`)
+  - Removed CORS security warnings by adjusting iframe sandbox attributes
+  - Fixed embedded widget authentication bypass for public access without login prompts
+  - Resolved white screen issue when embedding specific chatbot GUIDs in production
+  - Widget embedding with specific bot configurations now works correctly in deployed environment
+
 - **July 15, 2025**: Implemented AI-Powered UI Designer for Custom Home Screens:
   - Created complete component registry system with dynamic home screen rendering
   - Built AI-powered UI designer service using OpenAI for generating layouts from natural language
