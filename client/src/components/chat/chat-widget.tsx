@@ -78,28 +78,28 @@ export default function ChatWidget({
         <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slideUp">
           {/* Mobile header */}
           <div 
-            className="text-white p-4 flex items-center justify-between flex-shrink-0"
+            className="text-white p-3 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
           >
             <div className="flex items-center space-x-2">
               <img 
                 src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
                 alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-8 h-8 rounded-full border-2 border-white"
+                className="w-7 h-7 rounded-full border-2 border-white"
               />
               <div>
-                <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
+                <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
                 <div className="flex items-center space-x-1 text-xs text-blue-100">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
                   <span>Online</span>
                 </div>
               </div>
             </div>
             <button 
               onClick={closeChat}
-              className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
+              className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
@@ -130,26 +130,26 @@ export default function ChatWidget({
       <div className="chat-widget-embedded">
         {/* Desktop header - sticky at top */}
         <div 
-          className="chat-header text-white p-4 flex items-center justify-between"
+          className="chat-header text-white p-3 flex items-center justify-between"
           style={{ backgroundColor: primaryColor }}
         >
           <div className="flex items-center space-x-2">
             <img 
               src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
               alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-              className="w-8 h-8 rounded-full border-2 border-white"
+              className="w-7 h-7 rounded-full border-2 border-white"
             />
             <div>
-              <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
+              <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
               <div className="flex items-center space-x-1 text-xs text-blue-100">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
                 <span>Online</span>
               </div>
             </div>
           </div>
           <button 
             onClick={handleEmbeddedClose}
-            className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
+            className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
           >
             <Minimize2 className="h-4 w-4" />
           </button>
@@ -200,26 +200,26 @@ export default function ChatWidget({
         }`}>
           {/* Chat header */}
           <div 
-            className="text-white p-4 flex items-center justify-between flex-shrink-0"
+            className="text-white p-3 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
           >
             <div className="flex items-center space-x-2">
               <img 
                 src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
                 alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-8 h-8 rounded-full border-2 border-white"
+                className="w-7 h-7 rounded-full border-2 border-white"
               />
               <div>
-                <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
+                <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
                 <div className="flex items-center space-x-1 text-xs text-blue-100">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
                   <span>Online</span>
                 </div>
               </div>
             </div>
             <button 
               onClick={toggleChat}
-              className="text-white hover:bg-blue-600 p-2 rounded transition-colors"
+              className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
             >
               <Minimize2 className="h-4 w-4" />
             </button>

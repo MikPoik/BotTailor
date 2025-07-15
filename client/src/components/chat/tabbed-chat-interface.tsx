@@ -384,36 +384,7 @@ export default function TabbedChatInterface({
               </div>
             </div>
 
-            {/* Quick replies */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickReply("Thank you")}
-                className="rounded-full text-xs px-3 py-1 h-auto"
-                disabled={isLoading}
-              >
-                Thank you
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickReply("I need more help")}
-                className="rounded-full text-xs px-3 py-1 h-auto"
-                disabled={isLoading}
-              >
-                I need more help
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleQuickReply("Contact human agent")}
-                className="rounded-full text-xs px-3 py-1 h-auto"
-                disabled={isLoading}
-              >
-                Contact agent
-              </Button>
-            </div>
+            
           </div>
         </TabsContent>
       </div>
