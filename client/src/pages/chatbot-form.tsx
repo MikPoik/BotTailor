@@ -19,7 +19,7 @@ import { insertChatbotConfigSchema } from "@shared/schema";
 import { z } from "zod";
 import { ArrowLeft, Bot, Save, Upload, User, X } from "lucide-react";
 import { Link } from "wouter";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -42,7 +42,6 @@ export default function ChatbotForm() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [avatarPreview, setAvatarPreview] = useState<string>("");
 
   // Redirect to home if not authenticated
   useEffect(() => {

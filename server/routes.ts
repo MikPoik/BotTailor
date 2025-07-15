@@ -12,6 +12,7 @@ import { Request, Response, NextFunction } from "express";
 import { ChatService } from "./storage";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { upload, uploadAvatar, getFileFromStorage } from "./upload-service";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +32,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Avatar upload routes
+  app.post('/api/upload/avatar', isAuthenticated, upload.single('avatar'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const userId = req.user.claims.sub;
+      const result = await uploadAvatar(req.file, userId);
+
+      if (!result.success) {
+        return res.status(500).json({ message: result.error });
+      }
+
+      res.json({ url: result.url });
+    } catch (error) {
+      console.error("Avatar upload error:", error);
+      res.status(500).json({ message: "Failed to upload avatar" });
+    }
+  });
+
+  // File serving route
+  app.get('/api/storage/*', async (req, res) => {
+    try {
+      const fileName = req.params[0]; // Get everything after /api/storage/
+      const result = await getFileFromStorage(fileName);
+
+      if (!result.success) {
+        return res.status(404).json({ message: result.error });
+      }
+
+      // Set appropriate headers
+      if (result.contentType) {
+        res.set('Content-Type', result.contentType);
+      }
+      res.set('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+
+      res.send(result.data);
+    } catch (error) {
+      console.error("File serving error:", error);
+      res.status(500).json({ message: "Failed to serve file" });
     }
   });
 

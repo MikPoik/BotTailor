@@ -18,7 +18,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { ArrowLeft, Bot, Save, User, X } from "lucide-react";
 import { Link } from "wouter";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
 import type { ChatbotConfig } from "@shared/schema";
 
@@ -41,7 +41,6 @@ export default function ChatbotEdit() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/chatbots/:guid");
-  const [avatarPreview, setAvatarPreview] = useState<string>("");
 
   const chatbotGuid = params?.guid || null;
 
@@ -97,7 +96,6 @@ export default function ChatbotEdit() {
         welcomeMessage: chatbot.welcomeMessage || "",
         fallbackMessage: chatbot.fallbackMessage || "",
       });
-      setAvatarPreview(chatbot.avatarUrl || "");
     }
   }, [chatbot, form]);
 
@@ -251,51 +249,14 @@ export default function ChatbotEdit() {
                   <FormItem>
                     <FormLabel>Avatar</FormLabel>
                     <FormControl>
-                      <div className="space-y-4">
-                        {/* Avatar Preview */}
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-16 w-16">
-                            <AvatarImage src={field.value || avatarPreview} />
-                            <AvatarFallback>
-                              <User className="h-8 w-8" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">Chatbot Avatar</p>
-                            <p className="text-xs text-muted-foreground">
-                              Optional image for your chatbot
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Avatar URL Input */}
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="https://example.com/avatar.jpg"
-                            value={field.value}
-                            onChange={(e) => {
-                              field.onChange(e.target.value);
-                              setAvatarPreview(e.target.value);
-                            }}
-                          />
-                          {field.value && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                field.onChange("");
-                                setAvatarPreview("");
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                      <AvatarUpload
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={updateMutation.isPending}
+                      />
                     </FormControl>
                     <FormDescription>
-                      Choose an avatar image for your chatbot by entering an image URL.
+                      Upload a custom avatar or provide an image URL for your chatbot.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
