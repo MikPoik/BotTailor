@@ -201,6 +201,9 @@ export function Navbar() {
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </a>
+                  <div className="pt-2">
+                    <ThemeToggle />
+                  </div>
                 </div>
               </>
             ) : (
@@ -219,6 +222,9 @@ export function Navbar() {
                 >
                   Log In
                 </a>
+                <div className="pt-2">
+                  <ThemeToggle />
+                </div>
               </div>
             )}
           </div>
