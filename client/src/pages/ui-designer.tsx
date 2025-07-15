@@ -187,37 +187,38 @@ export default function UIDesigner() {
   }
 
   return (
-    <div className="container max-w-7xl py-6">
+    <div className="container max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <Button variant="ghost" size="sm" asChild className="self-start">
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              Back to Dashboard
             </Link>
           </Button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold truncate">UI Designer</h1>
-            <p className="text-sm sm:text-base text-muted-foreground truncate">
-              Design custom home screens for {chatbot.name}
-            </p>
-          </div>
         </div>
-        <div className="flex gap-2 self-start sm:self-auto">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">UI Designer</h1>
+            {currentConfig && (
+              <Badge variant="outline">Custom</Badge>
+            )}
+          </div>
           {currentConfig && (
             <Button 
               onClick={handleSaveConfig}
               disabled={saveConfigMutation.isPending}
               size="sm"
-              className="sm:size-default"
             >
               <Download className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Save Design</span>
-              <span className="sm:hidden">Save</span>
+              Save Design
             </Button>
           )}
         </div>
+        <p className="text-muted-foreground">
+          Design custom home screens for {chatbot.name}
+        </p>
       </div>
 
       {/* Main Layout */}

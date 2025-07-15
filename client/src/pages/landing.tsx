@@ -25,7 +25,7 @@ export default function Landing() {
   return (
     <div className="flex flex-col min-h-screen relative">
       {/* Hero Section */}
-      <section className="flex-1 flex items-center justify-center px-4 py-12 md:py-24">
+      <section className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 md:py-24">
         <div className="container max-w-4xl text-center">
           <div className="mb-6">
             <Bot className="h-16 w-16 mx-auto mb-4 text-primary" />
@@ -49,7 +49,7 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-12 md:py-24 bg-muted/50">
+      <section id="features" className="py-12 md:py-24 bg-muted/50 px-4 sm:px-6 lg:px-8">
         <div className="container max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
@@ -107,7 +107,7 @@ export default function Landing() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 md:py-24">
+      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="container max-w-4xl text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-4">
             Ready to get started?

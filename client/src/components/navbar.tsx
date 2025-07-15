@@ -69,7 +69,7 @@ export function Navbar() {
         )}
 
         {/* Mobile Menu Button */}
-        {isMobile && isAuthenticated && (
+        {isMobile && (
           <Button
             variant="ghost"
             size="icon"
@@ -157,49 +157,70 @@ export function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      {isMobile && isMenuOpen && isAuthenticated && (
+      {isMobile && isMenuOpen && (
         <div className="border-t bg-background/95 backdrop-blur">
           <div className="container py-4 space-y-3">
-            <Link 
-              href="/dashboard" 
-              className="block text-sm font-medium transition-colors hover:text-primary py-2"
-              onClick={closeMenu}
-            >
-              Dashboard
-            </Link>
-            <Link 
-              href="/chatbots" 
-              className="block text-sm font-medium transition-colors hover:text-primary py-2"
-              onClick={closeMenu}
-            >
-              My Chatbots
-            </Link>
-            <div className="border-t pt-3 space-y-3">
-              <Link 
-                href="/profile" 
-                className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
-                onClick={closeMenu}
-              >
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </Link>
-              <Link 
-                href="/settings" 
-                className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
-                onClick={closeMenu}
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Link>
-              <a 
-                href="/api/logout" 
-                className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
-                onClick={closeMenu}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </a>
-            </div>
+            {isAuthenticated ? (
+              <>
+                <Link 
+                  href="/dashboard" 
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  href="/chatbots" 
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  My Chatbots
+                </Link>
+                <div className="border-t pt-3 space-y-3">
+                  <Link 
+                    href="/profile" 
+                    className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
+                    onClick={closeMenu}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                  <Link 
+                    href="/settings" 
+                    className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
+                    onClick={closeMenu}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                  <a 
+                    href="/api/logout" 
+                    className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
+                    onClick={closeMenu}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </a>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-3">
+                <Link 
+                  href="/" 
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Home
+                </Link>
+                <a 
+                  href="/api/login" 
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Log In
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}
