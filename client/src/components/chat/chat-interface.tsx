@@ -234,7 +234,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           />
         ))}
 
-        {(isTyping || isStreaming) && <TypingIndicator />}
+        {(isTyping || isStreaming) && <TypingIndicator chatbotConfig={chatbotConfig} />}
         <div ref={messagesEndRef} />
       </div>
 

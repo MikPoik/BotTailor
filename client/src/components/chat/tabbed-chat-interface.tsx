@@ -353,7 +353,7 @@ export default function TabbedChatInterface({
               ))
             )}
 
-            {(isTyping || isStreaming) && <TypingIndicator />}
+            {(isTyping || isStreaming) && <TypingIndicator chatbotConfig={chatbotConfig} />}
             <div ref={messagesEndRef} />
           </div>
 
