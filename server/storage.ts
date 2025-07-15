@@ -120,6 +120,12 @@ export class DatabaseStorage implements IStorage {
     return results[0] || null;
   }
 
+  async getPublicChatbotConfigByGuid(guid: string): Promise<ChatbotConfig | null> {
+    const results = await db.select().from(chatbotConfigs)
+      .where(eq(chatbotConfigs.guid, guid));
+    return results[0] || null;
+  }
+
   async createChatbotConfig(configData: InsertChatbotConfig): Promise<ChatbotConfig> {
     const [config] = await db
       .insert(chatbotConfigs)

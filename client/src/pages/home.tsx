@@ -22,7 +22,7 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string>("");
   const { isAuthenticated } = useAuth();
 
-  // Fetch available chatbot configs
+  // Fetch available chatbot configs (authenticated users only)
   const { data: chatbots } = useQuery<ChatbotConfig[]>({
     queryKey: ["/api/chatbots"],
     enabled: isAuthenticated,
@@ -35,23 +35,47 @@ export default function Home() {
   const envChatbotGuid = import.meta.env.VITE_DEFAULT_CHATBOT_GUID;
   const targetChatbotGuid = urlChatbotGuid || envChatbotGuid;
 
-  // Fetch specific chatbot by GUID if configured
+  // Fetch specific chatbot by GUID if configured (authenticated users)
   const { data: specificChatbot } = useQuery<ChatbotConfig>({
     queryKey: [`/api/chatbots/guid/${targetChatbotGuid}`],
     enabled: isAuthenticated && !!targetChatbotGuid,
     retry: false,
   });
 
+  // Fetch public chatbot by GUID (for non-authenticated users or public access)
+  const { data: publicChatbot } = useQuery<ChatbotConfig>({
+    queryKey: [`/api/public/chatbots/${targetChatbotGuid}`],
+    enabled: !isAuthenticated && !!targetChatbotGuid,
+    retry: false,
+  });
+
+  // Fetch site default chatbot for non-authenticated users when no specific GUID is provided
+  const { data: defaultChatbot } = useQuery<ChatbotConfig>({
+    queryKey: ['/api/public/default-chatbot'],
+    enabled: !isAuthenticated && !targetChatbotGuid,
+    retry: false,
+  });
+
   // Get selected chatbot configuration
   const getSelectedChatbot = () => {
-    // Use specific chatbot if fetched successfully
-    if (specificChatbot) {
-      return specificChatbot;
+    if (isAuthenticated) {
+      // Authenticated user flow
+      if (specificChatbot) {
+        return specificChatbot;
+      }
+      // Fallback to first available from user's list
+      if (!chatbots || chatbots.length === 0) return undefined;
+      return chatbots.find(bot => bot.isActive) || chatbots[0];
+    } else {
+      // Non-authenticated user flow
+      if (publicChatbot) {
+        return publicChatbot;
+      }
+      if (defaultChatbot) {
+        return defaultChatbot;
+      }
+      return undefined;
     }
-
-    // Fallback to first available from general list
-    if (!chatbots || chatbots.length === 0) return undefined;
-    return chatbots.find(bot => bot.isActive) || chatbots[0];
   };
 
   const selectedChatbot = getSelectedChatbot();
@@ -128,9 +152,21 @@ export default function Home() {
                 )}
               </div>
               <div className="mt-3 text-xs text-muted-foreground">
-                Configure default chatbot with: <code>VITE_DEFAULT_CHATBOT_GUID={selectedChatbot.guid}</code>
-                <br />
-                Or use URL parameter: <code>?chatbot={selectedChatbot.guid}</code>
+                {isAuthenticated ? (
+                  <>
+                    Configure personal default with: <code>VITE_DEFAULT_CHATBOT_GUID={selectedChatbot.guid}</code>
+                    <br />
+                    Configure site-wide default with: <code>DEFAULT_SITE_CHATBOT_GUID={selectedChatbot.guid}</code>
+                    <br />
+                    Or use URL parameter: <code>?chatbot={selectedChatbot.guid}</code>
+                  </>
+                ) : (
+                  <>
+                    This is the {publicChatbot ? 'configured' : 'default'} chatbot for this site.
+                    <br />
+                    Site owner can configure default with: <code>DEFAULT_SITE_CHATBOT_GUID={selectedChatbot.guid}</code>
+                  </>
+                )}
               </div>
             </div>
           )}

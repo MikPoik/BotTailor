@@ -62,7 +62,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get chatbot by GUID (for widget configuration)
+  // Get chatbot by GUID (for widget configuration) - authenticated version
   app.get('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -77,6 +77,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching chatbot config by GUID:", error);
       res.status(500).json({ message: "Failed to fetch chatbot config" });
+    }
+  });
+
+  // Public endpoint to get chatbot by GUID (for public widgets and embedding)
+  app.get('/api/public/chatbots/:guid', async (req: Request, res: Response) => {
+    try {
+      const { guid } = req.params;
+
+      const config = await storage.getPublicChatbotConfigByGuid(guid);
+      if (!config || !config.isActive) {
+        return res.status(404).json({ message: "Chatbot config not found or inactive" });
+      }
+
+      // Return only public-safe fields
+      const publicConfig = {
+        id: config.id,
+        guid: config.guid,
+        name: config.name,
+        description: config.description,
+        avatarUrl: config.avatarUrl,
+        welcomeMessage: config.welcomeMessage,
+        fallbackMessage: config.fallbackMessage,
+        model: config.model,
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
+        systemPrompt: config.systemPrompt,
+        isActive: config.isActive
+      };
+
+      res.json(publicConfig);
+    } catch (error) {
+      console.error("Error fetching public chatbot config by GUID:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot config" });
+    }
+  });
+
+  // Get site-wide default chatbot (for non-authenticated users)
+  app.get('/api/public/default-chatbot', async (req: Request, res: Response) => {
+    try {
+      const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
+      
+      if (!defaultGuid) {
+        return res.status(404).json({ message: "No default chatbot configured" });
+      }
+
+      const config = await storage.getPublicChatbotConfigByGuid(defaultGuid);
+      if (!config || !config.isActive) {
+        return res.status(404).json({ message: "Default chatbot not found or inactive" });
+      }
+
+      // Return only public-safe fields
+      const publicConfig = {
+        id: config.id,
+        guid: config.guid,
+        name: config.name,
+        description: config.description,
+        avatarUrl: config.avatarUrl,
+        welcomeMessage: config.welcomeMessage,
+        fallbackMessage: config.fallbackMessage,
+        model: config.model,
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
+        systemPrompt: config.systemPrompt,
+        isActive: config.isActive
+      };
+
+      res.json(publicConfig);
+    } catch (error) {
+      console.error("Error fetching default chatbot config:", error);
+      res.status(500).json({ message: "Failed to fetch default chatbot config" });
     }
   });
 
