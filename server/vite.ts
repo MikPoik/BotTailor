@@ -58,6 +58,18 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
+
+      // Inject chat widget config if available
+      if ((req as any).chatWidgetConfig) {
+        const config = (req as any).chatWidgetConfig;
+        const configScript = `
+          <script>
+            window.__CHAT_WIDGET_CONFIG__ = ${JSON.stringify(config)};
+          </script>
+        `;
+        template = template.replace('</head>', `${configScript}</head>`);
+      }
+
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {

@@ -7,7 +7,7 @@ import { generateStructuredResponse, generateOptionResponse, generateStreamingRe
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { ChatService } from "./storage";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -49,12 +49,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
-      
+
       const config = await storage.getChatbotConfig(parseInt(id));
       if (!config || config.userId !== userId) {
         return res.status(404).json({ message: "Chatbot config not found" });
       }
-      
+
       res.json(config);
     } catch (error) {
       console.error("Error fetching chatbot config:", error);
@@ -65,10 +65,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/chatbots', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      
+
       // Create a client-side schema that excludes userId since it comes from auth
       const clientChatbotSchema = insertChatbotConfigSchema.omit({ userId: true });
-      
+
       // Validate request body (without userId)
       const validationResult = clientChatbotSchema.safeParse(req.body);
       if (!validationResult.success) {
@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: fromZodError(validationResult.error).toString() 
         });
       }
-      
+
       const configData = { ...validationResult.data, userId };
       const config = await storage.createChatbotConfig(configData);
       res.json(config);
@@ -91,13 +91,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
-      
+
       // Verify ownership
       const existingConfig = await storage.getChatbotConfig(parseInt(id));
       if (!existingConfig || existingConfig.userId !== userId) {
         return res.status(404).json({ message: "Chatbot config not found" });
       }
-      
+
       const config = await storage.updateChatbotConfig(parseInt(id), req.body);
       res.json(config);
     } catch (error) {
@@ -110,13 +110,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { id } = req.params;
-      
+
       // Verify ownership
       const existingConfig = await storage.getChatbotConfig(parseInt(id));
       if (!existingConfig || existingConfig.userId !== userId) {
         return res.status(404).json({ message: "Chatbot config not found" });
       }
-      
+
       await storage.deleteChatbotConfig(parseInt(id));
       res.json({ message: "Chatbot config deleted" });
     } catch (error) {
@@ -132,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const embedPath = app.get("env") === "production" 
         ? path.join(__dirname, 'public', 'embed.js')
         : path.join(__dirname, '..', 'public', 'embed.js');
-      
+
       if (fs.existsSync(embedPath)) {
         res.setHeader('Content-Type', 'application/javascript');
         res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
@@ -412,28 +412,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Chatbot-specific widget route: /:userId/:chatbotGuid
-  app.get("/:userId/:chatbotGuid", async (req: Request, res: Response) => {
+  // Chat widget route with user and chatbot parameters
+  app.get("/:userId/:chatbotGuid", async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId, chatbotGuid } = req.params;
-      
-      // Get chatbot configuration
+      const { embedded = "true", mobile = "false" } = req.query;
+
+      // Get chatbot config from database
       const chatbotConfig = await storage.getChatbotConfigByGuid(userId, chatbotGuid);
       if (!chatbotConfig || !chatbotConfig.isActive) {
-        return res.status(404).send("Chatbot not found or inactive");
+        return res.status(404).send('Chatbot not found or inactive');
       }
 
       const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const isMobile = req.query.mobile === 'true';
       const embedded = req.query.embedded === 'true';
 
-      console.log(`Loading chatbot widget - User: ${userId}, Chatbot: ${chatbotGuid}, SessionId: ${sessionId}`);
-
       // Force HTTPS in production environments
       const protocol = app.get("env") === "production" ? 'https' : req.protocol;
       const apiUrl = protocol + '://' + req.get('host');
-
-      // In production, serve the built React app
       if (app.get("env") === "production") {
         const distPath = path.resolve(__dirname, "./public");
         let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
@@ -455,33 +452,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Content-Type', 'text/html');
         res.send(html);
       } else {
-        // In development, serve with Vite dev server integration
-        let html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${chatbotConfig.name} - Chat Widget</title>
-    <script>
-      window.__CHAT_WIDGET_CONFIG__ = {
-        sessionId: "${sessionId}",
-        apiUrl: "${apiUrl}",
-        isMobile: ${isMobile},
-        embedded: ${embedded},
-        chatbotConfig: ${JSON.stringify(chatbotConfig)}
-      };
-    </script>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-</body>
-</html>
-        `;
-        
-        res.setHeader('Content-Type', 'text/html');
-        res.send(html);
+        // In development, inject config and let Vite dev server handle the rest
+        req.url = '/';
+        req.chatWidgetConfig = {
+          sessionId,
+          apiUrl,
+          isMobile,
+          embedded,
+          chatbotConfig
+        };
+        next();
       }
     } catch (error) {
       console.error('Error serving chatbot widget:', error);
@@ -550,7 +530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 </body>
 </html>
         `;
-        
+
         console.log(`Development chat widget served - API URL: ${apiUrl}`);
         res.setHeader('Content-Type', 'text/html');
         res.send(html);
@@ -622,7 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
 
 
