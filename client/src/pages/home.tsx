@@ -154,8 +154,6 @@ export default function Home() {
               <div className="mt-3 text-xs text-muted-foreground">
                 {isAuthenticated ? (
                   <>
-                    Configure personal default with: <code>VITE_DEFAULT_CHATBOT_GUID={selectedChatbot.guid}</code>
-                    <br />
                     Configure site-wide default with: <code>DEFAULT_SITE_CHATBOT_GUID={selectedChatbot.guid}</code>
                     <br />
                     Or use URL parameter: <code>?chatbot={selectedChatbot.guid}</code>
