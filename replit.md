@@ -13,8 +13,10 @@ This is a full-stack React chat widget application built with Express.js backend
   - Added multer middleware for handling file uploads with 10MB size limit and image type validation
   - Implemented secure file serving endpoints with proper content-type headers and caching
   - Updated both chatbot creation and edit forms to use new avatar upload functionality
-  - Added error handling for object storage configuration and graceful fallbacks
+  - Fixed object storage data handling by switching to base64 encoding approach (works around downloadAsBytes issues)
+  - Resolved mobile viewport scaling problems with proper CSS font-size controls and text-size-adjust settings
   - Users can now upload custom avatar images or use image URLs for their chatbots
+  - **CONFIRMED WORKING**: Avatar upload, processing, and serving fully functional in production environment
 
 - **July 15, 2025**: Fixed Embedded Widget Production Path and Security Issues:
   - Fixed production deployment path resolution for widget routes (`../dist/public` instead of `./public`)
