@@ -20,6 +20,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -169,7 +170,7 @@ export class DatabaseStorage implements IStorage {
   async getWebsiteSources(chatbotConfigId: number): Promise<WebsiteSource[]> {
     return await db.select().from(websiteSources)
       .where(eq(websiteSources.chatbotConfigId, chatbotConfigId))
-      .orderBy(websiteSources.createdAt);
+      .orderBy(asc(websiteSources.createdAt));
   }
 
   async getWebsiteSource(id: number): Promise<WebsiteSource | undefined> {
@@ -205,7 +206,7 @@ export class DatabaseStorage implements IStorage {
   async getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]> {
     return await db.select().from(websiteContent)
       .where(eq(websiteContent.websiteSourceId, websiteSourceId))
-      .orderBy(websiteContent.createdAt);
+      .orderBy(asc(websiteContent.createdAt));
   }
 
   async createWebsiteContent(contentData: InsertWebsiteContent, embedding: string): Promise<WebsiteContent> {
