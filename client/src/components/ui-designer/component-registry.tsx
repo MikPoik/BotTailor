@@ -258,4 +258,3 @@ export function renderComponent(
 }
 
 export default ComponentRegistry;
-`
