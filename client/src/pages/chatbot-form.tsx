@@ -225,62 +225,14 @@ export default function ChatbotForm() {
                   <FormItem>
                     <FormLabel>Avatar</FormLabel>
                     <FormControl>
-                      <div className="space-y-4">
-                        {/* Avatar Preview */}
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-16 w-16">
-                            <AvatarImage src={field.value || avatarPreview} />
-                            <AvatarFallback>
-                              <User className="h-8 w-8" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">Chatbot Avatar</p>
-                            <p className="text-xs text-muted-foreground">
-                              Optional image for your chatbot
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Avatar URL Input */}
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="https://example.com/avatar.jpg"
-                            value={field.value}
-                            onChange={(e) => {
-                              field.onChange(e.target.value);
-                              setAvatarPreview(e.target.value);
-                            }}
-                          />
-                          {field.value && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                field.onChange("");
-                                setAvatarPreview("");
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        {/* File Upload Option */}
-                        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground mb-2">
-                            File upload will be available after object storage setup
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            For now, enter an image URL above
-                          </p>
-                        </div>
-                      </div>
+                      <AvatarUpload
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={createMutation.isPending}
+                      />
                     </FormControl>
                     <FormDescription>
-                      Choose an avatar image for your chatbot. You can enter a URL or upload a file (coming soon).
+                      Upload a custom avatar or provide an image URL for your chatbot.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

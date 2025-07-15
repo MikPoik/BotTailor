@@ -4,8 +4,10 @@ import { Request } from "express";
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
 
-// Initialize Replit Object Storage client
-const client = new Client();
+// Initialize Replit Object Storage client with specific bucket
+const client = new Client({
+  bucketName: "chatbot-avatars"
+});
 
 // Initialize the client with a default bucket if needed
 let isClientInitialized = false;
