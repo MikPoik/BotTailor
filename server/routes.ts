@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or get chat session
   app.post("/api/chat/session", async (req, res) => {
     try {
-      const { sessionId } = req.body;
+      const { sessionId, chatbotConfigId } = req.body;
 
       if (!sessionId) {
         return res.status(400).json({ message: "Session ID is required" });
@@ -163,8 +163,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let session = await storage.getChatSession(sessionId);
 
       if (!session) {
-        session = await storage.createChatSession({ sessionId });
-        // Session created without any initial messages
+        session = await storage.createChatSession({ 
+          sessionId,
+          chatbotConfigId: chatbotConfigId || null
+        });
       }
 
       res.json({ session });
@@ -226,12 +228,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: msg.content
         }));
 
+      // Get chatbot configuration for this session
+      let chatbotConfig = null;
+      const session = await storage.getChatSession(sessionId);
+      if (session?.chatbotConfigId) {
+        chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
+      }
+
       // Generate streaming response using internal message if provided, otherwise use display text
       const aiInputMessage = internalMessage || messageData.content;
       const streamingGenerator = generateStreamingResponse(
         aiInputMessage,
         sessionId,
-        conversationHistory
+        conversationHistory,
+        chatbotConfig
       );
 
       const createdMessages = [];
@@ -402,7 +412,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Chat widget page
+  // Chatbot-specific widget route: /:userId/:chatbotGuid
+  app.get("/:userId/:chatbotGuid", async (req: Request, res: Response) => {
+    try {
+      const { userId, chatbotGuid } = req.params;
+      
+      // Get chatbot configuration
+      const chatbotConfig = await storage.getChatbotConfigByGuid(userId, chatbotGuid);
+      if (!chatbotConfig || !chatbotConfig.isActive) {
+        return res.status(404).send("Chatbot not found or inactive");
+      }
+
+      const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const isMobile = req.query.mobile === 'true';
+      const embedded = req.query.embedded === 'true';
+
+      console.log(`Loading chatbot widget - User: ${userId}, Chatbot: ${chatbotGuid}, SessionId: ${sessionId}`);
+
+      // Force HTTPS in production environments
+      const protocol = app.get("env") === "production" ? 'https' : req.protocol;
+      const apiUrl = protocol + '://' + req.get('host');
+
+      // In production, serve the built React app
+      if (app.get("env") === "production") {
+        const distPath = path.resolve(__dirname, "./public");
+        let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
+
+        // Inject session data and chatbot config into the HTML
+        const sessionData = `
+          <script>
+            window.__CHAT_WIDGET_CONFIG__ = {
+              sessionId: "${sessionId}",
+              apiUrl: "${apiUrl}",
+              isMobile: ${isMobile},
+              embedded: ${embedded},
+              chatbotConfig: ${JSON.stringify(chatbotConfig)}
+            };
+          </script>
+        `;
+
+        html = html.replace('</head>', `${sessionData}</head>`);
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+      } else {
+        // In development, serve with Vite dev server integration
+        let html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${chatbotConfig.name} - Chat Widget</title>
+    <script>
+      window.__CHAT_WIDGET_CONFIG__ = {
+        sessionId: "${sessionId}",
+        apiUrl: "${apiUrl}",
+        isMobile: ${isMobile},
+        embedded: ${embedded},
+        chatbotConfig: ${JSON.stringify(chatbotConfig)}
+      };
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
+        `;
+        
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+      }
+    } catch (error) {
+      console.error('Error serving chatbot widget:', error);
+      res.status(500).send('Internal server error');
+    }
+  });
+
+  // Chat widget page (legacy route)
   app.get("/chat-widget", async (req: Request, res: Response) => {
     try {
       const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

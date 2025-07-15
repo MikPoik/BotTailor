@@ -13,23 +13,23 @@ import {
   type InsertChatbotConfig,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+
   // Chat session methods
   getChatSession(sessionId: string): Promise<ChatSession | undefined>;
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
   updateChatSession(sessionId: string, data: Partial<ChatSession>): Promise<ChatSession | undefined>;
-  
+
   // Message methods
   getMessages(sessionId: string): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   getRecentMessages(sessionId: string, limit?: number): Promise<Message[]>;
-  
+
   // Chatbot config methods
   getChatbotConfigs(userId: string): Promise<ChatbotConfig[]>;
   getChatbotConfig(id: number): Promise<ChatbotConfig | undefined>;
@@ -109,9 +109,15 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.userId, userId));
   }
 
-  async getChatbotConfig(id: number): Promise<ChatbotConfig | undefined> {
-    const [config] = await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.id, id));
-    return config || undefined;
+  async getChatbotConfig(id: number): Promise<ChatbotConfig | null> {
+    const results = await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.id, id));
+    return results[0] || null;
+  }
+
+  async getChatbotConfigByGuid(userId: string, guid: string): Promise<ChatbotConfig | null> {
+    const results = await db.select().from(chatbotConfigs)
+      .where(and(eq(chatbotConfigs.userId, userId), eq(chatbotConfigs.guid, guid)));
+    return results[0] || null;
   }
 
   async createChatbotConfig(configData: InsertChatbotConfig): Promise<ChatbotConfig> {

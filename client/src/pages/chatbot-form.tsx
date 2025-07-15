@@ -81,17 +81,21 @@ export default function ChatbotForm() {
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      const dataWithGuid = {
+        ...data,
+        guid: generateGuid()
+      };
       const response = await fetch("/api/chatbots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(dataWithGuid),
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -133,6 +137,13 @@ export default function ChatbotForm() {
       </div>
     );
   }
+
+    function generateGuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
 
   return (
     <div className="container max-w-4xl py-8">

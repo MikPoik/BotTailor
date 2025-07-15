@@ -38,6 +38,7 @@ export const users = pgTable("users", {
 export const chatbotConfigs = pgTable("chatbot_configs", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
+  guid: varchar("guid").notNull().unique(), // Unique identifier for public URLs
   name: text("name").notNull(),
   description: text("description"),
   avatarUrl: varchar("avatar_url"),
@@ -83,6 +84,7 @@ export const upsertUserSchema = createInsertSchema(users).pick({
 // Chatbot config schemas
 export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick({
   userId: true,
+  guid: true,
   name: true,
   description: true,
   avatarUrl: true,

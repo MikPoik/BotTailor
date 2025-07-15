@@ -165,7 +165,8 @@ export async function generateMultiBubbleResponse(
 export async function* generateStreamingResponse(
   userMessage: string,
   sessionId: string,
-  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  chatbotConfig?: any
 ): AsyncGenerator<{ type: 'bubble' | 'complete', bubble?: any, content?: string, messageType?: string, metadata?: any }, void, unknown> {
   console.log(`[OpenAI] Starting streaming response for: "${userMessage}"`);
 
