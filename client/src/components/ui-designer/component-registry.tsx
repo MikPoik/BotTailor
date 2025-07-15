@@ -55,22 +55,24 @@ export function HeaderComponent({ component }: ComponentRegistryProps) {
   
   return (
     <div 
-      className="text-center py-6 px-4"
+      className="bg-white border-b border-neutral-200 p-6"
       style={{
-        backgroundColor: style?.backgroundColor,
+        backgroundColor: style?.backgroundColor || 'white',
         color: style?.textColor,
       }}
     >
-      {title && (
-        <h1 className="text-2xl font-bold mb-2">
-          {title}
-        </h1>
-      )}
-      {subtitle && (
-        <p className="text-muted-foreground">
-          {subtitle}
-        </p>
-      )}
+      <div className="text-center">
+        {title && (
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {title}
+          </h2>
+        )}
+        {subtitle && (
+          <p className="text-gray-600">
+            {subtitle}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -108,39 +110,53 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
   if (!topics || topics.length === 0) return null;
   
   const gridClass = layout === 'grid' 
-    ? `grid grid-cols-1 md:grid-cols-${columns} gap-4`
-    : 'space-y-2';
+    ? `grid grid-cols-1 gap-3`
+    : 'space-y-3';
+
+  // Category colors similar to original design
+  const categoryColors = {
+    support: 'bg-blue-50 text-blue-700 border-blue-200',
+    sales: 'bg-green-50 text-green-700 border-green-200', 
+    billing: 'bg-purple-50 text-purple-700 border-purple-200',
+    general: 'bg-gray-50 text-gray-700 border-gray-200'
+  };
   
   return (
-    <div className="px-4 py-4">
+    <div className="p-4 space-y-3">
+      <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+        Topics
+      </h3>
       <div className={gridClass}>
         {topics.map((topic) => (
-          <Card 
+          <div 
             key={topic.id}
-            className="cursor-pointer hover:shadow-md transition-shadow"
+            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-primary rounded-lg border bg-white shadow-sm p-4"
             onClick={() => onTopicClick?.(topic)}
             style={{
-              backgroundColor: style?.backgroundColor,
+              backgroundColor: style?.backgroundColor || 'white',
               color: style?.textColor,
             }}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
+              <div className="text-primary mt-1">
                 {getIcon(topic.icon)}
-                <div className="flex-1">
-                  <CardTitle className="text-sm">{topic.title}</CardTitle>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-medium text-gray-900">{topic.title}</h4>
+                  {topic.category && (
+                    <span className={`text-xs px-2 py-1 rounded-full border ${categoryColors[topic.category as keyof typeof categoryColors] || categoryColors.general}`}>
+                      {topic.category}
+                    </span>
+                  )}
                   {topic.popular && (
-                    <Badge variant="secondary" className="ml-2 text-xs">Popular</Badge>
+                    <Badge variant="secondary" className="text-xs">Popular</Badge>
                   )}
                 </div>
+                <p className="text-sm text-gray-600">{topic.description}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-xs">
-                {topic.description}
-              </CardDescription>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -154,22 +170,32 @@ export function QuickActionsComponent({ component, onActionClick }: ComponentReg
   if (!actions || actions.length === 0) return null;
   
   return (
-    <div className="px-4 py-4">
-      <div className="space-y-2">
-        {actions.map((action) => (
+    <div className="p-4 space-y-3">
+      <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+        Quick Actions
+      </h3>
+      <div className="grid grid-cols-1 gap-3">
+        {actions.map((action, index) => (
           <Button
             key={action.id}
-            variant="outline"
-            className="w-full justify-start"
+            variant={index === 0 ? "default" : "outline"}
+            className={`h-auto p-4 justify-start ${
+              index === 0 
+                ? "bg-primary hover:bg-primary/90 text-white" 
+                : ""
+            }`}
             onClick={() => onActionClick?.(action)}
             style={{
-              backgroundColor: style?.backgroundColor,
-              color: style?.textColor,
+              backgroundColor: index === 0 ? undefined : style?.backgroundColor,
+              color: index === 0 ? undefined : style?.textColor,
             }}
           >
-            <div className="text-left">
+            {getIcon(action.icon || 'MessageCircle')}
+            <div className="text-left ml-3">
               <div className="font-medium">{action.title}</div>
-              <div className="text-xs text-muted-foreground">{action.description}</div>
+              <div className={`text-xs ${index === 0 ? 'opacity-90' : 'text-gray-600'}`}>
+                {action.description}
+              </div>
             </div>
           </Button>
         ))}

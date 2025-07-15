@@ -30,7 +30,7 @@ export default function DynamicHomeScreen({
 
   return (
     <div 
-      className={`bg-background min-h-full ${className || ''}`}
+      className={`h-full overflow-y-auto ${className || ''}`}
       style={{
         backgroundColor: config.theme?.backgroundColor,
         color: config.theme?.textColor,
@@ -39,6 +39,7 @@ export default function DynamicHomeScreen({
       {sortedComponents.map((component) => 
         renderComponent(component, onTopicClick, onActionClick)
       )}
+      <div className="pb-8"></div>
     </div>
   );
 }
