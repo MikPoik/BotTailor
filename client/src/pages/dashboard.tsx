@@ -63,6 +63,28 @@ export default function Dashboard() {
     retry: false,
   });
 
+  // Get chatbot GUID from environment for consistency with homepage
+  const envChatbotGuid = import.meta.env.VITE_DEFAULT_CHATBOT_GUID;
+
+  // Fetch specific chatbot by GUID if configured
+  const { data: specificChatbot } = useQuery<ChatbotConfig>({
+    queryKey: [`/api/chatbots/guid/${envChatbotGuid}`],
+    enabled: isAuthenticated && !!envChatbotGuid,
+    retry: false,
+  });
+
+  // Get selected chatbot configuration (same logic as homepage)
+  const getSelectedChatbot = () => {
+    if (specificChatbot) {
+      return specificChatbot;
+    }
+    // Fallback to first available from user's list
+    if (!chatbots || chatbots.length === 0) return undefined;
+    return chatbots.find(bot => bot.isActive) || chatbots[0];
+  };
+
+  const selectedChatbot = getSelectedChatbot();
+
   if (isLoading || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -255,6 +277,7 @@ export default function Dashboard() {
           sessionId={sessionId}
           position="bottom-right"
           primaryColor="#3b82f6"
+          chatbotConfig={selectedChatbot}
         />
       )}
     </div>
