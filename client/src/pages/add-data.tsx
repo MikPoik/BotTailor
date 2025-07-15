@@ -120,6 +120,7 @@ export default function AddData() {
       });
     },
     onError: (error: Error) => {
+      console.error("Add website error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add website source",
@@ -176,6 +177,7 @@ export default function AddData() {
   });
 
   const onSubmit = (data: FormData) => {
+    console.log("Form submission data:", data);
     addWebsiteMutation.mutate(data);
   };
 

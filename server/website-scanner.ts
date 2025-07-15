@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+// import { chromium } from 'playwright'; // Temporarily disabled for initial implementation
 import * as cheerio from 'cheerio';
 import { parseStringPromise } from 'xml2js';
 import OpenAI from 'openai';
@@ -44,29 +44,22 @@ export class WebsiteScanner {
       console.log(`Discovered ${urls.length} URLs for ${websiteSource.url}`);
 
       let scannedCount = 0;
-      const browser = await chromium.launch({ headless: true });
-      const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (compatible; ChatbotScanner/1.0)',
-      });
 
-      try {
-        for (const url of urls.slice(0, websiteSource.maxPages || this.maxPages)) {
-          try {
-            const content = await this.extractContent(context, url);
-            if (content) {
-              await this.processAndStore(websiteSourceId, url, content);
-              scannedCount++;
-            }
-            
-            // Respectful delay between requests
-            await new Promise(resolve => setTimeout(resolve, this.delay));
-          } catch (error) {
-            console.error(`Error scanning ${url}:`, error);
-            continue;
+      // For now, use simpler content extraction without Playwright
+      for (const url of urls.slice(0, websiteSource.maxPages || this.maxPages)) {
+        try {
+          const content = await this.extractContentSimple(url);
+          if (content) {
+            await this.processAndStore(websiteSourceId, url, content);
+            scannedCount++;
           }
+          
+          // Respectful delay between requests
+          await new Promise(resolve => setTimeout(resolve, this.delay));
+        } catch (error) {
+          console.error(`Error scanning ${url}:`, error);
+          continue;
         }
-      } finally {
-        await browser.close();
       }
 
       await storage.updateWebsiteSource(websiteSourceId, {
@@ -140,6 +133,8 @@ export class WebsiteScanner {
 
     for (const sitemapUrl of sitemapUrls) {
       try {
+        // Use dynamic import for fetch polyfill in case Node.js version doesn't have it
+        const fetch = (await import('node-fetch')).default;
         const response = await fetch(sitemapUrl);
         if (response.ok) {
           const content = await response.text();
@@ -163,6 +158,7 @@ export class WebsiteScanner {
 
   private async parseSitemap(sitemapUrl: string): Promise<string[]> {
     try {
+      const fetch = (await import('node-fetch')).default;
       const response = await fetch(sitemapUrl);
       if (!response.ok) return [];
 
@@ -197,6 +193,7 @@ export class WebsiteScanner {
 
   private async crawlPageLinks(url: string, baseOrigin: string): Promise<string[]> {
     try {
+      const fetch = (await import('node-fetch')).default;
       const response = await fetch(url);
       if (!response.ok) return [];
 
@@ -227,38 +224,44 @@ export class WebsiteScanner {
     }
   }
 
-  private async extractContent(context: any, url: string): Promise<{ title: string; content: string } | null> {
+  private async extractContentSimple(url: string): Promise<{ title: string; content: string } | null> {
     try {
-      const page = await context.newPage();
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-
-      const content = await page.evaluate(() => {
-        // Remove scripts, styles, and other non-content elements
-        const elementsToRemove = document.querySelectorAll('script, style, nav, header, footer, aside, .advertisement, .ads, .social-share');
-        elementsToRemove.forEach(el => el.remove());
-
-        const title = document.title || document.querySelector('h1')?.textContent || '';
-        
-        // Extract main content
-        const mainContent = document.querySelector('main, article, .content, .post, #content, #main') 
-          || document.querySelector('body');
-        
-        const text = mainContent?.textContent || '';
-        
-        return {
-          title: title.trim(),
-          content: text.replace(/\s+/g, ' ').trim()
-        };
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; ChatbotScanner/1.0)',
+        },
+        timeout: 10000,
       });
 
-      await page.close();
-
-      // Filter out pages with very little content
-      if (content.content.length < 100) {
+      if (!response.ok) {
+        console.error(`HTTP ${response.status} for ${url}`);
         return null;
       }
 
-      return content;
+      const html = await response.text();
+      const $ = cheerio.load(html);
+
+      // Remove scripts, styles, and other non-content elements
+      $('script, style, nav, header, footer, aside, .advertisement, .ads, .social-share').remove();
+
+      const title = $('title').text() || $('h1').first().text() || '';
+      
+      // Extract main content
+      const mainContent = $('main, article, .content, .post, #content, #main').first();
+      const content = mainContent.length > 0 ? mainContent.text() : $('body').text();
+      
+      const cleanContent = content.replace(/\s+/g, ' ').trim();
+
+      // Filter out pages with very little content
+      if (cleanContent.length < 100) {
+        return null;
+      }
+
+      return {
+        title: title.trim(),
+        content: cleanContent
+      };
     } catch (error) {
       console.error(`Error extracting content from ${url}:`, error);
       return null;

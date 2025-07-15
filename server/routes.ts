@@ -373,15 +373,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const source = await storage.createWebsiteSource(sourceData);
 
       // Start scanning in background
+      console.log(`Starting background scan for website source ${source.id}: ${source.url}`);
       const scanner = new WebsiteScanner();
-      scanner.scanWebsite(source.id).catch(error => {
+      scanner.scanWebsite(source.id).then(result => {
+        console.log(`Scan completed for ${source.url}:`, result);
+      }).catch(error => {
         console.error("Background scanning error:", error);
       });
 
       res.json(source);
     } catch (error) {
       console.error("Error creating website source:", error);
-      res.status(500).json({ message: "Failed to create website source" });
+      console.error("Error details:", error.stack);
+      res.status(500).json({ 
+        message: "Failed to create website source",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
 
