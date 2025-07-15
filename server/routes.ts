@@ -62,6 +62,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get chatbot by GUID (for widget configuration)
+  app.get('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { guid } = req.params;
+
+      const config = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!config || !config.isActive) {
+        return res.status(404).json({ message: "Chatbot config not found or inactive" });
+      }
+
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching chatbot config by GUID:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot config" });
+    }
+  });
+
   app.post('/api/chatbots', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

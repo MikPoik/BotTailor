@@ -29,8 +29,32 @@ export default function Home() {
     retry: false,
   });
 
-  // Select the first active chatbot config or fallback to default
-  const selectedChatbot = chatbots?.find(bot => bot.isActive) || chatbots?.[0];
+  // Get chatbot GUID from URL parameters or environment
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlChatbotGuid = urlParams.get('chatbot');
+  const envChatbotGuid = import.meta.env.VITE_DEFAULT_CHATBOT_GUID;
+  const targetChatbotGuid = urlChatbotGuid || envChatbotGuid;
+
+  // Fetch specific chatbot by GUID if configured
+  const { data: specificChatbot } = useQuery<ChatbotConfig>({
+    queryKey: [`/api/chatbots/guid/${targetChatbotGuid}`],
+    enabled: isAuthenticated && !!targetChatbotGuid,
+    retry: false,
+  });
+
+  // Get selected chatbot configuration
+  const getSelectedChatbot = () => {
+    // Use specific chatbot if fetched successfully
+    if (specificChatbot) {
+      return specificChatbot;
+    }
+
+    // Fallback to first available from general list
+    if (!chatbots || chatbots.length === 0) return undefined;
+    return chatbots.find(bot => bot.isActive) || chatbots[0];
+  };
+
+  const selectedChatbot = getSelectedChatbot();
 
   useEffect(() => {
     // Generate or get session ID
@@ -91,6 +115,25 @@ export default function Home() {
               on any website with a simple JavaScript snippet.
             </p>
           </div>
+
+          {selectedChatbot && (
+            <div className="p-6 border rounded-lg bg-muted/50">
+              <h3 className="text-lg font-semibold mb-2">Active Chatbot Configuration</h3>
+              <div className="space-y-2 text-sm">
+                <p><span className="font-medium">Name:</span> {selectedChatbot.name}</p>
+                <p><span className="font-medium">Model:</span> {selectedChatbot.model}</p>
+                <p><span className="font-medium">GUID:</span> <code className="bg-background px-1 py-0.5 rounded text-xs">{selectedChatbot.guid}</code></p>
+                {selectedChatbot.description && (
+                  <p><span className="font-medium">Description:</span> {selectedChatbot.description}</p>
+                )}
+              </div>
+              <div className="mt-3 text-xs text-muted-foreground">
+                Configure default chatbot with: <code>VITE_DEFAULT_CHATBOT_GUID={selectedChatbot.guid}</code>
+                <br />
+                Or use URL parameter: <code>?chatbot={selectedChatbot.guid}</code>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
