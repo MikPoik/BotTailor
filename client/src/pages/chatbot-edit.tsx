@@ -40,10 +40,10 @@ export default function ChatbotEdit() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [, params] = useRoute("/chatbots/:id");
+  const [, params] = useRoute("/chatbots/:guid");
   const [avatarPreview, setAvatarPreview] = useState<string>("");
 
-  const chatbotId = params?.id ? parseInt(params.id) : null;
+  const chatbotGuid = params?.guid || null;
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -62,8 +62,8 @@ export default function ChatbotEdit() {
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/${chatbotId}`],
-    enabled: isAuthenticated && !!chatbotId,
+    queryKey: [`/api/chatbots/guid/${chatbotGuid}`],
+    enabled: isAuthenticated && !!chatbotGuid,
     retry: false,
   });
 
@@ -103,7 +103,7 @@ export default function ChatbotEdit() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await fetch(`/api/chatbots/${chatbotId}`, {
+      const response = await fetch(`/api/chatbots/guid/${chatbotGuid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -122,7 +122,7 @@ export default function ChatbotEdit() {
         description: "Chatbot configuration updated successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/guid/${chatbotGuid}`] });
       setLocation("/dashboard");
     },
     onError: (error) => {

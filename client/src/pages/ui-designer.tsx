@@ -32,7 +32,7 @@ interface ChatMessage {
 }
 
 export default function UIDesigner() {
-  const { id } = useParams();
+  const { guid } = useParams();
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -44,8 +44,8 @@ export default function UIDesigner() {
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/${id}`],
-    enabled: isAuthenticated && !!id,
+    queryKey: [`/api/chatbots/guid/${guid}`],
+    enabled: isAuthenticated && !!guid,
     retry: false,
   });
 
@@ -95,11 +95,11 @@ export default function UIDesigner() {
   // Save configuration mutation
   const saveConfigMutation = useMutation({
     mutationFn: async (config: HomeScreenConfig) => {
-      const response = await apiRequest("PATCH", `/api/chatbots/${id}`, { homeScreenConfig: config });
+      const response = await apiRequest("PATCH", `/api/chatbots/guid/${guid}`, { homeScreenConfig: config });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/guid/${guid}`] });
       toast({
         title: "Configuration Saved",
         description: "Your home screen design has been saved successfully!",

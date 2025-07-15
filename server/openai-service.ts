@@ -41,7 +41,7 @@ export async function generateMultiBubbleResponse(
     console.log(
       `[OpenAI] Using model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`,
     );
-    console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
     const messages = [
       { role: "system" as const, content: systemPrompt },
       ...conversationHistory,
@@ -232,7 +232,7 @@ export async function* generateStreamingResponse(
     console.log(
       `[OpenAI] Streaming with model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`,
     );
-    console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
 
     const messages = [
       { role: "system" as const, content: systemPrompt },

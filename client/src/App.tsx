@@ -40,9 +40,9 @@ function AuthenticatedRouter() {
           <Route path="/" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/chatbots/new" component={ChatbotForm} />
-          <Route path="/chatbots/:id/test" component={ChatbotTest} />
-          <Route path="/chatbots/:id/ui-designer" component={UIDesigner} />
-          <Route path="/chatbots/:id" component={ChatbotEdit} />
+          <Route path="/chatbots/:guid/test" component={ChatbotTest} />
+          <Route path="/chatbots/:guid/ui-designer" component={UIDesigner} />
+          <Route path="/chatbots/:guid" component={ChatbotEdit} />
           <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />

@@ -46,6 +46,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get chatbot by GUID for authenticated users
+  app.get('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { guid } = req.params;
+
+      const config = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!config) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching chatbot config by GUID:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot config" });
+    }
+  });
+
   app.get('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -213,6 +231,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(config);
     } catch (error) {
       console.error("Error updating chatbot config:", error);
+      res.status(500).json({ message: "Failed to update chatbot config" });
+    }
+  });
+
+  // Update chatbot by GUID (PUT method)
+  app.put('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { guid } = req.params;
+
+      // Get the chatbot by GUID first to get the ID
+      const existingConfig = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingConfig) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+
+      const config = await storage.updateChatbotConfig(existingConfig.id, req.body);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating chatbot config by GUID:", error);
+      res.status(500).json({ message: "Failed to update chatbot config" });
+    }
+  });
+
+  // Update chatbot by GUID (PATCH method)
+  app.patch('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { guid } = req.params;
+
+      // Get the chatbot by GUID first to get the ID
+      const existingConfig = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingConfig) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+
+      // For PATCH, we only update the provided fields
+      const config = await storage.updateChatbotConfig(existingConfig.id, req.body);
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating chatbot config by GUID:", error);
       res.status(500).json({ message: "Failed to update chatbot config" });
     }
   });

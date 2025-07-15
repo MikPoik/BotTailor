@@ -38,7 +38,7 @@ interface ChatbotConfig {
 }
 
 export default function ChatbotTest() {
-  const { id } = useParams();
+  const { guid } = useParams();
   const { user, isAuthenticated, isLoading } = useAuth();
   const [testSessionId, setTestSessionId] = useState<string>("");
 
@@ -48,11 +48,11 @@ export default function ChatbotTest() {
       return `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     };
     setTestSessionId(generateTestSessionId());
-  }, [id]);
+  }, [guid]);
 
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/${id}`],
-    enabled: isAuthenticated && !!id,
+    queryKey: [`/api/chatbots/guid/${guid}`],
+    enabled: isAuthenticated && !!guid,
     retry: false,
   });
 

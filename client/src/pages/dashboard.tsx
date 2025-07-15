@@ -174,19 +174,19 @@ export default function Dashboard() {
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.id}`}>
+                      <Link href={`/chatbots/${chatbot.guid}`}>
                         <Settings className="mr-2 h-3 w-3" />
                         Configure
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.id}/test`}>
+                      <Link href={`/chatbots/${chatbot.guid}/test`}>
                         <MessageSquare className="mr-2 h-3 w-3" />
                         Test
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.id}/ui-designer`}>
+                      <Link href={`/chatbots/${chatbot.guid}/ui-designer`}>
                         <Palette className="mr-2 h-3 w-3" />
                         UI Designer
                       </Link>
