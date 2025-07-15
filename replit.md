@@ -6,6 +6,15 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 15, 2025**: Implemented Test Chatbot Feature:
+  - Added dedicated test page `/chatbots/:id/test` for live chatbot testing
+  - Created TabbedChatInterface component with chatbot-specific configuration support
+  - Updated useChat hook to accept optional chatbotConfigId parameter for targeted testing
+  - Enhanced chat session creation to link sessions with specific chatbot configurations
+  - Added embedding instructions with copy-paste code generation for easy website integration
+  - Maintained backward compatibility for existing chat widgets and interfaces
+  - Users can now test their chatbots with actual AI responses before embedding
+
 - **July 12, 2025**: Added Avatar Upload Functionality:
   - Enhanced chatbot schema with `avatarUrl` field for storing avatar image URLs
   - Added comprehensive avatar upload UI to chatbot creation form with live preview
