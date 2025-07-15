@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { Upload, X, User, Link as LinkIcon, Image } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -50,13 +49,15 @@ export function AvatarUpload({ value, onValueChange, disabled }: AvatarUploadPro
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await apiRequest("/api/upload/avatar", {
+      const response = await fetch("/api/upload/avatar", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error("Upload failed");
+        const errorData = await response.json().catch(() => ({ message: "Upload failed" }));
+        throw new Error(errorData.message || "Upload failed");
       }
 
       const data = await response.json();
