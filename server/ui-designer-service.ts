@@ -24,6 +24,12 @@ DESIGN PRINCIPLES:
 - Accessibility considerations
 - Brand consistency
 
+CRITICAL: ALL FIELDS MARKED AS REQUIRED MUST BE INCLUDED:
+- actions[].description is REQUIRED (cannot be undefined or null)
+- topics[].description is REQUIRED
+- topics[].icon is REQUIRED
+- topics[].category is REQUIRED
+
 EXAMPLE CONFIG:
 {
   "version": "1.0",
@@ -36,6 +42,28 @@ EXAMPLE CONFIG:
         "subtitle": "How can we help you today?"
       },
       "order": 1,
+      "visible": true
+    },
+    {
+      "id": "quick_actions_1",
+      "type": "quick_actions",
+      "props": {
+        "actions": [
+          {
+            "id": "start_chat",
+            "title": "Start Free Chat",
+            "description": "Ask anything you want",
+            "action": "start_chat"
+          },
+          {
+            "id": "live_agent",
+            "title": "Request Live Agent",
+            "description": "Talk to a human representative",
+            "action": "request_agent"
+          }
+        ]
+      },
+      "order": 2,
       "visible": true
     },
     {
@@ -58,7 +86,7 @@ EXAMPLE CONFIG:
           "columns": 2
         }
       },
-      "order": 2,
+      "order": 3,
       "visible": true
     }
   ],
@@ -99,11 +127,43 @@ export async function generateHomeScreenConfig(userPrompt: string): Promise<Home
 
     // Parse and validate the response
     const parsedConfig = JSON.parse(jsonResponse);
+    
+    // Add some basic validation and cleanup before schema validation
+    if (parsedConfig.components) {
+      parsedConfig.components.forEach((component: any) => {
+        if (component.props?.actions) {
+          component.props.actions.forEach((action: any) => {
+            // Ensure description exists for actions
+            if (!action.description) {
+              action.description = action.title || "Click to perform this action";
+            }
+          });
+        }
+        if (component.props?.topics) {
+          component.props.topics.forEach((topic: any) => {
+            // Ensure required fields exist for topics
+            if (!topic.description) {
+              topic.description = topic.title || "Click for more information";
+            }
+            if (!topic.icon) {
+              topic.icon = "HelpCircle";
+            }
+            if (!topic.category) {
+              topic.category = "general";
+            }
+          });
+        }
+      });
+    }
+    
     const validatedConfig = HomeScreenConfigSchema.parse(parsedConfig);
     
     return validatedConfig;
   } catch (error) {
     console.error("Error generating home screen config:", error);
+    if (error instanceof Error && error.message.includes('ZodError')) {
+      throw new Error(`Schema validation failed. Please ensure all required fields are included in the response.`);
+    }
     throw new Error(`Failed to generate UI layout: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -142,11 +202,41 @@ Return the updated complete configuration.`,
 
     // Parse and validate the response
     const parsedConfig = JSON.parse(jsonResponse);
+    
+    // Add the same cleanup logic as in generateHomeScreenConfig
+    if (parsedConfig.components) {
+      parsedConfig.components.forEach((component: any) => {
+        if (component.props?.actions) {
+          component.props.actions.forEach((action: any) => {
+            if (!action.description) {
+              action.description = action.title || "Click to perform this action";
+            }
+          });
+        }
+        if (component.props?.topics) {
+          component.props.topics.forEach((topic: any) => {
+            if (!topic.description) {
+              topic.description = topic.title || "Click for more information";
+            }
+            if (!topic.icon) {
+              topic.icon = "HelpCircle";
+            }
+            if (!topic.category) {
+              topic.category = "general";
+            }
+          });
+        }
+      });
+    }
+    
     const validatedConfig = HomeScreenConfigSchema.parse(parsedConfig);
     
     return validatedConfig;
   } catch (error) {
     console.error("Error modifying home screen config:", error);
+    if (error instanceof Error && error.message.includes('ZodError')) {
+      throw new Error(`Schema validation failed. Please ensure all required fields are included in the response.`);
+    }
     throw new Error(`Failed to modify UI layout: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
