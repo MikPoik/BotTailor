@@ -13,6 +13,7 @@ import { ChatService } from "./storage";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { upload, uploadAvatar, getFileFromStorage } from "./upload-service";
+import passport from "passport";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
