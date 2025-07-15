@@ -5,6 +5,7 @@ import {
   type AIResponse,
 } from "./ai-response-schema";
 import { parse } from "best-effort-json-parser";
+import { storage } from "./storage";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -30,8 +31,31 @@ export async function generateMultiBubbleResponse(
   }
 
   try {
+    // Search for relevant website content if chatbot config is available
+    let websiteContext = "";
+    if (chatbotConfig?.id) {
+      try {
+        const relevantContent = await storage.searchSimilarContent(
+          chatbotConfig.id,
+          userMessage,
+          3
+        );
+        
+        if (relevantContent.length > 0) {
+          websiteContext = "\n\nRELEVANT CONTEXT FROM WEBSITE:\n" +
+            relevantContent.map((content, index) => 
+              `[${index + 1}] ${content.title || 'Untitled'}\n${content.content.substring(0, 500)}...`
+            ).join("\n\n") +
+            "\n\nUse this context to provide more accurate and relevant responses. If the context is relevant to the user's question, incorporate the information naturally into your response.";
+        }
+      } catch (error) {
+        console.error("Error searching website content:", error);
+        // Continue without website context if search fails
+      }
+    }
+
     // Use chatbot config system prompt or fallback to default
-    const systemPrompt = buildSystemPrompt(chatbotConfig);
+    const systemPrompt = buildSystemPrompt(chatbotConfig) + websiteContext;
     const model = chatbotConfig?.model || "gpt-4o";
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10

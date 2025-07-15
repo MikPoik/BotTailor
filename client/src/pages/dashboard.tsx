@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, MessageSquare, Plus, Settings, Palette } from "lucide-react";
+import { Bot, MessageSquare, Plus, Settings, Palette, Globe } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -199,6 +199,12 @@ export default function Dashboard() {
                       <Link href={`/chatbots/${chatbot.guid}`}>
                         <Settings className="mr-2 h-3 w-3" />
                         Configure
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/chatbots/${chatbot.id}/add-data`}>
+                        <Globe className="mr-2 h-3 w-3" />
+                        Add Data
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>

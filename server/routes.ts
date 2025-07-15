@@ -1,10 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema } from "@shared/schema";
+import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema, insertWebsiteSourceSchema, type WebsiteSource } from "@shared/schema";
 import { z } from "zod";
 import { generateStructuredResponse, generateOptionResponse, generateStreamingResponse } from "./openai-service";
 import { generateHomeScreenConfig, modifyHomeScreenConfig, getDefaultHomeScreenConfig } from "./ui-designer-service";
+import { WebsiteScanner } from "./website-scanner";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -322,6 +323,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting chatbot config:", error);
       res.status(500).json({ message: "Failed to delete chatbot config" });
+    }
+  });
+
+  // Website Sources Routes
+  app.get('/api/chatbots/:id/website-sources', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      // Verify ownership
+      const existingConfig = await storage.getChatbotConfig(parseInt(id));
+      if (!existingConfig || existingConfig.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+
+      const sources = await storage.getWebsiteSources(parseInt(id));
+      res.json(sources);
+    } catch (error) {
+      console.error("Error fetching website sources:", error);
+      res.status(500).json({ message: "Failed to fetch website sources" });
+    }
+  });
+
+  app.post('/api/chatbots/:id/website-sources', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      // Verify ownership
+      const existingConfig = await storage.getChatbotConfig(parseInt(id));
+      if (!existingConfig || existingConfig.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+
+      // Create a schema that excludes chatbotConfigId since it comes from params
+      const clientSourceSchema = insertWebsiteSourceSchema.omit({ chatbotConfigId: true });
+
+      // Validate request body
+      const validationResult = clientSourceSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: fromZodError(validationResult.error).toString() 
+        });
+      }
+
+      const sourceData = { ...validationResult.data, chatbotConfigId: parseInt(id) };
+      const source = await storage.createWebsiteSource(sourceData);
+
+      // Start scanning in background
+      const scanner = new WebsiteScanner();
+      scanner.scanWebsite(source.id).catch(error => {
+        console.error("Background scanning error:", error);
+      });
+
+      res.json(source);
+    } catch (error) {
+      console.error("Error creating website source:", error);
+      res.status(500).json({ message: "Failed to create website source" });
+    }
+  });
+
+  app.delete('/api/website-sources/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      // Get the website source to verify ownership
+      const source = await storage.getWebsiteSource(parseInt(id));
+      if (!source) {
+        return res.status(404).json({ message: "Website source not found" });
+      }
+
+      // Verify chatbot ownership
+      const chatbot = await storage.getChatbotConfig(source.chatbotConfigId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(404).json({ message: "Website source not found" });
+      }
+
+      await storage.deleteWebsiteSource(parseInt(id));
+      res.json({ message: "Website source deleted" });
+    } catch (error) {
+      console.error("Error deleting website source:", error);
+      res.status(500).json({ message: "Failed to delete website source" });
+    }
+  });
+
+  app.post('/api/website-sources/:id/rescan', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      // Get the website source to verify ownership
+      const source = await storage.getWebsiteSource(parseInt(id));
+      if (!source) {
+        return res.status(404).json({ message: "Website source not found" });
+      }
+
+      // Verify chatbot ownership
+      const chatbot = await storage.getChatbotConfig(source.chatbotConfigId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(404).json({ message: "Website source not found" });
+      }
+
+      // Start scanning
+      const scanner = new WebsiteScanner();
+      const result = await scanner.scanWebsite(parseInt(id));
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error rescanning website:", error);
+      res.status(500).json({ message: "Failed to rescan website" });
     }
   });
 

@@ -8,6 +8,7 @@ import {
   serial,
   integer,
   boolean,
+  real,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -74,6 +75,36 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Website Sources table for storing website URLs and metadata
+export const websiteSources = pgTable("website_sources", {
+  id: serial("id").primaryKey(),
+  chatbotConfigId: integer("chatbot_config_id").notNull().references(() => chatbotConfigs.id),
+  url: varchar("url", { length: 2048 }).notNull(),
+  title: text("title"),
+  description: text("description"),
+  sitemapUrl: varchar("sitemap_url", { length: 2048 }),
+  lastScanned: timestamp("last_scanned"),
+  totalPages: integer("total_pages").default(0),
+  status: text("status").notNull().default("pending"), // 'pending' | 'scanning' | 'completed' | 'error'
+  errorMessage: text("error_message"),
+  maxPages: integer("max_pages").default(50), // Cap on pages to scan
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Website Content table for storing parsed content with embeddings
+export const websiteContent = pgTable("website_content", {
+  id: serial("id").primaryKey(),
+  websiteSourceId: integer("website_source_id").notNull().references(() => websiteSources.id),
+  url: varchar("url", { length: 2048 }).notNull(),
+  title: text("title"),
+  content: text("content").notNull(),
+  contentType: text("content_type").default("text"), // 'text' | 'heading' | 'paragraph'
+  wordCount: integer("word_count"),
+  embedding: text("embedding"), // Store as JSON array string for now
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Replit Auth user upsert schema
 export const upsertUserSchema = createInsertSchema(users).pick({
   id: true,
@@ -113,6 +144,22 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   metadata: true,
 });
 
+// Website sources schemas
+export const insertWebsiteSourceSchema = createInsertSchema(websiteSources).pick({
+  chatbotConfigId: true,
+  url: true,
+  title: true,
+  description: true,
+  sitemapUrl: true,
+  maxPages: true,
+});
+
+export const insertWebsiteContentSchema = createInsertSchema(websiteContent).omit({
+  id: true,
+  embedding: true,
+  createdAt: true,
+});
+
 // Type exports
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -122,6 +169,12 @@ export type ChatSession = typeof chatSessions.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+// Website source types
+export type WebsiteSource = typeof websiteSources.$inferSelect;
+export type InsertWebsiteSource = z.infer<typeof insertWebsiteSourceSchema>;
+export type WebsiteContent = typeof websiteContent.$inferSelect;
+export type InsertWebsiteContent = z.infer<typeof insertWebsiteContentSchema>;
 
 // Rich message types
 export const RichMessageSchema = z.object({

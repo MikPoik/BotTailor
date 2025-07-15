@@ -6,6 +6,17 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 15, 2025**: Implemented Website Context Feature for AI-Powered Chatbots:
+  - Added comprehensive website scanning and content extraction system using Playwright and Cheerio
+  - Created vector-based content storage with PostgreSQL database schema (websiteSources, websiteContent tables)
+  - Implemented HTML parsing pipeline that automatically discovers sitemaps and extracts relevant text content
+  - Built intelligent text-based content search with scoring algorithm for context relevance
+  - Created "Add Data" management page with URL input, scanning progress tracking, and content management
+  - Integrated website context into OpenAI response generation for more accurate, relevant chatbot answers
+  - Added API endpoints for website source CRUD operations with proper authentication and ownership verification
+  - Users can now add website URLs to their chatbots, which are automatically scanned and used to provide contextual responses
+  - **IMPLEMENTED**: Text-based similarity search (foundation for future vector embeddings with pgvector)
+
 - **July 15, 2025**: Implemented Avatar Upload with Replit Object Storage Integration:
   - Added comprehensive avatar upload system using Replit Object Storage with "chatbot-avatars" bucket
   - Created reusable AvatarUpload component with tabbed interface for file upload vs URL input

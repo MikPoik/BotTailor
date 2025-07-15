@@ -3,6 +3,8 @@ import {
   chatSessions, 
   messages,
   chatbotConfigs,
+  websiteSources,
+  websiteContent,
   type User, 
   type UpsertUser,
   type ChatSession,
@@ -11,6 +13,10 @@ import {
   type InsertMessage,
   type ChatbotConfig,
   type InsertChatbotConfig,
+  type WebsiteSource,
+  type InsertWebsiteSource,
+  type WebsiteContent,
+  type InsertWebsiteContent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -36,6 +42,18 @@ export interface IStorage {
   createChatbotConfig(config: InsertChatbotConfig): Promise<ChatbotConfig>;
   updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined>;
   deleteChatbotConfig(id: number): Promise<void>;
+
+  // Website source methods
+  getWebsiteSources(chatbotConfigId: number): Promise<WebsiteSource[]>;
+  getWebsiteSource(id: number): Promise<WebsiteSource | undefined>;
+  createWebsiteSource(source: InsertWebsiteSource): Promise<WebsiteSource>;
+  updateWebsiteSource(id: number, data: Partial<WebsiteSource>): Promise<WebsiteSource | undefined>;
+  deleteWebsiteSource(id: number): Promise<void>;
+
+  // Website content methods
+  getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]>;
+  createWebsiteContent(content: InsertWebsiteContent, embedding: string): Promise<WebsiteContent>;
+  searchSimilarContent(chatbotConfigId: number, query: string, limit?: number): Promise<WebsiteContent[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -145,6 +163,106 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChatbotConfig(id: number): Promise<void> {
     await db.delete(chatbotConfigs).where(eq(chatbotConfigs.id, id));
+  }
+
+  // Website source methods
+  async getWebsiteSources(chatbotConfigId: number): Promise<WebsiteSource[]> {
+    return await db.select().from(websiteSources)
+      .where(eq(websiteSources.chatbotConfigId, chatbotConfigId))
+      .orderBy(websiteSources.createdAt);
+  }
+
+  async getWebsiteSource(id: number): Promise<WebsiteSource | undefined> {
+    const [source] = await db.select().from(websiteSources).where(eq(websiteSources.id, id));
+    return source || undefined;
+  }
+
+  async createWebsiteSource(sourceData: InsertWebsiteSource): Promise<WebsiteSource> {
+    const [source] = await db
+      .insert(websiteSources)
+      .values(sourceData)
+      .returning();
+    return source;
+  }
+
+  async updateWebsiteSource(id: number, data: Partial<WebsiteSource>): Promise<WebsiteSource | undefined> {
+    const [source] = await db
+      .update(websiteSources)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(websiteSources.id, id))
+      .returning();
+    return source || undefined;
+  }
+
+  async deleteWebsiteSource(id: number): Promise<void> {
+    // First delete all website content for this source
+    await db.delete(websiteContent).where(eq(websiteContent.websiteSourceId, id));
+    // Then delete the source
+    await db.delete(websiteSources).where(eq(websiteSources.id, id));
+  }
+
+  // Website content methods
+  async getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]> {
+    return await db.select().from(websiteContent)
+      .where(eq(websiteContent.websiteSourceId, websiteSourceId))
+      .orderBy(websiteContent.createdAt);
+  }
+
+  async createWebsiteContent(contentData: InsertWebsiteContent, embedding: string): Promise<WebsiteContent> {
+    const [content] = await db
+      .insert(websiteContent)
+      .values({ ...contentData, embedding })
+      .returning();
+    return content;
+  }
+
+  async searchSimilarContent(chatbotConfigId: number, query: string, limit: number = 3): Promise<WebsiteContent[]> {
+    // Get all website sources for this chatbot
+    const sources = await db.select().from(websiteSources)
+      .where(and(
+        eq(websiteSources.chatbotConfigId, chatbotConfigId),
+        eq(websiteSources.status, 'completed')
+      ));
+    
+    if (sources.length === 0) return [];
+
+    const sourceIds = sources.map(s => s.id);
+    
+    // For now, do text-based search on content
+    // In production, this would use vector similarity with embeddings
+    const queryLower = query.toLowerCase();
+    
+    // Get content from all sources and filter by relevance
+    const allContent = await db.select().from(websiteContent)
+      .where(
+        sourceIds.length === 1 
+          ? eq(websiteContent.websiteSourceId, sourceIds[0])
+          : eq(websiteContent.websiteSourceId, sourceIds[0]) // For now, search first source
+      );
+
+    // Simple text matching scoring
+    const scoredContent = allContent
+      .map(content => {
+        const contentLower = content.content.toLowerCase();
+        const titleLower = (content.title || '').toLowerCase();
+        
+        let score = 0;
+        const queryWords = queryLower.split(/\s+/);
+        
+        for (const word of queryWords) {
+          if (word.length > 2) { // Ignore very short words
+            if (titleLower.includes(word)) score += 3;
+            if (contentLower.includes(word)) score += 1;
+          }
+        }
+        
+        return { ...content, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+
+    return scoredContent.map(({ score, ...content }) => content);
   }
 }
 
