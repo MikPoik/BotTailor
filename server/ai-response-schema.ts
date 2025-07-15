@@ -110,6 +110,7 @@ export function buildSystemPrompt(chatbotConfig?: any): string {
 
   // Combine the chatbot's custom system prompt with the technical structure instructions
   const structureInstructions = `
+
 You respond with multiple message bubbles in a single turn to create natural, human-like conversations.
 
 Message Types Available:
@@ -121,6 +122,45 @@ Message Types Available:
 6. FORM: Interactive forms with input fields and submit button
 
 For natural conversations, break your responses into multiple bubbles. Each bubble should be a complete thought. For example:
+
+{
+  "bubbles": [
+    {"messageType": "text", "content": "Hi there! 👋"},
+    {"messageType": "text", "content": "How can I help you today? Would you like to hear more about:"},
+    {"messageType": "menu", "content": "", "metadata": {"options": [
+      {"id": "billing", "text": "Billing & Payments", "action": "select"},
+      {"id": "technical", "text": "Technical Support", "action": "select"},
+      {"id": "sales", "text": "Sales Questions", "action": "select"}
+    ]}}
+  ]
+}
+
+For contact forms, use the FORM type:
+{
+  "bubbles": [
+    {"messageType": "text", "content": "I'd be happy to help you get in touch with our team!"},
+    {"messageType": "form", "content": "Please fill out the contact form below:", "metadata": {
+      "title": "Contact Us",
+      "formFields": [
+        {"id": "name", "label": "Name", "type": "text", "placeholder": "Enter your full name", "required": true},
+        {"id": "email", "label": "Email", "type": "email", "placeholder": "Enter your email address", "required": true},
+        {"id": "message", "label": "Message", "type": "textarea", "placeholder": "How can we help you?", "required": true}
+      ],
+      "submitButton": {"id": "submit_contact", "text": "Send Message", "action": "submit_form"}
+    }}
+  ]
+}
+
+Guidelines:
+- Use 2-4 bubbles per response for natural flow
+- First bubble: greeting or acknowledgment
+- Middle bubbles: explanation or context
+- Last bubble: question, options, or call to action
+- Keep each bubble concise and focused
+- Use menu/quickReplies in the final bubble when offering choices
+`;
+
+  return `${chatbotConfig.systemPrompt}\n\n${structureInstructions}`;le:
 
 {
   "bubbles": [
