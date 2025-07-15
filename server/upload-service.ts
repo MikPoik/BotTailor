@@ -77,6 +77,8 @@ export async function uploadAvatar(file: Express.Multer.File, userId: string): P
       .toBuffer();
 
     // Upload to Replit Object Storage
+    console.log(`Uploading ${fileName}, processed image size: ${processedImage.length} bytes`);
+    
     const { ok: uploadOk, error: uploadError } = await client.uploadFromBytes(
       fileName,
       processedImage
@@ -89,6 +91,8 @@ export async function uploadAvatar(file: Express.Multer.File, userId: string): P
         error: "Failed to upload file to storage"
       };
     }
+    
+    console.log(`Upload successful: ${fileName}`);
 
     // Return the public URL for the uploaded file
     const publicUrl = `/api/storage/${fileName}`;
@@ -118,6 +122,10 @@ export async function getFileFromStorage(fileName: string): Promise<{ success: b
       };
     }
 
+    // Try using downloadAsText first to see what we get
+    const textResult = await client.downloadAsText(fileName);
+    console.log(`Text download result: ok=${textResult.ok}, length=${textResult.value?.length || 0}`);
+    
     const { ok, value, error } = await client.downloadAsBytes(fileName);
     
     if (!ok) {
@@ -147,9 +155,33 @@ export async function getFileFromStorage(fileName: string): Promise<{ success: b
         break;
     }
 
+    // Handle different types of data returned from object storage
+    console.log(`File ${fileName}: value type: ${typeof value}, is Array: ${Array.isArray(value)}, is Buffer: ${Buffer.isBuffer(value)}, value length: ${value?.length || 0}`);
+    
+    let data: Buffer;
+    
+    // Try direct handling first
+    if (Buffer.isBuffer(value)) {
+      data = value;
+      console.log(`Using direct Buffer: ${data.length} bytes`);
+    } else if (value instanceof Uint8Array) {
+      data = Buffer.from(value);
+      console.log(`Converted from Uint8Array: ${data.length} bytes`);
+    } else if (Array.isArray(value)) {
+      data = Buffer.from(value);
+      console.log(`Converted from Array: ${data.length} bytes`);
+    } else if (typeof value === 'string') {
+      data = Buffer.from(value, 'base64');
+      console.log(`Converted from base64 string: ${data.length} bytes`);
+    } else {
+      // Last resort - convert directly
+      data = Buffer.from(value);
+      console.log(`Direct conversion fallback: ${data.length} bytes`);
+    }
+
     return {
       success: true,
-      data: Buffer.from(value),
+      data,
       contentType
     };
 
