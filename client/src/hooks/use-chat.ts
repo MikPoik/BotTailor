@@ -80,7 +80,8 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         body: JSON.stringify({ 
           content: userDisplayText,
           messageType: 'text',
-          internalMessage: internalMessage !== userDisplayText ? internalMessage : undefined
+          internalMessage: internalMessage !== userDisplayText ? internalMessage : undefined,
+          chatbotConfigId: chatbotConfigId
         }),
       });
 

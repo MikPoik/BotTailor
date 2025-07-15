@@ -6,6 +6,14 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 15, 2025**: Fixed Chatbot Testing and Embed Code Issues:
+  - Fixed chatbot testing feature to properly use updated configuration during testing
+  - Enhanced session management to update chatbot configuration when testing
+  - Modified streaming API to accept chatbotConfigId parameter for proper config binding
+  - Updated embed.js to make sessionId optional - server generates it if not provided
+  - Improved chat session linking with specific chatbot configurations for accurate testing
+  - Fixed issue where testing would use default system prompt instead of chatbot-specific prompt
+
 - **July 15, 2025**: Implemented Test Chatbot Feature:
   - Added dedicated test page `/chatbots/:id/test` for live chatbot testing
   - Created TabbedChatInterface component with chatbot-specific configuration support

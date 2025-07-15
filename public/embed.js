@@ -27,10 +27,8 @@
         return;
       }
 
-      // Generate session ID if not provided
-      if (!this.config.sessionId) {
-        this.config.sessionId = this.generateSessionId();
-      }
+      // Session ID will be generated server-side if not provided
+      // We'll let the server handle generation when the iframe loads
 
       this._initialized = true;
 
@@ -215,10 +213,10 @@
         isOpen = true;
         badge.style.display = 'none';
 
-        // Set global config for iframe
+        // Set global config for iframe (sessionId will be set by server if not provided)
         if (!window.__CHAT_WIDGET_CONFIG__) {
           window.__CHAT_WIDGET_CONFIG__ = {
-            sessionId: this.config.sessionId,
+            sessionId: this.config.sessionId || null, // Server will generate if null
             apiUrl: this.config.apiUrl,
             position: this.config.position,
             primaryColor: this.config.primaryColor
@@ -228,7 +226,9 @@
         if (isMobile()) {
                 // Lazy load mobile iframe if not already loaded
                 if (!mobileIframe.src) {
-                  mobileIframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&mobile=true&embedded=true`;
+                  // Build URL with sessionId if provided, otherwise let server generate it
+                  const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+                  mobileIframe.src = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
                   // Set config for iframe content
                   mobileIframe.onload = () => {
                     mobileIframe.contentWindow.__CHAT_WIDGET_CONFIG__ = window.__CHAT_WIDGET_CONFIG__;
@@ -240,7 +240,9 @@
               } else {
                 // Lazy load desktop iframe if not already loaded
                 if (!iframe.src) {
-                  iframe.src = `${this.config.apiUrl}/chat-widget?sessionId=${this.config.sessionId}&mobile=false&embedded=true`;
+                  // Build URL with sessionId if provided, otherwise let server generate it
+                  const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+                  iframe.src = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
                   // Set config for iframe content
                   iframe.onload = () => {
                     iframe.contentWindow.__CHAT_WIDGET_CONFIG__ = window.__CHAT_WIDGET_CONFIG__;

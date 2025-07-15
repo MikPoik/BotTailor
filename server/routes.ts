@@ -280,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat/:sessionId/messages/stream", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const { content, internalMessage, ...otherData } = req.body;
+      const { content, internalMessage, chatbotConfigId, ...otherData } = req.body;
 
       const messageData = insertMessageSchema.parse({
         ...otherData,
@@ -303,7 +303,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!session) {
         session = await storage.createChatSession({ 
           sessionId,
-          chatbotConfigId: null // Will be updated if we have config info
+          chatbotConfigId: chatbotConfigId || null
+        });
+      } else if (chatbotConfigId && session.chatbotConfigId !== chatbotConfigId) {
+        // Update session with new chatbot config if provided and different
+        session = await storage.updateChatSession(sessionId, { 
+          chatbotConfigId: chatbotConfigId 
         });
       }
 
@@ -325,11 +330,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           content: msg.content
         }));
 
-      // Get chatbot configuration for this session
+      // Get chatbot configuration for this session (prefer the one from request, then session)
       let chatbotConfig = null;
-      const currentSession = await storage.getChatSession(sessionId);
-      if (currentSession?.chatbotConfigId) {
-        chatbotConfig = await storage.getChatbotConfig(currentSession.chatbotConfigId);
+      const configId = chatbotConfigId || session?.chatbotConfigId;
+      if (configId) {
+        chatbotConfig = await storage.getChatbotConfig(configId);
       }
 
       // Generate streaming response using internal message if provided, otherwise use display text
