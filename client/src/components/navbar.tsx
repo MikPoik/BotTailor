@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,13 +6,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bot, LogOut, Settings, User, Menu, X } from "lucide-react";
 import { Link } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -83,6 +82,7 @@ export function Navbar() {
         {/* Desktop User Menu */}
         {!isMobile && (
           <div className="flex flex-1 items-center justify-end space-x-2">
+             <ThemeToggle />
             {!isAuthenticated ? (
               <Button asChild>
                 <a href="/api/login">Log In</a>

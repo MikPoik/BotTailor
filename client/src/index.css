@@ -68,7 +68,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors duration-200;
   }
 
   body {
@@ -83,6 +83,27 @@
     font-size: 16px !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
+  }
+
+  /* Theme transition */
+  html {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Ensure proper dark mode for chat elements */
+  .dark .chat-message-bot {
+    background-color: hsl(240, 10%, 15%);
+    border-color: hsl(240, 3.7%, 25%);
+    color: hsl(0, 0%, 98%);
+  }
+
+  .dark .chat-interface {
+    background-color: hsl(240, 10%, 3.9%);
+    border-color: hsl(240, 3.7%, 15.9%);
+  }
+
+  .dark .chat-interface-mobile {
+    background-color: hsl(240, 10%, 3.9%);
   }
 }
 
