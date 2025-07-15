@@ -412,8 +412,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Chat widget route with user and chatbot parameters
-  app.get("/:userId/:chatbotGuid", async (req: Request, res: Response, next: NextFunction) => {
+  // Chat widget route with user and chatbot parameters - only match specific patterns
+  app.get("/widget/:userId/:chatbotGuid", async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId, chatbotGuid } = req.params;
       const { embedded = "true", mobile = "false" } = req.query;
@@ -426,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const isMobile = req.query.mobile === 'true';
-      const embedded = req.query.embedded === 'true';
+      const isEmbedded = req.query.embedded === 'true';
 
       // Force HTTPS in production environments
       const protocol = app.get("env") === "production" ? 'https' : req.protocol;
@@ -442,7 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               sessionId: "${sessionId}",
               apiUrl: "${apiUrl}",
               isMobile: ${isMobile},
-              embedded: ${embedded},
+              embedded: ${isEmbedded},
               chatbotConfig: ${JSON.stringify(chatbotConfig)}
             };
           </script>
@@ -458,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessionId,
           apiUrl,
           isMobile,
-          embedded,
+          embedded: isEmbedded,
           chatbotConfig
         };
         next();
