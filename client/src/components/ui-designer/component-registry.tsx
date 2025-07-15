@@ -52,7 +52,7 @@ interface ComponentRegistryProps {
 // Header Component
 export function HeaderComponent({ component }: ComponentRegistryProps) {
   const { title, subtitle, style } = component.props;
-  
+
   return (
     <div 
       className="bg-white border-b border-neutral-200 p-6"
@@ -81,9 +81,9 @@ export function HeaderComponent({ component }: ComponentRegistryProps) {
 export function CategoryTabsComponent({ component }: ComponentRegistryProps) {
   const { categories } = component.props;
   const [selectedCategory, setSelectedCategory] = React.useState(categories?.[0] || 'all');
-  
+
   if (!categories || categories.length === 0) return null;
-  
+
   return (
     <div className="flex gap-2 px-4 py-2 overflow-x-auto">
       {['all', ...categories].map((category) => (
@@ -106,9 +106,9 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
   const { topics, style } = component.props;
   const layout = style?.layout || 'grid';
   const columns = style?.columns || 2;
-  
+
   if (!topics || topics.length === 0) return null;
-  
+
   const gridClass = layout === 'grid' 
     ? `grid grid-cols-1 gap-3`
     : 'space-y-3';
@@ -120,7 +120,7 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
     billing: 'bg-purple-50 text-purple-700 border-purple-200',
     general: 'bg-gray-50 text-gray-700 border-gray-200'
   };
-  
+
   return (
     <div className="p-4 space-y-3">
       <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
@@ -166,9 +166,9 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
 // Quick Actions Component
 export function QuickActionsComponent({ component, onActionClick }: ComponentRegistryProps) {
   const { actions, style } = component.props;
-  
+
   if (!actions || actions.length === 0) return null;
-  
+
   return (
     <div className="p-4 space-y-3">
       <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
@@ -176,6 +176,7 @@ export function QuickActionsComponent({ component, onActionClick }: ComponentReg
       </h3>
       <div className="grid grid-cols-1 gap-3">
         {actions.map((action, index) => (
+          
           <Button
             key={action.id}
             variant={index === 0 ? "default" : "outline"}
@@ -207,7 +208,7 @@ export function QuickActionsComponent({ component, onActionClick }: ComponentReg
 // Footer Component
 export function FooterComponent({ component }: ComponentRegistryProps) {
   const { title, style } = component.props;
-  
+
   return (
     <div 
       className="text-center py-4 px-4 border-t"
@@ -240,12 +241,12 @@ export function renderComponent(
   onActionClick?: (action: any) => void
 ) {
   const ComponentToRender = ComponentRegistry[component.type];
-  
+
   if (!ComponentToRender) {
     console.warn(`Component type "${component.type}" not found in registry`);
     return null;
   }
-  
+
   return (
     <ComponentToRender
       key={component.id}
@@ -257,3 +258,4 @@ export function renderComponent(
 }
 
 export default ComponentRegistry;
+`

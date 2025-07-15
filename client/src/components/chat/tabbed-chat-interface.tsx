@@ -418,9 +418,8 @@ export default function TabbedChatInterface({
         </TabsContent>
       </div>
 
-      {/* Tab Navigation - fixed at bottom */}
-      <div className="border-t border-neutral-200 bg-white flex-shrink-0">
-        <TabsList className="grid w-full grid-cols-2 h-14 bg-transparent p-1">
+      {/* Tab Navigation - at bottom */}
+      <TabsList className="grid w-full grid-cols-2 h-14 bg-transparent p-1">
           <TabsTrigger 
             value="home" 
             className="flex items-center gap-2 h-full rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
@@ -441,7 +440,6 @@ export default function TabbedChatInterface({
             )}
           </TabsTrigger>
         </TabsList>
-      </div>
     </Tabs>
   );
 }

@@ -34,7 +34,9 @@ export default function DynamicHomeScreen({
       style={{
         backgroundColor: config.theme?.backgroundColor,
         color: config.theme?.textColor,
-      }}
+        '--primary': config.theme?.primaryColor || 'var(--chat-primary-color, var(--primary))',
+        '--chat-primary-color': config.theme?.primaryColor || 'var(--chat-primary-color, var(--primary))'
+      } as React.CSSProperties}
     >
       {sortedComponents.map((component) => 
         renderComponent(component, onTopicClick, onActionClick)
