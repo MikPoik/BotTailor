@@ -189,27 +189,32 @@ export default function UIDesigner() {
   return (
     <div className="container max-w-7xl py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
+      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <Button variant="ghost" size="sm" asChild className="self-start">
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Link>
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">UI Designer</h1>
-            <p className="text-muted-foreground">Design custom home screens for {chatbot.name}</p>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold truncate">UI Designer</h1>
+            <p className="text-sm sm:text-base text-muted-foreground truncate">
+              Design custom home screens for {chatbot.name}
+            </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-start sm:self-auto">
           {currentConfig && (
             <Button 
               onClick={handleSaveConfig}
               disabled={saveConfigMutation.isPending}
+              size="sm"
+              className="sm:size-default"
             >
               <Download className="h-4 w-4 mr-2" />
-              Save Design
+              <span className="hidden sm:inline">Save Design</span>
+              <span className="sm:hidden">Save</span>
             </Button>
           )}
         </div>
