@@ -10,10 +10,7 @@ interface ChatWidgetProps {
   sessionId: string;
   position?: 'bottom-right' | 'bottom-left';
   primaryColor?: string;
-  chatbotConfig?: {
-    name?: string;
-    avatarUrl?: string;
-  };
+  chatbotConfig?: any;
 }
 
 export default function ChatWidget({ 

@@ -40,9 +40,16 @@ export default function ChatWidgetPage() {
 
   // If embedded, show only the chat widget
   if (isEmbedded) {
+    // Check if we have a specific chatbot config from the injected config
+    const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
+    const chatbotConfig = injectedConfig?.chatbotConfig;
+    
     return (
       <div className="w-full h-full">
-        <ChatWidget sessionId={sessionId} />
+        <ChatWidget 
+          sessionId={sessionId} 
+          chatbotConfig={chatbotConfig}
+        />
       </div>
     );
   }
