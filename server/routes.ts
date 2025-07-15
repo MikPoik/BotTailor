@@ -327,9 +327,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get chatbot configuration for this session
       let chatbotConfig = null;
-      const session = await storage.getChatSession(sessionId);
-      if (session?.chatbotConfigId) {
-        chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
+      const currentSession = await storage.getChatSession(sessionId);
+      if (currentSession?.chatbotConfigId) {
+        chatbotConfig = await storage.getChatbotConfig(currentSession.chatbotConfigId);
       }
 
       // Generate streaming response using internal message if provided, otherwise use display text
