@@ -15,7 +15,8 @@ export async function apiRequest(
   // Use absolute URL when widget is embedded to avoid CORS issues
   const config = (window as any).__CHAT_WIDGET_CONFIG__;
   const baseUrl = config?.apiUrl || '';
-  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  const urlString = String(url);
+  const fullUrl = urlString.startsWith('http') ? urlString : `${baseUrl}${urlString}`;
   
   const res = await fetch(fullUrl, {
     method,
@@ -37,8 +38,9 @@ export const getQueryFn: <T>(options: {
     // Use absolute URL when widget is embedded to avoid CORS issues
     const config = (window as any).__CHAT_WIDGET_CONFIG__;
     const baseUrl = config?.apiUrl || '';
-    const url = queryKey.join("/") as string;
-    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    const url = queryKey.join("/");
+    const urlString = String(url);
+    const fullUrl = urlString.startsWith('http') ? urlString : `${baseUrl}${urlString}`;
     
     const res = await fetch(fullUrl, {
       credentials: "include",
