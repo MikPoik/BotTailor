@@ -63,11 +63,8 @@ export default function UIDesigner() {
         ? `/api/ui-designer/modify`
         : `/api/ui-designer/generate`;
       
-      return apiRequest(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("POST", endpoint, data);
+      return response.json();
     },
     onSuccess: (data: { config: HomeScreenConfig }) => {
       setCurrentConfig(data.config);
@@ -98,11 +95,8 @@ export default function UIDesigner() {
   // Save configuration mutation
   const saveConfigMutation = useMutation({
     mutationFn: async (config: HomeScreenConfig) => {
-      return apiRequest(`/api/chatbots/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ homeScreenConfig: config }),
-      });
+      const response = await apiRequest("PATCH", `/api/chatbots/${id}`, { homeScreenConfig: config });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}`] });
