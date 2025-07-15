@@ -298,6 +298,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Access-Control-Allow-Headers': 'Cache-Control',
       });
 
+      // Ensure session exists before creating messages
+      let session = await storage.getChatSession(sessionId);
+      if (!session) {
+        session = await storage.createChatSession({ 
+          sessionId,
+          chatbotConfigId: null // Will be updated if we have config info
+        });
+      }
+
       // Create user message first
       const userMessage = await storage.createMessage(messageData);
 
