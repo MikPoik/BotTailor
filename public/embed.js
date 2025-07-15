@@ -220,7 +220,19 @@
                 if (!mobileIframe.src) {
                   // Build URL with sessionId if provided, otherwise let server generate it
                   const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-                  mobileIframe.src = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+                  
+                  // Check if apiUrl already contains a specific widget path
+                  let widgetUrl;
+                  if (this.config.apiUrl.includes('/widget/')) {
+                    // Specific widget URL - use as-is with query parameters
+                    const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                    widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
+                  } else {
+                    // Base URL - append /chat-widget path
+                    widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+                  }
+                  
+                  mobileIframe.src = widgetUrl;
                   // Note: Removed cross-origin config setting due to protocol differences
                 }
                 overlay.style.display = 'block';
@@ -231,7 +243,19 @@
                 if (!iframe.src) {
                   // Build URL with sessionId if provided, otherwise let server generate it
                   const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-                  iframe.src = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
+                  
+                  // Check if apiUrl already contains a specific widget path
+                  let widgetUrl;
+                  if (this.config.apiUrl.includes('/widget/')) {
+                    // Specific widget URL - use as-is with query parameters
+                    const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                    widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
+                  } else {
+                    // Base URL - append /chat-widget path
+                    widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
+                  }
+                  
+                  iframe.src = widgetUrl;
                   // Note: Removed cross-origin config setting due to protocol differences
                 }
                 bubble.style.display = 'none';
