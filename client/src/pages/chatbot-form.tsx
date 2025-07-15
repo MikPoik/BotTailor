@@ -21,6 +21,7 @@ import { ArrowLeft, Bot, Save, Upload, User, X } from "lucide-react";
 import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 // Create a more explicit form schema to ensure proper typing
 const formSchema = z.object({
@@ -83,7 +84,7 @@ export default function ChatbotForm() {
     mutationFn: async (data: FormData) => {
       const dataWithGuid = {
         ...data,
-        guid: generateGuid()
+        guid: uuidv4()
       };
       const response = await fetch("/api/chatbots", {
         method: "POST",
@@ -138,12 +139,7 @@ export default function ChatbotForm() {
     );
   }
 
-    function generateGuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
+    
 
   return (
     <div className="container max-w-4xl py-8">
