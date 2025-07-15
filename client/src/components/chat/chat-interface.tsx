@@ -12,9 +12,10 @@ interface ChatInterfaceProps {
   sessionId: string;
   isMobile: boolean;
   isPreloaded?: boolean;
+  chatbotConfig?: any;
 }
 
-export default function ChatInterface({ sessionId, isMobile, isPreloaded = false }: ChatInterfaceProps) {
+export default function ChatInterface({ sessionId, isMobile, isPreloaded = false, chatbotConfig }: ChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -229,6 +230,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
             message={message}
             onOptionSelect={handleOptionSelect}
             onQuickReply={handleQuickReply}
+            chatbotConfig={chatbotConfig}
           />
         ))}
 

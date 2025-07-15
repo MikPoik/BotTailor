@@ -8,9 +8,10 @@ interface MessageBubbleProps {
   message: Message;
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
   onQuickReply: (reply: string) => void;
+  chatbotConfig?: any;
 }
 
-export default function MessageBubble({ message, onOptionSelect, onQuickReply }: MessageBubbleProps) {
+export default function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
   const timeAgo = formatDistanceToNow(new Date(message.createdAt), { addSuffix: true });
 
@@ -35,7 +36,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
       <div className="w-8 h-8 flex-shrink-0">
         {!message.metadata?.isFollowUp && (
           <img 
-            src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256" 
+            src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
             alt="Bot avatar" 
             className="w-8 h-8 rounded-full"
           />
@@ -48,6 +49,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
             message={message} 
             onOptionSelect={onOptionSelect}
             onQuickReply={onQuickReply}
+            chatbotConfig={chatbotConfig}
           />
         ) : message.messageType === 'text' ? (
           <div className="chat-message-bot">
@@ -58,6 +60,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply }:
             message={message} 
             onOptionSelect={onOptionSelect}
             onQuickReply={onQuickReply}
+            chatbotConfig={chatbotConfig}
           />
         )}
 

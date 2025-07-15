@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 
 interface RichMessageProps {
   message: Message;
-  onOptionSelect: (optionId: string, payload?: any) => void;
+  onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
   onQuickReply: (reply: string) => void;
+  chatbotConfig?: any;
 }
 
-export default function RichMessage({ message, onOptionSelect, onQuickReply }: RichMessageProps) {
+export default function RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig }: RichMessageProps) {
   const { messageType, content, metadata } = message;
 
   if (messageType === 'card' && metadata) {
@@ -115,7 +116,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
           {metadata.title && (
             <h4 className="font-semibold text-neutral-800 mb-3">{metadata.title}</h4>
           )}
-          
+
           {content && (
             <p className="text-neutral-600 mb-4">{content}</p>
           )}
@@ -130,7 +131,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply }: R
                   {field.label}
                   {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
-                
+
                 {field.type === 'textarea' ? (
                   <textarea
                     id={field.id}
