@@ -586,11 +586,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId, chatbotGuid } = req.params;
       const { embedded = "true", mobile = "false" } = req.query;
 
+      console.log(`Loading widget for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);
+
       // Get chatbot config from database
       const chatbotConfig = await storage.getChatbotConfigByGuid(userId, chatbotGuid);
       if (!chatbotConfig || !chatbotConfig.isActive) {
+        console.log(`Chatbot not found or inactive: ${chatbotGuid}`);
         return res.status(404).send('Chatbot not found or inactive');
       }
+
+      console.log(`Found chatbot config: ${chatbotConfig.name}`);
+
+
 
       const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const isMobile = req.query.mobile === 'true';
@@ -599,9 +606,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Force HTTPS in production environments
       const protocol = app.get("env") === "production" ? 'https' : req.protocol;
       const apiUrl = protocol + '://' + req.get('host');
+      
+      console.log(`Environment: ${app.get("env")}, Protocol: ${protocol}, API URL: ${apiUrl}`);
+      
       if (app.get("env") === "production") {
         const distPath = path.resolve(__dirname, "../dist/public");
-        let html = fs.readFileSync(path.join(distPath, 'index.html'), 'utf8');
+        const htmlPath = path.join(distPath, 'index.html');
+        
+        console.log(`Looking for HTML file at: ${htmlPath}`);
+        console.log(`File exists: ${fs.existsSync(htmlPath)}`);
+        
+        let html;
+        if (!fs.existsSync(htmlPath)) {
+          console.log(`HTML file not found, trying alternative paths...`);
+          // Try different possible paths
+          const alternativePaths = [
+            path.resolve(__dirname, "./public/index.html"),
+            path.resolve(__dirname, "../public/index.html"), 
+            path.resolve(__dirname, "dist/public/index.html"),
+            path.resolve(process.cwd(), "dist/public/index.html")
+          ];
+          
+          let found = false;
+          for (const altPath of alternativePaths) {
+            console.log(`Trying: ${altPath} - exists: ${fs.existsSync(altPath)}`);
+            if (fs.existsSync(altPath)) {
+              html = fs.readFileSync(altPath, 'utf8');
+              console.log(`Successfully loaded HTML from: ${altPath}`);
+              found = true;
+              break;
+            }
+          }
+          
+          if (!found) {
+            return res.status(500).send('HTML template not found');
+          }
+        } else {
+          html = fs.readFileSync(htmlPath, 'utf8');
+        }
 
         // Inject session data and chatbot config into the HTML
         const sessionData = `
