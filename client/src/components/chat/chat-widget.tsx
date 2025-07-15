@@ -81,11 +81,11 @@ export default function ChatWidget({
             className="text-white p-4 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
           >
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <img 
                 src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
                 alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-10 h-10 rounded-full border-2 border-white"
+                className="w-8 h-8 rounded-full border-2 border-white"
               />
               <div>
                 <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
@@ -133,11 +133,11 @@ export default function ChatWidget({
           className="chat-header text-white p-4 flex items-center justify-between"
           style={{ backgroundColor: primaryColor }}
         >
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <img 
               src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
               alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-              className="w-10 h-10 rounded-full border-2 border-white"
+              className="w-8 h-8 rounded-full border-2 border-white"
             />
             <div>
               <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
@@ -203,11 +203,11 @@ export default function ChatWidget({
             className="text-white p-4 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: primaryColor }}
           >
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <img 
                 src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
                 alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-10 h-10 rounded-full border-2 border-white"
+                className="w-8 h-8 rounded-full border-2 border-white"
               />
               <div>
                 <h3 className="font-semibold">{chatbotConfig?.name || 'Support Assistant'}</h3>
