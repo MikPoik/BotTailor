@@ -64,7 +64,7 @@ export default function Dashboard() {
   });
 
   // Get chatbot GUID from environment for consistency with homepage
-  const envChatbotGuid = import.meta.env.VITE_DEFAULT_CHATBOT_GUID;
+  const envChatbotGuid = import.meta.env.VITE_DEFAULT_SITE_CHATBOT_GUID;
 
   // Fetch specific chatbot by GUID if configured
   const { data: specificChatbot } = useQuery<ChatbotConfig>({

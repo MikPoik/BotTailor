@@ -32,7 +32,7 @@ export default function Home() {
   // Get chatbot GUID from URL parameters or environment
   const urlParams = new URLSearchParams(window.location.search);
   const urlChatbotGuid = urlParams.get('chatbot');
-  const envChatbotGuid = import.meta.env.VITE_DEFAULT_CHATBOT_GUID;
+  const envChatbotGuid = import.meta.env.VITE_DEFAULT_SITE_CHATBOT_GUID;
   const targetChatbotGuid = urlChatbotGuid || envChatbotGuid;
 
   // Fetch specific chatbot by GUID if configured (authenticated users)
