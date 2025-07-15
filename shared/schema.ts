@@ -38,7 +38,7 @@ export const users = pgTable("users", {
 export const chatbotConfigs = pgTable("chatbot_configs", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
-  guid: varchar("guid").notNull().unique(), // Unique identifier for public URLs
+  guid: varchar("guid").notNull().unique().default("RandomGuid"), // Unique identifier for public URLs
   name: text("name").notNull(),
   description: text("description"),
   avatarUrl: varchar("avatar_url"),
