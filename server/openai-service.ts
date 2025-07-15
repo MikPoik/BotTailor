@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { AIResponseSchema, SYSTEM_PROMPT, type AIResponse } from "./ai-response-schema";
+import { AIResponseSchema, SYSTEM_PROMPT, buildSystemPrompt, type AIResponse } from "./ai-response-schema";
 import { parse } from "best-effort-json-parser";
 
 const openai = new OpenAI({
@@ -12,7 +12,8 @@ const openai = new OpenAI({
 export async function generateMultiBubbleResponse(
   userMessage: string,
   sessionId: string,
-  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  chatbotConfig?: any
 ): Promise<AIResponse> {
   console.log(`[OpenAI] Generating multi-bubble response for: "${userMessage}"`);
 
@@ -22,14 +23,22 @@ export async function generateMultiBubbleResponse(
   }
 
   try {
+    // Use chatbot config system prompt or fallback to default
+    const systemPrompt = buildSystemPrompt(chatbotConfig);
+    const model = chatbotConfig?.model || "gpt-4o";
+    const temperature = chatbotConfig?.temperature ? (chatbotConfig.temperature / 10) : 0.7;
+    const maxTokens = chatbotConfig?.maxTokens || 1500;
+
+    console.log(`[OpenAI] Using model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`);
+
     const messages = [
-      { role: 'system' as const, content: SYSTEM_PROMPT },
+      { role: 'system' as const, content: systemPrompt },
       ...conversationHistory,
       { role: 'user' as const, content: userMessage }
     ];
 
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model,
       messages,
       stream: true,
       response_format: {
@@ -127,8 +136,8 @@ export async function generateMultiBubbleResponse(
           }
         }
       },
-      temperature: 0.7,
-      max_tokens: 1500
+      temperature,
+      max_tokens: maxTokens
     });
 
     let accumulatedContent = '';
@@ -176,14 +185,22 @@ export async function* generateStreamingResponse(
   }
 
   try {
+    // Use chatbot config system prompt or fallback to default
+    const systemPrompt = buildSystemPrompt(chatbotConfig);
+    const model = chatbotConfig?.model || "gpt-4o";
+    const temperature = chatbotConfig?.temperature ? (chatbotConfig.temperature / 10) : 0.7;
+    const maxTokens = chatbotConfig?.maxTokens || 1500;
+
+    console.log(`[OpenAI] Streaming with model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`);
+
     const messages = [
-      { role: 'system' as const, content: SYSTEM_PROMPT },
+      { role: 'system' as const, content: systemPrompt },
       ...conversationHistory,
       { role: 'user' as const, content: userMessage }
     ];
 
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model,
       messages,
       stream: true,
       response_format: {
@@ -281,8 +298,8 @@ export async function* generateStreamingResponse(
           }
         }
       },
-      temperature: 0.7,
-      max_tokens: 1500
+      temperature,
+      max_tokens: maxTokens
     });
 
     let accumulatedContent = '';
@@ -428,17 +445,19 @@ export async function* generateStreamingResponse(
 export async function generateStructuredResponse(
   userMessage: string,
   sessionId: string,
-  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  chatbotConfig?: any
 ): Promise<AIResponse> {
-  return generateMultiBubbleResponse(userMessage, sessionId, conversationHistory);
+  return generateMultiBubbleResponse(userMessage, sessionId, conversationHistory, chatbotConfig);
 }
 
 export async function generateOptionResponse(
   optionId: string,
   payload: any,
   sessionId: string,
-  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  chatbotConfig?: any
 ): Promise<AIResponse> {
   const contextMessage = `User selected option "${optionId}" with payload: ${JSON.stringify(payload)}. Provide a helpful response.`;
-  return generateMultiBubbleResponse(contextMessage, sessionId, conversationHistory);
+  return generateMultiBubbleResponse(contextMessage, sessionId, conversationHistory, chatbotConfig);
 }
