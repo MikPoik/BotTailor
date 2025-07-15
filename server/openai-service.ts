@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import {
   AIResponseSchema,
-  SYSTEM_PROMPT,
   buildSystemPrompt,
   type AIResponse,
 } from "./ai-response-schema";
