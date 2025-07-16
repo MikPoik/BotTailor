@@ -290,7 +290,7 @@ export class WebsiteScanner {
           wordCount: chunk.split(/\s+/).length,
         };
 
-        await storage.createWebsiteContent(contentData, `[${embedding.join(',')}]`);
+        await storage.createWebsiteContent(contentData, embedding);
       }
     } catch (error) {
       console.error('Error processing and storing content:', error);

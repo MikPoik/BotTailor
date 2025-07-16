@@ -52,7 +52,7 @@ export interface IStorage {
 
   // Website content methods
   getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]>;
-  createWebsiteContent(content: InsertWebsiteContent, embedding: string): Promise<WebsiteContent>;
+  createWebsiteContent(content: InsertWebsiteContent, embeddingArray: number[]): Promise<WebsiteContent>;
   searchSimilarContent(chatbotConfigId: number, query: string, limit?: number): Promise<WebsiteContent[]>;
 }
 
@@ -208,10 +208,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(websiteContent.createdAt));
   }
 
-  async createWebsiteContent(contentData: InsertWebsiteContent, embedding: string): Promise<WebsiteContent> {
+  async createWebsiteContent(contentData: InsertWebsiteContent, embeddingArray: number[]): Promise<WebsiteContent> {
     const [content] = await db
       .insert(websiteContent)
-      .values({ ...contentData, embedding })
+      .values({ 
+        ...contentData, 
+        embedding: sql`${`[${embeddingArray.join(',')}]`}::vector`
+      })
       .returning();
     return content;
   }
