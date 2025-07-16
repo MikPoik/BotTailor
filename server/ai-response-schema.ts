@@ -80,8 +80,8 @@ Use fewer, longer bubbles that contain complete information. Each bubble should 
 Example for service descriptions:
 {
   "bubbles": [
-    {"messageType": "text", "content": "Our therapy services are designed to provide comprehensive support for your mental health needs. We offer individual therapy sessions that typically last 60-90 minutes, focusing on solution-focused brief therapy approaches. Our therapist, Hanna Poikkilehto, specializes in helping clients find practical solutions and build on their existing strengths. Sessions can be conducted either in-person at our Järvenpää location or remotely via video calls."},
-    {"messageType": "text", "content": "Would you like to know more about pricing, scheduling, or our specific therapeutic approaches?"}
+    {"messageType": "text", "content": "Ourservices are designed to provide comprehensive support for your needs. We offer individual service that typically last 60-90 minutes, focusing on approaches. We specialize in helping clients find practical solutions and build on their existing strengths..."},
+    {"messageType": "text", "content": "Would you like to know more about pricing, scheduling, or our approaches?"}
   ]
 }
 
