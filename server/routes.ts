@@ -938,6 +938,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get conversation count for authenticated user's chatbots
+  app.get('/api/chat/conversations/count', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get all chatbot IDs for this user
+      const chatbots = await storage.getChatbotConfigs(userId);
+      const chatbotIds = chatbots.map(bot => bot.id);
+      
+      if (chatbotIds.length === 0) {
+        return res.json(0);
+      }
+      
+      // Count unique sessions across all user's chatbots
+      const sessions = await storage.db.select({ 
+        id: storage.chatSessions.id 
+      })
+      .from(storage.chatSessions)
+      .where(inArray(storage.chatSessions.chatbotConfigId, chatbotIds));
+      
+      res.json(sessions.length);
+    } catch (error) {
+      console.error("Error counting conversations:", error);
+      res.status(500).json({ message: "Failed to count conversations" });
+    }
+  });
+
   // Chat API routes for embedded widget
   app.get("/api/chat/:sessionId", async (req: Request, res: Response) => {
     try {

@@ -226,11 +226,11 @@ export class DatabaseStorage implements IStorage {
         eq(websiteSources.chatbotConfigId, chatbotConfigId),
         eq(websiteSources.status, 'completed')
       ));
-    
+
     if (sources.length === 0) return [];
 
     const sourceIds = sources.map(s => s.id);
-    
+
     // Generate embedding for the query using OpenAI
     let queryEmbedding: number[];
     try {
@@ -241,10 +241,10 @@ export class DatabaseStorage implements IStorage {
       console.error('Error generating query embedding:', error);
       return [];
     }
-    
+
     // Convert embedding to PostgreSQL vector format
     const queryVector = `[${queryEmbedding.join(',')}]`;
-    
+
     // Use pgvector cosine distance for similarity search across all sources
     const sourceConditions = sourceIds.map(id => eq(websiteContent.websiteSourceId, id));
     const whereCondition = sourceConditions.length === 1 
@@ -279,6 +279,13 @@ export class DatabaseStorage implements IStorage {
 export const storage = new DatabaseStorage();
 
 export class ChatService {
+  private db: any;
+  public chatSessions = chatSessions;
+
+  constructor() {
+    this.db = db;
+  }
+
   async getMessages(sessionId: string): Promise<any[]> {
     const messages = await storage.getMessages(sessionId);
     return messages.map(msg => ({
