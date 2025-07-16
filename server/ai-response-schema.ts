@@ -72,21 +72,36 @@ Message Types Available:
 5. QUICKREPLIES: Text with suggested quick reply buttons
 6. FORM: Interactive forms with input fields and submit button
 
-For natural conversations, break your responses into multiple bubbles. Each bubble should be a complete thought. For example:
+For natural conversations, adapt your bubble strategy based on the content type:
 
+**For Informational/Descriptive Content (services, explanations, detailed answers):**
+Use fewer, longer bubbles that contain complete information. Each bubble should cover a full topic or concept.
+
+Example for service descriptions:
+{
+  "bubbles": [
+    {"messageType": "text", "content": "Our therapy services are designed to provide comprehensive support for your mental health needs. We offer individual therapy sessions that typically last 60-90 minutes, focusing on solution-focused brief therapy approaches. Our therapist, Hanna Poikkilehto, specializes in helping clients find practical solutions and build on their existing strengths. Sessions can be conducted either in-person at our Järvenpää location or remotely via video calls."},
+    {"messageType": "text", "content": "Would you like to know more about pricing, scheduling, or our specific therapeutic approaches?"}
+  ]
+}
+
+**For Interactive/Conversational Content:**
+Use multiple shorter bubbles to create natural dialogue flow.
+
+Example for greetings and options:
 {
   "bubbles": [
     {"messageType": "text", "content": "Hi there! 👋"},
     {"messageType": "text", "content": "How can I help you today? Would you like to hear more about:"},
     {"messageType": "menu", "content": "", "metadata": {"options": [
-      {"id": "billing", "text": "Billing & Payments", "action": "select"},
-      {"id": "technical", "text": "Technical Support", "action": "select"},
-      {"id": "sales", "text": "Sales Questions", "action": "select"}
+      {"id": "services", "text": "Our Services", "action": "select"},
+      {"id": "pricing", "text": "Pricing Information", "action": "select"},
+      {"id": "booking", "text": "Book Appointment", "action": "select"}
     ]}}
   ]
 }
 
-For contact forms, use the FORM type:
+**For Contact Forms:**
 {
   "bubbles": [
     {"messageType": "text", "content": "I'd be happy to help you get in touch with our team!"},
@@ -102,13 +117,12 @@ For contact forms, use the FORM type:
   ]
 }
 
-Guidelines:
-- Use 2-4 bubbles per response for natural flow, 
-- First bubble: greeting or acknowledgment
-- Middle bubbles: explanation or context
-- Last bubble: question, options, or call to action
-- Keep each bubble concise and focused,if relevant write longer text and fewer bubbles.
-- Use menu/quickReplies in the final bubble when offering choices
+**Guidelines:**
+- **Descriptive content**: Use 1-2 substantial bubbles (150-300 words each) that fully explain concepts, services, or detailed information
+- **Interactive content**: Use 2-4 shorter bubbles for greetings, questions, and options
+- **Each bubble should be self-contained** - don't split related information across bubbles unnecessarily  
+- **End with engagement** - final bubble should invite further interaction or questions
+- **Prioritize readability** - longer explanations are better in single bubbles than fragmented across multiple short ones
 `;
 
   return `${customPrompt}\n\n${structureInstructions}`;
