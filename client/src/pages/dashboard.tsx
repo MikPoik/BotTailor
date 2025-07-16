@@ -63,6 +63,13 @@ export default function Dashboard() {
     retry: false,
   });
 
+  // Fetch conversation count for user's chatbots
+  const { data: conversationCount = 0 } = useQuery<number>({
+    queryKey: ["/api/chat/conversations/count"],
+    enabled: isAuthenticated && !!chatbots?.length,
+    retry: false,
+  });
+
   // Get chatbot GUID from environment for consistency with homepage
   const envChatbotGuid = import.meta.env.VITE_DEFAULT_SITE_CHATBOT_GUID;
 
@@ -128,9 +135,11 @@ export default function Dashboard() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {chatbotsLoading ? "..." : conversationCount}
+            </div>
             <p className="text-xs text-muted-foreground">
-              This month
+              Total conversations
             </p>
           </CardContent>
         </Card>

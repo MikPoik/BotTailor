@@ -15,6 +15,7 @@ import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { upload, uploadAvatar, getFileFromStorage } from "./upload-service";
 import passport from "passport";
+import { eq, desc, and, isNull, or, sql, inArray } from "drizzle-orm";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -457,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Start scanning
       const scanner = new WebsiteScanner();
       const result = await scanner.scanWebsite(parseInt(id));
-      
+
       res.json(result);
     } catch (error) {
       console.error("Error rescanning website:", error);
