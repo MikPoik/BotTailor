@@ -245,8 +245,25 @@ export async function* generateStreamingResponse(
   }
 
   try {
-    // Use chatbot config system prompt or fallback to default
-    const systemPrompt = buildSystemPrompt(chatbotConfig);
+    // Search for relevant website context if chatbotConfig is available
+    let websiteContext = "";
+    if (chatbotConfig?.id) {
+      const { storage } = await import('./storage');
+      const contextChunks = await storage.searchSimilarContent(chatbotConfig.id, userMessage, 3);
+      
+      if (contextChunks.length > 0) {
+        console.log(`[OpenAI] Found ${contextChunks.length} relevant context chunks for chatbot ${chatbotConfig.id}`);
+        websiteContext = "\n\nRelevant context from your knowledge base:\n" + 
+          contextChunks.map((chunk, index) => 
+            `Context ${index + 1} (${chunk.title}):\n${chunk.content}`
+          ).join("\n\n");
+      } else {
+        console.log(`[OpenAI] No relevant context found for query: "${userMessage}"`);
+      }
+    }
+
+    // Use chatbot config system prompt or fallback to default, then add website context
+    const systemPrompt = buildSystemPrompt(chatbotConfig) + websiteContext;
     const model = chatbotConfig?.model || "gpt-4o";
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10
@@ -256,7 +273,7 @@ export async function* generateStreamingResponse(
     console.log(
       `[OpenAI] Streaming with model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`,
     );
-    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    console.log(`[OpenAI] System prompt: ${systemPrompt}`);
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
