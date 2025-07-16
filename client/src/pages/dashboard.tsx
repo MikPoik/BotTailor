@@ -202,7 +202,7 @@ export default function Dashboard() {
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.id}/add-data`}>
+                      <Link href={`/chatbots/${chatbot.guid}/add-data`}>
                         <Globe className="mr-2 h-3 w-3" />
                         Add Data
                       </Link>

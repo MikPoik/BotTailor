@@ -56,7 +56,7 @@ function AuthenticatedRouter() {
           <Route path="/" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/chatbots/new" component={ChatbotForm} />
-          <Route path="/chatbots/:id/add-data" component={AddData} />
+          <Route path="/chatbots/:guid/add-data" component={AddData} />
           <Route path="/chatbots/:guid/test" component={ChatbotTest} />
           <Route path="/chatbots/:guid/ui-designer" component={UIDesigner} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />

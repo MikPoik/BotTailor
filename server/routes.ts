@@ -346,6 +346,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get website sources by chatbot GUID
+  app.get('/api/chatbots/guid/:guid/website-sources', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { guid } = req.params;
+
+      // Get the chatbot by GUID first to get the ID
+      const existingConfig = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingConfig) {
+        return res.status(404).json({ message: "Chatbot config not found" });
+      }
+
+      const sources = await storage.getWebsiteSources(existingConfig.id);
+      res.json(sources);
+    } catch (error) {
+      console.error("Error fetching website sources by GUID:", error);
+      res.status(500).json({ message: "Failed to fetch website sources" });
+    }
+  });
+
   app.post('/api/chatbots/:id/website-sources', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

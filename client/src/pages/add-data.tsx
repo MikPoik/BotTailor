@@ -57,7 +57,7 @@ const addWebsiteSchema = z.object({
 type FormData = z.infer<typeof addWebsiteSchema>;
 
 export default function AddData() {
-  const { id } = useParams();
+  const { guid } = useParams();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -90,15 +90,15 @@ export default function AddData() {
 
   // Get chatbot details
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/${id}`],
-    enabled: isAuthenticated && !!id,
+    queryKey: [`/api/chatbots/guid/${guid}`],
+    enabled: isAuthenticated && !!guid,
     retry: false,
   });
 
   // Get website sources for this chatbot with polling for active scans
   const { data: websiteSources, isLoading: sourcesLoading } = useQuery<WebsiteSource[]>({
-    queryKey: [`/api/chatbots/${id}/website-sources`],
-    enabled: isAuthenticated && !!id,
+    queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`],
+    enabled: isAuthenticated && !!chatbot?.id,
     retry: false,
     refetchInterval: (data) => {
       // Poll every 3 seconds if there are any sources still scanning
@@ -113,11 +113,12 @@ export default function AddData() {
   // Add website source mutation
   const addWebsiteMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", `/api/chatbots/${id}/website-sources`, data);
+      if (!chatbot?.id) throw new Error("Chatbot not found");
+      const response = await apiRequest("POST", `/api/chatbots/${chatbot.id}/website-sources`, data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}/website-sources`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`] });
       form.reset();
       toast({
         title: "Website Added",
@@ -140,7 +141,7 @@ export default function AddData() {
       await apiRequest("DELETE", `/api/website-sources/${sourceId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}/website-sources`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`] });
       toast({
         title: "Website Deleted",
         description: "Website source has been removed.",
@@ -162,7 +163,7 @@ export default function AddData() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}/website-sources`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`] });
       toast({
         title: "Rescan Started",
         description: "Website scanning has been restarted.",
