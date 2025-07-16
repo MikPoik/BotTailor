@@ -103,11 +103,11 @@ For contact forms, use the FORM type:
 }
 
 Guidelines:
-- Use 2-4 bubbles per response for natural flow
+- Use 2-4 bubbles per response for natural flow, 
 - First bubble: greeting or acknowledgment
 - Middle bubbles: explanation or context
 - Last bubble: question, options, or call to action
-- Keep each bubble concise and focused
+- Keep each bubble concise and focused,if relevant write longer text and fewer bubbles.
 - Use menu/quickReplies in the final bubble when offering choices
 `;
 

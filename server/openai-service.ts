@@ -257,7 +257,7 @@ export async function* generateStreamingResponse(
         if (relevantContent.length > 0) {
           websiteContext = "\n\nRELEVANT CONTEXT FROM WEBSITE:\n" +
             relevantContent.map((content, index) => 
-              `[${index + 1}] ${content.title || 'Untitled'}\n${content.content.substring(0, 500)}...`
+              `[${index + 1}] ${content.title || 'Untitled'}\n${content.content.substring(0, 800)}...`
             ).join("\n\n") +
             "\n\nUse this context to provide more accurate and relevant responses. If the context is relevant to the user's question, incorporate the information naturally into your response.";
         }
