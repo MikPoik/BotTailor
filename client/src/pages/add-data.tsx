@@ -95,11 +95,19 @@ export default function AddData() {
     retry: false,
   });
 
-  // Get website sources for this chatbot
+  // Get website sources for this chatbot with polling for active scans
   const { data: websiteSources, isLoading: sourcesLoading } = useQuery<WebsiteSource[]>({
     queryKey: [`/api/chatbots/${id}/website-sources`],
     enabled: isAuthenticated && !!id,
     retry: false,
+    refetchInterval: (data) => {
+      // Poll every 3 seconds if there are any sources still scanning
+      if (!data || !Array.isArray(data)) return false;
+      const hasScanning = data.some((source: WebsiteSource) => 
+        source.status === 'scanning' || source.status === 'pending'
+      );
+      return hasScanning ? 3000 : false;
+    },
   });
 
   // Add website source mutation

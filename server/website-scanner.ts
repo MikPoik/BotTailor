@@ -62,11 +62,13 @@ export class WebsiteScanner {
         }
       }
 
-      await storage.updateWebsiteSource(websiteSourceId, {
+      const updateResult = await storage.updateWebsiteSource(websiteSourceId, {
         status: 'completed',
         totalPages: scannedCount,
         lastScanned: new Date()
       });
+
+      console.log(`✅ Scan completed for source ${websiteSourceId}: ${scannedCount} pages, status updated to completed`);
 
       return {
         success: true,
