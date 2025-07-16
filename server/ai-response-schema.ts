@@ -135,10 +135,10 @@ Example for greetings and options:
       "table": {
         "headers": ["Service", "Duration", "Price", "Package Deal"],
         "rows": [
-          ["Individual Therapy", "60 min", "85€", "5 sessions: 400€"],
-          ["Individual Therapy", "90 min", "105€", "5 sessions: 500€"],
-          ["Couples Therapy", "60 min", "105€", "5 sessions: 500€"],
-          ["Couples Therapy", "90 min", "125€", "5 sessions: 600€"]
+          ["Package 1", "60 min", "85€/$", "5 sessions: $"],
+          ["Package 2", "90 min", "105€/$", "5 sessions: $"],
+          ["Package 3", "60 min", "105€/$", "5 sessions: $],
+          ["Package 4, "90 min", "125€/$", "5 sessions: $"]
         ],
         "caption": "All prices include 25.5% VAT"
       }

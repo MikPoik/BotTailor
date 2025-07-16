@@ -135,9 +135,9 @@ export default function HomeTab({ onStartChat, isMobile, isPreloaded = false, ch
       if (action.action === 'start_chat') {
         onStartChat(action.title);
       } else if (action.action === 'explore_services') {
-        onStartChat(action.title, `I'd like to learn more about ${action.title.toLowerCase()}`);
+        onStartChat(action.title, `${action.title.toLowerCase()}`);
       } else if (action.action === 'book_appointment') {
-        onStartChat(action.title, `I'd like to book an appointment. ${action.description}`);
+        onStartChat(action.title, `${action.description}`);
       } else {
         // Default: treat any action as a chat starter
         onStartChat(action.title, action.description);
