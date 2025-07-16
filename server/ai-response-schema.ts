@@ -27,9 +27,16 @@ const FormFieldSchema = z.object({
   value: z.string().optional(),
 });
 
+// Define the table schema for tabular data
+const TableSchema = z.object({
+  headers: z.array(z.string()),
+  rows: z.array(z.array(z.string())),
+  caption: z.string().optional(),
+});
+
 // Define individual message bubble schema
 const MessageBubbleSchema = z.object({
-  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form']),
+  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form', 'table']),
   content: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -40,6 +47,7 @@ const MessageBubbleSchema = z.object({
     quickReplies: z.array(z.string()).optional(),
     formFields: z.array(FormFieldSchema).optional(),
     submitButton: ButtonSchema.optional(),
+    table: TableSchema.optional(),
   }).optional(),
 });
 
@@ -71,6 +79,7 @@ Message Types Available:
 4. IMAGE: Image responses with optional text
 5. QUICKREPLIES: Text with suggested quick reply buttons
 6. FORM: Interactive forms with input fields and submit button
+7. TABLE: Structured tabular data for prices, comparisons, or organized information
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -117,12 +126,34 @@ Example for greetings and options:
   ]
 }
 
+**For Tables (pricing, comparisons, structured data):**
+{
+  "bubbles": [
+    {"messageType": "text", "content": "Here's our complete pricing breakdown:"},
+    {"messageType": "table", "content": "", "metadata": {
+      "title": "Service Pricing",
+      "table": {
+        "headers": ["Service", "Duration", "Price", "Package Deal"],
+        "rows": [
+          ["Individual Therapy", "60 min", "85€", "5 sessions: 400€"],
+          ["Individual Therapy", "90 min", "105€", "5 sessions: 500€"],
+          ["Couples Therapy", "60 min", "105€", "5 sessions: 500€"],
+          ["Couples Therapy", "90 min", "125€", "5 sessions: 600€"]
+        ],
+        "caption": "All prices include 25.5% VAT"
+      }
+    }}
+  ]
+}
+
 **Guidelines:**
 - **Descriptive content**: Use 1-2 substantial bubbles (150-300 words each) that fully explain concepts, services, or detailed information
 - **Interactive content**: Use 2-4 shorter bubbles for greetings, questions, and options
+- **Tabular data**: Use table message type for pricing, comparisons, schedules, or any structured data with multiple columns
 - **Each bubble should be self-contained** - don't split related information across bubbles unnecessarily  
 - **End with engagement** - final bubble should invite further interaction or questions
 - **Prioritize readability** - longer explanations are better in single bubbles than fragmented across multiple short ones
+- **Tables should be clear**: Use descriptive headers and keep cell content concise for mobile readability
 `;
 
   return `${customPrompt}\n\n${structureInstructions}`;
