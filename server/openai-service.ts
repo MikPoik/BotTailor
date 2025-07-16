@@ -38,14 +38,18 @@ export async function generateMultiBubbleResponse(
         const relevantContent = await storage.searchSimilarContent(
           chatbotConfig.id,
           userMessage,
-          3
+          3,
         );
-        
+
         if (relevantContent.length > 0) {
-          websiteContext = "\n\nRELEVANT CONTEXT FROM WEBSITE:\n" +
-            relevantContent.map((content, index) => 
-              `[${index + 1}] ${content.title || 'Untitled'}\n${content.content.substring(0, 500)}...`
-            ).join("\n\n") +
+          websiteContext =
+            "\n\nRELEVANT CONTEXT FROM WEBSITE:\n" +
+            relevantContent
+              .map(
+                (content, index) =>
+                  `[${index + 1}] ${content.title || "Untitled"}\n${content.content.substring(0, 500)}...`,
+              )
+              .join("\n\n") +
             "\n\nUse this context to provide more accurate and relevant responses. If the context is relevant to the user's question, incorporate the information naturally into your response.";
         }
       } catch (error) {
@@ -251,14 +255,20 @@ export async function* generateStreamingResponse(
         const relevantContent = await storage.searchSimilarContent(
           chatbotConfig.id,
           userMessage,
-          3
+          3,
         );
-        console.log(`[OpenAI] Found ${relevantContent.length} relevant content chunks`)
+        console.log(
+          `[OpenAI] Found ${relevantContent.length} relevant content chunks`,
+        );
         if (relevantContent.length > 0) {
-          websiteContext = "\n\nRELEVANT CONTEXT FROM WEBSITE:\n" +
-            relevantContent.map((content, index) => 
-              `[${index + 1}] ${content.title || 'Untitled'}\n${content.content.substring(0, 800)}...`
-            ).join("\n\n") +
+          websiteContext =
+            "\n\nRELEVANT CONTEXT FROM WEBSITE:\n" +
+            relevantContent
+              .map(
+                (content, index) =>
+                  `[${index + 1}] ${content.title || "Untitled"}\n${content.content.substring(0, 800)}...`,
+              )
+              .join("\n\n") +
             "\n\nUse this context to provide more accurate and relevant responses. If the context is relevant to the user's question, incorporate the information naturally into your response.";
         }
       } catch (error) {
@@ -266,7 +276,7 @@ export async function* generateStreamingResponse(
         // Continue without website context if search fails
       }
     }
-    
+
     // Use chatbot config system prompt or fallback to default
     const systemPrompt = buildSystemPrompt(chatbotConfig) + websiteContext;
     const model = chatbotConfig?.model || "gpt-4o";
