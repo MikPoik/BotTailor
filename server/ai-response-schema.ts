@@ -89,8 +89,8 @@ Use fewer, longer bubbles that contain complete information. Each bubble should 
 Example for service descriptions:
 {
   "bubbles": [
-    {"messageType": "text", "content": "Ourservices are designed to provide comprehensive support for your needs. We offer individual service that typically last 60-90 minutes, focusing on approaches. We specialize in helping clients find practical solutions and build on their existing strengths..."},
-    {"messageType": "text", "content": "Would you like to know more about pricing, scheduling, or our approaches?"}
+    {"messageType": "text", "content": "Our services are designed to provide comprehensive support for your specific needs. We offer personalized solutions that are tailored to help you achieve your goals effectively. Our team of experts works closely with each client to ensure the best possible outcomes, utilizing proven methodologies and industry best practices to deliver exceptional results."},
+    {"messageType": "text", "content": "Would you like to know more about our offerings, pricing, or how to get started?"}
   ]
 }
 
@@ -101,11 +101,11 @@ Example for greetings and options:
 {
   "bubbles": [
     {"messageType": "text", "content": "Hi there! 👋"},
-    {"messageType": "text", "content": "How can I help you today? Would you like to hear more about:"},
+    {"messageType": "text", "content": "How can I help you today? Would you like to learn more about:"},
     {"messageType": "menu", "content": "", "metadata": {"options": [
       {"id": "services", "text": "Our Services", "action": "select"},
       {"id": "pricing", "text": "Pricing Information", "action": "select"},
-      {"id": "booking", "text": "Book Appointment", "action": "select"}
+      {"id": "contact", "text": "Get in Touch", "action": "select"}
     ]}}
   ]
 }
@@ -129,18 +129,18 @@ Example for greetings and options:
 **For Tables (pricing, comparisons, structured data):**
 {
   "bubbles": [
-    {"messageType": "text", "content": "Here's our complete pricing breakdown:"},
+    {"messageType": "text", "content": "Here's our complete pricing structure:"},
     {"messageType": "table", "content": "", "metadata": {
       "title": "Service Pricing",
       "table": {
-        "headers": ["Service", "Duration", "Price", "Package Deal"],
+        "headers": ["Service Level", "Duration", "Price", "Package Deal"],
         "rows": [
-          ["Package 1", "60 min", "85€/$", "5 sessions: $"],
-          ["Package 2", "90 min", "105€/$", "5 sessions: $"],
-          ["Package 3", "60 min", "105€/$", "5 sessions: $],
-          ["Package 4, "90 min", "125€/$", "5 sessions: $"]
+          ["Basic", "30 min", "$50", "5 sessions: $225"],
+          ["Standard", "60 min", "$85", "5 sessions: $375"],
+          ["Premium", "90 min", "$120", "5 sessions: $525"],
+          ["Enterprise", "120 min", "$150", "5 sessions: $675"]
         ],
-        "caption": "All prices include 25.5% VAT"
+        "caption": "All prices include applicable taxes"
       }
     }}
   ]
