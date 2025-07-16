@@ -105,11 +105,8 @@ export default function AddData() {
   // Add website source mutation
   const addWebsiteMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest(`/api/chatbots/${id}/website-sources`, {
-        method: "POST",
-        body: data,
-      });
-      return response;
+      const response = await apiRequest("POST", `/api/chatbots/${id}/website-sources`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}/website-sources`] });
@@ -132,9 +129,7 @@ export default function AddData() {
   // Delete website source mutation
   const deleteWebsiteMutation = useMutation({
     mutationFn: async (sourceId: number) => {
-      await apiRequest(`/api/website-sources/${sourceId}`, {
-        method: "DELETE",
-      });
+      await apiRequest("DELETE", `/api/website-sources/${sourceId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}/website-sources`] });
@@ -155,10 +150,8 @@ export default function AddData() {
   // Rescan website mutation
   const rescanMutation = useMutation({
     mutationFn: async (sourceId: number) => {
-      const response = await apiRequest(`/api/website-sources/${sourceId}/rescan`, {
-        method: "POST",
-      });
-      return response;
+      const response = await apiRequest("POST", `/api/website-sources/${sourceId}/rescan`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${id}/website-sources`] });
