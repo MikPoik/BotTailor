@@ -241,8 +241,25 @@ export class WebsiteScanner {
         return null;
       }
 
+      // Check X-Robots-Tag header
+      const robotsHeader = response.headers.get('x-robots-tag');
+      if (robotsHeader && this.hasNoIndexDirective(robotsHeader)) {
+        console.log(`Skipping ${url} due to X-Robots-Tag: ${robotsHeader}`);
+        return null;
+      }
+
       const html = await response.text();
       const $ = cheerio.load(html);
+
+      // Check for meta robots no-index tags
+      const robotsMetas = $('meta[name="robots"]');
+      for (let i = 0; i < robotsMetas.length; i++) {
+        const content = $(robotsMetas[i]).attr('content');
+        if (content && this.hasNoIndexDirective(content)) {
+          console.log(`Skipping ${url} due to meta robots: ${content}`);
+          return null;
+        }
+      }
 
       // Remove scripts, styles, and other non-content elements
       $('script, style, nav, header, footer, aside, .advertisement, .ads, .social-share').remove();
@@ -316,6 +333,11 @@ export class WebsiteScanner {
     }
 
     return chunks;
+  }
+
+  private hasNoIndexDirective(robotsContent: string): boolean {
+    const content = robotsContent.toLowerCase();
+    return content.includes('noindex') || content.includes('none');
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
