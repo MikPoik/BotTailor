@@ -245,24 +245,29 @@ export async function* generateStreamingResponse(
   }
 
   try {
-    // Search for relevant website context if chatbotConfig is available
     let websiteContext = "";
     if (chatbotConfig?.id) {
-      const { storage } = await import('./storage');
-      const contextChunks = await storage.searchSimilarContent(chatbotConfig.id, userMessage, 3);
-      
-      if (contextChunks.length > 0) {
-        console.log(`[OpenAI] Found ${contextChunks.length} relevant context chunks for chatbot ${chatbotConfig.id}`);
-        websiteContext = "\n\nRelevant context from your knowledge base:\n" + 
-          contextChunks.map((chunk, index) => 
-            `Context ${index + 1} (${chunk.title}):\n${chunk.content}`
-          ).join("\n\n");
-      } else {
-        console.log(`[OpenAI] No relevant context found for query: "${userMessage}"`);
+      try {
+        const relevantContent = await storage.searchSimilarContent(
+          chatbotConfig.id,
+          userMessage,
+          3
+        );
+        console.log(`[OpenAI] Found ${relevantContent.length} relevant content chunks`)
+        if (relevantContent.length > 0) {
+          websiteContext = "\n\nRELEVANT CONTEXT FROM WEBSITE:\n" +
+            relevantContent.map((content, index) => 
+              `[${index + 1}] ${content.title || 'Untitled'}\n${content.content.substring(0, 500)}...`
+            ).join("\n\n") +
+            "\n\nUse this context to provide more accurate and relevant responses. If the context is relevant to the user's question, incorporate the information naturally into your response.";
+        }
+      } catch (error) {
+        console.error("Error searching website content:", error);
+        // Continue without website context if search fails
       }
     }
-
-    // Use chatbot config system prompt or fallback to default, then add website context
+    
+    // Use chatbot config system prompt or fallback to default
     const systemPrompt = buildSystemPrompt(chatbotConfig) + websiteContext;
     const model = chatbotConfig?.model || "gpt-4o";
     const temperature = chatbotConfig?.temperature

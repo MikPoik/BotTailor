@@ -290,7 +290,7 @@ export class WebsiteScanner {
           wordCount: chunk.split(/\s+/).length,
         };
 
-        await storage.createWebsiteContent(contentData, JSON.stringify(embedding));
+        await storage.createWebsiteContent(contentData, `[${embedding.join(',')}]`);
       }
     } catch (error) {
       console.error('Error processing and storing content:', error);
@@ -318,7 +318,7 @@ export class WebsiteScanner {
     return chunks;
   }
 
-  private async generateEmbedding(text: string): Promise<number[]> {
+  async generateEmbedding(text: string): Promise<number[]> {
     const client = initializeOpenAI();
     if (!client) {
       throw new Error('OpenAI API key not configured');

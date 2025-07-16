@@ -19,8 +19,7 @@ import {
   type InsertWebsiteContent,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
-import { asc } from "drizzle-orm";
+import { eq, and, or, sql, asc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -229,41 +228,48 @@ export class DatabaseStorage implements IStorage {
 
     const sourceIds = sources.map(s => s.id);
     
-    // For now, do text-based search on content
-    // In production, this would use vector similarity with embeddings
-    const queryLower = query.toLowerCase();
+    // Generate embedding for the query using OpenAI
+    let queryEmbedding: number[];
+    try {
+      const { WebsiteScanner } = await import('./website-scanner');
+      const scanner = new WebsiteScanner();
+      queryEmbedding = await scanner.generateEmbedding(query);
+    } catch (error) {
+      console.error('Error generating query embedding:', error);
+      return [];
+    }
     
-    // Get content from all sources and filter by relevance
-    const allContent = await db.select().from(websiteContent)
-      .where(
-        sourceIds.length === 1 
-          ? eq(websiteContent.websiteSourceId, sourceIds[0])
-          : eq(websiteContent.websiteSourceId, sourceIds[0]) // For now, search first source
-      );
+    // Convert embedding to PostgreSQL vector format
+    const queryVector = `[${queryEmbedding.join(',')}]`;
+    
+    // Use pgvector cosine distance for similarity search across all sources
+    const sourceConditions = sourceIds.map(id => eq(websiteContent.websiteSourceId, id));
+    const whereCondition = sourceConditions.length === 1 
+      ? sourceConditions[0] 
+      : or(...sourceConditions);
 
-    // Simple text matching scoring
-    const scoredContent = allContent
-      .map(content => {
-        const contentLower = content.content.toLowerCase();
-        const titleLower = (content.title || '').toLowerCase();
-        
-        let score = 0;
-        const queryWords = queryLower.split(/\s+/);
-        
-        for (const word of queryWords) {
-          if (word.length > 2) { // Ignore very short words
-            if (titleLower.includes(word)) score += 3;
-            if (contentLower.includes(word)) score += 1;
-          }
-        }
-        
-        return { ...content, score };
-      })
-      .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    // Execute vector similarity search using pgvector
+    const results = await db.execute(sql`
+      SELECT id, website_source_id, url, title, content, content_type, word_count, created_at,
+             (embedding <=> ${queryVector}::vector) as distance
+      FROM website_content 
+      WHERE ${whereCondition}
+      AND embedding IS NOT NULL
+      ORDER BY embedding <=> ${queryVector}::vector
+      LIMIT ${limit}
+    `);
 
-    return scoredContent.map(({ score, ...content }) => content);
+    return results.rows.map(row => ({
+      id: row.id as number,
+      websiteSourceId: row.website_source_id as number,
+      url: row.url as string,
+      title: row.title as string | null,
+      content: row.content as string,
+      contentType: row.content_type as string | null,
+      wordCount: row.word_count as number | null,
+      embedding: null, // Don't return the embedding in search results
+      createdAt: row.created_at as Date,
+    }));
   }
 }
 

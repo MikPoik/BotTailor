@@ -9,6 +9,7 @@ import {
   integer,
   boolean,
   real,
+  vector,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -101,7 +102,7 @@ export const websiteContent = pgTable("website_content", {
   content: text("content").notNull(),
   contentType: text("content_type").default("text"), // 'text' | 'heading' | 'paragraph'
   wordCount: integer("word_count"),
-  embedding: text("embedding"), // Store as JSON array string for now
+  embedding: vector("embedding", { dimensions: 1536 }), // OpenAI ada-002 embedding size
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
