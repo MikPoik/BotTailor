@@ -279,11 +279,7 @@ export class DatabaseStorage implements IStorage {
 export const storage = new DatabaseStorage();
 
 export class ChatService {
-  private db: any;
-  public chatSessions = chatSessions;
-
   constructor() {
-    this.db = db;
   }
 
   async getMessages(sessionId: string): Promise<any[]> {

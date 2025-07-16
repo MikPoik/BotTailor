@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema, insertWebsiteSourceSchema, type WebsiteSource } from "@shared/schema";
+import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema, insertWebsiteSourceSchema, type WebsiteSource, chatSessions } from "@shared/schema";
 import { z } from "zod";
 import { generateStructuredResponse, generateOptionResponse, generateStreamingResponse } from "./openai-service";
 import { generateHomeScreenConfig, modifyHomeScreenConfig, getDefaultHomeScreenConfig } from "./ui-designer-service";
@@ -16,6 +16,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { upload, uploadAvatar, getFileFromStorage } from "./upload-service";
 import passport from "passport";
 import { eq, desc, and, isNull, or, sql, inArray } from "drizzle-orm";
+import { db } from "./db";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -951,12 +952,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(0);
       }
       
-      // Count unique sessions across all user's chatbots
-      const sessions = await storage.db.select({ 
-        id: storage.chatSessions.id 
+      // Count unique sessions across all user's chatbots using the db import
+      const sessions = await db.select({ 
+        id: chatSessions.id 
       })
-      .from(storage.chatSessions)
-      .where(inArray(storage.chatSessions.chatbotConfigId, chatbotIds));
+      .from(chatSessions)
+      .where(inArray(chatSessions.chatbotConfigId, chatbotIds));
       
       res.json(sessions.length);
     } catch (error) {
