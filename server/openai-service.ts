@@ -475,25 +475,6 @@ export async function* generateStreamingResponse(
                         `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`,
                       );
                       await shouldYieldBubble();
-                      
-                      const menuJson = JSON.stringify({
-                        messageType: bubble.messageType,
-                        content: bubble.content,
-                        metadata: bubble.metadata
-                      });
-                
-                      yield { 
-                        type: 'bubble', 
-                        bubble: {
-                          messageType: 'system',
-                          content: `[SYSTEM] ${menuJson}`,
-                          metadata: { 
-                            optionsContext: true,
-                            isSystemMessage: true 
-                          }
-                        }
-                      };
-                      
                       yield { type: "bubble", bubble };
                       processedBubbles = i + 1;
                     }
@@ -555,23 +536,6 @@ export async function* generateStreamingResponse(
       console.log(`[OpenAI] Final parse successful, validating schema...`);
 
       const validated = AIResponseSchema.parse(finalParseResult);
-
-      // Store options context for potential future reference
-      const optionsContext = extractOptionsFromBubbles(validated.bubbles);
-      if (optionsContext) {
-        // Save the options context to storage for this session
-        try {
-          await storage.createMessage({
-            sessionId,
-            content: `[SYSTEM] ${optionsContext}`,
-            sender: "assistant",
-            messageType: "system",
-            metadata: { isSystemMessage: true, optionsContext: true }
-          });
-        } catch (error) {
-          console.warn("[OpenAI] Failed to store options context:", error);
-        }
-      }
 
       // Yield any remaining bubbles that weren't processed during streaming
       for (let i = processedBubbles; i < validated.bubbles.length; i++) {
@@ -650,18 +614,4 @@ export async function generateOptionResponse(
   );
 }
 
-// Helper function to extract options context from bubbles
-function extractOptionsFromBubbles(bubbles: any[]): string | null {
-  let optionsContext = "";
-
-  for (const bubble of bubbles) {
-    if (bubble.messageType === "menu" && bubble.metadata?.options && Array.isArray(bubble.metadata.options)) {
-      const options = bubble.metadata.options
-        .map(option => `${option.text} (${option.id})`)
-        .join(", ");
-      optionsContext += `Available options: ${options}. `;
-    }
-  }
-
-  return optionsContext.length > 0 ? optionsContext : null;
-}
+// Helper function removed - no longer storing textual descriptions of menu options
