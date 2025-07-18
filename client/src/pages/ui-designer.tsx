@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import DynamicHomeScreen from "@/components/ui-designer/dynamic-home-screen";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowLeft, 
   Send, 
@@ -41,6 +42,7 @@ export default function UIDesigner() {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [currentConfig, setCurrentConfig] = useState<HomeScreenConfig | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [editableConfig, setEditableConfig] = useState<string>("");
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -55,6 +57,13 @@ export default function UIDesigner() {
       setCurrentConfig(chatbot.homeScreenConfig as HomeScreenConfig);
     }
   }, [chatbot]);
+
+  // Update editable config when current config changes
+  useEffect(() => {
+    if (currentConfig) {
+      setEditableConfig(JSON.stringify(currentConfig, null, 2));
+    }
+  }, [currentConfig]);
 
   // Generate UI mutation
   const generateUIMutation = useMutation({
@@ -148,6 +157,23 @@ export default function UIDesigner() {
       toast({
         title: "Copied",
         description: "Configuration copied to clipboard!",
+      });
+    }
+  };
+
+  const handleApplyConfig = () => {
+    try {
+      const parsedConfig = JSON.parse(editableConfig);
+      setCurrentConfig(parsedConfig);
+      toast({
+        title: "Configuration Applied",
+        description: "Your changes have been applied to the preview!",
+      });
+    } catch (error) {
+      toast({
+        title: "Invalid JSON",
+        description: "Please check your JSON syntax and try again.",
+        variant: "destructive",
       });
     }
   };
@@ -318,21 +344,37 @@ export default function UIDesigner() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Configuration</CardTitle>
-                    {currentConfig && (
-                      <Button variant="outline" size="sm" onClick={handleCopyConfig}>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {currentConfig && (
+                        <>
+                          <Button variant="outline" size="sm" onClick={handleCopyConfig}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy
+                          </Button>
+                          <Button size="sm" onClick={handleApplyConfig}>
+                            Apply Changes
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
+                  <CardDescription>
+                    Edit the JSON configuration directly. Click "Apply Changes" to update the preview.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <pre className="bg-muted p-4 rounded-lg text-xs overflow-auto h-96">
-                    {currentConfig 
-                      ? JSON.stringify(currentConfig, null, 2)
-                      : "No configuration generated yet"
-                    }
-                  </pre>
+                <CardContent className="flex flex-col h-full">
+                  {currentConfig ? (
+                    <Textarea
+                      value={editableConfig}
+                      onChange={(e) => setEditableConfig(e.target.value)}
+                      className="flex-1 font-mono text-xs resize-none"
+                      placeholder="Edit your configuration here..."
+                    />
+                  ) : (
+                    <div className="flex-1 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
+                      No configuration generated yet
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
