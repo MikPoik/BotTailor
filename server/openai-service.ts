@@ -475,6 +475,25 @@ export async function* generateStreamingResponse(
                         `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`,
                       );
                       await shouldYieldBubble();
+                      
+                      const menuJson = JSON.stringify({
+                        messageType: bubble.messageType,
+                        content: bubble.content,
+                        metadata: bubble.metadata
+                      });
+                
+                      yield { 
+                        type: 'bubble', 
+                        bubble: {
+                          messageType: 'system',
+                          content: `[SYSTEM] ${menuJson}`,
+                          metadata: { 
+                            optionsContext: true,
+                            isSystemMessage: true 
+                          }
+                        }
+                      };
+                      
                       yield { type: "bubble", bubble };
                       processedBubbles = i + 1;
                     }
