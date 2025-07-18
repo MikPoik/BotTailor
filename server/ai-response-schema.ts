@@ -137,6 +137,13 @@ Example for greetings and options:
   ]
 }
 
+**CRITICAL: Survey Consistency Rules:**
+- EVERY survey question MUST end with a menu of options
+- NEVER present a question without providing answer choices
+- If you see previous menu history like "[MENU] Presented options: option1, option2, option3", continue the same pattern
+- Survey questions should ALWAYS follow this format: Question text + Menu with options
+- Never break survey flow by omitting menu options
+
 **Guidelines:**
 - **Descriptive content**: Use 1-2 substantial bubbles (150-300 words each) that fully explain concepts, services, or detailed information
 - **Interactive content**: Use 2-4 shorter bubbles for greetings, questions, and options

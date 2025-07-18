@@ -588,16 +588,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           }
           
-          // For menu messages, include the full JSON structure for AI context
-          if (msg.messageType === 'menu' && msg.metadata) {
-            const menuContent = {
-              messageType: 'menu',
-              content: msg.content || '',
-              metadata: msg.metadata
-            };
+          // For menu messages, include a simplified, AI-friendly summary
+          if (msg.messageType === 'menu' && msg.metadata?.options) {
+            const options = msg.metadata.options.map((opt: any) => opt.text || opt.id).join(', ');
+            const menuSummary = `[MENU] Presented options: ${options}`;
             return {
               role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-              content: JSON.stringify(menuContent)
+              content: menuSummary
             };
           }
           
@@ -741,16 +738,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           }
           
-          // For menu messages, include the full JSON structure for AI context
-          if (msg.messageType === 'menu' && msg.metadata) {
-            const menuContent = {
-              messageType: 'menu',
-              content: msg.content || '',
-              metadata: msg.metadata
-            };
+          // For menu messages, include a simplified, AI-friendly summary
+          if (msg.messageType === 'menu' && msg.metadata?.options) {
+            const options = msg.metadata.options.map((opt: any) => opt.text || opt.id).join(', ');
+            const menuSummary = `[MENU] Presented options: ${options}`;
             return {
               role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-              content: JSON.stringify(menuContent)
+              content: menuSummary
             };
           }
           
@@ -1183,16 +1177,13 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
       .slice(-5) // Last 5 messages for context
       .filter(msg => msg.content !== null && msg.content !== undefined) // Filter out null/undefined content
       .map(msg => {
-        // For menu messages, include the full JSON structure for AI context
-        if (msg.messageType === 'menu' && msg.metadata) {
-          const menuContent = {
-            messageType: 'menu',
-            content: msg.content || '',
-            metadata: msg.metadata
-          };
+        // For menu messages, include a simplified, AI-friendly summary
+        if (msg.messageType === 'menu' && msg.metadata?.options) {
+          const options = msg.metadata.options.map((opt: any) => opt.text || opt.id).join(', ');
+          const menuSummary = `[MENU] Presented options: ${options}`;
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-            content: JSON.stringify(menuContent)
+            content: menuSummary
           };
         }
         
@@ -1236,16 +1227,13 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
       .slice(-5) // Last 5 messages for context
       .filter(msg => msg.content !== null && msg.content !== undefined) // Filter out null/undefined content
       .map(msg => {
-        // For menu messages, include the full JSON structure for AI context
-        if (msg.messageType === 'menu' && msg.metadata) {
-          const menuContent = {
-            messageType: 'menu',
-            content: msg.content || '',
-            metadata: msg.metadata
-          };
+        // For menu messages, include a simplified, AI-friendly summary
+        if (msg.messageType === 'menu' && msg.metadata?.options) {
+          const options = msg.metadata.options.map((opt: any) => opt.text || opt.id).join(', ');
+          const menuSummary = `[MENU] Presented options: ${options}`;
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-            content: JSON.stringify(menuContent)
+            content: menuSummary
           };
         }
         
