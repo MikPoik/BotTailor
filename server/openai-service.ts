@@ -288,14 +288,14 @@ export async function* generateStreamingResponse(
     console.log(
       `[OpenAI] Streaming with model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`,
     );
-    console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
       ...conversationHistory,
       { role: "user" as const, content: userMessage },
     ];
-    console.log(`[OpenAI] Conversation history: ${JSON.stringify(messages)}`);
+    //console.log(`[OpenAI] Conversation history: ${JSON.stringify(messages.map(msg => ({ role: msg.role, content: msg.content })))}`);
     const stream = await openai.chat.completions.create({
       model,
       messages,
