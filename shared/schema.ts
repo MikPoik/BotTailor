@@ -141,7 +141,7 @@ export const insertMessageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   sender: z.enum(["user", "bot", "assistant"]),
-  messageType: z.enum(["text", "image", "audio", "video", "file", "card", "menu", "quickReplies", "form", "table", "system"]).default("text"),
+  messageType: z.enum(["text", "image", "audio", "video", "file", "card", "menu", "quickReplies", "form", "system"]).default("text"),
   metadata: z.record(z.any()).default({}),
 });
 
@@ -179,7 +179,7 @@ export type InsertWebsiteContent = z.infer<typeof insertWebsiteContentSchema>;
 
 // Rich message types
 export const RichMessageSchema = z.object({
-  type: z.enum(['text', 'card', 'menu', 'image', 'quickReplies','form']),
+  type: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form']),
   content: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -276,7 +276,7 @@ export const messageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   sender: z.enum(["user", "bot"]),
-  messageType: z.enum(["text", "card", "menu", "image", "quickReplies","form"]).default("text"),
+  messageType: z.enum(["text", "card", "menu", "image", "quickReplies", "form"]).default("text"),
   createdAt: z.string(),
   metadata: z.object({
     title: z.string().optional(),

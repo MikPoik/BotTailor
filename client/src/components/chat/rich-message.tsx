@@ -129,53 +129,6 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     );
   }
 
-  if (messageType === 'table' && metadata?.table) {
-    return (
-      <div className="bg-white rounded-lg rounded-tl-none shadow-sm border overflow-hidden">
-        <div className="p-4">
-          {metadata.title && (
-            <h4 className="font-semibold text-neutral-800 mb-3">{metadata.title}</h4>
-          )}
-
-          {content && (
-            <p 
-              className="text-neutral-600 mb-4" 
-              dangerouslySetInnerHTML={{ __html: parseMarkdown(content) }}
-            />
-          )}
-
-          <div className="overflow-x-auto">
-            <Table>
-              {metadata.table.caption && (
-                <TableCaption>{metadata.table.caption}</TableCaption>
-              )}
-              <TableHeader>
-                <TableRow>
-                  {metadata.table.headers.map((header, index) => (
-                    <TableHead key={index} className="font-semibold">
-                      {header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {metadata.table.rows.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {row.map((cell, cellIndex) => (
-                      <TableCell key={cellIndex} className="text-neutral-800">
-                        {cell}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (messageType === 'form' && metadata?.formFields) {
     return (
       <div className="bg-white rounded-lg rounded-tl-none shadow-sm border overflow-hidden">
