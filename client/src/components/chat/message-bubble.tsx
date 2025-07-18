@@ -4,6 +4,19 @@ import { Button } from "@/components/ui/button";
 import RichMessage from "./rich-message";
 import StreamingMessage from "./streaming-message";
 
+// Simple Markdown parser for basic formatting
+function parseMarkdown(text: string): string {
+  return text
+    // Bold text: **text** or __text__
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    // Italic text: *text* or _text_
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    // Line breaks
+    .replace(/\n/g, '<br />');
+}
+
 interface MessageBubbleProps {
   message: Message;
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
@@ -20,7 +33,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
       <div className="flex justify-end animate-fadeIn">
         <div className="max-w-xs">
           <div className="chat-message-user">
-            <p>{message.content}</p>
+            <p dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
           </div>
           {!message.metadata?.isFollowUp && (<span className="text-xs text-neutral-500 mt-1 block text-right">
             {timeAgo}
@@ -53,7 +66,10 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
           />
         ) : message.messageType === 'text' ? (
           <div className="chat-message-bot">
-            <p className="text-neutral-800">{message.content}</p>
+            <p 
+              className="text-neutral-800" 
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }}
+            />
           </div>
         ) : (
           <RichMessage 

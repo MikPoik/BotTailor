@@ -2,6 +2,25 @@ import { Message } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 
+// Function to parse Markdown to HTML
+function parseMarkdown(text: string): string {
+  let html = text;
+
+  // Bold text
+  html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+  // Italic text
+  html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+
+  // Links
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+
+  // Line breaks
+  html = html.replace(/\n/g, '<br />');
+
+  return html;
+}
+
 interface RichMessageProps {
   message: Message;
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
@@ -119,7 +138,10 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
           )}
 
           {content && (
-            <p className="text-neutral-600 mb-4">{content}</p>
+            <p 
+              className="text-neutral-600 mb-4" 
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(content) }}
+            />
           )}
 
           <div className="overflow-x-auto">
@@ -163,7 +185,10 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
           )}
 
           {content && (
-            <p className="text-neutral-600 mb-4">{content}</p>
+            <p 
+              className="text-neutral-600 mb-4" 
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(content) }}
+            />
           )}
 
           <form className="space-y-4">
