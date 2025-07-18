@@ -587,6 +587,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: msg.content || `Previous options were presented to user`
             };
           }
+          
+          // For menu messages, include the full JSON structure for AI context
+          if (msg.messageType === 'menu' && msg.metadata) {
+            const menuContent = {
+              messageType: 'menu',
+              content: msg.content || '',
+              metadata: msg.metadata
+            };
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: JSON.stringify(menuContent)
+            };
+          }
+          
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
             content: msg.content || `[${msg.messageType} message]`
@@ -726,6 +740,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: msg.content || `Previous options were presented to user`
             };
           }
+          
+          // For menu messages, include the full JSON structure for AI context
+          if (msg.messageType === 'menu' && msg.metadata) {
+            const menuContent = {
+              messageType: 'menu',
+              content: msg.content || '',
+              metadata: msg.metadata
+            };
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: JSON.stringify(menuContent)
+            };
+          }
+          
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
             content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
@@ -1154,10 +1182,25 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
     const conversationHistory = recentMessages
       .slice(-5) // Last 5 messages for context
       .filter(msg => msg.content !== null && msg.content !== undefined) // Filter out null/undefined content
-      .map(msg => ({
-        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-        content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
-      }));
+      .map(msg => {
+        // For menu messages, include the full JSON structure for AI context
+        if (msg.messageType === 'menu' && msg.metadata) {
+          const menuContent = {
+            messageType: 'menu',
+            content: msg.content || '',
+            metadata: msg.metadata
+          };
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: JSON.stringify(menuContent)
+          };
+        }
+        
+        return {
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
+        };
+      });
 
     // Generate structured response using OpenAI
     const aiResponse = await generateStructuredResponse(userMessage, sessionId, conversationHistory);
@@ -1192,10 +1235,25 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
     const conversationHistory = recentMessages
       .slice(-5) // Last 5 messages for context
       .filter(msg => msg.content !== null && msg.content !== undefined) // Filter out null/undefined content
-      .map(msg => ({
-        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-        content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
-      }));
+      .map(msg => {
+        // For menu messages, include the full JSON structure for AI context
+        if (msg.messageType === 'menu' && msg.metadata) {
+          const menuContent = {
+            messageType: 'menu',
+            content: msg.content || '',
+            metadata: msg.metadata
+          };
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: JSON.stringify(menuContent)
+          };
+        }
+        
+        return {
+          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
+        };
+      });
 
     // Generate structured response using OpenAI
     const aiResponse = await generateOptionResponse(optionId, payload, sessionId, conversationHistory);

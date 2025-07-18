@@ -6,6 +6,13 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 18, 2025**: Enhanced Menu Message Context for AI Memory:
+  - Updated conversation history handling to include full JSON structure for menu messages
+  - AI now receives complete menu options with metadata when processing follow-up responses
+  - Improved context retention by replacing `[menu message]` placeholders with actual menu content
+  - Enhanced AI's ability to reference previous options and maintain conversation flow
+  - Applied changes to all conversation history mappings: streaming messages, option selection, and bot response functions
+
 - **July 16, 2025**: Successfully Implemented pgvector Vector Similarity Search:
   - **COMPLETED**: Full pgvector integration with OpenAI embeddings for semantic content search
   - Fixed vector storage format using proper SQL casting (`::vector`) for PostgreSQL pgvector extension
