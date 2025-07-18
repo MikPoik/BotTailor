@@ -537,6 +537,23 @@ export async function* generateStreamingResponse(
 
       const validated = AIResponseSchema.parse(finalParseResult);
 
+      // Store options context for potential future reference
+      const optionsContext = extractOptionsFromBubbles(validated.bubbles);
+      if (optionsContext) {
+        // Save the options context to storage for this session
+        try {
+          await storage.createMessage({
+            sessionId,
+            content: `[SYSTEM] ${optionsContext}`,
+            sender: "assistant",
+            messageType: "system",
+            metadata: { isSystemMessage: true, optionsContext: true }
+          });
+        } catch (error) {
+          console.warn("[OpenAI] Failed to store options context:", error);
+        }
+      }
+
       // Yield any remaining bubbles that weren't processed during streaming
       for (let i = processedBubbles; i < validated.bubbles.length; i++) {
         const bubble = validated.bubbles[i];
@@ -610,4 +627,20 @@ export async function generateOptionResponse(
     conversationHistory,
     chatbotConfig,
   );
+}
+
+// Helper function to extract options context from bubbles
+function extractOptionsFromBubbles(bubbles: any[]): string | null {
+  let optionsContext = "";
+
+  for (const bubble of bubbles) {
+    if (bubble.messageType === "menu" && bubble.metadata?.options && Array.isArray(bubble.metadata.options)) {
+      const options = bubble.metadata.options
+        .map(option => `${option.text} (${option.id})`)
+        .join(", ");
+      optionsContext += `Available options: ${options}. `;
+    }
+  }
+
+  return optionsContext.length > 0 ? optionsContext : null;
 }

@@ -36,7 +36,7 @@ const TableSchema = z.object({
 
 // Define individual message bubble schema
 const MessageBubbleSchema = z.object({
-  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form', 'table']),
+  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form', 'table', 'system']),
   content: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -48,6 +48,9 @@ const MessageBubbleSchema = z.object({
     formFields: z.array(FormFieldSchema).optional(),
     submitButton: ButtonSchema.optional(),
     table: TableSchema.optional(),
+    isSystemMessage: z.boolean().optional(),
+    optionsContext: z.boolean().optional(),
+    isFollowUp: z.boolean().optional(),
   }).optional(),
 });
 

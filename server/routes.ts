@@ -576,13 +576,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       })}\n\n`);
 
       // Get conversation history for context
-      const recentMessages = await storage.getRecentMessages(sessionId, 10);
+      const recentMessages = await storage.getRecentMessages(sessionId, 15);
       const conversationHistory = recentMessages
         .filter(msg => msg.id !== userMessage.id) // Exclude the message we just created
-        .map(msg => ({
-          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-          content: msg.content
-        }));
+        .map(msg => {
+          // Include system messages with options context but make them assistant messages
+          if (msg.messageType === 'system' && msg.metadata?.optionsContext) {
+            return {
+              role: 'assistant' as const,
+              content: msg.content || `Previous options were presented to user`
+            };
+          }
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: msg.content || `[${msg.messageType} message]`
+          };
+        });
 
       // Get chatbot configuration for this session (prefer the one from request, then session)
       let chatbotConfig = null;
@@ -705,14 +714,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Get conversation history for context
-      const recentMessages = await storage.getRecentMessages(sessionId, 10);
+      const recentMessages = await storage.getRecentMessages(sessionId, 15);
       const conversationHistory = recentMessages
-        .slice(-5) // Last 5 messages for context
+        .slice(-8) // Last 8 messages for context (including system messages)
         .filter(msg => msg.content !== null && msg.content !== undefined) // Filter out null/undefined content
-        .map(msg => ({
-          role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
-          content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
-        }));
+        .map(msg => {
+          // Include system messages with options context but make them assistant messages
+          if (msg.messageType === 'system' && msg.metadata?.optionsContext) {
+            return {
+              role: 'assistant' as const,
+              content: msg.content || `Previous options were presented to user`
+            };
+          }
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
+          };
+        });
 
       // Generate response for the option selection
       const response = await generateOptionResponse(optionId, payload, sessionId, conversationHistory);

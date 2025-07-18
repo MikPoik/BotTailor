@@ -37,7 +37,8 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     enabled: !!sessionId && !!session,
   });
 
-  const messages: Message[] = messagesData?.messages || [];
+  const messages: Message[] = (messagesData?.messages || [])
+    .filter((msg: Message) => msg.messageType !== 'system'); // Filter out system messages from UI
 
   // Streaming message function with real-time bubble parsing
   const sendStreamingMessage = async (

@@ -137,12 +137,12 @@ export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
   chatbotConfigId: true,
 });
 
-export const insertMessageSchema = createInsertSchema(messages).pick({
-  sessionId: true,
-  content: true,
-  sender: true,
-  messageType: true,
-  metadata: true,
+export const insertMessageSchema = z.object({
+  sessionId: z.string(),
+  content: z.string(),
+  sender: z.enum(["user", "bot", "assistant"]),
+  messageType: z.enum(["text", "image", "audio", "video", "file", "card", "menu", "quickReplies", "form", "table", "system"]).default("text"),
+  metadata: z.record(z.any()).default({}),
 });
 
 // Website sources schemas
