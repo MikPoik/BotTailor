@@ -138,16 +138,23 @@ export default function HomeTab({
 
     const handleActionClick = (action: any) => {
       console.log("Action:", action);
+      // Always include action description as payload
+      const payload = {
+        action: action.action,
+        description: action.description,
+        title: action.title
+      };
+
       // Handle different action types
       if (action.action === "start_chat") {
-        onStartChat(action.title);
+        onStartChat(action.title, payload);
       } else if (action.action === "explore_services") {
-        onStartChat(action.title, `${action.title.toLowerCase()}`);
+        onStartChat(action.title, payload);
       } else if (action.action === "book_appointment") {
-        onStartChat(action.title, `${action.description}`);
+        onStartChat(action.title, payload);
       } else {
-        // Default: treat any action as a chat starter
-        onStartChat(action.title, action.description);
+        // Default: treat any action as a chat starter with payload
+        onStartChat(action.title, payload);
       }
     };
 
