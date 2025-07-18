@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema, insertWebsiteSourceSchema, type WebsiteSource, chatSessions } from "@shared/schema";
+import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema, insertWebsiteSourceSchema, type WebsiteSource, chatSessions, insertSurveySchema, SurveyConfigSchema, type Survey } from "@shared/schema";
 import { z } from "zod";
 import { generateStructuredResponse, generateOptionResponse, generateStreamingResponse } from "./openai-service";
 import { generateHomeScreenConfig, modifyHomeScreenConfig, getDefaultHomeScreenConfig } from "./ui-designer-service";
@@ -1053,6 +1053,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error counting conversations:", error);
       res.status(500).json({ message: "Failed to count conversations" });
+    }
+  });
+
+  // Survey API routes
+  app.get('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const chatbotId = parseInt(req.params.chatbotId);
+      
+      // Verify user owns this chatbot
+      const chatbot = await storage.getChatbotConfig(chatbotId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const surveys = await storage.getSurveys(chatbotId);
+      res.json(surveys);
+    } catch (error) {
+      console.error("Error getting surveys:", error);
+      res.status(500).json({ message: "Failed to get surveys" });
+    }
+  });
+
+  app.post('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const chatbotId = parseInt(req.params.chatbotId);
+      
+      // Verify user owns this chatbot
+      const chatbot = await storage.getChatbotConfig(chatbotId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const { name, description, surveyConfig, status } = req.body;
+      
+      // Validate survey config
+      const validatedConfig = SurveyConfigSchema.parse(surveyConfig);
+      
+      const surveyData = insertSurveySchema.parse({
+        chatbotConfigId: chatbotId,
+        name,
+        description,
+        surveyConfig: validatedConfig,
+        status: status || 'draft'
+      });
+      
+      const survey = await storage.createSurvey(surveyData);
+      res.json(survey);
+    } catch (error) {
+      console.error("Error creating survey:", error);
+      if (error.issues) {
+        return res.status(400).json({ message: "Invalid survey data", errors: error.issues });
+      }
+      res.status(500).json({ message: "Failed to create survey" });
+    }
+  });
+
+  app.get('/api/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const surveyId = parseInt(req.params.surveyId);
+      
+      const survey = await storage.getSurvey(surveyId);
+      if (!survey) {
+        return res.status(404).json({ message: "Survey not found" });
+      }
+      
+      // Verify user owns the chatbot this survey belongs to
+      const chatbot = await storage.getChatbotConfig(survey.chatbotConfigId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json(survey);
+    } catch (error) {
+      console.error("Error getting survey:", error);
+      res.status(500).json({ message: "Failed to get survey" });
+    }
+  });
+
+  app.patch('/api/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const surveyId = parseInt(req.params.surveyId);
+      
+      const survey = await storage.getSurvey(surveyId);
+      if (!survey) {
+        return res.status(404).json({ message: "Survey not found" });
+      }
+      
+      // Verify user owns the chatbot this survey belongs to
+      const chatbot = await storage.getChatbotConfig(survey.chatbotConfigId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const { name, description, surveyConfig, status } = req.body;
+      
+      const updateData: Partial<Survey> = {};
+      if (name !== undefined) updateData.name = name;
+      if (description !== undefined) updateData.description = description;
+      if (status !== undefined) updateData.status = status;
+      
+      if (surveyConfig !== undefined) {
+        updateData.surveyConfig = SurveyConfigSchema.parse(surveyConfig);
+      }
+      
+      const updatedSurvey = await storage.updateSurvey(surveyId, updateData);
+      res.json(updatedSurvey);
+    } catch (error) {
+      console.error("Error updating survey:", error);
+      if (error.issues) {
+        return res.status(400).json({ message: "Invalid survey data", errors: error.issues });
+      }
+      res.status(500).json({ message: "Failed to update survey" });
+    }
+  });
+
+  app.delete('/api/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const surveyId = parseInt(req.params.surveyId);
+      
+      const survey = await storage.getSurvey(surveyId);
+      if (!survey) {
+        return res.status(404).json({ message: "Survey not found" });
+      }
+      
+      // Verify user owns the chatbot this survey belongs to
+      const chatbot = await storage.getChatbotConfig(survey.chatbotConfigId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      await storage.deleteSurvey(surveyId);
+      res.json({ message: "Survey deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting survey:", error);
+      res.status(500).json({ message: "Failed to delete survey" });
     }
   });
 

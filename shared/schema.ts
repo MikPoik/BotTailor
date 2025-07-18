@@ -106,6 +106,31 @@ export const websiteContent = pgTable("website_content", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Survey Configuration table for storing survey definitions
+export const surveys = pgTable("surveys", {
+  id: serial("id").primaryKey(),
+  chatbotConfigId: integer("chatbot_config_id").notNull().references(() => chatbotConfigs.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  surveyConfig: jsonb("survey_config").notNull(), // Survey structure with questions and flow
+  status: text("status").notNull().default("draft"), // 'draft' | 'active' | 'archived'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Survey Sessions table for tracking user progress through surveys
+export const surveySessions = pgTable("survey_sessions", {
+  id: serial("id").primaryKey(),
+  surveyId: integer("survey_id").notNull().references(() => surveys.id),
+  sessionId: text("session_id").notNull().references(() => chatSessions.sessionId),
+  userId: varchar("user_id").references(() => users.id),
+  currentQuestionIndex: integer("current_question_index").default(0),
+  responses: jsonb("responses").default({}), // Stores all user responses
+  status: text("status").notNull().default("active"), // 'active' | 'completed' | 'abandoned'
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
 // Replit Auth user upsert schema
 export const upsertUserSchema = createInsertSchema(users).pick({
   id: true,
@@ -176,6 +201,30 @@ export type WebsiteSource = typeof websiteSources.$inferSelect;
 export type InsertWebsiteSource = z.infer<typeof insertWebsiteSourceSchema>;
 export type WebsiteContent = typeof websiteContent.$inferSelect;
 export type InsertWebsiteContent = z.infer<typeof insertWebsiteContentSchema>;
+
+// Survey schemas
+export const insertSurveySchema = createInsertSchema(surveys).pick({
+  chatbotConfigId: true,
+  name: true,
+  description: true,
+  surveyConfig: true,
+  status: true,
+});
+
+export const insertSurveySessionSchema = createInsertSchema(surveySessions).pick({
+  surveyId: true,
+  sessionId: true,
+  userId: true,
+  currentQuestionIndex: true,
+  responses: true,
+  status: true,
+});
+
+// Survey types
+export type Survey = typeof surveys.$inferSelect;
+export type InsertSurvey = z.infer<typeof insertSurveySchema>;
+export type SurveySession = typeof surveySessions.$inferSelect;
+export type InsertSurveySession = z.infer<typeof insertSurveySessionSchema>;
 
 // Rich message types
 export const RichMessageSchema = z.object({
@@ -270,6 +319,47 @@ export const HomeScreenConfigSchema = z.object({
 
 export type HomeScreenComponent = z.infer<typeof HomeScreenComponentSchema>;
 export type HomeScreenConfig = z.infer<typeof HomeScreenConfigSchema>;
+
+// Survey Configuration schemas
+export const SurveyQuestionSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  type: z.enum(['single_choice', 'multiple_choice', 'text', 'rating', 'conditional']),
+  options: z.array(z.object({
+    id: z.string(),
+    text: z.string(),
+    followUp: z.string().optional(), // Next question ID for conditional flow
+    value: z.any().optional(),
+  })).optional(),
+  required: z.boolean().default(true),
+  metadata: z.object({
+    aiInstructions: z.string().optional(),
+    validationRules: z.array(z.string()).optional(),
+    skipLogic: z.object({
+      condition: z.string(),
+      skipTo: z.string(),
+    }).optional(),
+  }).optional(),
+});
+
+export const SurveyConfigSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  questions: z.array(SurveyQuestionSchema),
+  conditionalFlow: z.boolean().default(false),
+  completionMessage: z.string().optional(),
+  aiInstructions: z.string().optional(),
+  settings: z.object({
+    allowBackNavigation: z.boolean().default(true),
+    showProgress: z.boolean().default(true),
+    savePartialResponses: z.boolean().default(true),
+    timeoutMinutes: z.number().optional(),
+  }).optional(),
+});
+
+export type SurveyQuestion = z.infer<typeof SurveyQuestionSchema>;
+export type SurveyConfig = z.infer<typeof SurveyConfigSchema>;
 
 export const messageSchema = z.object({
   id: z.number(),

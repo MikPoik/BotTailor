@@ -5,6 +5,8 @@ import {
   chatbotConfigs,
   websiteSources,
   websiteContent,
+  surveys,
+  surveySessions,
   type User, 
   type UpsertUser,
   type ChatSession,
@@ -17,6 +19,10 @@ import {
   type InsertWebsiteSource,
   type WebsiteContent,
   type InsertWebsiteContent,
+  type Survey,
+  type InsertSurvey,
+  type SurveySession,
+  type InsertSurveySession,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, sql, asc } from "drizzle-orm";
@@ -54,6 +60,19 @@ export interface IStorage {
   getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]>;
   createWebsiteContent(content: InsertWebsiteContent, embeddingArray: number[]): Promise<WebsiteContent>;
   searchSimilarContent(chatbotConfigId: number, query: string, limit?: number): Promise<WebsiteContent[]>;
+  
+  // Survey methods
+  getSurveys(chatbotConfigId: number): Promise<Survey[]>;
+  getSurvey(id: number): Promise<Survey | undefined>;
+  createSurvey(surveyData: InsertSurvey): Promise<Survey>;
+  updateSurvey(id: number, data: Partial<Survey>): Promise<Survey | undefined>;
+  deleteSurvey(id: number): Promise<void>;
+  
+  // Survey session methods
+  getSurveySession(surveyId: number, sessionId: string): Promise<SurveySession | undefined>;
+  createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession>;
+  updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined>;
+  getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -274,6 +293,72 @@ export class DatabaseStorage implements IStorage {
       createdAt: row.created_at as Date,
     }));
   }
+
+  // Survey methods
+  async getSurveys(chatbotConfigId: number): Promise<Survey[]> {
+    return await db.select().from(surveys)
+      .where(eq(surveys.chatbotConfigId, chatbotConfigId))
+      .orderBy(asc(surveys.createdAt));
+  }
+
+  async getSurvey(id: number): Promise<Survey | undefined> {
+    const [survey] = await db.select().from(surveys).where(eq(surveys.id, id));
+    return survey || undefined;
+  }
+
+  async createSurvey(surveyData: InsertSurvey): Promise<Survey> {
+    const [survey] = await db
+      .insert(surveys)
+      .values(surveyData)
+      .returning();
+    return survey;
+  }
+
+  async updateSurvey(id: number, data: Partial<Survey>): Promise<Survey | undefined> {
+    const [survey] = await db
+      .update(surveys)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(surveys.id, id))
+      .returning();
+    return survey || undefined;
+  }
+
+  async deleteSurvey(id: number): Promise<void> {
+    // First delete all survey sessions for this survey
+    await db.delete(surveySessions).where(eq(surveySessions.surveyId, id));
+    // Then delete the survey
+    await db.delete(surveys).where(eq(surveys.id, id));
+  }
+
+  // Survey session methods
+  async getSurveySession(surveyId: number, sessionId: string): Promise<SurveySession | undefined> {
+    const [session] = await db.select().from(surveySessions)
+      .where(and(eq(surveySessions.surveyId, surveyId), eq(surveySessions.sessionId, sessionId)));
+    return session || undefined;
+  }
+
+  async createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession> {
+    const [session] = await db
+      .insert(surveySessions)
+      .values(sessionData)
+      .returning();
+    return session;
+  }
+
+  async updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined> {
+    const [session] = await db
+      .update(surveySessions)
+      .set(data)
+      .where(eq(surveySessions.id, id))
+      .returning();
+    return session || undefined;
+  }
+
+  async getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined> {
+    const [session] = await db.select().from(surveySessions)
+      .where(eq(surveySessions.sessionId, sessionId));
+    return session || undefined;
+  }
 }
 
 export const storage = new DatabaseStorage();
@@ -296,7 +381,8 @@ export class ChatService {
       sessionId,
       content: message,
       sender: 'user',
-      messageType: 'text'
+      messageType: 'text',
+      metadata: {}
     });
 
     // Generate bot response
@@ -310,7 +396,8 @@ export class ChatService {
       sessionId,
       content: botResponse.content,
       sender: 'bot',
-      messageType: 'text'
+      messageType: 'text',
+      metadata: {}
     });
 
     return botResponse;

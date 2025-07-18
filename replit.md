@@ -6,6 +6,18 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 18, 2025**: Implemented Survey System Phase 1 - Survey Builder:
+  - **COMPLETED**: Added comprehensive survey system foundation with database schema and API
+  - Created new database tables: `surveys` (survey definitions) and `survey_sessions` (user progress tracking)
+  - Implemented PostgreSQL survey configuration storage using JSON fields for flexible survey structures
+  - Built comprehensive survey builder interface with tabbed UI for questions, settings, and preview
+  - Added full CRUD API endpoints for survey management with proper authentication and ownership verification
+  - Created survey schema with support for single/multiple choice, text input, rating, and conditional flow
+  - Added survey builder link to dashboard with BarChart3 icon for easy access
+  - Integrated survey routing in App.tsx with proper URL structure: `/chatbots/:chatbotId/surveys`
+  - **READY FOR TESTING**: Survey builder UI allows creating, editing, and managing surveys with question types and options
+  - **NEXT PHASES**: Home screen integration, AI context injection, and survey session management
+
 - **July 18, 2025**: Enhanced Message Context and Survey Flow Consistency:
   - **FIXED**: Simplified all interactive message representation in conversation history from complex JSON to clean summaries
   - **IMPROVED**: AI now receives digestible formats for all message types:

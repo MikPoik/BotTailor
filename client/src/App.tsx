@@ -16,6 +16,7 @@ import ChatbotEdit from "@/pages/chatbot-edit";
 import ChatbotTest from "@/pages/chatbot-test";
 import UIDesigner from "@/pages/ui-designer";
 import AddData from "@/pages/add-data";
+import SurveyBuilder from "@/pages/survey-builder";
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
@@ -59,6 +60,7 @@ function AuthenticatedRouter() {
           <Route path="/chatbots/:guid/add-data" component={AddData} />
           <Route path="/chatbots/:guid/test" component={ChatbotTest} />
           <Route path="/chatbots/:guid/ui-designer" component={UIDesigner} />
+          <Route path="/chatbots/:chatbotId/surveys" component={SurveyBuilder} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
           <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
