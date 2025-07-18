@@ -295,7 +295,7 @@ export async function* generateStreamingResponse(
       ...conversationHistory,
       { role: "user" as const, content: userMessage },
     ];
-    //console.log(`[OpenAI] Conversation history: ${JSON.stringify(messages.map(msg => ({ role: msg.role, content: msg.content })))}`);
+    console.log(`[OpenAI] Conversation history: ${JSON.stringify(messages.map(msg => ({ role: msg.role, content: msg.content })))}`);
     const stream = await openai.chat.completions.create({
       model,
       messages,
