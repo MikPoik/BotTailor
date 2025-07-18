@@ -650,7 +650,7 @@ export async function generateOptionResponse(
   chatbotConfig?: any,
 ): Promise<AIResponse> {
   const contextMessage = `User selected option "${optionId}"` +
-    (payload !== undefined ? ` with payload: ${JSON.stringify(payload)}` : '') +
+    (payload !== undefined && payload !== null ? ` with payload: ${JSON.stringify(payload)}` : '') +
     ". Provide a helpful response.";
   return generateMultiBubbleResponse(
     contextMessage,

@@ -6,15 +6,20 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
-- **July 18, 2025**: Enhanced Menu Message Context and Survey Flow Consistency:
-  - **FIXED**: Simplified menu message representation in conversation history from complex JSON to clean summaries
-  - **IMPROVED**: AI now receives digestible format like "[MENU] Presented options: option1, option2, option3" instead of verbose JSON
+- **July 18, 2025**: Enhanced Message Context and Survey Flow Consistency:
+  - **FIXED**: Simplified all interactive message representation in conversation history from complex JSON to clean summaries
+  - **IMPROVED**: AI now receives digestible formats for all message types:
+    - Menu: "[MENU] Presented options: option1, option2, option3"
+    - Quick Replies: "[QUICKREPLIES] Suggested replies: reply1, reply2"
+    - Forms: "[FORM] Contact form with fields: name, email, message"
+    - Cards: "[CARD] Card Title"
   - **ENHANCED**: Added explicit survey consistency rules requiring every question to include menu options
   - **RESOLVED**: Menu consistency issues in multi-step surveys and questionnaires
+  - **CLEANED**: Removed "payload: undefined" from option selection messages for cleaner AI context
   - Applied changes to all conversation history mappings: streaming messages, option selection, and bot response functions
   - Added robust error handling with response salvage mechanism for schema validation failures
   - Enhanced system prompt with explicit requirements for bubbles array structure and survey flow rules
-  - **PRODUCTION READY**: Survey chatbots now maintain consistent menu presentation throughout conversation flow
+  - **PRODUCTION READY**: Survey chatbots now maintain consistent interactive message presentation throughout conversation flow
 
 - **July 16, 2025**: Successfully Implemented pgvector Vector Similarity Search:
   - **COMPLETED**: Full pgvector integration with OpenAI embeddings for semantic content search

@@ -598,6 +598,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           }
           
+          // For other interactive message types, provide friendly summaries
+          if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
+            const replies = msg.metadata.quickReplies.join(', ');
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: `[QUICKREPLIES] Suggested replies: ${replies}`
+            };
+          }
+          
+          if (msg.messageType === 'form' && msg.metadata?.formFields) {
+            const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: `[FORM] Contact form with fields: ${fields}`
+            };
+          }
+          
+          if (msg.messageType === 'card' && msg.metadata) {
+            const cardInfo = msg.metadata.title || 'Card';
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: `[CARD] ${cardInfo}`
+            };
+          }
+          
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
             content: msg.content || `[${msg.messageType} message]`
@@ -745,6 +770,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return {
               role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
               content: menuSummary
+            };
+          }
+          
+          // For other interactive message types, provide friendly summaries
+          if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
+            const replies = msg.metadata.quickReplies.join(', ');
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: `[QUICKREPLIES] Suggested replies: ${replies}`
+            };
+          }
+          
+          if (msg.messageType === 'form' && msg.metadata?.formFields) {
+            const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: `[FORM] Contact form with fields: ${fields}`
+            };
+          }
+          
+          if (msg.messageType === 'card' && msg.metadata) {
+            const cardInfo = msg.metadata.title || 'Card';
+            return {
+              role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+              content: `[CARD] ${cardInfo}`
             };
           }
           
@@ -1187,6 +1237,31 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
           };
         }
         
+        // For other interactive message types, provide friendly summaries
+        if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
+          const replies = msg.metadata.quickReplies.join(', ');
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: `[QUICKREPLIES] Suggested replies: ${replies}`
+          };
+        }
+        
+        if (msg.messageType === 'form' && msg.metadata?.formFields) {
+          const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: `[FORM] Contact form with fields: ${fields}`
+          };
+        }
+        
+        if (msg.messageType === 'card' && msg.metadata) {
+          const cardInfo = msg.metadata.title || 'Card';
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: `[CARD] ${cardInfo}`
+          };
+        }
+        
         return {
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
           content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
@@ -1234,6 +1309,31 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
             content: menuSummary
+          };
+        }
+        
+        // For other interactive message types, provide friendly summaries
+        if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
+          const replies = msg.metadata.quickReplies.join(', ');
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: `[QUICKREPLIES] Suggested replies: ${replies}`
+          };
+        }
+        
+        if (msg.messageType === 'form' && msg.metadata?.formFields) {
+          const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: `[FORM] Contact form with fields: ${fields}`
+          };
+        }
+        
+        if (msg.messageType === 'card' && msg.metadata) {
+          const cardInfo = msg.metadata.title || 'Card';
+          return {
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            content: `[CARD] ${cardInfo}`
           };
         }
         
