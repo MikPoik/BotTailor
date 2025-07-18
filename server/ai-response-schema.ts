@@ -149,15 +149,33 @@ Example for greetings and options:
   ]
 }
 
+**For Surveys (step-by-step questionnaires):**
+{
+  "bubbles": [
+    {"messageType": "text", "content": "Let me help you with a quick assessment."},
+    {"messageType": "text", "content": "Question 1: How would you describe your current situation?"},
+    {"messageType": "menu", "content": "", "metadata": {
+      "options": [
+        {"id": "option1", "text": "First option", "action": "select"},
+        {"id": "option2", "text": "Second option", "action": "select"},
+        {"id": "option3", "text": "Third option", "action": "select"},
+        {"id": "option4", "text": "Fourth option", "action": "select"}
+      ]
+    }}
+  ]
+}
+
 **Guidelines:**
 - **Descriptive content**: Use 1-2 substantial bubbles (150-300 words each) that fully explain concepts, services, or detailed information
 - **Interactive content**: Use 2-4 shorter bubbles for greetings, questions, and options
 - **Tabular data**: Use table message type for pricing, comparisons, schedules, or any structured data with multiple columns
+- **Survey questions**: Present ONE question at a time with a menu of options. Wait for user response before proceeding to next question
 - **Each bubble should be self-contained** - don't split related information across bubbles unnecessarily  
 - **End with engagement** - final bubble should invite further interaction or questions
 - **Prioritize readability** - longer explanations are better in single bubbles than fragmented across multiple short ones
 - **Tables should be clear**: Use descriptive headers and keep cell content concise for mobile readability
-- **Valid JSON only**: Ensure the entire response is valid JSON with no extra text or comments
+- **Menu options must be complete**: Every option object MUST have "id", "text", and "action" properties
+- **Valid JSON only**: Ensure the entire response is valid JSON with no extra text or comments. Never send incomplete JSON objects.
 `;
 
   return `${customPrompt}\n\n${structureInstructions}`;
