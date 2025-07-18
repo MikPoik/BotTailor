@@ -423,106 +423,58 @@ export async function* generateStreamingResponse(
 
         // Use best-effort parser to extract any complete bubbles from incomplete JSON
         try {
-          const parseResult = parse(accumulatedContent);
-          //console.log(`[OpenAI] Parse result: ${JSON.stringify(parseResult)}`);
-          //console.log(`[OpenAI] Data: ${JSON.stringify(parseResult.bubbles)}`)
-          if (
-            parseResult.bubbles &&
-            Array.isArray(parseResult.bubbles) &&
-            jsonEnded
-          ) {
-            const bubbles = parseResult.bubbles;
+          // Clean the content before parsing
+          let cleanContent = accumulatedContent.trim();
+          if (cleanContent.startsWith('```json')) {
+            cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          }
+          if (cleanContent.startsWith('```')) {
+            cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+          }
 
-            // Check if we have new complete bubbles beyond what we've already processed
-            for (let i = processedBubbles; i < bubbles.length; i++) {
-              const bubble = bubbles[i];
-              console.log(JSON.stringify(bubble));
-              // Check if this bubble is complete (has required fields)
-              if (bubble.messageType && bubble.content !== undefined) {
-                // For menu type, also check if metadata.options is complete
-                const shouldYieldBubble = async () => {
-                  const now = Date.now();
-                  const timeSinceLastBubble = now - lastBubbleTime;
+          // Try to parse the accumulated content to see if we have a complete bubble
+          const currentParseResult = parse(cleanContent);
 
-                  // If this isn't the first bubble and we haven't waited long enough, add delay
-                  if (
-                    processedBubbles > 0 &&
-                    timeSinceLastBubble < BUBBLE_DELAY_MS
-                  ) {
-                    const remainingDelay =
-                      BUBBLE_DELAY_MS - timeSinceLastBubble;
-                    await new Promise((resolve) =>
-                      setTimeout(resolve, remainingDelay),
-                    );
+          if (currentParseResult && currentParseResult.bubbles && Array.isArray(currentParseResult.bubbles)) {
+            const currentBubbles = currentParseResult.bubbles;
+
+            // Check if we have new complete bubbles
+            if (currentBubbles.length > processedBubbles) {
+              for (let i = processedBubbles; i < currentBubbles.length; i++) {
+                const bubble = currentBubbles[i];
+
+                // Validate the bubble has required fields
+                if (bubble && bubble.messageType && bubble.content !== undefined) {
+                  console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType}`);
+
+                  // Apply delay between bubbles for natural conversation flow
+                  if (i > 0) {
+                    await new Promise((resolve) => setTimeout(resolve, BUBBLE_DELAY_MS));
                   }
 
-                  lastBubbleTime = Date.now();
-                  return true;
-                };
+                  yield {
+                    type: "bubble",
+                    bubble: bubble,
+                    content: bubble.content,
+                    messageType: bubble.messageType,
+                    metadata: bubble.metadata || {},
+                  };
 
-                if (bubble.messageType === "menu") {
-                  if (
-                    bubble.metadata?.options &&
-                    Array.isArray(bubble.metadata.options) &&
-                    bubble.metadata.options.length > 0
-                  ) {
-                    // Check if all options have required fields
-                    const allOptionsComplete = bubble.metadata.options.every(
-                      (opt) => opt.id && opt.text && opt.action,
-                    );
-                    if (allOptionsComplete) {
-                      console.log(
-                        `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} options)`,
-                      );
-                      await shouldYieldBubble();
-                      yield { type: "bubble", bubble };
-                      processedBubbles = i + 1;
-                    }
-                  }
-                } else if (bubble.messageType === "form") {
-                  // For form bubbles, ensure all required form fields are complete
-                  if (
-                    bubble.metadata?.formFields &&
-                    Array.isArray(bubble.metadata.formFields) &&
-                    bubble.metadata.formFields.length > 0
-                  ) {
-                    // Check if all form fields have required properties
-                    const allFieldsComplete = bubble.metadata.formFields.every(
-                      (field) => field && field.id && field.label && field.type,
-                    );
-                    if (allFieldsComplete) {
-                      console.log(
-                        `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (form with ${bubble.metadata.formFields.length} fields)`,
-                      );
-                      await shouldYieldBubble();
-                      yield { type: "bubble", bubble };
-                      processedBubbles = i + 1;
-                    }
-                  }
-                } else if (bubble.messageType === "text") {
-                  // For text bubbles, ensure content is not just empty string
-                  if (bubble.content && bubble.content.trim().length > 0) {
-                    console.log(
-                      `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`,
-                    );
-                    await shouldYieldBubble();
-                    yield { type: "bubble", bubble };
-                    processedBubbles = i + 1;
-                  }
+                  processedBubbles++;
                 } else {
-                  // For other types (card, image, quickReplies), just check basic completion
-                  console.log(
-                    `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`,
-                  );
-                  await shouldYieldBubble();
-                  yield { type: "bubble", bubble };
-                  processedBubbles = i + 1;
+                  console.warn(`[OpenAI] Incomplete bubble at index ${i}:`, bubble);
                 }
               }
             }
           }
         } catch (parseError) {
-          // Silently ignore parsing errors during streaming - we'll try again with more content
+          // JSON not complete yet, continue accumulating
+          console.log(`[OpenAI] Partial JSON, continuing... (${accumulatedContent.length} chars)`);
+
+          // If we have too much content without valid JSON, log a warning
+          if (accumulatedContent.length > 5000) {
+            console.warn(`[OpenAI] Accumulated content is very long without valid JSON:`, accumulatedContent.substring(0, 200) + '...');
+          }
         }
       }
     }
