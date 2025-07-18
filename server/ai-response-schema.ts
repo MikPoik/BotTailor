@@ -149,13 +149,6 @@ Example for greetings and options:
   ]
 }
 
-**CRITICAL JSON FORMATTING RULES:**
-- ALWAYS respond with valid JSON only - no markdown, no explanations, no extra text
-- Your response must start with { and end with } 
-- All strings must be properly escaped with double quotes
-- Never include undefined, null, or empty values in required fields
-- Always include the "content" field even if empty (use empty string "")
-
 **Guidelines:**
 - **Descriptive content**: Use 1-2 substantial bubbles (150-300 words each) that fully explain concepts, services, or detailed information
 - **Interactive content**: Use 2-4 shorter bubbles for greetings, questions, and options
@@ -164,12 +157,7 @@ Example for greetings and options:
 - **End with engagement** - final bubble should invite further interaction or questions
 - **Prioritize readability** - longer explanations are better in single bubbles than fragmented across multiple short ones
 - **Tables should be clear**: Use descriptive headers and keep cell content concise for mobile readability
-
-**MENU MESSAGE TYPE REQUIREMENTS:**
-- When using messageType "menu", always include options array in metadata
-- Each option must have: id, text, and action fields
-- content field should describe the menu purpose
-- Example: {"messageType": "menu", "content": "Please choose an option:", "metadata": {"options": [{"id": "opt1", "text": "Option 1", "action": "select"}]}}
+- **Valid JSON only**: Ensure the entire response is valid JSON with no extra text or comments
 `;
 
   return `${customPrompt}\n\n${structureInstructions}`;
