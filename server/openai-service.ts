@@ -207,6 +207,24 @@ export async function generateMultiBubbleResponse(
     return validated;
   } catch (error) {
     console.error("[OpenAI] Error generating response:", error);
+    
+    // Try to salvage if it's a parsing error
+    if (error instanceof SyntaxError && accumulatedContent) {
+      console.log("[OpenAI] Attempting to salvage response from parsing error");
+      try {
+        // Try to parse as single message and wrap in bubbles array
+        const singleMessage = JSON.parse(accumulatedContent);
+        if (singleMessage.messageType && singleMessage.content !== undefined) {
+          console.log("[OpenAI] Successfully salvaged single message response");
+          return {
+            bubbles: [singleMessage]
+          };
+        }
+      } catch (salvageError) {
+        console.log("[OpenAI] Could not salvage response");
+      }
+    }
+    
     // Return fallback response
     return {
       bubbles: [
@@ -557,12 +575,40 @@ export async function* generateStreamingResponse(
     } catch (parseError) {
       console.error("[OpenAI] Error parsing final response:", parseError);
       console.error("[OpenAI] Accumulated content:", accumulatedContent);
-      yield {
-        type: "complete",
-        content:
-          "I apologize, but I'm having trouble generating a response right now. Please try again.",
-        messageType: "text",
+      
+      // Try to salvage the response by wrapping it in bubbles array if it's a valid single message
+      try {
+        const singleMessage = JSON.parse(accumulatedContent);
+        if (singleMessage.messageType && singleMessage.content !== undefined) {
+          console.log("[OpenAI] Attempting to salvage single message response by wrapping in bubbles array");
+          const salvaged = {
+            bubbles: [singleMessage]
+          };
+          const validated = AIResponseSchema.parse(salvaged);
+          
+          for (let i = processedBubbles; i < validated.bubbles.length; i++) {
+            const bubble = validated.bubbles[i];
+            console.log(`[OpenAI] Salvaged bubble ${i + 1}: ${bubble.messageType}`);
+            yield { type: "bubble", bubble };
+          }
+          
+          console.log("[OpenAI] Successfully salvaged response");
+          yield { type: "complete", content: "streaming_complete" };
+          return;
+        }
+      } catch (salvageError) {
+        console.log("[OpenAI] Could not salvage response, using fallback");
+      }
+      
+      // Final fallback
+      const fallbackBubble = {
+        messageType: "text" as const,
+        content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
+        metadata: {}
       };
+      
+      yield { type: "bubble", bubble: fallbackBubble };
+      yield { type: "complete", content: "streaming_complete" };
     }
   } catch (error) {
     console.error("[OpenAI] Error in streaming response:", error);

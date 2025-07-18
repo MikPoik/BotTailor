@@ -146,6 +146,13 @@ Example for greetings and options:
 - **Prioritize readability** - longer explanations are better in single bubbles than fragmented across multiple short ones
 - **Menu options must be complete**: Every option object MUST have "id", "text", and "action" properties
 - **Valid JSON only**: Ensure the entire response is valid JSON with no extra text or comments. Never send incomplete JSON objects.
+
+**CRITICAL: Response Format Requirements:**
+- ALWAYS wrap your response in a "bubbles" array
+- NEVER send a single message object directly  
+- Even for simple single responses, use: {"bubbles": [{"messageType": "text", "content": "your message"}]}
+- Invalid format: {"messageType": "text", "content": "message"}
+- Correct format: {"bubbles": [{"messageType": "text", "content": "message"}]}
 `;
 
   return `${customPrompt}\n\n${structureInstructions}`;
