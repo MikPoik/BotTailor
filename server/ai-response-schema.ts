@@ -129,25 +129,6 @@ Example for greetings and options:
   ]
 }
 
-**For Tables (pricing, comparisons, structured data):**
-{
-  "bubbles": [
-    {"messageType": "text", "content": "Here's our complete pricing structure:"},
-    {"messageType": "table", "content": "", "metadata": {
-      "title": "Service Pricing",
-      "table": {
-        "headers": ["Service Level", "Duration", "Price", "Package Deal"],
-        "rows": [
-          ["Basic", "30 min", "$50", "5 sessions: $225"],
-          ["Standard", "60 min", "$85", "5 sessions: $375"],
-          ["Premium", "90 min", "$120", "5 sessions: $525"],
-          ["Enterprise", "120 min", "$150", "5 sessions: $675"]
-        ],
-        "caption": "All prices include applicable taxes"
-      }
-    }}
-  ]
-}
 
 **For Surveys (step-by-step questionnaires):**
 {
