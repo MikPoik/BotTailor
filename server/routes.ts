@@ -702,6 +702,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`[SURVEY] Detected survey request in message`);
 
+        // Check if message contains specific surveyId
+        const surveyIdMatch = messageData.content.match(/surveyId:\s*(\d+)/);
+        let targetSurveyId = surveyIdMatch ? parseInt(surveyIdMatch[1]) : null;
+        console.log(`[SURVEY] Extracted surveyId from message: ${targetSurveyId}`);
+
         // Get chatbot configuration to find available surveys
         const configId = chatbotConfigId || session?.chatbotConfigId;
         if (configId) {
@@ -716,12 +721,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
               let existingSurveySession = await storage.getSurveySessionBySessionId(sessionId);
 
               if (!existingSurveySession || existingSurveySession.status !== 'active') {
-                // Create new survey session with the first available survey
-                const firstSurvey = availableSurveys[0];
-                console.log(`[SURVEY] Creating survey session for survey: ${firstSurvey.surveyConfig?.title}`);
+                // Find target survey or use first available
+                let targetSurvey;
+                if (targetSurveyId) {
+                  targetSurvey = availableSurveys.find(s => s.id === targetSurveyId);
+                  if (!targetSurvey) {
+                    console.log(`[SURVEY] WARNING: Requested surveyId ${targetSurveyId} not found, using first available`);
+                    targetSurvey = availableSurveys[0];
+                  } else {
+                    console.log(`[SURVEY] Found specific survey requested: ${targetSurvey.surveyConfig?.title}`);
+                  }
+                } else {
+                  targetSurvey = availableSurveys[0];
+                  console.log(`[SURVEY] No specific surveyId requested, using first available: ${targetSurvey.surveyConfig?.title}`);
+                }
+                
+                console.log(`[SURVEY] Creating survey session for survey: ${targetSurvey.surveyConfig?.title}`);
 
                 const newSurveySession = await storage.createSurveySession({
-                  surveyId: firstSurvey.id,
+                  surveyId: targetSurvey.id,
                   sessionId,
                   currentQuestionIndex: 0,
                   responses: {},

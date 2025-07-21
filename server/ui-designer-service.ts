@@ -7,11 +7,12 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // UI Designer system prompt
 function createSystemPrompt(availableSurveys: any[] = []) {
-  const surveyInfo = availableSurveys.length > 0 
-    ? `\n\n## Available Surveys for Integration:\n${availableSurveys.map(s => 
-        `- Survey ID: ${s.id} - "${s.title}" (${s.description})`
-      ).join('\n')}`
-    : '';
+  const surveyInfo =
+    availableSurveys.length > 0
+      ? `\n\n## Available Surveys for Integration:\n${availableSurveys
+          .map((s) => `- Survey ID: ${s.id} - "${s.title}" (${s.description})`)
+          .join("\n")}`
+      : "";
 
   return `You are an expert UI designer that creates home screen configurations for chatbots. You generate JSON configurations that define the layout, components, and styling of chatbot home screens.
 
@@ -74,9 +75,13 @@ When creating survey launchers, use:
 Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No additional text or explanation.
 
 Generate engaging home screen layouts based on the user's requirements.`;
+  console.log(`[UI Designer] System prompt: ${createSystemPrompt()}`);
 }
 
-export async function generateHomeScreenConfig(userPrompt: string, chatbotId?: number): Promise<HomeScreenConfig> {
+export async function generateHomeScreenConfig(
+  userPrompt: string,
+  chatbotId?: number,
+): Promise<HomeScreenConfig> {
   try {
     // Fetch available surveys if chatbotId is provided
     let availableSurveys: any[] = [];
@@ -84,20 +89,22 @@ export async function generateHomeScreenConfig(userPrompt: string, chatbotId?: n
       const { db } = await import("./db");
       const { surveys } = await import("@shared/schema");
       const { eq, and } = await import("drizzle-orm");
-      
+
       const surveyResults = await db
         .select()
         .from(surveys)
-        .where(and(
-          eq(surveys.chatbotConfigId, chatbotId),
-          eq(surveys.status, "active")
-        ));
-      
-      availableSurveys = surveyResults.map(survey => ({
+        .where(
+          and(
+            eq(surveys.chatbotConfigId, chatbotId),
+            eq(surveys.status, "active"),
+          ),
+        );
+
+      availableSurveys = surveyResults.map((survey) => ({
         id: survey.id,
         name: survey.name,
         title: survey.surveyConfig?.title || survey.name,
-        description: survey.description
+        description: survey.description,
       }));
     }
 
@@ -132,10 +139,11 @@ export async function generateHomeScreenConfig(userPrompt: string, chatbotId?: n
           component.props.actions.forEach((action: any) => {
             // Ensure description exists for actions
             if (!action.description) {
-              action.description = action.title || "Click to perform this action";
+              action.description =
+                action.title || "Click to perform this action";
             }
             // Convert surveyId from string to number if present
-            if (action.surveyId && typeof action.surveyId === 'string') {
+            if (action.surveyId && typeof action.surveyId === "string") {
               const numericId = parseInt(action.surveyId, 10);
               if (!isNaN(numericId)) {
                 action.surveyId = numericId;
@@ -158,7 +166,7 @@ export async function generateHomeScreenConfig(userPrompt: string, chatbotId?: n
               topic.category = "general";
             }
             // Convert surveyId from string to number if present
-            if (topic.surveyId && typeof topic.surveyId === 'string') {
+            if (topic.surveyId && typeof topic.surveyId === "string") {
               const numericId = parseInt(topic.surveyId, 10);
               if (!isNaN(numericId)) {
                 topic.surveyId = numericId;
@@ -176,17 +184,21 @@ export async function generateHomeScreenConfig(userPrompt: string, chatbotId?: n
     return validatedConfig;
   } catch (error) {
     console.error("Error generating home screen config:", error);
-    if (error instanceof Error && error.message.includes('ZodError')) {
-      throw new Error(`Schema validation failed. Please ensure all required fields are included in the response.`);
+    if (error instanceof Error && error.message.includes("ZodError")) {
+      throw new Error(
+        `Schema validation failed. Please ensure all required fields are included in the response.`,
+      );
     }
-    throw new Error(`Failed to generate UI layout: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to generate UI layout: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
 export async function modifyHomeScreenConfig(
   currentConfig: HomeScreenConfig,
   modificationPrompt: string,
-  chatbotId?: number
+  chatbotId?: number,
 ): Promise<HomeScreenConfig> {
   try {
     // Fetch available surveys if chatbotId is provided
@@ -195,20 +207,22 @@ export async function modifyHomeScreenConfig(
       const { db } = await import("./db");
       const { surveys } = await import("@shared/schema");
       const { eq, and } = await import("drizzle-orm");
-      
+
       const surveyResults = await db
         .select()
         .from(surveys)
-        .where(and(
-          eq(surveys.chatbotConfigId, chatbotId),
-          eq(surveys.status, "active")
-        ));
-      
-      availableSurveys = surveyResults.map(survey => ({
+        .where(
+          and(
+            eq(surveys.chatbotConfigId, chatbotId),
+            eq(surveys.status, "active"),
+          ),
+        );
+
+      availableSurveys = surveyResults.map((survey) => ({
         id: survey.id,
         name: survey.name,
         title: survey.surveyConfig?.title || survey.name,
-        description: survey.description
+        description: survey.description,
       }));
     }
 
@@ -248,10 +262,11 @@ Return the updated complete configuration.`,
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {
             if (!action.description) {
-              action.description = action.title || "Click to perform this action";
+              action.description =
+                action.title || "Click to perform this action";
             }
             // Convert surveyId from string to number if present
-            if (action.surveyId && typeof action.surveyId === 'string') {
+            if (action.surveyId && typeof action.surveyId === "string") {
               const numericId = parseInt(action.surveyId, 10);
               if (!isNaN(numericId)) {
                 action.surveyId = numericId;
@@ -273,7 +288,7 @@ Return the updated complete configuration.`,
               topic.category = "general";
             }
             // Convert surveyId from string to number if present
-            if (topic.surveyId && typeof topic.surveyId === 'string') {
+            if (topic.surveyId && typeof topic.surveyId === "string") {
               const numericId = parseInt(topic.surveyId, 10);
               if (!isNaN(numericId)) {
                 topic.surveyId = numericId;
@@ -291,10 +306,14 @@ Return the updated complete configuration.`,
     return validatedConfig;
   } catch (error) {
     console.error("Error modifying home screen config:", error);
-    if (error instanceof Error && error.message.includes('ZodError')) {
-      throw new Error(`Schema validation failed. Please ensure all required fields are included in the response.`);
+    if (error instanceof Error && error.message.includes("ZodError")) {
+      throw new Error(
+        `Schema validation failed. Please ensure all required fields are included in the response.`,
+      );
     }
-    throw new Error(`Failed to modify UI layout: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to modify UI layout: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -332,7 +351,8 @@ export function getDefaultHomeScreenConfig(): HomeScreenConfig {
               title: "Product Information",
               description: "Learn about our products and features",
               icon: "MessageCircle",
-              message: "Hi! I would like to learn more about your products and features.",
+              message:
+                "Hi! I would like to learn more about your products and features.",
               category: "sales",
               popular: true,
             },

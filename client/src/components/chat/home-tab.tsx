@@ -141,13 +141,9 @@ export default function HomeTab({
 
       // Handle survey actions specifically
       if (action.action === "take_assessment" || action.actionType === "survey") {
-        const payload = {
-          action: action.action,
-          description: action.description,
-          title: action.title,
-          surveyId: action.surveyId
-        };
-        onStartChat(action.title, payload);
+        // Include surveyId in the message content for backend parsing
+        const surveyMessage = `I'd like to take the ${action.title} assessment (surveyId: ${action.surveyId})`;
+        onStartChat(action.title, surveyMessage);
       } else if (action.action === "start_chat") {
         // For regular chat actions, send as string message
         onStartChat(action.title, action.description);
