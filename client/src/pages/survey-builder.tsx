@@ -50,14 +50,25 @@ export default function SurveyBuilderPage() {
   // Local state for editing fields to prevent constant updates
   const [localSurveyName, setLocalSurveyName] = useState<string>("");
   const [localSurveyDescription, setLocalSurveyDescription] = useState<string>("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
   // Update local state when selectedSurvey changes
   useEffect(() => {
     if (selectedSurvey) {
       setLocalSurveyName(selectedSurvey.name);
       setLocalSurveyDescription(selectedSurvey.description || "");
+      setHasUnsavedChanges(false);
     }
   }, [selectedSurvey]);
+
+  // Track changes to enable save button
+  useEffect(() => {
+    if (selectedSurvey) {
+      const nameChanged = localSurveyName !== selectedSurvey.name;
+      const descChanged = localSurveyDescription !== (selectedSurvey.description || "");
+      setHasUnsavedChanges(nameChanged || descChanged);
+    }
+  }, [localSurveyName, localSurveyDescription, selectedSurvey]);
 
   // Fetch chatbot details
   const { data: chatbot } = useQuery<{ name: string; id: number }>({
@@ -187,6 +198,19 @@ export default function SurveyBuilderPage() {
     updateSurveyMutation.mutate({
       id: surveyId,
       updates: { surveyConfig: updatedConfig },
+    });
+  };
+
+  // Save survey details function
+  const handleSaveSurveyDetails = () => {
+    if (!selectedSurvey) return;
+    
+    updateSurveyMutation.mutate({
+      id: selectedSurvey.id,
+      updates: { 
+        name: localSurveyName,
+        description: localSurveyDescription 
+      },
     });
   };
 
@@ -408,19 +432,7 @@ export default function SurveyBuilderPage() {
                             id="survey-name"
                             value={localSurveyName}
                             onChange={(e) => setLocalSurveyName(e.target.value)}
-                            onBlur={() => {
-                              if (localSurveyName !== selectedSurvey.name) {
-                                updateSurveyMutation.mutate({
-                                  id: selectedSurvey.id,
-                                  updates: { name: localSurveyName },
-                                });
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.currentTarget.blur();
-                              }
-                            }}
+                            placeholder="Enter survey name..."
                           />
                         </div>
                         <div>
@@ -452,17 +464,27 @@ export default function SurveyBuilderPage() {
                           id="survey-description"
                           value={localSurveyDescription}
                           onChange={(e) => setLocalSurveyDescription(e.target.value)}
-                          onBlur={() => {
-                            if (localSurveyDescription !== (selectedSurvey.description || "")) {
-                              updateSurveyMutation.mutate({
-                                id: selectedSurvey.id,
-                                updates: { description: localSurveyDescription },
-                              });
-                            }
-                          }}
                           placeholder="Brief description of the survey..."
                         />
                       </div>
+
+                      {/* Save survey details button */}
+                      {hasUnsavedChanges && (
+                        <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-amber-800">Unsaved Changes</p>
+                            <p className="text-xs text-amber-600">You have unsaved changes to the survey details.</p>
+                          </div>
+                          <Button
+                            onClick={handleSaveSurveyDetails}
+                            disabled={updateSurveyMutation.isPending}
+                            size="sm"
+                          >
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Details
+                          </Button>
+                        </div>
+                      )}
 
                       {/* Questions list */}
                       <div className="space-y-4">
@@ -483,12 +505,6 @@ export default function SurveyBuilderPage() {
                                   <Input
                                     value={localQuestionText[index] !== undefined ? localQuestionText[index] : question.text}
                                     onChange={(e) => handleQuestionTextChange(index, e.target.value)}
-                                    onBlur={() => handleQuestionTextSave(index)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.currentTarget.blur();
-                                      }
-                                    }}
                                     placeholder="Enter question text..."
                                   />
                                 </div>
@@ -550,12 +566,6 @@ export default function SurveyBuilderPage() {
                                           <Input
                                             value={localOptionTexts[optionKey] !== undefined ? localOptionTexts[optionKey] : option.text}
                                             onChange={(e) => handleOptionTextChange(index, optionIndex, e.target.value)}
-                                            onBlur={() => handleOptionTextSave(index, optionIndex)}
-                                            onKeyDown={(e) => {
-                                              if (e.key === 'Enter') {
-                                                e.currentTarget.blur();
-                                              }
-                                            }}
                                             placeholder={`Option ${optionIndex + 1}`}
                                           />
                                           <Button
@@ -588,7 +598,22 @@ export default function SurveyBuilderPage() {
 
                                 <div className="flex items-center gap-2 pt-4 border-t">
                                   <Button
-                                    onClick={() => setEditingQuestion(null)}
+                                    onClick={() => {
+                                      // Save question text if changed
+                                      if (localQuestionText[index] !== undefined) {
+                                        handleQuestionTextSave(index);
+                                      }
+                                      
+                                      // Save all option texts if changed
+                                      question.options?.forEach((_: any, optionIndex: number) => {
+                                        const optionKey = `${index}-${optionIndex}`;
+                                        if (localOptionTexts[optionKey] !== undefined) {
+                                          handleOptionTextSave(index, optionIndex);
+                                        }
+                                      });
+                                      
+                                      setEditingQuestion(null);
+                                    }}
                                     variant="default"
                                     size="sm"
                                   >
@@ -598,7 +623,26 @@ export default function SurveyBuilderPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setEditingQuestion(null)}
+                                    onClick={() => {
+                                      // Clear local changes
+                                      setLocalQuestionText(prev => {
+                                        const newState = { ...prev };
+                                        delete newState[index];
+                                        return newState;
+                                      });
+                                      
+                                      // Clear option text changes
+                                      question.options?.forEach((_: any, optionIndex: number) => {
+                                        const optionKey = `${index}-${optionIndex}`;
+                                        setLocalOptionTexts(prev => {
+                                          const newState = { ...prev };
+                                          delete newState[optionKey];
+                                          return newState;
+                                        });
+                                      });
+                                      
+                                      setEditingQuestion(null);
+                                    }}
                                   >
                                     Cancel
                                   </Button>
