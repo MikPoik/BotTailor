@@ -165,21 +165,6 @@ Example for greetings and options:
   // Add survey context if provided
   const surveyInstructions = surveyContext || "";
 
-  const surveyInfo = "";
-
-## Survey Integration:
-When creating survey launchers, use:
-- actionType: "survey"
-- surveyId: valid survey ID from available surveys (REQUIRED - use exact ID numbers)
-- action: "take_assessment" or "start_survey"  
-- Appropriate icons: "Star", "BarChart", "PieChart", "TrendingUp"
-- Clear descriptions indicating it's a survey/assessment
-
-**IMPORTANT**: Always match survey titles/names mentioned in prompts to available survey IDs. For example:
-- If user asks for "Valitse sopiva terapia muoto" survey, find the matching survey by name/title and use its ID
-- If user mentions a specific survey, search available surveys for name/title matches
-- If no specific survey mentioned, use the first available survey${surveyInfo}
-
   return `${customPrompt}\n\n${structureInstructions}\n\n${surveyInstructions}`;
 }
 
