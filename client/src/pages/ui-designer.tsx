@@ -72,7 +72,12 @@ export default function UIDesigner() {
         ? `/api/ui-designer/modify`
         : `/api/ui-designer/generate`;
       
-      const response = await apiRequest("POST", endpoint, data);
+      const payload = {
+        ...data,
+        chatbotId: chatbot?.id
+      };
+      
+      const response = await apiRequest("POST", endpoint, payload);
       return response.json();
     },
     onSuccess: (data: { config: HomeScreenConfig }) => {

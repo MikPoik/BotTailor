@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const survey = await storage.getSurvey(surveySession.surveyId);
-      
+
       res.json({
         active: surveySession.status === 'active',
         surveySession,
@@ -699,9 +699,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (messageData.content.toLowerCase().includes('assessment') || 
           messageData.content.toLowerCase().includes('survey') ||
           messageData.content.toLowerCase().includes('arviointi')) {
-        
+
         console.log(`[SURVEY] Detected survey request in message`);
-        
+
         // Get chatbot configuration to find available surveys
         const configId = chatbotConfigId || session?.chatbotConfigId;
         if (configId) {
@@ -710,16 +710,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Get available surveys for this chatbot
             const availableSurveys = await storage.getSurveysByChatbotId(configId);
             console.log(`[SURVEY] Found ${availableSurveys.length} available surveys`);
-            
+
             if (availableSurveys.length > 0) {
               // Check if there's already an active survey session
               let existingSurveySession = await storage.getSurveySessionBySessionId(sessionId);
-              
+
               if (!existingSurveySession || existingSurveySession.status !== 'active') {
                 // Create new survey session with the first available survey
                 const firstSurvey = availableSurveys[0];
                 console.log(`[SURVEY] Creating survey session for survey: ${firstSurvey.surveyConfig?.title}`);
-                
+
                 const newSurveySession = await storage.createSurveySession({
                   surveyId: firstSurvey.id,
                   sessionId,
@@ -727,7 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   responses: {},
                   status: 'active'
                 });
-                
+
                 console.log(`[SURVEY] Created survey session:`, {
                   id: newSurveySession.id,
                   surveyId: newSurveySession.surveyId,
@@ -753,7 +753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: msg.content || `Previous options were presented to user`
             };
           }
-          
+
           // For menu messages, include a simplified, AI-friendly summary
           if (msg.messageType === 'menu' && msg.metadata?.options) {
             const options = msg.metadata.options.map((opt: any) => opt.text || opt.id).join(', ');
@@ -763,7 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: menuSummary
             };
           }
-          
+
           // For other interactive message types, provide friendly summaries
           if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
             const replies = msg.metadata.quickReplies.join(', ');
@@ -772,7 +772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: `[QUICKREPLIES] Suggested replies: ${replies}`
             };
           }
-          
+
           if (msg.messageType === 'form' && msg.metadata?.formFields) {
             const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
             return {
@@ -780,7 +780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: `[FORM] Contact form with fields: ${fields}`
             };
           }
-          
+
           if (msg.messageType === 'card' && msg.metadata) {
             const cardInfo = msg.metadata.title || 'Card';
             return {
@@ -788,7 +788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: `[CARD] ${cardInfo}`
             };
           }
-          
+
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
             content: msg.content || `[${msg.messageType} message]`
@@ -839,7 +839,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           })}\n\n`);
 
         } else if (chunk.type === 'complete') {
-          // All bubbles processed, send final completion
+          // All bubbles processed```text
+, send final completion
           res.write(`data: ${JSON.stringify({ 
             type: 'complete', 
             messages: createdMessages
@@ -928,7 +929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: msg.content || `Previous options were presented to user`
             };
           }
-          
+
           // For menu messages, include a simplified, AI-friendly summary
           if (msg.messageType === 'menu' && msg.metadata?.options) {
             const options = msg.metadata.options.map((opt: any) => opt.text || opt.id).join(', ');
@@ -938,7 +939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: menuSummary
             };
           }
-          
+
           // For other interactive message types, provide friendly summaries
           if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
             const replies = msg.metadata.quickReplies.join(', ');
@@ -947,7 +948,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: `[QUICKREPLIES] Suggested replies: ${replies}`
             };
           }
-          
+
           if (msg.messageType === 'form' && msg.metadata?.formFields) {
             const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
             return {
@@ -955,7 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: `[FORM] Contact form with fields: ${fields}`
             };
           }
-          
+
           if (msg.messageType === 'card' && msg.metadata) {
             const cardInfo = msg.metadata.title || 'Card';
             return {
@@ -963,7 +964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: `[CARD] ${cardInfo}`
             };
           }
-          
+
           return {
             role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
             content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
@@ -979,7 +980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const config = survey.surveyConfig;
           const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
           const currentQuestion = config.questions?.[currentQuestionIndex];
-          
+
           if (currentQuestion) {
             // Update responses
             const updatedResponses = {
@@ -1233,22 +1234,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/chat/conversations/count', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      
+
       // Get all chatbot IDs for this user
       const chatbots = await storage.getChatbotConfigs(userId);
       const chatbotIds = chatbots.map(bot => bot.id);
-      
+
       if (chatbotIds.length === 0) {
         return res.json(0);
       }
-      
+
       // Count unique sessions across all user's chatbots using the db import
       const sessions = await db.select({ 
         id: chatSessions.id 
       })
       .from(chatSessions)
       .where(inArray(chatSessions.chatbotConfigId, chatbotIds));
-      
+
       res.json(sessions.length);
     } catch (error) {
       console.error("Error counting conversations:", error);
@@ -1260,17 +1261,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/chatbots/guid/:guid/surveys/available', async (req, res) => {
     try {
       const { guid } = req.params;
-      
+
       // Get chatbot by GUID without requiring authentication (for embedded widgets)
       const chatbotConfig = await storage.getChatbotConfigByGuidPublic(guid);
       if (!chatbotConfig) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
-      
+
       // Get active surveys for this chatbot
       const surveys = await storage.getSurveys(chatbotConfig.id);
       const activeSurveys = surveys.filter(survey => survey.status === 'active');
-      
+
       // Return simplified survey data for home screen
       const availableSurveys = activeSurveys.map(survey => ({
         id: survey.id,
@@ -1279,7 +1280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estimatedTime: survey.surveyConfig?.estimatedTime || '5 minutes',
         questionCount: survey.surveyConfig?.questions?.length || 0
       }));
-      
+
       res.json(availableSurveys);
     } catch (error) {
       console.error("Error getting available surveys:", error);
@@ -1292,13 +1293,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const chatbotId = parseInt(req.params.chatbotId);
-      
+
       // Verify user owns this chatbot
       const chatbot = await storage.getChatbotConfig(chatbotId);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       const surveys = await storage.getSurveys(chatbotId);
       res.json(surveys);
     } catch (error) {
@@ -1311,18 +1312,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const chatbotId = parseInt(req.params.chatbotId);
-      
+
       // Verify user owns this chatbot
       const chatbot = await storage.getChatbotConfig(chatbotId);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       const { name, description, surveyConfig, status } = req.body;
-      
+
       // Validate survey config
       const validatedConfig = SurveyConfigSchema.parse(surveyConfig);
-      
+
       const surveyData = insertSurveySchema.parse({
         chatbotConfigId: chatbotId,
         name,
@@ -1330,7 +1331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         surveyConfig: validatedConfig,
         status: status || 'draft'
       });
-      
+
       const survey = await storage.createSurvey(surveyData);
       res.json(survey);
     } catch (error) {
@@ -1346,18 +1347,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const surveyId = parseInt(req.params.surveyId);
-      
+
       const survey = await storage.getSurvey(surveyId);
       if (!survey) {
         return res.status(404).json({ message: "Survey not found" });
       }
-      
+
       // Verify user owns the chatbot this survey belongs to
       const chatbot = await storage.getChatbotConfig(survey.chatbotConfigId);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       res.json(survey);
     } catch (error) {
       console.error("Error getting survey:", error);
@@ -1369,29 +1370,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const surveyId = parseInt(req.params.surveyId);
-      
+
       const survey = await storage.getSurvey(surveyId);
       if (!survey) {
         return res.status(404).json({ message: "Survey not found" });
       }
-      
+
       // Verify user owns the chatbot this survey belongs to
       const chatbot = await storage.getChatbotConfig(survey.chatbotConfigId);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       const { name, description, surveyConfig, status } = req.body;
-      
+
       const updateData: Partial<Survey> = {};
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
       if (status !== undefined) updateData.status = status;
-      
+
       if (surveyConfig !== undefined) {
         updateData.surveyConfig = SurveyConfigSchema.parse(surveyConfig);
       }
-      
+
       const updatedSurvey = await storage.updateSurvey(surveyId, updateData);
       res.json(updatedSurvey);
     } catch (error) {
@@ -1407,18 +1408,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const surveyId = parseInt(req.params.surveyId);
-      
+
       const survey = await storage.getSurvey(surveyId);
       if (!survey) {
         return res.status(404).json({ message: "Survey not found" });
       }
-      
+
       // Verify user owns the chatbot this survey belongs to
       const chatbot = await storage.getChatbotConfig(survey.chatbotConfigId);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      
+
       await storage.deleteSurvey(surveyId);
       res.json({ message: "Survey deleted successfully" });
     } catch (error) {
@@ -1607,7 +1608,7 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
             content: menuSummary
           };
         }
-        
+
         // For other interactive message types, provide friendly summaries
         if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
           const replies = msg.metadata.quickReplies.join(', ');
@@ -1616,7 +1617,7 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
             content: `[QUICKREPLIES] Suggested replies: ${replies}`
           };
         }
-        
+
         if (msg.messageType === 'form' && msg.metadata?.formFields) {
           const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
           return {
@@ -1624,7 +1625,7 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
             content: `[FORM] Contact form with fields: ${fields}`
           };
         }
-        
+
         if (msg.messageType === 'card' && msg.metadata) {
           const cardInfo = msg.metadata.title || 'Card';
           return {
@@ -1632,7 +1633,7 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
             content: `[CARD] ${cardInfo}`
           };
         }
-        
+
         return {
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
           content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
@@ -1682,7 +1683,7 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
             content: menuSummary
           };
         }
-        
+
         // For other interactive message types, provide friendly summaries
         if (msg.messageType === 'quickReplies' && msg.metadata?.quickReplies) {
           const replies = msg.metadata.quickReplies.join(', ');
@@ -1691,7 +1692,7 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
             content: `[QUICKREPLIES] Suggested replies: ${replies}`
           };
         }
-        
+
         if (msg.messageType === 'form' && msg.metadata?.formFields) {
           const fields = msg.metadata.formFields.map((field: any) => field.label || field.id).join(', ');
           return {
@@ -1699,7 +1700,7 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
             content: `[FORM] Contact form with fields: ${fields}`
           };
         }
-        
+
         if (msg.messageType === 'card' && msg.metadata) {
           const cardInfo = msg.metadata.title || 'Card';
           return {
@@ -1707,7 +1708,7 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
             content: `[CARD] ${cardInfo}`
           };
         }
-        
+
         return {
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
           content: msg.content || `[${msg.messageType} message]` // Provide fallback for empty content
@@ -1738,4 +1739,56 @@ async function generateAIOptionResponse(optionId: string, payload: any, sessionI
       ]
     };
   }
+}
+
+  // UI Designer API routes
+  app.post('/api/ui-designer/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, chatbotId } = req.body;
+
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      const config = await generateHomeScreenConfig(prompt, chatbotId);
+      res.json({ config });
+    } catch (error) {
+      console.error("Error generating UI config:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate UI" });
+    }
+  });
+
+  app.post('/api/ui-designer/modify', isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, currentConfig, chatbotId } = req.body;
+
+      if (!prompt || !currentConfig) {
+        return res.status(400).json({ message: "Prompt and current config are required" });
+      }
+
+      const config = await modifyHomeScreenConfig(currentConfig, prompt, chatbotId);
+      res.json({ config });
+    } catch (error) {
+      console.error("Error modifying UI config:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to modify UI" });
+    }
+  });
+
+  app.get('/api/ui-designer/default', isAuthenticated, async (req: any, res) => {
+    try {
+      const config = getDefaultHomeScreenConfig();
+      res.json({ config });
+    } catch (error) {
+      console.error("Error getting default config:", error);
+      res.status(500).json({ message: "Failed to get default configuration" });
+    }
+  });
+
+  app.get('/api/callback', passport.authenticate('local', { 
+    failureRedirect: '/',
+    successRedirect: '/dashboard'
+  }));
+
+  const httpServer = createServer(app);
+  return httpServer;
 }

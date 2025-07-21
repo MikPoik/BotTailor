@@ -6,101 +6,75 @@ import { HomeScreenConfigSchema, type HomeScreenConfig } from "@shared/schema";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // UI Designer system prompt
-const UI_DESIGNER_SYSTEM_PROMPT = `You are an expert UI/UX designer for chat widget home screens. You create beautiful, functional layouts based on user requirements.
+function createSystemPrompt(availableSurveys: any[] = []) {
+  const surveyInfo = availableSurveys.length > 0 
+    ? `\n\n## Available Surveys for Integration:\n${availableSurveys.map(s => 
+        `- Survey ID: ${s.id} - "${s.title}" (${s.description})`
+      ).join('\n')}`
+    : '';
 
-COMPONENT TYPES AVAILABLE:
-1. header - Title and subtitle sections
-2. category_tabs - Filter tabs for topics 
-3. topic_grid - Grid of clickable topic cards
-4. quick_actions - Action buttons for common tasks
-5. footer - Footer content
+  return `You are an expert UI designer that creates home screen configurations for chatbots. You generate JSON configurations that define the layout, components, and styling of chatbot home screens.
 
-RESPONSE FORMAT: Return valid JSON matching the HomeScreenConfig schema.
+Your goal is to create engaging, user-friendly home screens that help users quickly find what they're looking for and start meaningful conversations with the chatbot.
 
-DESIGN PRINCIPLES:
-- Mobile-first responsive design
-- Clear visual hierarchy
-- Intuitive user experience
-- Accessibility considerations
-- Brand consistency
+## Available Component Types:
 
-CRITICAL: ALL FIELDS MARKED AS REQUIRED MUST BE INCLUDED:
-- actions[].description is REQUIRED (cannot be undefined or null)
-- topics[].description is REQUIRED
-- topics[].icon is REQUIRED
-- topics[].category is REQUIRED
+1. **header** - Welcome message and branding
+   - Props: title, subtitle
 
-EXAMPLE CONFIG:
-{
-  "version": "1.0",
-  "components": [
-    {
-      "id": "header_1",
-      "type": "header",
-      "props": {
-        "title": "Welcome to Support",
-        "subtitle": "How can we help you today?"
-      },
-      "order": 1,
-      "visible": true
-    },
-    {
-      "id": "quick_actions_1",
-      "type": "quick_actions",
-      "props": {
-        "actions": [
-          {
-            "id": "start_chat",
-            "title": "Start Free Chat",
-            "description": "Ask anything you want",
-            "action": "start_chat"
-          },
-          {
-            "id": "live_agent",
-            "title": "Request Live Agent",
-            "description": "Talk to a human representative",
-            "action": "request_agent"
-          }
-        ]
-      },
-      "order": 2,
-      "visible": true
-    },
-    {
-      "id": "topics_1", 
-      "type": "topic_grid",
-      "props": {
-        "topics": [
-          {
-            "id": "billing",
-            "title": "Billing Help",
-            "description": "Payment and subscription questions",
-            "icon": "CreditCard",
-            "message": "I need help with billing",
-            "category": "billing",
-            "popular": true
-          }
-        ],
-        "style": {
-          "layout": "grid",
-          "columns": 2
-        }
-      },
-      "order": 3,
-      "visible": true
-    }
-  ],
-  "theme": {
-    "primaryColor": "#3b82f6",
-    "backgroundColor": "#ffffff",
-    "textColor": "#1f2937"
-  }
+2. **category_tabs** - Horizontal tabs for filtering topics
+   - Props: categories (array of strings)
+
+3. **topic_grid** - Grid of clickable topic cards
+   - Props: topics (array with id, title, description, icon, category, message, actionType, surveyId)
+
+4. **quick_actions** - Prominent action buttons
+   - Props: actions (array with id, title, description, action, actionType, surveyId)
+
+5. **footer** - Bottom section with additional info
+   - Props: title, subtitle
+
+## Component Properties:
+
+### Topics in topic_grid:
+- id: unique identifier
+- title: display name
+- description: brief explanation
+- icon: icon name (e.g., "MessageCircle", "Phone", "CreditCard", "Star", "BarChart")
+- category: grouping category
+- message: what gets sent when clicked (for message types)
+- actionType: "message", "survey", or "custom" (default: "message")
+- surveyId: reference to survey ID (required when actionType is "survey")
+- popular: boolean for highlighting
+
+### Actions in quick_actions:
+- id: unique identifier  
+- title: action name
+- description: what the action does
+- action: action type (e.g., "start_chat", "contact_agent", "take_assessment")
+- actionType: "message", "survey", or "custom" (default: "message")
+- surveyId: reference to survey ID (required when actionType is "survey")
+
+## Survey Integration:
+When creating survey launchers, use:
+- actionType: "survey"
+- surveyId: valid survey ID from available surveys
+- action: "take_assessment" or "start_survey"
+- Appropriate icons: "Star", "BarChart", "PieChart", "TrendingUp"
+- Clear descriptions indicating it's a survey/assessment${surveyInfo}
+
+## Styling Guidelines:
+- Use modern, clean designs
+- Ensure good contrast and readability
+- Make interactive elements clearly clickable
+- Use appropriate spacing and typography
+- Consider mobile-first responsive design
+
+## Response Format:
+Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No additional text or explanation.
+
+Generate engaging home screen layouts based on the user's requirements.`;
 }
-
-AVAILABLE ICONS:
-MessageCircle, ShoppingCart, CreditCard, Truck, RotateCcw, HelpCircle, Star, Gift, Shield, Phone, Search, Grid, List, Home
-
-Always respond with valid JSON that can be parsed and rendered immediately.`;
 
 export async function generateHomeScreenConfig(userPrompt: string): Promise<HomeScreenConfig> {
   try {
@@ -109,7 +83,7 @@ export async function generateHomeScreenConfig(userPrompt: string): Promise<Home
       messages: [
         {
           role: "system",
-          content: UI_DESIGNER_SYSTEM_PROMPT,
+          content: createSystemPrompt(),
         },
         {
           role: "user",
@@ -127,7 +101,7 @@ export async function generateHomeScreenConfig(userPrompt: string): Promise<Home
 
     // Parse and validate the response
     const parsedConfig = JSON.parse(jsonResponse);
-    
+
     // Add some basic validation and cleanup before schema validation
     if (parsedConfig.components) {
       parsedConfig.components.forEach((component: any) => {
@@ -155,9 +129,9 @@ export async function generateHomeScreenConfig(userPrompt: string): Promise<Home
         }
       });
     }
-    
+
     const validatedConfig = HomeScreenConfigSchema.parse(parsedConfig);
-    
+
     return validatedConfig;
   } catch (error) {
     console.error("Error generating home screen config:", error);
@@ -178,7 +152,7 @@ export async function modifyHomeScreenConfig(
       messages: [
         {
           role: "system",
-          content: `${UI_DESIGNER_SYSTEM_PROMPT}
+          content: `${createSystemPrompt()}
 
 You are modifying an existing home screen configuration. Keep the existing structure unless specifically asked to change it.`,
         },
@@ -202,7 +176,7 @@ Return the updated complete configuration.`,
 
     // Parse and validate the response
     const parsedConfig = JSON.parse(jsonResponse);
-    
+
     // Add the same cleanup logic as in generateHomeScreenConfig
     if (parsedConfig.components) {
       parsedConfig.components.forEach((component: any) => {
@@ -228,9 +202,9 @@ Return the updated complete configuration.`,
         }
       });
     }
-    
+
     const validatedConfig = HomeScreenConfigSchema.parse(parsedConfig);
-    
+
     return validatedConfig;
   } catch (error) {
     console.error("Error modifying home screen config:", error);
