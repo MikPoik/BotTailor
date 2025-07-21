@@ -906,6 +906,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Handle option selection
   app.post("/api/chat/:sessionId/select-option", async (req, res) => {
+    console.log(`[OPTION SELECT ENDPOINT] Called for session: ${req.params.sessionId}`);
+    console.log(`[OPTION SELECT ENDPOINT] Request body:`, req.body);
     try {
       const { sessionId } = req.params;
       const { optionId, payload, optionText } = req.body;

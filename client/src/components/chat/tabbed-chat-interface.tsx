@@ -122,56 +122,11 @@ export default function TabbedChatInterface({
   const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
     if (isLoading || isStreaming) return;
 
-    // Create the context message for option selection
-    const displayText = optionText || optionId;
-    const contextMessage = `User selected option "${optionId}" with payload: ${JSON.stringify(payload)}. Provide a helpful response.`;
-
-    setIsStreaming(true);
-    streamingBubblesRef.current = [];
-
+    console.log(`[FRONTEND] Option selected: ${optionId} - ${optionText}`);
+    
     try {
-      await sendStreamingMessage(
-        displayText, // Send displayText as the actual message content
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (message: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...message,
-            metadata: {
-              ...message.metadata,
-              isFollowUp,
-              isStreaming: false // Mark as permanent message
-            }
-          };
-
-          // Add bubble directly to main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [bubbleWithFlag] };
-            return { messages: [...old.messages, bubbleWithFlag] };
-          });
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          setIsStreaming(false);
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
-        (error: string) => {
-          setIsStreaming(false);
-          streamingBubblesRef.current = [];
-          console.error("Option select streaming error:", error);
-        },
-        // Pass contextMessage as the internal message for AI processing
-        contextMessage
-      );
+      await selectOption(optionId, payload, optionText);
     } catch (error) {
-      setIsStreaming(false);
-      streamingBubblesRef.current = [];
       console.error("Option select error:", error);
     }
   };
