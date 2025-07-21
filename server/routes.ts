@@ -1665,7 +1665,3 @@ async function generateBotResponse(userMessage: string, sessionId: string) {
     };
   }
 }
-
-
-
-  
