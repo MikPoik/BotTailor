@@ -102,13 +102,17 @@ export function setupChatRoutes(app: Express) {
       })}\n\n`);
 
       // Handle survey session creation for survey requests
-      await handleSurveySessionCreation(sessionId, internalMessage || messageData.content, chatbotConfigId, session);
+      try {
+        await handleSurveySessionCreation(sessionId, internalMessage || messageData.content, chatbotConfigId, session);
+      } catch (surveyError) {
+        console.error(`[SURVEY] Error in survey session creation:`, surveyError);
+        // Continue with normal response even if survey creation fails
+      }
 
       // Generate streaming response
-      await generateStreamingResponse(
+      await handleStreamingResponse(
         internalMessage || messageData.content,
         sessionId,
-        [],
         res,
         chatbotConfigId || session?.chatbotConfigId || undefined
       );
@@ -122,6 +126,110 @@ export function setupChatRoutes(app: Express) {
       res.end();
     }
   });
+}
+
+// HTTP streaming handler that uses the generator
+async function handleStreamingResponse(
+  userMessage: string,
+  sessionId: string,
+  res: any,
+  chatbotConfigId?: string
+) {
+  try {
+    console.log(`[STREAMING] Starting streaming response for session: ${sessionId}`);
+    
+    // Get chatbot configuration
+    let chatbotConfig;
+    if (chatbotConfigId) {
+      chatbotConfig = await storage.getChatbotConfig(chatbotConfigId);
+      console.log(`[STREAMING] Using chatbot config: ${chatbotConfig?.name || 'Unknown'}`);
+    } else {
+      console.log(`[STREAMING] No chatbot config ID provided`);
+    }
+    
+    // Get conversation history
+    const conversationHistory = await storage.getMessages(sessionId);
+    const formattedHistory = conversationHistory
+      .filter(msg => msg.sender !== 'bot' || msg.content.trim() !== '')
+      .map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.sender === 'bot' && msg.metadata?.originalContent 
+          ? getTextualRepresentation(msg)
+          : msg.content
+      })) as Array<{ role: "user" | "assistant"; content: string }>;
+    
+    // Use the streaming generator
+    const responseStream = generateStreamingResponse(
+      userMessage,
+      sessionId,
+      formattedHistory,
+      chatbotConfig
+    );
+    
+    // Process the stream
+    for await (const chunk of responseStream) {
+      if (chunk.type === 'bubble' && chunk.bubble) {
+        console.log(`[STREAMING] Sending bubble: ${chunk.bubble.messageType}`);
+        
+        // Store the bot message in database
+        await storage.createMessage({
+          sessionId,
+          content: chunk.bubble.content,
+          sender: 'bot',
+          messageType: chunk.bubble.messageType,
+          metadata: {
+            ...chunk.bubble.metadata,
+            originalContent: chunk.bubble
+          }
+        });
+        
+        // Send to client
+        res.write(`data: ${JSON.stringify({ 
+          type: 'bot_message', 
+          message: chunk.bubble
+        })}\n\n`);
+      } else if (chunk.type === 'complete') {
+        console.log(`[STREAMING] Streaming complete for session: ${sessionId}`);
+        res.write(`data: ${JSON.stringify({ 
+          type: 'complete', 
+          message: 'Stream finished' 
+        })}\n\n`);
+        res.end();
+        return;
+      }
+    }
+    
+  } catch (error) {
+    console.error(`[STREAMING] Error in handleStreamingResponse:`, error);
+    res.write(`data: ${JSON.stringify({ 
+      type: 'error', 
+      message: 'Internal server error' 
+    })}\n\n`);
+    res.end();
+  }
+}
+
+// Helper function for textual representation of rich messages
+function getTextualRepresentation(msg: any): string {
+  if (!msg.metadata?.originalContent) return msg.content;
+  
+  const original = msg.metadata.originalContent;
+  
+  switch (original.messageType) {
+    case 'menu':
+      const options = original.metadata?.options?.map((opt: any) => opt.text).join(', ') || '';
+      return `[MENU] Presented options: ${options}`;
+    case 'quickReplies':
+      const replies = original.metadata?.quickReplies?.join(', ') || '';
+      return `[QUICKREPLIES] Suggested replies: ${replies}`;
+    case 'form':
+      const fields = original.metadata?.formFields?.map((field: any) => field.label).join(', ') || '';
+      return `[FORM] Form with fields: ${fields}`;
+    case 'card':
+      return `[CARD] ${original.metadata?.title || original.content}`;
+    default:
+      return original.content;
+  }
 }
 
 async function handleSurveySessionCreation(
