@@ -403,41 +403,179 @@ export default function SurveyBuilderPage() {
                         <Label>Questions</Label>
                         {selectedSurvey.surveyConfig.questions.map((question: SurveyQuestion, index: number) => (
                           <Card key={question.id} className="p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
+                            {editingQuestion === index ? (
+                              // Editing mode
+                              <div className="space-y-4">
                                 <div className="flex items-center gap-2 mb-2">
                                   <Badge variant="outline">Q{index + 1}</Badge>
                                   <Badge variant="secondary">{question.type}</Badge>
                                   {question.required && <Badge variant="outline">Required</Badge>}
                                 </div>
-                                <p className="font-medium">{question.text}</p>
+                                
+                                <div>
+                                  <Label>Question Text</Label>
+                                  <Input
+                                    value={question.text}
+                                    onChange={(e) => handleUpdateQuestion(selectedSurvey.id, index, { text: e.target.value })}
+                                    placeholder="Enter question text..."
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label>Question Type</Label>
+                                    <Select
+                                      value={question.type}
+                                      onValueChange={(value) => {
+                                        const updates: Partial<SurveyQuestion> = { type: value as any };
+                                        if (value === "text" || value === "rating") {
+                                          updates.options = undefined;
+                                        } else if (!question.options) {
+                                          updates.options = [
+                                            { id: "option1", text: "Option 1" },
+                                            { id: "option2", text: "Option 2" },
+                                          ];
+                                        }
+                                        handleUpdateQuestion(selectedSurvey.id, index, updates);
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="single_choice">Single Choice</SelectItem>
+                                        <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+                                        <SelectItem value="text">Text Input</SelectItem>
+                                        <SelectItem value="rating">Rating</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <div>
+                                    <Label>Required</Label>
+                                    <Select
+                                      value={question.required ? "true" : "false"}
+                                      onValueChange={(value) => handleUpdateQuestion(selectedSurvey.id, index, { required: value === "true" })}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="true">Yes</SelectItem>
+                                        <SelectItem value="false">No</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+
                                 {question.options && (
-                                  <div className="mt-2 space-y-1">
-                                    {question.options.map((option: any) => (
-                                      <div key={option.id} className="text-sm text-muted-foreground">
-                                        • {option.text}
+                                  <div className="space-y-3">
+                                    <Label>Answer Options</Label>
+                                    {question.options.map((option: any, optionIndex: number) => (
+                                      <div key={option.id} className="flex items-center gap-2">
+                                        <Input
+                                          value={option.text}
+                                          onChange={(e) => {
+                                            const updatedOptions = [...question.options];
+                                            updatedOptions[optionIndex] = { ...option, text: e.target.value };
+                                            handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
+                                          }}
+                                          placeholder={`Option ${optionIndex + 1}`}
+                                        />
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
+                                            handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
+                                          }}
+                                          disabled={question.options.length <= 2}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
                                       </div>
                                     ))}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const newOption = { id: `option${question.options.length + 1}`, text: `Option ${question.options.length + 1}` };
+                                        handleUpdateQuestion(selectedSurvey.id, index, { options: [...question.options, newOption] });
+                                      }}
+                                    >
+                                      <Plus className="h-4 w-4 mr-2" />
+                                      Add Option
+                                    </Button>
                                   </div>
                                 )}
+
+                                <div className="flex items-center gap-2 pt-4 border-t">
+                                  <Button
+                                    onClick={() => setEditingQuestion(null)}
+                                    variant="default"
+                                    size="sm"
+                                  >
+                                    <Save className="h-4 w-4 mr-2" />
+                                    Save Changes
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setEditingQuestion(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => {
+                                      handleDeleteQuestion(selectedSurvey.id, index);
+                                      setEditingQuestion(null);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Question
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setEditingQuestion(index)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDeleteQuestion(selectedSurvey.id, index)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                            ) : (
+                              // View mode
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge variant="outline">Q{index + 1}</Badge>
+                                    <Badge variant="secondary">{question.type}</Badge>
+                                    {question.required && <Badge variant="outline">Required</Badge>}
+                                  </div>
+                                  <p className="font-medium">{question.text}</p>
+                                  {question.options && (
+                                    <div className="mt-2 space-y-1">
+                                      {question.options.map((option: any) => (
+                                        <div key={option.id} className="text-sm text-muted-foreground">
+                                          • {option.text}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setEditingQuestion(index)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteQuestion(selectedSurvey.id, index)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </Card>
                         ))}
 
