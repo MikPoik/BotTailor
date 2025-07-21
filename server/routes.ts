@@ -695,15 +695,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       })}\n\n`);
 
       // Check if this is a survey request and automatically create survey session
+      // Use internalMessage for survey detection if available, otherwise use display content
+      const messageToCheck = internalMessage || messageData.content;
       console.log(`[SURVEY] Checking if message is survey request: "${messageData.content}"`);
-      if (messageData.content.toLowerCase().includes('assessment') || 
-          messageData.content.toLowerCase().includes('survey') ||
-          messageData.content.toLowerCase().includes('arviointi')) {
+      console.log(`[SURVEY] Using message for surveyId detection: "${messageToCheck}"`);
+      
+      if (messageToCheck.toLowerCase().includes('assessment') || 
+          messageToCheck.toLowerCase().includes('survey') ||
+          messageToCheck.toLowerCase().includes('arviointi')) {
 
         console.log(`[SURVEY] Detected survey request in message`);
 
         // Check if message contains specific surveyId
-        const surveyIdMatch = messageData.content.match(/surveyId:\s*(\d+)/);
+        const surveyIdMatch = messageToCheck.match(/surveyId:\s*(\d+)/);
         let targetSurveyId = surveyIdMatch ? parseInt(surveyIdMatch[1]) : null;
         console.log(`[SURVEY] Extracted surveyId from message: ${targetSurveyId}`);
 
