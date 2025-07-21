@@ -915,6 +915,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messageType: "text",
       });
 
+      // Check for active survey and record response BEFORE generating AI response
+      console.log(`[SURVEY] Checking for survey session for option selection: ${sessionId}`);
+      let surveyUpdated = false;
+      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      console.log(`[SURVEY] Survey session found:`, surveySession ? {
+        id: surveySession.id,
+        surveyId: surveySession.surveyId,
+        status: surveySession.status,
+        currentQuestionIndex: surveySession.currentQuestionIndex
+      } : null);
+      
+      if (surveySession && surveySession.status === 'active') {
+        console.log(`[SURVEY] Active survey session found, recording response and updating progress`);
+        // This is a survey response, record it
+        const survey = await storage.getSurvey(surveySession.surveyId);
+        if (survey) {
+          const config = survey.surveyConfig;
+          const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
+          const currentQuestion = config.questions?.[currentQuestionIndex];
+          
+          console.log(`[SURVEY] Current question index: ${currentQuestionIndex}`);
+          console.log(`[SURVEY] Current question:`, currentQuestion ? {
+            id: currentQuestion.id,
+            text: currentQuestion.text,
+            type: currentQuestion.type
+          } : null);
+
+          if (currentQuestion) {
+            // Update responses
+            const updatedResponses = {
+              ...surveySession.responses,
+              [currentQuestion.id]: optionText
+            };
+
+            // Check if this is the last question
+            const isLastQuestion = currentQuestionIndex >= (config.questions?.length || 0) - 1;
+            const newStatus = isLastQuestion ? 'completed' : 'active';
+            const nextQuestionIndex = isLastQuestion ? currentQuestionIndex : currentQuestionIndex + 1;
+            
+            console.log(`[SURVEY] Survey progression:`, {
+              currentIndex: currentQuestionIndex,
+              nextIndex: nextQuestionIndex,
+              totalQuestions: config.questions?.length,
+              isLastQuestion,
+              newStatus,
+              response: `${currentQuestion.id} = ${optionText}`
+            });
+
+            // Update survey session BEFORE generating AI response
+            const updatedSession = await storage.updateSurveySession(surveySession.id, {
+              currentQuestionIndex: nextQuestionIndex,
+              responses: updatedResponses,
+              status: newStatus
+            });
+
+            console.log(`[SURVEY] Survey session updated BEFORE AI response:`, {
+              id: updatedSession.id,
+              currentQuestionIndex: updatedSession.currentQuestionIndex,
+              status: updatedSession.status,
+              responseCount: Object.keys(updatedSession.responses).length
+            });
+            
+            console.log(`[SURVEY] Survey response recorded: ${currentQuestion.id} = ${optionText}`);
+            surveyUpdated = true;
+          } else {
+            console.log(`[SURVEY] ERROR: No current question found for index ${currentQuestionIndex}`);
+          }
+        } else {
+          console.log(`[SURVEY] ERROR: Survey not found for ID ${surveySession.surveyId}`);
+        }
+      } else {
+        console.log(`[SURVEY] No active survey session found`);
+      }
+
       // Get conversation history for context
       const recentMessages = await storage.getRecentMessages(sessionId, 15);
       const conversationHistory = recentMessages
@@ -970,76 +1044,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         });
 
-      // Check for active survey and record response if applicable
-      console.log(`[SURVEY] Checking for survey session for option selection: ${sessionId}`);
-      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
-      console.log(`[SURVEY] Survey session found:`, surveySession ? {
-        id: surveySession.id,
-        surveyId: surveySession.surveyId,
-        status: surveySession.status,
-        currentQuestionIndex: surveySession.currentQuestionIndex
-      } : null);
-      
-      if (surveySession && surveySession.status === 'active') {
-        console.log(`[SURVEY] Active survey session found, recording response`);
-        // This is a survey response, record it
-        const survey = await storage.getSurvey(surveySession.surveyId);
-        if (survey) {
-          const config = survey.surveyConfig;
-          const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
-          const currentQuestion = config.questions?.[currentQuestionIndex];
-          
-          console.log(`[SURVEY] Current question index: ${currentQuestionIndex}`);
-          console.log(`[SURVEY] Current question:`, currentQuestion ? {
-            id: currentQuestion.id,
-            text: currentQuestion.text,
-            type: currentQuestion.type
-          } : null);
-
-          if (currentQuestion) {
-            // Update responses
-            const updatedResponses = {
-              ...surveySession.responses,
-              [currentQuestion.id]: optionText
-            };
-
-            // Check if this is the last question
-            const isLastQuestion = currentQuestionIndex >= (config.questions?.length || 0) - 1;
-            const newStatus = isLastQuestion ? 'completed' : 'active';
-            const nextQuestionIndex = isLastQuestion ? currentQuestionIndex : currentQuestionIndex + 1;
-            
-            console.log(`[SURVEY] Survey progression:`, {
-              currentIndex: currentQuestionIndex,
-              nextIndex: nextQuestionIndex,
-              totalQuestions: config.questions?.length,
-              isLastQuestion,
-              newStatus,
-              response: `${currentQuestion.id} = ${optionText}`
-            });
-
-            // Update survey session
-            const updatedSession = await storage.updateSurveySession(surveySession.id, {
-              currentQuestionIndex: nextQuestionIndex,
-              responses: updatedResponses,
-              status: newStatus
-            });
-
-            console.log(`[SURVEY] Survey session updated:`, {
-              id: updatedSession.id,
-              currentQuestionIndex: updatedSession.currentQuestionIndex,
-              status: updatedSession.status,
-              responseCount: Object.keys(updatedSession.responses).length
-            });
-            
-            console.log(`[SURVEY] Survey response recorded: ${currentQuestion.id} = ${optionText}`);
-          } else {
-            console.log(`[SURVEY] ERROR: No current question found for index ${currentQuestionIndex}`);
-          }
-        } else {
-          console.log(`[SURVEY] ERROR: Survey not found for ID ${surveySession.surveyId}`);
-        }
-      } else {
-        console.log(`[SURVEY] No active survey session found`);
+      // Survey session was already updated above before AI response generation
+      if (surveyUpdated) {
+        console.log(`[SURVEY] Survey session was successfully updated before AI response generation`);
       }
 
       // Generate response for the option selection
