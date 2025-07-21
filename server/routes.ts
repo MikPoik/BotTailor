@@ -1068,54 +1068,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chatbotConfig = await storage.getChatbotConfig(configId);
       }
 
-      // Generate response for the option selection
-      const response = await generateOptionResponse(optionId, payload, sessionId, conversationHistory, chatbotConfig);
-
-      if (response.bubbles && response.bubbles.length > 0) {
-        // Create and store all bubbles as bot messages
-        const allMessages = [];
-
-        for (let i = 0; i < response.bubbles.length; i++) {
-          const bubble = response.bubbles[i];
-          const isFollowUp = i > 0;
-
-          const botMessage = await storage.createMessage({
-            sessionId,
-            content: bubble.content,
-            sender: "bot",
-            messageType: bubble.messageType,
-            metadata: {
-              ...bubble.metadata || {},
-              isFollowUp
-            }
-          });
-
-          allMessages.push(botMessage);
-        }
-
-        res.json({ 
-          success: true, 
-          userMessage, 
-          botMessage: allMessages[0], // First message for backward compatibility
-          allMessages // All messages for multi-bubble handling
-        });
-      } else {
-        // Fallback response
-        const botMessage = await storage.createMessage({
-          sessionId,
-          content: "Thank you for your selection. How else can I help you?",
-          sender: "bot",
-          messageType: "text",
-          metadata: {}
-        });
-
-        res.json({ 
-          success: true, 
-          userMessage, 
-          botMessage,
-          allMessages: [botMessage]
-        });
-      }
+      // Simply acknowledge the option selection - streaming will be handled by frontend
+      res.json({ 
+        success: true, 
+        userMessage,
+        message: "Option selection processed successfully"
+      });
     } catch (error) {
       console.error("Error handling option selection:", error);
       res.status(500).json({ message: "Internal server error" });
