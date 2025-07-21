@@ -47,6 +47,18 @@ export default function SurveyBuilderPage() {
     required: true,
   });
 
+  // Local state for editing fields to prevent constant updates
+  const [localSurveyName, setLocalSurveyName] = useState<string>("");
+  const [localSurveyDescription, setLocalSurveyDescription] = useState<string>("");
+
+  // Update local state when selectedSurvey changes
+  useEffect(() => {
+    if (selectedSurvey) {
+      setLocalSurveyName(selectedSurvey.name);
+      setLocalSurveyDescription(selectedSurvey.description || "");
+    }
+  }, [selectedSurvey]);
+
   // Fetch chatbot details
   const { data: chatbot } = useQuery<{ name: string; id: number }>({
     queryKey: [`/api/chatbots/${chatbotId}`],
@@ -178,6 +190,10 @@ export default function SurveyBuilderPage() {
     });
   };
 
+  // Local state for editing questions to prevent constant updates
+  const [localQuestionText, setLocalQuestionText] = useState<{ [key: number]: string }>({});
+  const [localOptionTexts, setLocalOptionTexts] = useState<{ [key: string]: string }>({});
+
   const handleUpdateQuestion = (surveyId: number, questionIndex: number, updates: Partial<SurveyQuestion>) => {
     if (!selectedSurvey) return;
 
@@ -194,6 +210,45 @@ export default function SurveyBuilderPage() {
       id: surveyId,
       updates: { surveyConfig: updatedConfig },
     });
+  };
+
+  const handleQuestionTextChange = (questionIndex: number, text: string) => {
+    setLocalQuestionText(prev => ({ ...prev, [questionIndex]: text }));
+  };
+
+  const handleQuestionTextSave = (questionIndex: number) => {
+    const text = localQuestionText[questionIndex];
+    if (text !== undefined && selectedSurvey) {
+      handleUpdateQuestion(selectedSurvey.id, questionIndex, { text });
+      setLocalQuestionText(prev => {
+        const newState = { ...prev };
+        delete newState[questionIndex];
+        return newState;
+      });
+    }
+  };
+
+  const handleOptionTextChange = (questionIndex: number, optionIndex: number, text: string) => {
+    const key = `${questionIndex}-${optionIndex}`;
+    setLocalOptionTexts(prev => ({ ...prev, [key]: text }));
+  };
+
+  const handleOptionTextSave = (questionIndex: number, optionIndex: number) => {
+    const key = `${questionIndex}-${optionIndex}`;
+    const text = localOptionTexts[key];
+    if (text !== undefined && selectedSurvey) {
+      const question = selectedSurvey.surveyConfig.questions[questionIndex];
+      if (question.options) {
+        const updatedOptions = [...question.options];
+        updatedOptions[optionIndex] = { ...updatedOptions[optionIndex], text };
+        handleUpdateQuestion(selectedSurvey.id, questionIndex, { options: updatedOptions });
+      }
+      setLocalOptionTexts(prev => {
+        const newState = { ...prev };
+        delete newState[key];
+        return newState;
+      });
+    }
   };
 
   if (!isAuthenticated) {
@@ -351,12 +406,20 @@ export default function SurveyBuilderPage() {
                           <Label htmlFor="survey-name">Survey Name</Label>
                           <Input
                             id="survey-name"
-                            value={selectedSurvey.name}
-                            onChange={(e) => {
-                              updateSurveyMutation.mutate({
-                                id: selectedSurvey.id,
-                                updates: { name: e.target.value },
-                              });
+                            value={localSurveyName}
+                            onChange={(e) => setLocalSurveyName(e.target.value)}
+                            onBlur={() => {
+                              if (localSurveyName !== selectedSurvey.name) {
+                                updateSurveyMutation.mutate({
+                                  id: selectedSurvey.id,
+                                  updates: { name: localSurveyName },
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              }
                             }}
                           />
                         </div>
@@ -387,12 +450,15 @@ export default function SurveyBuilderPage() {
                         <Label htmlFor="survey-description">Description</Label>
                         <Textarea
                           id="survey-description"
-                          value={selectedSurvey.description || ""}
-                          onChange={(e) => {
-                            updateSurveyMutation.mutate({
-                              id: selectedSurvey.id,
-                              updates: { description: e.target.value },
-                            });
+                          value={localSurveyDescription}
+                          onChange={(e) => setLocalSurveyDescription(e.target.value)}
+                          onBlur={() => {
+                            if (localSurveyDescription !== (selectedSurvey.description || "")) {
+                              updateSurveyMutation.mutate({
+                                id: selectedSurvey.id,
+                                updates: { description: localSurveyDescription },
+                              });
+                            }
                           }}
                           placeholder="Brief description of the survey..."
                         />
@@ -415,8 +481,14 @@ export default function SurveyBuilderPage() {
                                 <div>
                                   <Label>Question Text</Label>
                                   <Input
-                                    value={question.text}
-                                    onChange={(e) => handleUpdateQuestion(selectedSurvey.id, index, { text: e.target.value })}
+                                    value={localQuestionText[index] !== undefined ? localQuestionText[index] : question.text}
+                                    onChange={(e) => handleQuestionTextChange(index, e.target.value)}
+                                    onBlur={() => handleQuestionTextSave(index)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.currentTarget.blur();
+                                      }
+                                    }}
                                     placeholder="Enter question text..."
                                   />
                                 </div>
@@ -471,30 +543,35 @@ export default function SurveyBuilderPage() {
                                 {question.options && (
                                   <div className="space-y-3">
                                     <Label>Answer Options</Label>
-                                    {question.options.map((option: any, optionIndex: number) => (
-                                      <div key={option.id} className="flex items-center gap-2">
-                                        <Input
-                                          value={option.text}
-                                          onChange={(e) => {
-                                            const updatedOptions = [...question.options];
-                                            updatedOptions[optionIndex] = { ...option, text: e.target.value };
-                                            handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
-                                          }}
-                                          placeholder={`Option ${optionIndex + 1}`}
-                                        />
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => {
-                                            const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
-                                            handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
-                                          }}
-                                          disabled={question.options.length <= 2}
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    ))}
+                                    {question.options.map((option: any, optionIndex: number) => {
+                                      const optionKey = `${index}-${optionIndex}`;
+                                      return (
+                                        <div key={option.id} className="flex items-center gap-2">
+                                          <Input
+                                            value={localOptionTexts[optionKey] !== undefined ? localOptionTexts[optionKey] : option.text}
+                                            onChange={(e) => handleOptionTextChange(index, optionIndex, e.target.value)}
+                                            onBlur={() => handleOptionTextSave(index, optionIndex)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                e.currentTarget.blur();
+                                              }
+                                            }}
+                                            placeholder={`Option ${optionIndex + 1}`}
+                                          />
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
+                                              handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
+                                            }}
+                                            disabled={question.options.length <= 2}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      );
+                                    })}
                                     <Button
                                       variant="outline"
                                       size="sm"
