@@ -599,18 +599,48 @@ export default function SurveyBuilderPage() {
                                 <div className="flex items-center gap-2 pt-4 border-t">
                                   <Button
                                     onClick={() => {
+                                      // Prepare all updates for this question
+                                      const updates: Partial<SurveyQuestion> = {};
+                                      
                                       // Save question text if changed
                                       if (localQuestionText[index] !== undefined) {
-                                        handleQuestionTextSave(index);
+                                        updates.text = localQuestionText[index];
+                                        setLocalQuestionText(prev => {
+                                          const newState = { ...prev };
+                                          delete newState[index];
+                                          return newState;
+                                        });
                                       }
                                       
                                       // Save all option texts if changed
-                                      question.options?.forEach((_: any, optionIndex: number) => {
+                                      const hasOptionChanges = question.options?.some((_: any, optionIndex: number) => {
                                         const optionKey = `${index}-${optionIndex}`;
-                                        if (localOptionTexts[optionKey] !== undefined) {
-                                          handleOptionTextSave(index, optionIndex);
-                                        }
+                                        return localOptionTexts[optionKey] !== undefined;
                                       });
+                                      
+                                      if (hasOptionChanges && question.options) {
+                                        const updatedOptions = question.options.map((option: any, optionIndex: number) => {
+                                          const optionKey = `${index}-${optionIndex}`;
+                                          const newText = localOptionTexts[optionKey];
+                                          return newText !== undefined ? { ...option, text: newText } : option;
+                                        });
+                                        updates.options = updatedOptions;
+                                        
+                                        // Clear all option text changes for this question
+                                        question.options.forEach((_: any, optionIndex: number) => {
+                                          const optionKey = `${index}-${optionIndex}`;
+                                          setLocalOptionTexts(prev => {
+                                            const newState = { ...prev };
+                                            delete newState[optionKey];
+                                            return newState;
+                                          });
+                                        });
+                                      }
+                                      
+                                      // Apply all updates at once
+                                      if (Object.keys(updates).length > 0) {
+                                        handleUpdateQuestion(selectedSurvey.id, index, updates);
+                                      }
                                       
                                       setEditingQuestion(null);
                                     }}
