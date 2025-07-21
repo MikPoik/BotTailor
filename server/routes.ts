@@ -694,6 +694,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: userMessage 
       })}\n\n`);
 
+      // Check if this is a survey request and automatically create survey session
+      console.log(`[SURVEY] Checking if message is survey request: "${messageData.content}"`);
+      if (messageData.content.toLowerCase().includes('assessment') || 
+          messageData.content.toLowerCase().includes('survey') ||
+          messageData.content.toLowerCase().includes('arviointi')) {
+        
+        console.log(`[SURVEY] Detected survey request in message`);
+        
+        // Get chatbot configuration to find available surveys
+        const configId = chatbotConfigId || session?.chatbotConfigId;
+        if (configId) {
+          const chatbotConfigTemp = await storage.getChatbotConfig(configId);
+          if (chatbotConfigTemp) {
+            // Get available surveys for this chatbot
+            const availableSurveys = await storage.getSurveysByChatbotId(configId);
+            console.log(`[SURVEY] Found ${availableSurveys.length} available surveys`);
+            
+            if (availableSurveys.length > 0) {
+              // Check if there's already an active survey session
+              let existingSurveySession = await storage.getSurveySessionBySessionId(sessionId);
+              
+              if (!existingSurveySession || existingSurveySession.status !== 'active') {
+                // Create new survey session with the first available survey
+                const firstSurvey = availableSurveys[0];
+                console.log(`[SURVEY] Creating survey session for survey: ${firstSurvey.surveyConfig?.title}`);
+                
+                const newSurveySession = await storage.createSurveySession({
+                  surveyId: firstSurvey.id,
+                  sessionId,
+                  currentQuestionIndex: 0,
+                  responses: {},
+                  status: 'active'
+                });
+                
+                console.log(`[SURVEY] Created survey session:`, {
+                  id: newSurveySession.id,
+                  surveyId: newSurveySession.surveyId,
+                  sessionId: newSurveySession.sessionId
+                });
+              } else {
+                console.log(`[SURVEY] Active survey session already exists`);
+              }
+            }
+          }
+        }
+      }
+
       // Get conversation history for context
       const recentMessages = await storage.getRecentMessages(sessionId, 15);
       const conversationHistory = recentMessages

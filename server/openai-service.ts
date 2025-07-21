@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import {
   AIResponseSchema,
   buildSystemPrompt,
+  buildSurveyContext,
   type AIResponse,
 } from "./ai-response-schema";
 import { parse } from "best-effort-json-parser";
@@ -308,8 +309,38 @@ export async function* generateStreamingResponse(
       }
     }
 
+    // Check for active survey and build context
+    let surveyContext = "";
+    console.log(`[SURVEY] Checking for survey context for session: ${sessionId}`);
+    
+    try {
+      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      console.log(`[SURVEY] Survey session found:`, surveySession ? { 
+        id: surveySession.id, 
+        surveyId: surveySession.surveyId, 
+        status: surveySession.status,
+        currentQuestionIndex: surveySession.currentQuestionIndex
+      } : null);
+      
+      if (surveySession && surveySession.status === 'active') {
+        const survey = await storage.getSurvey(surveySession.surveyId);
+        console.log(`[SURVEY] Survey found:`, survey ? {
+          id: survey.id,
+          title: survey.surveyConfig?.title,
+          questionCount: survey.surveyConfig?.questions?.length
+        } : null);
+        
+        if (survey) {
+          surveyContext = buildSurveyContext(survey, surveySession);
+          console.log(`[SURVEY] Built survey context (${surveyContext.length} chars):`, surveyContext.substring(0, 500) + '...');
+        }
+      }
+    } catch (error) {
+      console.error("[SURVEY] Error building survey context:", error);
+    }
+
     // Use chatbot config system prompt or fallback to default
-    const systemPrompt = buildSystemPrompt(chatbotConfig) + websiteContext;
+    const systemPrompt = buildSystemPrompt(chatbotConfig) + websiteContext + surveyContext;
     const model = chatbotConfig?.model || "gpt-4o";
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10
@@ -319,6 +350,9 @@ export async function* generateStreamingResponse(
     console.log(
       `[OpenAI] Streaming with model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`,
     );
+    if (surveyContext) {
+      console.log(`[SURVEY] Using survey context in system prompt`);
+    }
     //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
 
     const messages = [
@@ -326,7 +360,12 @@ export async function* generateStreamingResponse(
       ...conversationHistory,
       { role: "user" as const, content: userMessage },
     ];
-    console.log(`[OpenAI] Conversation history: ${JSON.stringify(messages.map(msg => ({ role: msg.role, content: msg.content })))}`);
+    console.log('[OpenAI] Conversation history:');
+    messages.forEach(msg => {
+        if (msg.role !== 'system') {
+            console.log(`${msg.role}: ${msg.content}`);
+        }
+    });
     const stream = await openai.chat.completions.create({
       model,
       messages,
