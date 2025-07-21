@@ -708,7 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const chatbotConfigTemp = await storage.getChatbotConfig(configId);
           if (chatbotConfigTemp) {
             // Get available surveys for this chatbot
-            const availableSurveys = await storage.getSurveysByChatbotId(configId);
+            const availableSurveys = await storage.getSurveys(configId);
             console.log(`[SURVEY] Found ${availableSurveys.length} available surveys`);
 
             if (availableSurveys.length > 0) {
