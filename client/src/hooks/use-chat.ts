@@ -175,36 +175,13 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   // Select option mutation
   const selectOptionMutation = useMutation({
     mutationFn: async ({ optionId, payload, optionText }: { optionId: string; payload?: any; optionText?: string }) => {
-      // Optimistically add user selection message
-      const optimisticUserMessage = {
-        id: Date.now(),
-        sessionId,
-        content: optionText || optionId,
-        sender: 'user' as const,
-        messageType: 'text' as const,
-        createdAt: new Date().toISOString(),
-        metadata: {}
-      };
-
-      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-        if (!old) return { messages: [optimisticUserMessage] };
-        return { messages: [...old.messages, optimisticUserMessage] };
-      });
-
+      // Don't create optimistic user message here - streaming will handle it
       const response = await apiRequest('POST', `/api/chat/${sessionId}/select-option`, {
         optionId,
         payload,
         optionText
       });
       const result = await response.json();
-
-      // Add the new bot messages to the existing messages array instead of refetching
-      if (result.messages && result.messages.length > 0) {
-        queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-          if (!old) return { messages: result.messages };
-          return { messages: [...old.messages, ...result.messages] };
-        });
-      }
 
       return result;
     },
