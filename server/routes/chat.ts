@@ -185,7 +185,7 @@ async function handleStreamingResponse(
         
         // Send to client
         res.write(`data: ${JSON.stringify({ 
-          type: 'bot_message', 
+          type: 'bubble', 
           message: chunk.bubble
         })}\n\n`);
       } else if (chunk.type === 'complete') {
