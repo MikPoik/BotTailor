@@ -1049,8 +1049,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[SURVEY] Survey session was successfully updated before AI response generation`);
       }
 
+      // Get chatbot configuration for this session
+      let chatbotConfig = null;
+      const session = await storage.getChatSession(sessionId);
+      const configId = session?.chatbotConfigId;
+      if (configId) {
+        chatbotConfig = await storage.getChatbotConfig(configId);
+      }
+
       // Generate response for the option selection
-      const response = await generateOptionResponse(optionId, payload, sessionId, conversationHistory);
+      const response = await generateOptionResponse(optionId, payload, sessionId, conversationHistory, chatbotConfig);
 
       if (response.bubbles && response.bubbles.length > 0) {
         // Create and store all bubbles as bot messages

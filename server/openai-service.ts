@@ -315,16 +315,17 @@ export async function* generateStreamingResponse(
     
     try {
       const surveySession = await storage.getSurveySessionBySessionId(sessionId);
-      console.log(`[SURVEY] Survey session found:`, surveySession ? { 
+      console.log(`[SURVEY AI CONTEXT] Survey session retrieved:`, surveySession ? { 
         id: surveySession.id, 
         surveyId: surveySession.surveyId, 
         status: surveySession.status,
-        currentQuestionIndex: surveySession.currentQuestionIndex
+        currentQuestionIndex: surveySession.currentQuestionIndex,
+        responses: surveySession.responses
       } : null);
       
       if (surveySession && surveySession.status === 'active') {
         const survey = await storage.getSurvey(surveySession.surveyId);
-        console.log(`[SURVEY] Survey found:`, survey ? {
+        console.log(`[SURVEY AI CONTEXT] Survey found:`, survey ? {
           id: survey.id,
           title: survey.surveyConfig?.title,
           questionCount: survey.surveyConfig?.questions?.length
@@ -332,11 +333,12 @@ export async function* generateStreamingResponse(
         
         if (survey) {
           surveyContext = buildSurveyContext(survey, surveySession);
-          console.log(`[SURVEY] Built survey context (${surveyContext.length} chars):`, surveyContext.substring(0, 500) + '...');
+          console.log(`[SURVEY AI CONTEXT] Built survey context (${surveyContext.length} chars) for question index ${surveySession.currentQuestionIndex}:`);
+          console.log(surveyContext.substring(0, 800));
         }
       }
     } catch (error) {
-      console.error("[SURVEY] Error building survey context:", error);
+      console.error("[SURVEY AI CONTEXT] Error building survey context:", error);
     }
 
     // Use chatbot config system prompt or fallback to default
