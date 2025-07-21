@@ -215,9 +215,8 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   };
 
   const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
-    // This function is no longer needed since handleOptionSelect in chat-interface.tsx
-    // directly calls sendStreamingMessage with proper callbacks
-    return Promise.resolve();
+    console.log(`[FRONTEND] Selecting option: ${optionId}, text: ${optionText}`);
+    return selectOptionMutation.mutateAsync({ optionId, payload, optionText });
   };
 
   return {
