@@ -111,6 +111,15 @@ export async function generateHomeScreenConfig(userPrompt: string): Promise<Home
             if (!action.description) {
               action.description = action.title || "Click to perform this action";
             }
+            // Convert surveyId from string to number if present
+            if (action.surveyId && typeof action.surveyId === 'string') {
+              const numericId = parseInt(action.surveyId, 10);
+              if (!isNaN(numericId)) {
+                action.surveyId = numericId;
+              } else {
+                delete action.surveyId; // Remove invalid surveyId
+              }
+            }
           });
         }
         if (component.props?.topics) {
@@ -124,6 +133,15 @@ export async function generateHomeScreenConfig(userPrompt: string): Promise<Home
             }
             if (!topic.category) {
               topic.category = "general";
+            }
+            // Convert surveyId from string to number if present
+            if (topic.surveyId && typeof topic.surveyId === 'string') {
+              const numericId = parseInt(topic.surveyId, 10);
+              if (!isNaN(numericId)) {
+                topic.surveyId = numericId;
+              } else {
+                delete topic.surveyId; // Remove invalid surveyId
+              }
             }
           });
         }
@@ -185,6 +203,15 @@ Return the updated complete configuration.`,
             if (!action.description) {
               action.description = action.title || "Click to perform this action";
             }
+            // Convert surveyId from string to number if present
+            if (action.surveyId && typeof action.surveyId === 'string') {
+              const numericId = parseInt(action.surveyId, 10);
+              if (!isNaN(numericId)) {
+                action.surveyId = numericId;
+              } else {
+                delete action.surveyId; // Remove invalid surveyId
+              }
+            }
           });
         }
         if (component.props?.topics) {
@@ -197,6 +224,15 @@ Return the updated complete configuration.`,
             }
             if (!topic.category) {
               topic.category = "general";
+            }
+            // Convert surveyId from string to number if present
+            if (topic.surveyId && typeof topic.surveyId === 'string') {
+              const numericId = parseInt(topic.surveyId, 10);
+              if (!isNaN(numericId)) {
+                topic.surveyId = numericId;
+              } else {
+                delete topic.surveyId; // Remove invalid surveyId
+              }
             }
           });
         }

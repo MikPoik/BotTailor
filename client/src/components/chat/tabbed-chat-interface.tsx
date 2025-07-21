@@ -57,10 +57,10 @@ export default function TabbedChatInterface({
   // Only auto-switch to chat tab when starting a new conversation, not when manually switching tabs
   // This effect is removed to allow free navigation between tabs
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading || isStreaming) return;
+  const handleSendMessage = async (inputMessage: string, payload?: any) => {
+    const messageText = typeof inputMessage === 'string' ? inputMessage : String(inputMessage || '');
+    if (!messageText.trim() || isLoading || isStreaming) return;
 
-    const message = inputMessage.trim();
     setInputMessage("");
     setIsStreaming(true);
     streamingBubblesRef.current = [];
@@ -70,7 +70,7 @@ export default function TabbedChatInterface({
 
     try {
       await sendStreamingMessage(
-        message,
+        messageText,
         // onBubbleReceived: Add each complete bubble directly to main messages
         (message: Message) => {
           // Mark as follow-up if this isn't the first bubble in this streaming sequence
@@ -115,7 +115,7 @@ export default function TabbedChatInterface({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessage(inputMessage);
     }
   };
 
@@ -431,7 +431,7 @@ export default function TabbedChatInterface({
                   disabled={isLoading}
                 />
                 <Button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage(inputMessage)}
                   disabled={!inputMessage.trim() || isLoading}
                   size="sm"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
@@ -441,7 +441,7 @@ export default function TabbedChatInterface({
               </div>
             </div>
 
-            
+
           </div>
         </TabsContent>
       </div>
