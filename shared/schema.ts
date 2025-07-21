@@ -218,7 +218,7 @@ export const insertSurveySessionSchema = createInsertSchema(surveySessions).pick
   currentQuestionIndex: true,
   responses: true,
   status: true,
-});
+}).partial({ userId: true });
 
 // Survey types
 export type Survey = typeof surveys.$inferSelect;

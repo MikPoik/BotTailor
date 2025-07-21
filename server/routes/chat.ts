@@ -108,6 +108,7 @@ export function setupChatRoutes(app: Express) {
       await generateStreamingResponse(
         internalMessage || messageData.content,
         sessionId,
+        [],
         res,
         chatbotConfigId || session?.chatbotConfigId || undefined
       );
@@ -181,15 +182,25 @@ async function handleSurveySessionCreation(
               targetSurvey = availableSurveys[0];
             }
             
-            console.log(`[SURVEY] Creating survey session for survey: ${targetSurvey.surveyConfig?.title}`);
+            console.log(`[SURVEY] Creating survey session for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name || 'Unknown Survey'}`);
 
-            await storage.createSurveySession({
-              surveyId: targetSurvey.id,
-              sessionId,
-              currentQuestionIndex: 0,
-              responses: {},
-              status: 'active'
-            });
+            try {
+              const newSurveySession = await storage.createSurveySession({
+                surveyId: targetSurvey.id,
+                sessionId,
+                currentQuestionIndex: 0,
+                responses: {},
+                status: 'active'
+              });
+              
+              console.log(`[SURVEY] Successfully created survey session:`, {
+                id: newSurveySession.id,
+                surveyId: newSurveySession.surveyId,
+                sessionId: newSurveySession.sessionId
+              });
+            } catch (error) {
+              console.error(`[SURVEY] Error creating survey session:`, error);
+            }
           }
         }
       }
