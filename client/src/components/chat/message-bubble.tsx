@@ -26,7 +26,15 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
-  const timeAgo = formatDistanceToNow(new Date(message.createdAt), { addSuffix: true });
+  
+  // Safe date formatting with validation
+  const getTimeAgo = (dateString: string | undefined) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return formatDistanceToNow(date, { addSuffix: true });
+  };
+  const timeAgo = getTimeAgo(message.createdAt);
 
   if (isUser) {
     return (
@@ -35,7 +43,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
           <div className="chat-message-user">
             <p dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
           </div>
-          {!message.metadata?.isFollowUp && (<span className="text-xs text-neutral-500 mt-1 block text-right">
+          {!(message.metadata as any)?.isFollowUp && timeAgo && (<span className="text-xs text-neutral-500 mt-1 block text-right">
             {timeAgo}
           </span>)}
         </div>
@@ -47,7 +55,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
     <div className="flex items-start space-x-3 animate-fadeIn">
       {/* Avatar space - only show avatar for first bubble in a sequence */}
       <div className="w-8 h-8 flex-shrink-0">
-        {!message.metadata?.isFollowUp && (
+        {!(message.metadata as any)?.isFollowUp && (
           <img 
             src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
             alt="Bot avatar" 
@@ -57,7 +65,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
       </div>
       <div className="flex-1">
         {/* Check if this is a streaming/multipart message */}
-        {message.metadata?.isStreaming || message.metadata?.streamingComplete || message.metadata?.chunks ? (
+        {(message.metadata as any)?.isStreaming || (message.metadata as any)?.streamingComplete || (message.metadata as any)?.chunks ? (
           <StreamingMessage 
             message={message} 
             onOptionSelect={onOptionSelect}
@@ -81,9 +89,9 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
         )}
 
         {/* Quick replies for text messages (only for non-streaming) */}
-        {!message.metadata?.isStreaming && !message.metadata?.streamingComplete && !message.metadata?.chunks && message.messageType === 'text' && message.metadata?.quickReplies && (
+        {!(message.metadata as any)?.isStreaming && !(message.metadata as any)?.streamingComplete && !(message.metadata as any)?.chunks && message.messageType === 'text' && (message.metadata as any)?.quickReplies && (
           <div className="flex flex-wrap gap-2 mt-2 pl-0">
-            {message.metadata.quickReplies.map((reply: string, index: number) => (
+            {(message.metadata as any).quickReplies.map((reply: string, index: number) => (
               <button
                 key={index}
                 onClick={() => onQuickReply(reply)}
@@ -96,7 +104,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
         )}
 
         {/* Timestamp (only for non-streaming messages) */}
-        {!message.metadata?.isStreaming && !message.metadata?.streamingComplete && !message.metadata?.chunks && !message.metadata?.isFollowUp && (
+        {!(message.metadata as any)?.isStreaming && !(message.metadata as any)?.streamingComplete && !(message.metadata as any)?.chunks && !(message.metadata as any)?.isFollowUp && timeAgo && (
           <span className="text-xs text-neutral-500 mt-1 block">
             {timeAgo}
           </span>
