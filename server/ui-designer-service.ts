@@ -76,14 +76,37 @@ Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No add
 Generate engaging home screen layouts based on the user's requirements.`;
 }
 
-export async function generateHomeScreenConfig(userPrompt: string): Promise<HomeScreenConfig> {
+export async function generateHomeScreenConfig(userPrompt: string, chatbotId?: number): Promise<HomeScreenConfig> {
   try {
+    // Fetch available surveys if chatbotId is provided
+    let availableSurveys: any[] = [];
+    if (chatbotId) {
+      const { db } = await import("./db");
+      const { surveys } = await import("@shared/schema");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const surveyResults = await db
+        .select()
+        .from(surveys)
+        .where(and(
+          eq(surveys.chatbotConfigId, chatbotId),
+          eq(surveys.status, "active")
+        ));
+      
+      availableSurveys = surveyResults.map(survey => ({
+        id: survey.id,
+        name: survey.name,
+        title: survey.surveyConfig?.title || survey.name,
+        description: survey.description
+      }));
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
         {
           role: "system",
-          content: createSystemPrompt(),
+          content: createSystemPrompt(availableSurveys),
         },
         {
           role: "user",
@@ -162,15 +185,39 @@ export async function generateHomeScreenConfig(userPrompt: string): Promise<Home
 
 export async function modifyHomeScreenConfig(
   currentConfig: HomeScreenConfig,
-  modificationPrompt: string
+  modificationPrompt: string,
+  chatbotId?: number
 ): Promise<HomeScreenConfig> {
   try {
+    // Fetch available surveys if chatbotId is provided
+    let availableSurveys: any[] = [];
+    if (chatbotId) {
+      const { db } = await import("./db");
+      const { surveys } = await import("@shared/schema");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const surveyResults = await db
+        .select()
+        .from(surveys)
+        .where(and(
+          eq(surveys.chatbotConfigId, chatbotId),
+          eq(surveys.status, "active")
+        ));
+      
+      availableSurveys = surveyResults.map(survey => ({
+        id: survey.id,
+        name: survey.name,
+        title: survey.surveyConfig?.title || survey.name,
+        description: survey.description
+      }));
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
         {
           role: "system",
-          content: `${createSystemPrompt()}
+          content: `${createSystemPrompt(availableSurveys)}
 
 You are modifying an existing home screen configuration. Keep the existing structure unless specifically asked to change it.`,
         },

@@ -58,7 +58,7 @@ export type MessageBubble = z.infer<typeof MessageBubbleSchema>;
 export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): string {
   // Default system prompt if no chatbot config is provided
   const defaultSystemPrompt = "You are a helpful customer service chatbot.";
-  
+
   // Use chatbot's custom system prompt or fall back to default
   const customPrompt = chatbotConfig?.systemPrompt || defaultSystemPrompt;
 
@@ -164,7 +164,22 @@ Example for greetings and options:
 
   // Add survey context if provided
   const surveyInstructions = surveyContext || "";
-  
+
+  const surveyInfo = "";
+
+## Survey Integration:
+When creating survey launchers, use:
+- actionType: "survey"
+- surveyId: valid survey ID from available surveys (REQUIRED - use exact ID numbers)
+- action: "take_assessment" or "start_survey"  
+- Appropriate icons: "Star", "BarChart", "PieChart", "TrendingUp"
+- Clear descriptions indicating it's a survey/assessment
+
+**IMPORTANT**: Always match survey titles/names mentioned in prompts to available survey IDs. For example:
+- If user asks for "Valitse sopiva terapia muoto" survey, find the matching survey by name/title and use its ID
+- If user mentions a specific survey, search available surveys for name/title matches
+- If no specific survey mentioned, use the first available survey${surveyInfo}
+
   return `${customPrompt}\n\n${structureInstructions}\n\n${surveyInstructions}`;
 }
 
@@ -173,11 +188,11 @@ export function buildSurveyContext(survey: any, surveySession: any): string {
   const config = survey.surveyConfig;
   const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
   const responses = surveySession.responses || {};
-  
+
   if (!config.questions || config.questions.length === 0) {
     return "";
   }
-  
+
   // If survey is completed
   if (currentQuestionIndex >= config.questions.length) {
     return `
@@ -188,10 +203,10 @@ Previous responses: ${JSON.stringify(responses)}
 Do not ask any more survey questions.
 `;
   }
-  
+
   const currentQuestion = config.questions[currentQuestionIndex];
   const nextQuestionIndex = currentQuestionIndex + 1;
-  
+
   let context = `
 **ACTIVE SURVEY CONTEXT**
 Survey: "${config.title}"

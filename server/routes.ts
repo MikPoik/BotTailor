@@ -925,7 +925,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: surveySession.status,
         currentQuestionIndex: surveySession.currentQuestionIndex
       } : null);
-      
+
       if (surveySession && surveySession.status === 'active') {
         console.log(`[SURVEY] Active survey session found, recording response and updating progress`);
         // This is a survey response, record it
@@ -934,7 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const config = survey.surveyConfig;
           const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
           const currentQuestion = config.questions?.[currentQuestionIndex];
-          
+
           console.log(`[SURVEY] Current question index: ${currentQuestionIndex}`);
           console.log(`[SURVEY] Current question:`, currentQuestion ? {
             id: currentQuestion.id,
@@ -953,7 +953,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const isLastQuestion = currentQuestionIndex >= (config.questions?.length || 0) - 1;
             const newStatus = isLastQuestion ? 'completed' : 'active';
             const nextQuestionIndex = isLastQuestion ? currentQuestionIndex : currentQuestionIndex + 1;
-            
+
             console.log(`[SURVEY] Survey progression:`, {
               currentIndex: currentQuestionIndex,
               nextIndex: nextQuestionIndex,
@@ -979,7 +979,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               status: surveySession?.status,
               responseCount: Object.keys(surveySession?.responses || {}).length
             });
-            
+
             console.log(`[SURVEY] Survey response recorded: ${currentQuestion.id} = ${optionText}`);
             surveyUpdated = true;
           } else {
@@ -1538,33 +1538,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // UI Designer API routes
   app.post('/api/ui-designer/generate', isAuthenticated, async (req: any, res) => {
     try {
-      const { prompt } = req.body;
-
-      if (!prompt) {
-        return res.status(400).json({ message: "Prompt is required" });
-      }
-
-      const config = await generateHomeScreenConfig(prompt);
+      const { prompt, chatbotId } = req.body;
+      const config = await generateHomeScreenConfig(prompt, chatbotId);
       res.json({ config });
     } catch (error) {
-      console.error("Error generating UI config:", error);
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate UI" });
+      console.error("Error generating UI:", error);
+      res.status(500).json({ message: "Failed to generate UI" });
     }
   });
 
   app.post('/api/ui-designer/modify', isAuthenticated, async (req: any, res) => {
     try {
-      const { prompt, currentConfig } = req.body;
-
-      if (!prompt || !currentConfig) {
-        return res.status(400).json({ message: "Prompt and current config are required" });
-      }
-
-      const config = await modifyHomeScreenConfig(currentConfig, prompt);
+      const { prompt, currentConfig, chatbotId } = req.body;
+      const config = await modifyHomeScreenConfig(currentConfig, prompt, chatbotId);
       res.json({ config });
     } catch (error) {
-      console.error("Error modifying UI config:", error);
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to modify UI" });
+      console.error("Error modifying UI:", error);
+      res.status(500).json({ message: "Failed to modify UI" });
     }
   });
 
