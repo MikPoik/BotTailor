@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertMessageSchema, insertChatSessionSchema, RichMessageSchema, insertChatbotConfigSchema, HomeScreenConfigSchema, insertWebsiteSourceSchema, type WebsiteSource, chatSessions, insertSurveySchema, SurveyConfigSchema, type Survey } from "@shared/schema";
 import { z } from "zod";
 import { generateStructuredResponse, generateOptionResponse, generateStreamingResponse } from "./openai-service";
+import { buildSurveyContext } from "./ai-response-schema";
 import { generateHomeScreenConfig, modifyHomeScreenConfig, getDefaultHomeScreenConfig } from "./ui-designer-service";
 import { WebsiteScanner } from "./website-scanner";
 import fs from "fs";
@@ -325,6 +326,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting chatbot config:", error);
       res.status(500).json({ message: "Failed to delete chatbot config" });
+    }
+  });
+
+  // Survey session management endpoints
+  app.post('/api/chat/:sessionId/start-survey', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { surveyId } = req.body;
+
+      if (!surveyId) {
+        return res.status(400).json({ message: "Survey ID is required" });
+      }
+
+      // Get the survey to verify it exists
+      const survey = await storage.getSurvey(surveyId);
+      if (!survey) {
+        return res.status(404).json({ message: "Survey not found" });
+      }
+
+      // Check if there's already an active survey session
+      let surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      if (surveySession && surveySession.status === 'active') {
+        return res.status(400).json({ message: "A survey is already active for this session" });
+      }
+
+      // Create new survey session
+      surveySession = await storage.createSurveySession({
+        surveyId,
+        sessionId,
+        currentQuestionIndex: 0,
+        responses: {},
+        status: 'active'
+      });
+
+      res.json({ 
+        success: true, 
+        surveySession,
+        message: "Survey started successfully" 
+      });
+    } catch (error) {
+      console.error("Error starting survey:", error);
+      res.status(500).json({ message: "Failed to start survey" });
+    }
+  });
+
+  app.post('/api/chat/:sessionId/survey-response', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { questionId, response } = req.body;
+
+      if (!questionId || response === undefined) {
+        return res.status(400).json({ message: "Question ID and response are required" });
+      }
+
+      // Get active survey session
+      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      if (!surveySession || surveySession.status !== 'active') {
+        return res.status(404).json({ message: "No active survey session found" });
+      }
+
+      // Get survey to check questions
+      const survey = await storage.getSurvey(surveySession.surveyId);
+      if (!survey) {
+        return res.status(404).json({ message: "Survey not found" });
+      }
+
+      const config = survey.surveyConfig;
+      const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
+
+      // Update responses
+      const updatedResponses = {
+        ...surveySession.responses,
+        [questionId]: response
+      };
+
+      // Check if this is the last question
+      const isLastQuestion = currentQuestionIndex >= (config.questions?.length || 0) - 1;
+      const newStatus = isLastQuestion ? 'completed' : 'active';
+      const nextQuestionIndex = isLastQuestion ? currentQuestionIndex : currentQuestionIndex + 1;
+
+      // Update survey session
+      await storage.updateSurveySession(surveySession.id, {
+        currentQuestionIndex: nextQuestionIndex,
+        responses: updatedResponses,
+        status: newStatus
+      });
+
+      res.json({ 
+        success: true, 
+        completed: isLastQuestion,
+        nextQuestionIndex,
+        message: isLastQuestion ? "Survey completed" : "Response recorded" 
+      });
+    } catch (error) {
+      console.error("Error recording survey response:", error);
+      res.status(500).json({ message: "Failed to record survey response" });
+    }
+  });
+
+  app.get('/api/chat/:sessionId/survey-status', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+
+      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      if (!surveySession) {
+        return res.json({ active: false });
+      }
+
+      const survey = await storage.getSurvey(surveySession.surveyId);
+      
+      res.json({
+        active: surveySession.status === 'active',
+        surveySession,
+        survey
+      });
+    } catch (error) {
+      console.error("Error checking survey status:", error);
+      res.status(500).json({ message: "Failed to check survey status" });
     }
   });
 
@@ -804,6 +923,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         });
 
+      // Check for active survey and record response if applicable
+      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      if (surveySession && surveySession.status === 'active') {
+        // This is a survey response, record it
+        const survey = await storage.getSurvey(surveySession.surveyId);
+        if (survey) {
+          const config = survey.surveyConfig;
+          const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
+          const currentQuestion = config.questions?.[currentQuestionIndex];
+          
+          if (currentQuestion) {
+            // Update responses
+            const updatedResponses = {
+              ...surveySession.responses,
+              [currentQuestion.id]: optionText
+            };
+
+            // Check if this is the last question
+            const isLastQuestion = currentQuestionIndex >= (config.questions?.length || 0) - 1;
+            const newStatus = isLastQuestion ? 'completed' : 'active';
+            const nextQuestionIndex = isLastQuestion ? currentQuestionIndex : currentQuestionIndex + 1;
+
+            // Update survey session
+            await storage.updateSurveySession(surveySession.id, {
+              currentQuestionIndex: nextQuestionIndex,
+              responses: updatedResponses,
+              status: newStatus
+            });
+
+            console.log(`Survey response recorded: ${currentQuestion.id} = ${optionText}`);
+          }
+        }
+      }
+
       // Generate response for the option selection
       const response = await generateOptionResponse(optionId, payload, sessionId, conversationHistory);
 
@@ -1053,6 +1206,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error counting conversations:", error);
       res.status(500).json({ message: "Failed to count conversations" });
+    }
+  });
+
+  // Public endpoint to get available surveys for home screen integration
+  app.get('/api/chatbots/guid/:guid/surveys/available', async (req, res) => {
+    try {
+      const { guid } = req.params;
+      
+      // Get chatbot by GUID without requiring authentication (for embedded widgets)
+      const chatbotConfig = await storage.getChatbotConfigByGuidPublic(guid);
+      if (!chatbotConfig) {
+        return res.status(404).json({ message: "Chatbot not found" });
+      }
+      
+      // Get active surveys for this chatbot
+      const surveys = await storage.getSurveys(chatbotConfig.id);
+      const activeSurveys = surveys.filter(survey => survey.status === 'active');
+      
+      // Return simplified survey data for home screen
+      const availableSurveys = activeSurveys.map(survey => ({
+        id: survey.id,
+        name: survey.name,
+        description: survey.description,
+        estimatedTime: survey.surveyConfig?.estimatedTime || '5 minutes',
+        questionCount: survey.surveyConfig?.questions?.length || 0
+      }));
+      
+      res.json(availableSurveys);
+    } catch (error) {
+      console.error("Error getting available surveys:", error);
+      res.status(500).json({ message: "Failed to get available surveys" });
     }
   });
 

@@ -151,6 +151,11 @@ export class DatabaseStorage implements IStorage {
     return results[0] || undefined;
   }
 
+  async getChatbotConfigByGuidPublic(guid: string): Promise<ChatbotConfig | null> {
+    const result = await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.guid, guid)).limit(1);
+    return result[0] || null;
+  }
+
   async getChatbotConfigByGuid(userId: string, guid: string): Promise<ChatbotConfig | null> {
     const results = await db.select().from(chatbotConfigs)
       .where(and(eq(chatbotConfigs.userId, userId), eq(chatbotConfigs.guid, guid)));

@@ -188,50 +188,63 @@ export async function generateMultiBubbleResponse(
 
     let accumulatedContent = "";
 
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta?.content || "";
-      if (delta) {
-        accumulatedContent += delta;
-      }
-    }
-
-    const parsedResponse = JSON.parse(accumulatedContent);
-    console.log(`[OpenAI] Raw response: ${accumulatedContent}`);
-
-    // Validate against schema
-    const validated = AIResponseSchema.parse(parsedResponse);
-    console.log(
-      `[OpenAI] Successfully generated ${validated.bubbles.length} message bubbles`,
-    );
-
-    return validated;
-  } catch (error) {
-    console.error("[OpenAI] Error generating response:", error);
-    
-    // Try to salvage if it's a parsing error
-    if (error instanceof SyntaxError && accumulatedContent) {
-      console.log("[OpenAI] Attempting to salvage response from parsing error");
-      try {
-        // Try to parse as single message and wrap in bubbles array
-        const singleMessage = JSON.parse(accumulatedContent);
-        if (singleMessage.messageType && singleMessage.content !== undefined) {
-          console.log("[OpenAI] Successfully salvaged single message response");
-          return {
-            bubbles: [singleMessage]
-          };
+    try {
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta?.content || "";
+        if (delta) {
+          accumulatedContent += delta;
         }
-      } catch (salvageError) {
-        console.log("[OpenAI] Could not salvage response");
       }
+
+      const parsedResponse = JSON.parse(accumulatedContent);
+      console.log(`[OpenAI] Raw response: ${accumulatedContent}`);
+
+      // Validate against schema
+      const validated = AIResponseSchema.parse(parsedResponse);
+      console.log(
+        `[OpenAI] Successfully generated ${validated.bubbles.length} message bubbles`,
+      );
+
+      return validated;
+    } catch (parseError) {
+      console.error("[OpenAI] Error generating response:", parseError);
+      
+      // Try to salvage if it's a parsing error and we have content
+      if (parseError instanceof SyntaxError && accumulatedContent) {
+        console.log("[OpenAI] Attempting to salvage response from parsing error");
+        try {
+          // Try to parse as single message and wrap in bubbles array
+          const singleMessage = JSON.parse(accumulatedContent);
+          if (singleMessage.messageType && singleMessage.content !== undefined) {
+            console.log("[OpenAI] Successfully salvaged single message response");
+            return {
+              bubbles: [singleMessage]
+            };
+          }
+        } catch (salvageError) {
+          console.log("[OpenAI] Could not salvage response");
+        }
+      }
+      
+      // Return fallback response
+      return {
+        bubbles: [
+          {
+            messageType: "text",
+            content:
+              "I apologize, but I'm having trouble generating a response right now. Please try again.",
+            metadata: {},
+          },
+        ],
+      };
     }
-    
-    // Return fallback response
+  } catch (error) {
+    console.error("[OpenAI] Critical error:", error);
     return {
       bubbles: [
         {
           messageType: "text",
-          content:
-            "I apologize, but I'm having trouble generating a response right now. Please try again.",
+          content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
           metadata: {},
         },
       ],
@@ -486,7 +499,7 @@ export async function* generateStreamingResponse(
                   ) {
                     // Check if all options have required fields
                     const allOptionsComplete = bubble.metadata.options.every(
-                      (opt) => opt.id && opt.text && opt.action,
+                      (opt: any) => opt.id && opt.text && opt.action,
                     );
                     if (allOptionsComplete) {
                       console.log(
@@ -506,7 +519,7 @@ export async function* generateStreamingResponse(
                   ) {
                     // Check if all form fields have required properties
                     const allFieldsComplete = bubble.metadata.formFields.every(
-                      (field) => field && field.id && field.label && field.type,
+                      (field: any) => field && field.id && field.label && field.type,
                     );
                     if (allFieldsComplete) {
                       console.log(

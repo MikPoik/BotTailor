@@ -283,12 +283,16 @@ export const HomeScreenComponentSchema = z.object({
       message: z.string().optional(),
       category: z.string(),
       popular: z.boolean().optional(),
+      actionType: z.enum(['message', 'survey', 'custom']).default('message'),
+      surveyId: z.number().optional(), // Reference to survey ID for survey topics
     })).optional(),
     actions: z.array(z.object({
       id: z.string(),
       title: z.string(),
       description: z.string(),
       action: z.string(),
+      actionType: z.enum(['message', 'survey', 'custom']).default('message'),
+      surveyId: z.number().optional(), // Reference to survey ID for survey actions
     })).optional(),
     style: z.object({
       backgroundColor: z.string().optional(),

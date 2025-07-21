@@ -54,8 +54,8 @@ export const AIResponseSchema = z.object({
 export type AIResponse = z.infer<typeof AIResponseSchema>;
 export type MessageBubble = z.infer<typeof MessageBubbleSchema>;
 
-// Function to build system prompt with chatbot config
-export function buildSystemPrompt(chatbotConfig?: any): string {
+// Function to build system prompt with chatbot config and survey context
+export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): string {
   // Default system prompt if no chatbot config is provided
   const defaultSystemPrompt = "You are a helpful customer service chatbot.";
   
@@ -162,5 +162,78 @@ Example for greetings and options:
 - Correct format: {"bubbles": [{"messageType": "text", "content": "message"}]}
 `;
 
-  return `${customPrompt}\n\n${structureInstructions}`;
+  // Add survey context if provided
+  const surveyInstructions = surveyContext || "";
+  
+  return `${customPrompt}\n\n${structureInstructions}\n\n${surveyInstructions}`;
+}
+
+// Function to build survey context for AI when a survey is active
+export function buildSurveyContext(survey: any, surveySession: any): string {
+  const config = survey.surveyConfig;
+  const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
+  const responses = surveySession.responses || {};
+  
+  if (!config.questions || config.questions.length === 0) {
+    return "";
+  }
+  
+  // If survey is completed
+  if (currentQuestionIndex >= config.questions.length) {
+    return `
+**SURVEY COMPLETED**
+Survey "${config.title}" has been completed. 
+Completion message: "${config.completionMessage || 'Thank you for completing the survey!'}"
+Previous responses: ${JSON.stringify(responses)}
+Do not ask any more survey questions.
+`;
+  }
+  
+  const currentQuestion = config.questions[currentQuestionIndex];
+  const nextQuestionIndex = currentQuestionIndex + 1;
+  
+  let context = `
+**ACTIVE SURVEY CONTEXT**
+Survey: "${config.title}"
+${config.description ? `Description: ${config.description}` : ''}
+Progress: Question ${currentQuestionIndex + 1} of ${config.questions.length}
+${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ''}
+
+**CURRENT QUESTION**
+Question ${currentQuestionIndex + 1}: ${currentQuestion.text}
+Type: ${currentQuestion.type}
+Required: ${currentQuestion.required ? 'Yes' : 'No'}
+`;
+
+  if (currentQuestion.options && currentQuestion.options.length > 0) {
+    context += `
+**OPTIONS (MUST PRESENT AS MENU)**
+`;
+    currentQuestion.options.forEach((option: any, index: number) => {
+      context += `${index + 1}. ${option.text}\n`;
+    });
+    context += `
+**CRITICAL**: You MUST present this question with a menu containing these exact options.
+`;
+  }
+
+  if (Object.keys(responses).length > 0) {
+    context += `
+**PREVIOUS RESPONSES**
+${Object.entries(responses).map(([qId, answer]) => `${qId}: ${answer}`).join('\n')}
+`;
+  }
+
+  context += `
+**SURVEY FLOW INSTRUCTIONS**
+1. Present the current question with clear menu options
+2. Wait for user response before proceeding
+3. Store the response and advance to next question
+4. Continue until all questions are answered
+5. End with the completion message
+
+**IMPORTANT**: This is question ${currentQuestionIndex + 1} of ${config.questions.length}. After user answers, you will be automatically advanced to the next question.
+`;
+
+  return context;
 }
