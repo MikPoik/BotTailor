@@ -912,16 +912,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const { optionId, payload, optionText } = req.body;
 
-      // Use the option text from the client (which comes from AI response) or fallback
-      const displayText = optionText || getOptionDisplayText(optionId);
-
-      // Create user message for the selection
-      const userMessage = await storage.createMessage({
-        sessionId,
-        content: displayText,
-        sender: "user",
-        messageType: "text",
-      });
+      // Don't create user message here - streaming endpoint will handle it
+      // const displayText = optionText || getOptionDisplayText(optionId);
 
       // Check for active survey and record response BEFORE generating AI response
       console.log(`[SURVEY] Checking for survey session for option selection: ${sessionId}`);
@@ -1070,8 +1062,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Simply acknowledge the option selection - streaming will be handled by frontend
       res.json({ 
-        success: true, 
-        userMessage,
+        success: true,
         message: "Option selection processed successfully"
       });
     } catch (error) {
