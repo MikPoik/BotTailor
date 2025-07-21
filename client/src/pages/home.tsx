@@ -154,7 +154,11 @@ export default function Home() {
               <div className="mt-3 text-xs text-muted-foreground">
                 {isAuthenticated ? (
                   <>
-                    Configure site-wide default with: <code>DEFAULT_SITE_CHATBOT_GUID={selectedChatbot.guid}</code>
+                    Configure site-wide default with environment variables:
+                    <br />
+                    <code>DEFAULT_SITE_CHATBOT_GUID={selectedChatbot.guid}</code>
+                    <br />
+                    <code>DEFAULT_SITE_ADMIN_USER_ID=your_user_id</code>
                     <br />
                     Or use URL parameter: <code>?chatbot={selectedChatbot.guid}</code>
                   </>
@@ -162,7 +166,11 @@ export default function Home() {
                   <>
                     This is the {publicChatbot ? 'configured' : 'default'} chatbot for this site.
                     <br />
-                    Site owner can configure default with: <code>DEFAULT_SITE_CHATBOT_GUID={selectedChatbot.guid}</code>
+                    Site owner can configure default with environment variables:
+                    <br />
+                    <code>DEFAULT_SITE_CHATBOT_GUID={selectedChatbot.guid}</code>
+                    <br />
+                    <code>DEFAULT_SITE_ADMIN_USER_ID=your_user_id</code>
                   </>
                 )}
               </div>

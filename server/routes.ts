@@ -171,15 +171,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/public/default-chatbot', async (req: Request, res: Response) => {
     try {
       const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
+      const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
 
       if (!defaultGuid) {
-        return res.status(404).json({ message: "No default chatbot configured" });
+        return res.status(404).json({ message: "No default chatbot configured - missing DEFAULT_SITE_CHATBOT_GUID" });
       }
 
-      const config = await storage.getPublicChatbotConfigByGuid(defaultGuid);
+      if (!defaultUserId) {
+        return res.status(404).json({ message: "No default admin user configured - missing DEFAULT_SITE_ADMIN_USER_ID" });
+      }
+
+      // Use the same secure method as embeddable widget - verify ownership
+      const config = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
       if (!config || !config.isActive) {
         return res.status(404).json({ message: "Default chatbot not found or inactive" });
       }
+
+      console.log(`[DEFAULT CHATBOT] Serving default chatbot: ${config.name} (GUID: ${defaultGuid}) for admin user: ${defaultUserId}`);
 
       // Return only public-safe fields
       const publicConfig = {

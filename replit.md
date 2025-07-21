@@ -6,6 +6,15 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 21, 2025**: Enhanced Default Chatbot Security and Configuration:
+  - **IMPROVED**: Updated default chatbot configuration to match embeddable widget security model
+  - **ENHANCED**: Default chatbot now requires both `DEFAULT_SITE_CHATBOT_GUID` and `DEFAULT_SITE_ADMIN_USER_ID` environment variables
+  - **SECURITY**: Added ownership verification for default chatbot using `getChatbotConfigByGuid(userId, guid)` method
+  - **CONSISTENCY**: Default chatbot route now works identically to embeddable widget with proper user context
+  - **USER EXPERIENCE**: Updated configuration hints on home page and dashboard to show both required environment variables
+  - **RESOLVED**: Fixed inconsistency where default chatbot used global GUID lookup while embeddable widget used user-scoped lookup
+  - **PRODUCTION READY**: Default chatbot configuration now secure and consistent with existing widget security patterns
+
 - **July 21, 2025**: Completed Survey System Phase 2 - AI Integration & Session Management:
   - **COMPLETED**: Comprehensive survey system with AI context injection and session management
   - Implemented survey context injection with `buildSurveyContext()` function for AI prompts
