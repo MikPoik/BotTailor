@@ -12,7 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { type Survey, type SurveyConfig, type SurveyQuestion } from "@shared/schema";
+import { type Survey as BaseSurvey, type SurveyConfig, type SurveyQuestion } from "@shared/schema";
+
+// Properly typed Survey interface
+interface Survey extends Omit<BaseSurvey, 'surveyConfig'> {
+  surveyConfig: SurveyConfig;
+}
 import {
   ArrowLeft,
   Plus,
@@ -43,13 +48,13 @@ export default function SurveyBuilderPage() {
   });
 
   // Fetch chatbot details
-  const { data: chatbot } = useQuery({
+  const { data: chatbot } = useQuery<{ name: string; id: number }>({
     queryKey: [`/api/chatbots/${chatbotId}`],
     enabled: !!chatbotId && isAuthenticated,
   });
 
   // Fetch surveys for this chatbot
-  const { data: surveys, isLoading } = useQuery({
+  const { data: surveys = [], isLoading } = useQuery<Survey[]>({
     queryKey: [`/api/chatbots/${chatbotId}/surveys`],
     enabled: !!chatbotId && isAuthenticated,
   });
@@ -57,10 +62,7 @@ export default function SurveyBuilderPage() {
   // Create survey mutation
   const createSurveyMutation = useMutation({
     mutationFn: async (data: { name: string; description: string; surveyConfig: SurveyConfig }) => {
-      return await apiRequest(`/api/chatbots/${chatbotId}/surveys`, {
-        method: "POST",
-        body: data,
-      });
+      return await apiRequest("POST", `/api/chatbots/${chatbotId}/surveys`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}/surveys`] });
@@ -78,10 +80,7 @@ export default function SurveyBuilderPage() {
   // Update survey mutation
   const updateSurveyMutation = useMutation({
     mutationFn: async (data: { id: number; updates: Partial<Survey> }) => {
-      return await apiRequest(`/api/surveys/${data.id}`, {
-        method: "PATCH",
-        body: data.updates,
-      });
+      return await apiRequest("PATCH", `/api/surveys/${data.id}`, data.updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}/surveys`] });
@@ -99,9 +98,7 @@ export default function SurveyBuilderPage() {
   // Delete survey mutation
   const deleteSurveyMutation = useMutation({
     mutationFn: async (surveyId: number) => {
-      return await apiRequest(`/api/surveys/${surveyId}`, {
-        method: "DELETE",
-      });
+      return await apiRequest("DELETE", `/api/surveys/${surveyId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}/surveys`] });
@@ -172,7 +169,7 @@ export default function SurveyBuilderPage() {
 
     const updatedConfig = {
       ...selectedSurvey.surveyConfig,
-      questions: selectedSurvey.surveyConfig.questions.filter((_, index) => index !== questionIndex),
+      questions: selectedSurvey.surveyConfig.questions.filter((_: SurveyQuestion, index: number) => index !== questionIndex),
     };
 
     updateSurveyMutation.mutate({
@@ -184,7 +181,7 @@ export default function SurveyBuilderPage() {
   const handleUpdateQuestion = (surveyId: number, questionIndex: number, updates: Partial<SurveyQuestion>) => {
     if (!selectedSurvey) return;
 
-    const updatedQuestions = selectedSurvey.surveyConfig.questions.map((q, index) =>
+    const updatedQuestions = selectedSurvey.surveyConfig.questions.map((q: SurveyQuestion, index: number) =>
       index === questionIndex ? { ...q, ...updates } : q
     );
 
@@ -268,7 +265,7 @@ export default function SurveyBuilderPage() {
                     <p className="text-sm">Create your first survey to get started</p>
                   </div>
                 ) : (
-                  surveys?.map((survey) => (
+                  surveys?.map((survey: Survey) => (
                     <Card
                       key={survey.id}
                       className={`cursor-pointer transition-colors ${
@@ -404,7 +401,7 @@ export default function SurveyBuilderPage() {
                       {/* Questions list */}
                       <div className="space-y-4">
                         <Label>Questions</Label>
-                        {selectedSurvey.surveyConfig.questions.map((question, index) => (
+                        {selectedSurvey.surveyConfig.questions.map((question: SurveyQuestion, index: number) => (
                           <Card key={question.id} className="p-4">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
@@ -416,7 +413,7 @@ export default function SurveyBuilderPage() {
                                 <p className="font-medium">{question.text}</p>
                                 {question.options && (
                                   <div className="mt-2 space-y-1">
-                                    {question.options.map((option) => (
+                                    {question.options.map((option: any) => (
                                       <div key={option.id} className="text-sm text-muted-foreground">
                                         • {option.text}
                                       </div>
@@ -561,7 +558,7 @@ export default function SurveyBuilderPage() {
                             </p>
                           )}
                         </div>
-                        {selectedSurvey.surveyConfig.questions.map((question, index) => (
+                        {selectedSurvey.surveyConfig.questions.map((question: SurveyQuestion, index: number) => (
                           <div key={question.id} className="p-4 border rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">Q{index + 1}</Badge>
@@ -570,7 +567,7 @@ export default function SurveyBuilderPage() {
                             <p className="font-medium mb-3">{question.text}</p>
                             {question.options ? (
                               <div className="space-y-2">
-                                {question.options.map((option) => (
+                                {question.options.map((option: any) => (
                                   <div key={option.id} className="flex items-center gap-2">
                                     <div className="w-4 h-4 border rounded-full"></div>
                                     <span className="text-sm">{option.text}</span>
