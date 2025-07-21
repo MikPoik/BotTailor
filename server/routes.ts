@@ -839,8 +839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           })}\n\n`);
 
         } else if (chunk.type === 'complete') {
-          // All bubbles processed```text
-, send final completion
+          // All bubbles processed
           res.write(`data: ${JSON.stringify({ 
             type: 'complete', 
             messages: createdMessages
