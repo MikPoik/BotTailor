@@ -235,9 +235,66 @@ export default function TabbedChatInterface({
     // Switch to chat tab
     setActiveTab("chat");
 
-    // Check if this is a survey action
-    if (typeof messageOrPayload === 'object' && messageOrPayload?.action === 'take_assessment') {
-      // Handle survey action - start survey flow
+    // Check if this is a survey action with separate display/internal messages
+    if (typeof messageOrPayload === 'object' && messageOrPayload?.actionType === 'survey') {
+      // Handle survey action with clean display message and internal message with surveyId
+      const displayMessage = messageOrPayload.displayMessage;
+      const internalMessage = messageOrPayload.internalMessage;
+      setInputMessage("");
+
+      // Small delay to ensure the tab switch and input update, then send
+      setTimeout(() => {
+        setIsStreaming(true);
+        streamingBubblesRef.current = [];
+
+        sendStreamingMessage(
+          displayMessage, // Show clean message in chat
+          // onBubbleReceived: Add each complete bubble directly to main messages
+          (receivedMessage: Message) => {
+            // Mark as follow-up if this isn't the first bubble in this streaming sequence
+            const isFollowUp = streamingBubblesRef.current.length > 0;
+            const bubbleWithFlag = {
+              ...receivedMessage,
+              metadata: {
+                ...receivedMessage.metadata,
+                isFollowUp,
+                isStreaming: false // Mark as permanent message
+              }
+            };
+
+            // Add bubble directly to main messages query cache
+            queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            });
+
+            // Keep track of streaming bubbles for counting
+            streamingBubblesRef.current.push(bubbleWithFlag);
+          },
+          // onAllComplete: Streaming finished, just set streaming state to false
+          (messages: Message[]) => {
+            setIsStreaming(false);
+            // Clear the tracking ref since streaming is complete
+            streamingBubblesRef.current = [];
+            setInputMessage(""); // Clear input after sending
+          },
+          // onError: Handle errors
+          (error: string) => {
+            setIsStreaming(false);
+            streamingBubblesRef.current = [];
+            setInputMessage(""); // Clear input on error
+            console.error("Start chat streaming error:", error);
+          },
+          internalMessage // Send internal message with surveyId to backend
+        ).catch(error => {
+          setIsStreaming(false);
+          streamingBubblesRef.current = [];
+          setInputMessage(""); // Clear input on error
+          console.error("Start chat error:", error);
+        });
+      }, 100);
+    } else if (typeof messageOrPayload === 'object' && messageOrPayload?.action === 'take_assessment') {
+      // Handle legacy survey action - start survey flow (fallback)
       const surveyMessage = `I'd like to take the ${topic} assessment`;
       setInputMessage("");
 

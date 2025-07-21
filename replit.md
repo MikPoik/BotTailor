@@ -17,8 +17,10 @@ This is a full-stack React chat widget application built with Express.js backend
   - Added survey session database operations: create, update, get by session ID
   - Implemented automatic question progression and completion detection
   - Created comprehensive survey context for AI including current question, progress, and previous responses
-  - **PRODUCTION READY**: Complete survey system from builder to AI-powered conversational flow
-  - **TESTED**: Survey creation, AI context injection, session management, and response recording
+  - **FIXED**: Survey ID selection from home screen actions - specific surveys now properly selected instead of defaulting to first
+  - **ENHANCED**: Clean chat display - surveyId hidden from user messages while maintaining backend functionality
+  - **PRODUCTION READY**: Complete survey system from builder to AI-powered conversational flow with proper survey selection
+  - **TESTED**: Survey creation, AI context injection, session management, response recording, and specific survey ID targeting
 
 - **July 18, 2025**: Implemented Survey System Phase 1 - Survey Builder:
   - **COMPLETED**: Added comprehensive survey system foundation with database schema and API

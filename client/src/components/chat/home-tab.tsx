@@ -141,9 +141,15 @@ export default function HomeTab({
 
       // Handle survey actions specifically
       if (action.action === "take_assessment" || action.actionType === "survey") {
-        // Include surveyId in the message content for backend parsing
-        const surveyMessage = `I'd like to take the ${action.title} assessment (surveyId: ${action.surveyId})`;
-        onStartChat(action.title, surveyMessage);
+        // Send clean message to display, but include hidden surveyId for backend parsing
+        const displayMessage = `I'd like to take the ${action.title} assessment`;
+        const backgroundMessage = `${displayMessage} (surveyId: ${action.surveyId})`;
+        // Pass a special object that includes both display and internal messages
+        onStartChat(action.title, {
+          displayMessage,
+          internalMessage: backgroundMessage,
+          actionType: 'survey'
+        });
       } else if (action.action === "start_chat") {
         // For regular chat actions, send as string message
         onStartChat(action.title, action.description);
