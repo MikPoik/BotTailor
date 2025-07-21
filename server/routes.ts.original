@@ -691,20 +691,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         session = await storage.updateChatSession(sessionId, { 
           chatbotConfigId: chatbotConfigId 
         });
-      } else if (!session.chatbotConfigId && !chatbotConfigId) {
-        // For default chatbot sessions, resolve and store the config ID
-        const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
-        const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
-        
-        if (defaultGuid && defaultUserId) {
-          const defaultConfig = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
-          if (defaultConfig) {
-            session = await storage.updateChatSession(sessionId, { 
-              chatbotConfigId: defaultConfig.id 
-            });
-            console.log(`[SESSION] Updated session with default chatbot config ID: ${defaultConfig.id}`);
-          }
-        }
       }
 
       // Create user message first

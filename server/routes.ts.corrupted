@@ -691,20 +691,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         session = await storage.updateChatSession(sessionId, { 
           chatbotConfigId: chatbotConfigId 
         });
-      } else if (!session.chatbotConfigId && !chatbotConfigId) {
-        // For default chatbot sessions, resolve and store the config ID
-        const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
-        const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
-        
-        if (defaultGuid && defaultUserId) {
-          const defaultConfig = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
-          if (defaultConfig) {
-            session = await storage.updateChatSession(sessionId, { 
-              chatbotConfigId: defaultConfig.id 
-            });
-            console.log(`[SESSION] Updated session with default chatbot config ID: ${defaultConfig.id}`);
-          }
-        }
       }
 
       // Create user message first
@@ -734,13 +720,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[SURVEY] Extracted surveyId from message: ${targetSurveyId}`);
 
         // Get chatbot configuration to find available surveys
-        const configId = chatbotConfigId || session?.chatbotConfigId;
+        let configId = chatbotConfigId || session?.chatbotConfigId;
+        let chatbotConfigTemp = null;
+        
         if (configId) {
-          const chatbotConfigTemp = await storage.getChatbotConfig(configId);
-          if (chatbotConfigTemp) {
-            // Get available surveys for this chatbot
-            const availableSurveys = await storage.getSurveys(configId);
-            console.log(`[SURVEY] Found ${availableSurveys.length} available surveys`);
+          chatbotConfigTemp = await storage.getChatbotConfig(configId);
+        } else {
+          // Fall back to default site chatbot for survey operations
+          const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
+          const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
+          
+          if (defaultGuid && defaultUserId) {
+            chatbotConfigTemp = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
+            if (chatbotConfigTemp) {
+              configId = chatbotConfigTemp.id;
+              console.log(`[SURVEY] Using default chatbot for survey operations: ${chatbotConfigTemp.name} (ID: ${configId})`);
+              
+              // Update session with chatbot config ID for future operations
+              if (session && !session.chatbotConfigId) {
+                session = await storage.updateChatSession(sessionId, { 
+                  chatbotConfigId: configId 
+                });
+                console.log(`[SURVEY] Updated session with resolved chatbot config ID: ${configId}`);
+              }
+            }
+          }
+        }
+        
+        if (chatbotConfigTemp && configId) {
+          // Get available surveys for this chatbot
+          const availableSurveys = await storage.getSurveys(configId);
+          console.log(`[SURVEY] Found ${availableSurveys.length} available surveys`);
 
             if (availableSurveys.length > 0) {
               // Check if there's already an active survey session
