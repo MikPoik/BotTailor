@@ -116,7 +116,9 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
       
       // Then trigger streaming response with the updated survey context
       const displayText = optionText || optionId;
-      const contextMessage = `User selected option "${optionId}" with payload: ${JSON.stringify(payload)}. Provide a helpful response.`;
+      const contextMessage = `User selected option "${optionId}"` +
+        (payload !== undefined && payload !== null ? ` with payload: ${JSON.stringify(payload)}` : '') +
+        ". Provide a helpful response.";
 
       setIsStreaming(true);
       streamingBubblesRef.current = [];

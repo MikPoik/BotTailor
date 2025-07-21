@@ -20,14 +20,14 @@ interface TabbedChatInterfaceProps {
   chatbotConfig?: any;
 }
 
-export default function TabbedChatInterface({ 
-  sessionId, 
+export default function TabbedChatInterface({
+  sessionId,
   isMobile,
   isPreloaded = false,
   onClose,
   isEmbedded = false,
   chatbotConfigId,
-  chatbotConfig
+  chatbotConfig,
 }: TabbedChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -37,13 +37,13 @@ export default function TabbedChatInterface({
   const streamingBubblesRef = useRef<any[]>([]);
   const queryClient = useQueryClient();
 
-  const { 
-    messages, 
+  const {
+    messages,
     sendMessage,
-    sendStreamingMessage, 
-    selectOption, 
+    sendStreamingMessage,
+    selectOption,
     isLoading,
-    isSessionLoading 
+    isSessionLoading,
   } = useChat(sessionId, chatbotConfigId);
 
   const scrollToBottom = () => {
@@ -58,7 +58,10 @@ export default function TabbedChatInterface({
   // This effect is removed to allow free navigation between tabs
 
   const handleSendMessage = async (inputMessage: string, payload?: any) => {
-    const messageText = typeof inputMessage === 'string' ? inputMessage : String(inputMessage || '');
+    const messageText =
+      typeof inputMessage === "string"
+        ? inputMessage
+        : String(inputMessage || "");
     if (!messageText.trim() || isLoading || isStreaming) return;
 
     setInputMessage("");
@@ -80,15 +83,18 @@ export default function TabbedChatInterface({
             metadata: {
               ...message.metadata,
               isFollowUp,
-              isStreaming: false // Mark as permanent message
-            }
+              isStreaming: false, // Mark as permanent message
+            },
           };
 
           // Add bubble directly to main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [bubbleWithFlag] };
-            return { messages: [...old.messages, bubbleWithFlag] };
-          });
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
@@ -104,7 +110,7 @@ export default function TabbedChatInterface({
           setIsStreaming(false);
           streamingBubblesRef.current = [];
           console.error("Streaming error:", error);
-        }
+        },
       );
     } catch (error) {
       setIsStreaming(false);
@@ -113,24 +119,33 @@ export default function TabbedChatInterface({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(inputMessage);
     }
   };
 
-  const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
+  const handleOptionSelect = async (
+    optionId: string,
+    payload?: any,
+    optionText?: string,
+  ) => {
     if (isLoading || isStreaming) return;
 
     console.log(`[FRONTEND] Option selected: ${optionId} - ${optionText}`);
-    
+
     try {
       // First, record the option selection in the backend (this updates survey sessions)
       await selectOption(optionId, payload, optionText);
-      
+
       // Then trigger streaming response with the updated survey context
       const displayText = optionText || optionId;
-      const contextMessage = `User selected option "${optionId}" with payload: ${JSON.stringify(payload)}. Provide a helpful response.`;
+      const contextMessage =
+        `User selected option "${optionId}"` +
+        (payload !== undefined && payload !== null
+          ? ` with payload: ${JSON.stringify(payload)}`
+          : "") +
+        ". Provide a helpful response.";
 
       setIsStreaming(true);
       streamingBubblesRef.current = [];
@@ -146,16 +161,19 @@ export default function TabbedChatInterface({
             metadata: {
               ...message.metadata,
               isFollowUp,
-              isStreaming: false // Mark as permanent message
-            }
+              isStreaming: false, // Mark as permanent message
+            },
           };
-          
+
           // Add bubble directly to main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [bubbleWithFlag] };
-            return { messages: [...old.messages, bubbleWithFlag] };
-          });
-          
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
+
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
@@ -172,7 +190,7 @@ export default function TabbedChatInterface({
           console.error("Option select streaming error:", error);
         },
         // Pass contextMessage as the internal message for AI processing
-        contextMessage
+        contextMessage,
       );
     } catch (error) {
       setIsStreaming(false);
@@ -199,15 +217,18 @@ export default function TabbedChatInterface({
             metadata: {
               ...message.metadata,
               isFollowUp,
-              isStreaming: false // Mark as permanent message
-            }
+              isStreaming: false, // Mark as permanent message
+            },
           };
 
           // Add bubble directly to main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [bubbleWithFlag] };
-            return { messages: [...old.messages, bubbleWithFlag] };
-          });
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
@@ -223,7 +244,7 @@ export default function TabbedChatInterface({
           setIsStreaming(false);
           streamingBubblesRef.current = [];
           console.error("Quick reply streaming error:", error);
-        }
+        },
       );
     } catch (error) {
       setIsStreaming(false);
@@ -231,12 +252,18 @@ export default function TabbedChatInterface({
     }
   };
 
-  const handleStartChat = async (topic: string, messageOrPayload?: string | any) => {
+  const handleStartChat = async (
+    topic: string,
+    messageOrPayload?: string | any,
+  ) => {
     // Switch to chat tab
     setActiveTab("chat");
 
     // Check if this is a survey action with separate display/internal messages
-    if (typeof messageOrPayload === 'object' && messageOrPayload?.actionType === 'survey') {
+    if (
+      typeof messageOrPayload === "object" &&
+      messageOrPayload?.actionType === "survey"
+    ) {
       // Handle survey action with clean display message and internal message with surveyId
       const displayMessage = messageOrPayload.displayMessage;
       const internalMessage = messageOrPayload.internalMessage;
@@ -258,15 +285,18 @@ export default function TabbedChatInterface({
               metadata: {
                 ...receivedMessage.metadata,
                 isFollowUp,
-                isStreaming: false // Mark as permanent message
-              }
+                isStreaming: false, // Mark as permanent message
+              },
             };
 
             // Add bubble directly to main messages query cache
-            queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-              if (!old) return { messages: [bubbleWithFlag] };
-              return { messages: [...old.messages, bubbleWithFlag] };
-            });
+            queryClient.setQueryData(
+              ["/api/chat", sessionId, "messages"],
+              (old: any) => {
+                if (!old) return { messages: [bubbleWithFlag] };
+                return { messages: [...old.messages, bubbleWithFlag] };
+              },
+            );
 
             // Keep track of streaming bubbles for counting
             streamingBubblesRef.current.push(bubbleWithFlag);
@@ -285,15 +315,18 @@ export default function TabbedChatInterface({
             setInputMessage(""); // Clear input on error
             console.error("Start chat streaming error:", error);
           },
-          internalMessage // Send internal message with surveyId to backend
-        ).catch(error => {
+          internalMessage, // Send internal message with surveyId to backend
+        ).catch((error) => {
           setIsStreaming(false);
           streamingBubblesRef.current = [];
           setInputMessage(""); // Clear input on error
           console.error("Start chat error:", error);
         });
       }, 100);
-    } else if (typeof messageOrPayload === 'object' && messageOrPayload?.action === 'take_assessment') {
+    } else if (
+      typeof messageOrPayload === "object" &&
+      messageOrPayload?.action === "take_assessment"
+    ) {
       // Handle legacy survey action - start survey flow (fallback)
       const surveyMessage = `I'd like to take the ${topic} assessment`;
       setInputMessage("");
@@ -314,15 +347,18 @@ export default function TabbedChatInterface({
               metadata: {
                 ...receivedMessage.metadata,
                 isFollowUp,
-                isStreaming: false // Mark as permanent message
-              }
+                isStreaming: false, // Mark as permanent message
+              },
             };
 
             // Add bubble directly to main messages query cache
-            queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-              if (!old) return { messages: [bubbleWithFlag] };
-              return { messages: [...old.messages, bubbleWithFlag] };
-            });
+            queryClient.setQueryData(
+              ["/api/chat", sessionId, "messages"],
+              (old: any) => {
+                if (!old) return { messages: [bubbleWithFlag] };
+                return { messages: [...old.messages, bubbleWithFlag] };
+              },
+            );
 
             // Keep track of streaming bubbles for counting
             streamingBubblesRef.current.push(bubbleWithFlag);
@@ -340,15 +376,15 @@ export default function TabbedChatInterface({
             streamingBubblesRef.current = [];
             setInputMessage(""); // Clear input on error
             console.error("Start chat streaming error:", error);
-          }
-        ).catch(error => {
+          },
+        ).catch((error) => {
           setIsStreaming(false);
           streamingBubblesRef.current = [];
           setInputMessage(""); // Clear input on error
           console.error("Start chat error:", error);
         });
       }, 100);
-    } else if (typeof messageOrPayload === 'string' && messageOrPayload) {
+    } else if (typeof messageOrPayload === "string" && messageOrPayload) {
       // If a specific message string is provided, send it
       setInputMessage(messageOrPayload);
 
@@ -368,15 +404,18 @@ export default function TabbedChatInterface({
               metadata: {
                 ...receivedMessage.metadata,
                 isFollowUp,
-                isStreaming: false // Mark as permanent message
-              }
+                isStreaming: false, // Mark as permanent message
+              },
             };
 
             // Add bubble directly to main messages query cache
-            queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-              if (!old) return { messages: [bubbleWithFlag] };
-              return { messages: [...old.messages, bubbleWithFlag] };
-            });
+            queryClient.setQueryData(
+              ["/api/chat", sessionId, "messages"],
+              (old: any) => {
+                if (!old) return { messages: [bubbleWithFlag] };
+                return { messages: [...old.messages, bubbleWithFlag] };
+              },
+            );
 
             // Keep track of streaming bubbles for counting
             streamingBubblesRef.current.push(bubbleWithFlag);
@@ -394,8 +433,8 @@ export default function TabbedChatInterface({
             streamingBubblesRef.current = [];
             setInputMessage(""); // Clear input on error
             console.error("Start chat streaming error:", error);
-          }
-        ).catch(error => {
+          },
+        ).catch((error) => {
           setIsStreaming(false);
           streamingBubblesRef.current = [];
           setInputMessage(""); // Clear input on error
@@ -414,49 +453,57 @@ export default function TabbedChatInterface({
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className={`flex flex-col h-full ${isEmbedded ? 'embedded-tabs' : ''}`}>
+    <Tabs
+      value={activeTab}
+      onValueChange={setActiveTab}
+      className={`flex flex-col h-full ${isEmbedded ? "embedded-tabs" : ""}`}
+    >
       {/* Tab Content - takes remaining space above navigation */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-        <TabsContent 
-          value="home" 
+        <TabsContent
+          value="home"
           className="flex-1 m-0 p-0 flex flex-col overflow-hidden"
-          style={{ 
-            position: 'static',
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
+          style={{
+            position: "static",
+            width: "100%",
+            background: "transparent",
+            border: "none",
             padding: 0,
-            margin: 0
+            margin: 0,
           }}
         >
-          <HomeTab 
-              onStartChat={handleStartChat} 
-              isMobile={isMobile}
-              isPreloaded={isPreloaded}
-              chatbotConfig={chatbotConfig}
-            />
+          <HomeTab
+            onStartChat={handleStartChat}
+            isMobile={isMobile}
+            isPreloaded={isPreloaded}
+            chatbotConfig={chatbotConfig}
+          />
         </TabsContent>
 
-        <TabsContent 
-          value="chat" 
+        <TabsContent
+          value="chat"
           className="flex-1 m-0 p-0 flex flex-col overflow-hidden"
-          style={{ 
-            position: 'static',
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
+          style={{
+            position: "static",
+            width: "100%",
+            background: "transparent",
+            border: "none",
             padding: 0,
-            margin: 0
+            margin: 0,
           }}
         >
           {/* Messages area - takes remaining space above input */}
-          <div className={`flex-1 overflow-y-auto p-4 space-y-4 min-h-0 ${isEmbedded ? 'embedded-messages-area' : ''}`}>
+          <div
+            className={`flex-1 overflow-y-auto p-4 space-y-4 min-h-0 ${isEmbedded ? "embedded-messages-area" : ""}`}
+          >
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center text-gray-500">
                   <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <h3 className="font-medium mb-2">No messages yet</h3>
-                  <p className="text-sm">Start a conversation or go to Home to choose a topic</p>
+                  <p className="text-sm">
+                    Start a conversation or go to Home to choose a topic
+                  </p>
                 </div>
               </div>
             ) : (
@@ -471,7 +518,9 @@ export default function TabbedChatInterface({
               ))
             )}
 
-            {(isTyping || isStreaming) && <TypingIndicator chatbotConfig={chatbotConfig} />}
+            {(isTyping || isStreaming) && (
+              <TypingIndicator chatbotConfig={chatbotConfig} />
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -502,34 +551,32 @@ export default function TabbedChatInterface({
                 </Button>
               </div>
             </div>
-
-
           </div>
         </TabsContent>
       </div>
 
       {/* Tab Navigation - at bottom */}
       <TabsList className="grid w-full grid-cols-2 h-12 bg-transparent p-0.5">
-          <TabsTrigger 
-            value="home" 
-            className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
-          >
-            <Home className="h-4 w-4" />
-            <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="chat" 
-            className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
-            {messages.length > 0 && (
-              <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
-                {messages.length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
+        <TabsTrigger
+          value="home"
+          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
+        >
+          <Home className="h-4 w-4" />
+          <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="chat"
+          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
+          {messages.length > 0 && (
+            <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+              {messages.length}
+            </span>
+          )}
+        </TabsTrigger>
+      </TabsList>
     </Tabs>
   );
 }
