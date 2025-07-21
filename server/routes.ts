@@ -834,8 +834,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get chatbot configuration for this session (prefer the one from request, then session)
       let chatbotConfig = null;
       const configId = chatbotConfigId || session?.chatbotConfigId;
+      
       if (configId) {
+        // Use specific chatbot config ID if available
         chatbotConfig = await storage.getChatbotConfig(configId);
+        console.log(`[CHAT] Using specific chatbot config: ${chatbotConfig?.name} (ID: ${configId})`);
+      } else {
+        // Fall back to default site chatbot if no specific config is available
+        const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
+        const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
+        
+        if (defaultGuid && defaultUserId) {
+          chatbotConfig = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
+          if (chatbotConfig) {
+            console.log(`[CHAT] Using default site chatbot: ${chatbotConfig.name} (GUID: ${defaultGuid})`);
+          } else {
+            console.log(`[CHAT] WARNING: Default site chatbot not found or inactive (GUID: ${defaultGuid}, User: ${defaultUserId})`);
+          }
+        } else {
+          console.log(`[CHAT] No default site chatbot configured - missing environment variables`);
+        }
       }
 
       // Generate streaming response using internal message if provided, otherwise use display text
