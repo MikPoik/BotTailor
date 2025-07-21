@@ -734,7 +734,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   sessionId: newSurveySession.sessionId
                 });
               } else {
-                console.log(`[SURVEY] Active survey session already exists`);
+                console.log(`[SURVEY] Active survey session already exists, resetting to first question`);
+                // Reset existing session to start over
+                await storage.updateSurveySession(existingSurveySession.id, {
+                  currentQuestionIndex: 0,
+                  responses: {},
+                  status: 'active'
+                });
               }
             }
           }
@@ -918,7 +924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check for active survey and record response BEFORE generating AI response
       console.log(`[SURVEY] Checking for survey session for option selection: ${sessionId}`);
       let surveyUpdated = false;
-      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      let surveySession = await storage.getSurveySessionBySessionId(sessionId);
       console.log(`[SURVEY] Survey session found:`, surveySession ? {
         id: surveySession.id,
         surveyId: surveySession.surveyId,
@@ -964,17 +970,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
 
             // Update survey session BEFORE generating AI response
-            const updatedSession = await storage.updateSurveySession(surveySession.id, {
+            await storage.updateSurveySession(surveySession.id, {
               currentQuestionIndex: nextQuestionIndex,
               responses: updatedResponses,
               status: newStatus
             });
 
-            console.log(`[SURVEY] Survey session updated BEFORE AI response:`, {
-              id: updatedSession.id,
-              currentQuestionIndex: updatedSession.currentQuestionIndex,
-              status: updatedSession.status,
-              responseCount: Object.keys(updatedSession.responses).length
+            // Refresh the survey session to get updated data for AI context
+            surveySession = await storage.getSurveySessionBySessionId(sessionId);
+
+            console.log(`[SURVEY] Survey session updated and refreshed:`, {
+              id: surveySession?.id,
+              currentQuestionIndex: surveySession?.currentQuestionIndex,
+              status: surveySession?.status,
+              responseCount: Object.keys(surveySession?.responses || {}).length
             });
             
             console.log(`[SURVEY] Survey response recorded: ${currentQuestion.id} = ${optionText}`);

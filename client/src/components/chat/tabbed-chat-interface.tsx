@@ -234,7 +234,7 @@ export default function TabbedChatInterface({
     if (typeof messageOrPayload === 'object' && messageOrPayload?.action === 'take_assessment') {
       // Handle survey action - start survey flow
       const surveyMessage = `I'd like to take the ${topic} assessment`;
-      setInputMessage(surveyMessage);
+      setInputMessage("");
 
       // Small delay to ensure the tab switch and input update, then send
       setTimeout(() => {
