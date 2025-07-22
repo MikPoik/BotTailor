@@ -35,13 +35,34 @@
       // Wait for DOM to be ready
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
+          this.loadStyles();
           this.createWidget();
           this.setupEventListeners();
         });
       } else {
+        this.loadStyles();
         this.createWidget();
         this.setupEventListeners();
       }
+    },
+
+    loadStyles: function() {
+      // Check if styles are already loaded
+      if (document.getElementById('chatwidget-styles')) {
+        return;
+      }
+
+      // Load CSS file
+      const link = document.createElement('link');
+      link.id = 'chatwidget-styles';
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+
+      // Determine the CSS URL based on the API URL
+      const baseUrl = this.config.apiUrl.split('/widget/')[0] || window.location.origin;
+      link.href = `${baseUrl}/embed.css`;
+
+      document.head.appendChild(link);
     },
 
     generateSessionId: function() {
@@ -52,91 +73,29 @@
       // Create iframe container
       const container = document.createElement('div');
       container.id = 'chatwidget-container';
-      container.style.cssText = `
-        position: fixed;
-        ${this.config.position === 'bottom-right' ? 'bottom: 24px; right: 24px;' : 'bottom: 24px; left: 24px;'}
-        z-index: ${this.config.zIndex};
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      `;
+      container.className = `chatwidget-container ${this.config.position}`;
+      container.style.zIndex = this.config.zIndex;
 
       // Create initial message bubble
       const messageBubble = document.createElement('div');
       messageBubble.id = 'chatwidget-message-bubble';
-      messageBubble.style.cssText = `
-        position: absolute;
-        bottom: 80px;
-        ${this.config.position === 'bottom-right' ? 'right: 0;' : 'left: 0;'}
-        max-width: 280px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-        padding: 16px;
-        transform: translateY(10px) scale(0.95);
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-        border: 1px solid rgba(0,0,0,0.08);
-      `;
+      messageBubble.className = `chatwidget-message-bubble ${this.config.position}`;
 
       // Message bubble content
       messageBubble.innerHTML = `
-        <div style="display: flex; align-items: flex-start; gap: 12px;">
-          <div style="
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: ${this.config.primaryColor};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-          ">
+        <div class="chatwidget-message-content">
+          <div class="chatwidget-avatar" style="background-color: ${this.config.primaryColor};">
             <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
               <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
             </svg>
           </div>
-          <div style="flex: 1;">
-            <div style="
-              background: #f8f9fa;
-              border-radius: 12px;
-              padding: 12px;
-              margin-bottom: 8px;
-              position: relative;
-            ">
-              <p style="
-                margin: 0;
-                color: #2d3748;
-                font-size: 14px;
-                line-height: 1.4;
-                font-weight: 500;
-              ">Hello there! Need any help?</p>
-              <div style="
-                position: absolute;
-                bottom: -6px;
-                left: 12px;
-                width: 12px;
-                height: 12px;
-                background: #f8f9fa;
-                transform: rotate(45deg);
-              "></div>
+          <div class="chatwidget-message-text">
+            <div class="chatwidget-speech-bubble">
+              <p class="chatwidget-message-main">Hello there! Need any help?</p>
             </div>
-            <p style="
-              margin: 0;
-              color: #718096;
-              font-size: 12px;
-              line-height: 1.3;
-            ">Click the chat button to get started!</p>
+            <p class="chatwidget-message-sub">Click the chat button to get started!</p>
           </div>
-          <button id="chatwidget-message-close" style="
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            color: #a0aec0;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-          " onmouseover="this.style.background='#f7fafc'; this.style.color='#4a5568';" onmouseout="this.style.background='none'; this.style.color='#a0aec0';">
+          <button id="chatwidget-message-close" class="chatwidget-close-btn">
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
             </svg>
@@ -147,19 +106,8 @@
       // Create chat bubble
       const bubble = document.createElement('div');
       bubble.id = 'chatwidget-bubble';
-      bubble.style.cssText = `
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background-color: ${this.config.primaryColor};
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        animation: pulse 2s infinite;
-      `;
+      bubble.className = 'chatwidget-bubble';
+      bubble.style.backgroundColor = this.config.primaryColor;
 
       bubble.innerHTML = `
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -170,69 +118,26 @@
       // Create notification badge
       const badge = document.createElement('div');
       badge.id = 'chatwidget-badge';
-      badge.style.cssText = `
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        width: 24px;
-        height: 24px;
-        background-color: #ef4444;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 12px;
-        font-weight: 500;
-      `;
+      badge.className = 'chatwidget-badge';
       badge.textContent = '1';
       bubble.appendChild(badge);
 
       // Create iframe placeholder for chat interface (lazy load)
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
-      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
-      iframe.style.cssText = `
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 384px;
-        height: 600px;
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-        background: white;
-        display: none;
-        visibility: hidden;
-        z-index: 1001;
-      `;
+      iframe.className = 'chatwidget-iframe';
+      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
 
       // Mobile overlay for small screens
       const overlay = document.createElement('div');
       overlay.id = 'chatwidget-overlay';
-      overlay.style.cssText = `
-        position: fixed;
-        inset: 0;
-        background-color: rgba(0,0,0,0.5);
-        display: none;
-        z-index: 999;
-      `;
+      overlay.className = 'chatwidget-overlay';
 
       // Mobile iframe placeholder (lazy load)
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
-      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
-      mobileIframe.style.cssText = `
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        border: none;
-        background: white;
-        display: none;
-        visibility: hidden;
-        z-index: 1001;
-      `;
+      mobileIframe.className = 'chatwidget-mobile-iframe';
+      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
 
       container.appendChild(messageBubble);
       container.appendChild(bubble);
@@ -280,17 +185,17 @@
           to { transform: translateY(0); }
         }
 
-        #chatwidget-bubble:hover {
+        .chatwidget-bubble:hover {
           transform: scale(1.05);
           animation: none;
         }
 
-        #chatwidget-iframe.show {
+        .chatwidget-iframe.show {
           display: block !important;
           animation: fadeIn 0.3s ease-out;
         }
 
-        #chatwidget-mobile-iframe.show {
+        .chatwidget-mobile-iframe.show {
           display: block !important;
           animation: slideUp 0.3s ease-out;
         }
@@ -318,61 +223,55 @@
 
         // Hide message bubble when chat opens
         if (messageVisible && messageBubble) {
-          messageBubble.style.opacity = '0';
-          messageBubble.style.visibility = 'hidden';
-          messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+          messageBubble.classList.remove('visible');
           messageVisible = false;
         }
 
-        // Note: Configuration now passed via URL parameters to avoid CORS issues
-
         if (isMobile()) {
-                // Lazy load mobile iframe if not already loaded
-                if (!mobileIframe.src) {
-                  // Build URL with sessionId if provided, otherwise let server generate it
-                  const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+          // Lazy load mobile iframe if not already loaded
+          if (!mobileIframe.src) {
+            // Build URL with sessionId if provided, otherwise let server generate it
+            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
 
-                  // Check if apiUrl already contains a specific widget path
-                  let widgetUrl;
-                  if (this.config.apiUrl.includes('/widget/')) {
-                    // Specific widget URL - use as-is with query parameters
-                    const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                    widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
-                  } else {
-                    // Base URL - append /chat-widget path
-                    widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
-                  }
+            // Check if apiUrl already contains a specific widget path
+            let widgetUrl;
+            if (this.config.apiUrl.includes('/widget/')) {
+              // Specific widget URL - use as-is with query parameters
+              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+              widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
+            } else {
+              // Base URL - append /chat-widget path
+              widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+            }
 
-                  mobileIframe.src = widgetUrl;
-                  // Note: Removed cross-origin config setting due to protocol differences
-                }
-                overlay.style.display = 'block';
-                mobileIframe.style.visibility = 'visible';
-                mobileIframe.classList.add('show');
-              } else {
-                // Lazy load desktop iframe if not already loaded
-                if (!iframe.src) {
-                  // Build URL with sessionId if provided, otherwise let server generate it
-                  const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+            mobileIframe.src = widgetUrl;
+          }
+          overlay.style.display = 'block';
+          mobileIframe.style.visibility = 'visible';
+          mobileIframe.classList.add('show');
+        } else {
+          // Lazy load desktop iframe if not already loaded
+          if (!iframe.src) {
+            // Build URL with sessionId if provided, otherwise let server generate it
+            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
 
-                  // Check if apiUrl already contains a specific widget path
-                  let widgetUrl;
-                  if (this.config.apiUrl.includes('/widget/')) {
-                    // Specific widget URL - use as-is with query parameters
-                    const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                    widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
-                  } else {
-                    // Base URL - append /chat-widget path
-                    widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
-                  }
+            // Check if apiUrl already contains a specific widget path
+            let widgetUrl;
+            if (this.config.apiUrl.includes('/widget/')) {
+              // Specific widget URL - use as-is with query parameters
+              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+              widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
+            } else {
+              // Base URL - append /chat-widget path
+              widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
+            }
 
-                  iframe.src = widgetUrl;
-                  // Note: Removed cross-origin config setting due to protocol differences
-                }
-                bubble.style.display = 'none';
-                iframe.style.visibility = 'visible';
-                iframe.classList.add('show');
-              }
+            iframe.src = widgetUrl;
+          }
+          bubble.style.display = 'none';
+          iframe.style.visibility = 'visible';
+          iframe.classList.add('show');
+        }
       };
 
       const closeChat = () => {
@@ -392,9 +291,7 @@
       // Close message bubble function
       const closeMessageBubble = () => {
         if (messageBubble && messageVisible) {
-          messageBubble.style.opacity = '0';
-          messageBubble.style.visibility = 'hidden';
-          messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+          messageBubble.classList.remove('visible');
           messageVisible = false;
         }
       };
@@ -478,10 +375,8 @@
         if (currentMessageIndex >= messages.length) {
           // Auto-hide after showing all messages
           setTimeout(() => {
-            if (messageBubble.style.visibility === 'visible') {
-              messageBubble.style.opacity = '0';
-              messageBubble.style.visibility = 'hidden';
-              messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+            if (messageBubble.classList.contains('visible')) {
+              messageBubble.classList.remove('visible');
             }
           }, 8000);
           return;
@@ -489,18 +384,20 @@
 
         const message = messages[currentMessageIndex];
         messageBubble.innerHTML = `
-          <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <div class="chatwidget-message-content">
             <img src="${this.config.avatarUrl || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32'}" 
                  style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;" alt="Bot">
-            <span style="font-weight: 600; font-size: 14px; color: #1f2937;">${this.config.botName || 'Assistant'}</span>
-            <button onclick="ChatWidget.hideInitialMessage()" style="margin-left: auto; background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; line-height: 1; padding: 0;">&times;</button>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 600; font-size: 14px; color: #1f2937;">${this.config.botName || 'Assistant'}</span>
+                <button onclick="ChatWidget.hideInitialMessage()" style="margin-left: auto; background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; line-height: 1; padding: 0;">&times;</button>
+              </div>
+              <div style="color: #4b5563; font-size: 14px; line-height: 1.4;">${message.content || message}</div>
+            </div>
           </div>
-          <div style="color: #4b5563; font-size: 14px; line-height: 1.4;">${message.content || message}</div>
         `;
 
-        messageBubble.style.opacity = '1';
-        messageBubble.style.visibility = 'visible';
-        messageBubble.style.transform = 'translateY(0) scale(1)';
+        messageBubble.classList.add('visible');
 
         currentMessageIndex++;
 
@@ -510,10 +407,8 @@
         } else {
           // Auto-hide after last message
           setTimeout(() => {
-            if (messageBubble.style.visibility === 'visible') {
-              messageBubble.style.opacity = '0';
-              messageBubble.style.visibility = 'hidden';
-              messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+            if (messageBubble.classList.contains('visible')) {
+              messageBubble.classList.remove('visible');
             }
           }, 8000);
         }
@@ -526,16 +421,12 @@
     showDefaultMessage: function(messageBubble) {
       // Show default message bubble after a short delay
       setTimeout(() => {
-        messageBubble.style.opacity = '1';
-        messageBubble.style.visibility = 'visible';
-        messageBubble.style.transform = 'translateY(0) scale(1)';
+        messageBubble.classList.add('visible');
 
         // Auto-hide after 10 seconds unless user interacts
         setTimeout(() => {
-          if (messageBubble.style.visibility === 'visible') {
-            messageBubble.style.opacity = '0';
-            messageBubble.style.visibility = 'hidden';
-            messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+          if (messageBubble.classList.contains('visible')) {
+            messageBubble.classList.remove('visible');
           }
         }, 10000);
       }, 3000);
@@ -545,9 +436,7 @@
     hideInitialMessage: function() {
       const messageBubble = document.getElementById('chatwidget-message-bubble');
       if (messageBubble) {
-        messageBubble.style.opacity = '0';
-        messageBubble.style.visibility = 'hidden';
-        messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+        messageBubble.classList.remove('visible');
       }
     },
 

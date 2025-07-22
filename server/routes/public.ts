@@ -22,6 +22,20 @@ export function setupPublicRoutes(app: Express) {
       res.status(404).send('embed.js not found');
     }
   });
+
+  // Serve embed.css static file
+  app.get('/embed.css', (req: Request, res: Response) => {
+    const publicPath = path.resolve(__dirname, '../../public');
+    const embedCssPath = path.join(publicPath, 'embed.css');
+    
+    if (fs.existsSync(embedCssPath)) {
+      res.setHeader('Content-Type', 'text/css');
+      res.sendFile(embedCssPath);
+    } else {
+      console.error('embed.css not found at:', embedCssPath);
+      res.status(404).send('embed.css not found');
+    }
+  });
   // Get default chatbot configuration for public access
   app.get('/api/public/default-chatbot', async (req, res) => {
     try {
