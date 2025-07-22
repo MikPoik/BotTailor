@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -88,7 +87,7 @@ export default function WidgetTest() {
 
   const generateEmbedCode = () => {
     if (!selectedChatbot || !user) return "";
-    
+
     return `<script src="${window.location.origin}/embed.js"></script>
 <script>
   ChatWidget.init({
@@ -163,7 +162,7 @@ export default function WidgetTest() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh Widget
               </Button>
-              
+
               <Button
                 variant="outline"
                 className="w-full"
@@ -185,7 +184,7 @@ export default function WidgetTest() {
             This simulates your external website where the chat widget will be embedded.
             The widget should appear in the {position.replace('-', ' ')} corner.
           </p>
-          
+
           <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
             <h2 className="text-2xl font-semibold text-neutral-800 mb-4">About Our Service</h2>
             <p className="text-neutral-600 leading-relaxed mb-4">
@@ -224,7 +223,7 @@ export default function WidgetTest() {
                 </li>
               </ul>
             </div>
-            
+
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-xl font-semibold text-neutral-800 mb-3">Test Instructions</h3>
               <p className="text-neutral-600 mb-4">
@@ -247,8 +246,6 @@ export default function WidgetTest() {
           </div>
         </div>
       </div>
-
-      </old_str>
     </div>
   );
 }
