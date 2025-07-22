@@ -158,8 +158,10 @@
   border-radius: 12px;
   box-shadow: 0 25px 50px rgba(0,0,0,0.15);
   background: white;
-  display: none;
-  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.95);
+  transition: all 0.3s ease-out;
   z-index: 1001;
 }
 
@@ -178,8 +180,10 @@
   height: 100%;
   border: none;
   background: white;
-  display: none;
-  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(100%);
+  transition: all 0.3s ease-out;
   z-index: 1001;
 }
 
@@ -200,13 +204,15 @@
 }
 
 .chatwidget-iframe.show {
-  display: block !important;
-  animation: chatwidget-fadeIn 0.3s ease-out;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .chatwidget-mobile-iframe.show {
-  display: block !important;
-  animation: chatwidget-slideUp 0.3s ease-out;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 /* Message bubble visible state */

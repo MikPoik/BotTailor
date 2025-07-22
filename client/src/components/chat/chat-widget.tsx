@@ -23,7 +23,6 @@ export default function ChatWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [preloadStarted, setPreloadStarted] = useState(false);
   const queryClient = useQueryClient();
 
   // Generate a unique session ID for this chat widget instance
@@ -34,34 +33,11 @@ export default function ChatWidget({
   // Preload chat data in background when widget mounts
   const { isSessionLoading, isMessagesLoading } = useChat(sessionId);
   
-  // Start preloading when widget first mounts (for external embed)
-  useEffect(() => {
-    if (isEmbedded && !preloadStarted) {
-      setPreloadStarted(true);
-      // Small delay to allow initial render, then start preloading
-      setTimeout(() => {
-        queryClient.prefetchQuery({
-          queryKey: ['/api/chat/session', undefined],
-          queryFn: async () => {
-            const response = await fetch('/api/chat/session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sessionId })
-            });
-            return response.json();
-          }
-        });
-      }, 100);
-    }
-  }, [isEmbedded, preloadStarted, sessionId, queryClient]);
-
-  // Track when initial loading is complete
+  // Track when initial loading is complete (simplified)
   useEffect(() => {
     if (!isSessionLoading && !isMessagesLoading && isInitialLoad) {
-      // Add a small delay to ensure smooth transition from skeleton
-      setTimeout(() => {
-        setIsInitialLoad(false);
-      }, 500);
+      // Quick transition - no artificial delay
+      setIsInitialLoad(false);
     }
   }, [isSessionLoading, isMessagesLoading, isInitialLoad]);
 
