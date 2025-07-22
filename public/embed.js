@@ -59,6 +59,91 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       `;
 
+      // Create initial message bubble
+      const messageBubble = document.createElement('div');
+      messageBubble.id = 'chatwidget-message-bubble';
+      messageBubble.style.cssText = `
+        position: absolute;
+        bottom: 80px;
+        ${this.config.position === 'bottom-right' ? 'right: 0;' : 'left: 0;'}
+        max-width: 280px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        padding: 16px;
+        transform: translateY(10px) scale(0.95);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        border: 1px solid rgba(0,0,0,0.08);
+      `;
+
+      // Message bubble content
+      messageBubble.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: ${this.config.primaryColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          ">
+            <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+            </svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="
+              background: #f8f9fa;
+              border-radius: 12px;
+              padding: 12px;
+              margin-bottom: 8px;
+              position: relative;
+            ">
+              <p style="
+                margin: 0;
+                color: #2d3748;
+                font-size: 14px;
+                line-height: 1.4;
+                font-weight: 500;
+              ">Hello there! Need any help?</p>
+              <div style="
+                position: absolute;
+                bottom: -6px;
+                left: 12px;
+                width: 12px;
+                height: 12px;
+                background: #f8f9fa;
+                transform: rotate(45deg);
+              "></div>
+            </div>
+            <p style="
+              margin: 0;
+              color: #718096;
+              font-size: 12px;
+              line-height: 1.3;
+            ">Click the chat button to get started!</p>
+          </div>
+          <button id="chatwidget-message-close" style="
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #a0aec0;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+          " onmouseover="this.style.background='#f7fafc'; this.style.color='#4a5568';" onmouseout="this.style.background='none'; this.style.color='#a0aec0';">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+      `;
+
       // Create chat bubble
       const bubble = document.createElement('div');
       bubble.id = 'chatwidget-bubble';
@@ -149,11 +234,19 @@
         z-index: 1001;
       `;
 
+      container.appendChild(messageBubble);
       container.appendChild(bubble);
       container.appendChild(iframe);
       document.body.appendChild(overlay);
       document.body.appendChild(mobileIframe);
       document.body.appendChild(container);
+
+      // Show initial message after a short delay
+      setTimeout(() => {
+        messageBubble.style.opacity = '1';
+        messageBubble.style.visibility = 'visible';
+        messageBubble.style.transform = 'translateY(0) scale(1)';
+      }, 2000);
 
       // Add CSS animations
       this.addAnimations();
@@ -173,6 +266,17 @@
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px) scale(0.95); }
           to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes fadeInUp {
+          from { 
+            opacity: 0; 
+            transform: translateY(10px) scale(0.95); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+          }
         }
 
         @keyframes slideUp {
@@ -204,14 +308,25 @@
       const overlay = document.getElementById('chatwidget-overlay');
       const mobileIframe = document.getElementById('chatwidget-mobile-iframe');
       const badge = document.getElementById('chatwidget-badge');
+      const messageBubble = document.getElementById('chatwidget-message-bubble');
+      const messageClose = document.getElementById('chatwidget-message-close');
 
       let isOpen = false;
+      let messageVisible = true;
 
       const isMobile = () => window.innerWidth < 1024;
 
       const openChat = () => {
         isOpen = true;
         badge.style.display = 'none';
+        
+        // Hide message bubble when chat opens
+        if (messageVisible && messageBubble) {
+          messageBubble.style.opacity = '0';
+          messageBubble.style.visibility = 'hidden';
+          messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+          messageVisible = false;
+        }
 
         // Note: Configuration now passed via URL parameters to avoid CORS issues
 
@@ -278,9 +393,31 @@
         }
       };
 
+      // Close message bubble function
+      const closeMessageBubble = () => {
+        if (messageBubble && messageVisible) {
+          messageBubble.style.opacity = '0';
+          messageBubble.style.visibility = 'hidden';
+          messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+          messageVisible = false;
+        }
+      };
+
       // Event listeners
       bubble.addEventListener('click', openChat);
       overlay.addEventListener('click', closeChat);
+      if (messageClose) {
+        messageClose.addEventListener('click', closeMessageBubble);
+      }
+      if (messageBubble) {
+        // Also allow clicking the message bubble itself to open chat
+        messageBubble.addEventListener('click', (e) => {
+          // Don't trigger if clicking the close button
+          if (e.target !== messageClose && !messageClose.contains(e.target)) {
+            openChat();
+          }
+        });
+      }
 
       // Listen for messages from iframe
       window.addEventListener('message', (event) => {
