@@ -37,7 +37,7 @@ export default function Home() {
 
   // Fetch specific chatbot by GUID if configured (authenticated users)
   const { data: specificChatbot } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/guid/${targetChatbotGuid}`],
+    queryKey: [`/api/chatbots/${targetChatbotGuid}`],
     enabled: isAuthenticated && !!targetChatbotGuid,
     retry: false,
   });

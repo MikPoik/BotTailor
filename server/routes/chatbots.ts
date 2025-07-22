@@ -20,8 +20,8 @@ export function setupChatbotRoutes(app: Express) {
     }
   });
 
-  // Get specific chatbot configuration by GUID
-  app.get('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+  // Get specific chatbot configuration by GUID  
+  app.get('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
       const userId = req.user.claims.sub;
@@ -63,33 +63,26 @@ export function setupChatbotRoutes(app: Express) {
   });
 
   // Update chatbot by GUID
-  app.put('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+  app.put('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
       const userId = req.user.claims.sub;
       const body = req.body;
 
-      console.log("[DEBUG] Updating chatbot:", { guid, userId, body });
-
       // Verify ownership and get chatbot
       const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
       if (!existingChatbot) {
-        console.log("[DEBUG] Chatbot not found:", { guid, userId });
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
       const updateData = insertChatbotConfigSchema.partial().parse(body);
-      console.log("[DEBUG] Parsed update data:", updateData);
-      
       const chatbot = await storage.updateChatbotConfig(existingChatbot.id, updateData);
-      console.log("[DEBUG] Updated chatbot result:", chatbot);
       
       res.json(chatbot);
     } catch (error) {
       console.error("Error updating chatbot:", error);
       if (error instanceof z.ZodError) {
         const validationError = fromZodError(error);
-        console.log("[DEBUG] Validation error:", validationError.message);
         return res.status(400).json({ message: validationError.message });
       }
       res.status(500).json({ message: "Failed to update chatbot" });
@@ -97,7 +90,7 @@ export function setupChatbotRoutes(app: Express) {
   });
 
   // Delete chatbot by GUID
-  app.delete('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
       const userId = req.user.claims.sub;

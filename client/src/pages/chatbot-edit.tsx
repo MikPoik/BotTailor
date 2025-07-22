@@ -62,7 +62,7 @@ export default function ChatbotEdit() {
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/guid/${chatbotGuid}`],
+    queryKey: [`/api/chatbots/${chatbotGuid}`],
     enabled: isAuthenticated && !!chatbotGuid,
     retry: false,
   });
@@ -104,39 +104,29 @@ export default function ChatbotEdit() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      console.log("[DEBUG] Sending update data:", data);
-      console.log("[DEBUG] Request URL:", `/api/chatbots/guid/${chatbotGuid}`);
-      const response = await fetch(`/api/chatbots/guid/${chatbotGuid}`, {
+      const response = await fetch(`/api/chatbots/${chatbotGuid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       
-      console.log("[DEBUG] Response status:", response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
-        console.log("[DEBUG] Error response:", errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
-      const result = await response.json();
-      console.log("[DEBUG] Success response:", result);
-      return result;
+      return response.json();
     },
-    onSuccess: (result) => {
-      console.log("[DEBUG] Mutation success:", result);
+    onSuccess: () => {
       toast({
         title: "Success",
         description: "Chatbot configuration updated successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/guid/${chatbotGuid}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotGuid}`] });
       setLocation("/dashboard");
     },
     onError: (error) => {
-      console.log("[DEBUG] Mutation error:", error);
-      console.log("[DEBUG] Error details:", error.message, error.stack);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -150,15 +140,13 @@ export default function ChatbotEdit() {
       }
       toast({
         title: "Error",
-        description: `Failed to update chatbot configuration: ${error.message}`,
+        description: "Failed to update chatbot configuration. Please try again.",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: FormData) => {
-    console.log("[DEBUG] Form data on submit:", data);
-    console.log("[DEBUG] Form errors:", form.formState.errors);
     updateMutation.mutate(data);
   };
 

@@ -46,7 +46,7 @@ export default function UIDesigner() {
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/guid/${guid}`],
+    queryKey: [`/api/chatbots/${guid}`],
     enabled: isAuthenticated && !!guid,
     retry: false,
   });
