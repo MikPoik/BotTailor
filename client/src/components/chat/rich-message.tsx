@@ -83,12 +83,12 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             <button
               key={`${option.id}-${index}`}
               onClick={() => onOptionSelect(option.id, option.payload, option.text)}
-              className="w-full text-left py-2 px-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors flex items-center space-x-2"
+              className="w-full text-left py-2 px-3 border border-neutral-200 bg-primary-light rounded-lg hover:bg-neutral-50 transition-colors flex items-center space-x-2"
             >
               {option.icon && (
                 <i className={`${option.icon} text-primary`}></i>
               )}
-              <span>{option.text}</span>
+              <span className="rich-message-text">{option.text}</span>
             </button>
           ))}
         </div>
@@ -105,7 +105,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
           className="w-full max-h-64 object-cover"
         />
         {content && (
-          <div className="p-3">
+          <div className="p-2">
             <p className="text-neutral-800">{content}</p>
           </div>
         )}

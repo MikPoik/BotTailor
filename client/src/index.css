@@ -14,6 +14,7 @@
   --border: hsl(20, 5.9%, 90%);
   --input: hsl(20, 5.9%, 90%);
   --primary: hsl(213, 93%, 54%);
+  --primary-light: hsl(213, 93%, 74%); /* Example lighter shade */
   --primary-foreground: hsl(211, 100%, 99%);
   --secondary: hsl(60, 4.8%, 95.9%);
   --secondary-foreground: hsl(24, 9.8%, 10%);
@@ -275,14 +276,16 @@
   }
 
   .chat-message-user {
-    @apply rounded-lg rounded-tr-none px-2 py-1 shadow-sm text-white max-w-xs ml-auto;
+    @apply rounded-lg rounded-tr-none px-2 py-2 shadow-sm text-white max-w-xs ml-auto;
     background-color: var(--chat-user-bg);
+    font-size: 1rem;
   }
 
   .chat-message-bot {
-    @apply rounded-lg rounded-tl-none px-2 py-1 shadow-sm max-w-sm;
+    @apply rounded-lg rounded-tl-none px-2 py-2 shadow-sm max-w-sm;
     background-color: var(--chat-bot-bg);
     border: 1px solid var(--border);
+    font-size: 1rem;
   }
 
   .chat-message-bot.no-background {
@@ -302,6 +305,9 @@
 
   .chat-typing-dots:nth-child(3) {
     animation-delay: 300ms;
+  }
+  .rich-message-text {
+    font-size: 1rem; /* Set your desired font size */
   }
 }
 
