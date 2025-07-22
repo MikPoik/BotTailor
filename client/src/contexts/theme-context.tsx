@@ -13,8 +13,14 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('theme') as Theme;
-    return stored || 'system';
+    try {
+      const stored = localStorage.getItem('theme') as Theme;
+      return stored || 'system';
+    } catch (error) {
+      // Fallback for sandboxed environments where localStorage is not available
+      console.warn('localStorage not available, using default theme');
+      return 'system';
+    }
   });
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
@@ -46,7 +52,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (error) {
+      // Silently fail in sandboxed environments
+      console.warn('Cannot save theme to localStorage in sandboxed environment');
+    }
   }, [theme]);
 
   return (
