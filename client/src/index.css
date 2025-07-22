@@ -309,6 +309,15 @@
   .rich-message-text {
     font-size: 1rem; /* Set your desired font size */
   }
+
+  .menu-option-button {
+    background-color: var(--primary-light);
+  }
+
+  .menu-option-button:hover {
+    background-color: var(--primary) !important;
+    color: white !important;
+  }
 }
 
 @keyframes fadeIn {
