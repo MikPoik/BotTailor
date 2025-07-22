@@ -72,6 +72,9 @@
         // Fallback to current origin if URL parsing fails
         baseUrl = window.location.origin;
       }
+      
+      // Force HTTPS for CSS loading
+      baseUrl = this.forceHttps(baseUrl);
       link.href = `${baseUrl}/embed.css`;
 
       document.head.appendChild(link);
@@ -257,10 +260,11 @@
                 widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
               }
 
-              mobileIframe.src = widgetUrl;
+              // Force HTTPS for iframe URL
+              mobileIframe.src = this.forceHttps(widgetUrl);
             } catch (error) {
               // Fallback URL construction
-              mobileIframe.src = `${this.config.apiUrl}?mobile=true&embedded=true`;
+              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=true&embedded=true`);
             }
           }
           overlay.style.display = 'block';
@@ -284,10 +288,11 @@
                 widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
               }
 
-              iframe.src = widgetUrl;
+              // Force HTTPS for iframe URL
+              iframe.src = this.forceHttps(widgetUrl);
             } catch (error) {
               // Fallback URL construction
-              iframe.src = `${this.config.apiUrl}?mobile=false&embedded=true`;
+              iframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=false&embedded=true`);
             }
           }
           bubble.style.display = 'none';
@@ -359,6 +364,14 @@
       });
     },
 
+    forceHttps: function(url) {
+      // Force HTTPS for all API requests
+      if (url.startsWith('http://')) {
+        return url.replace('http://', 'https://');
+      }
+      return url;
+    },
+
     loadInitialMessages: function(messageBubble) {
       // Extract userId and chatbotGuid from apiUrl if available
       const urlMatch = this.config.apiUrl.match(/\/widget\/([^\/]+)\/([^\/\?]+)/);
@@ -374,6 +387,9 @@
         } catch (error) {
           baseUrl = window.location.origin;
         }
+        
+        // Force HTTPS for API requests
+        baseUrl = this.forceHttps(baseUrl);
         
         fetch(`${baseUrl}/api/public/chatbot/${userId}/${chatbotGuid}`)
           .then(response => {
