@@ -275,12 +275,12 @@
   }
 
   .chat-message-user {
-    @apply rounded-lg rounded-tr-none p-3 shadow-sm text-white max-w-xs ml-auto;
+    @apply rounded-lg rounded-tr-none px-2 py-1 shadow-sm text-white max-w-xs ml-auto;
     background-color: var(--chat-user-bg);
   }
 
   .chat-message-bot {
-    @apply rounded-lg rounded-tl-none p-3 shadow-sm max-w-sm;
+    @apply rounded-lg rounded-tl-none px-2 py-1 shadow-sm max-w-sm;
     background-color: var(--chat-bot-bg);
     border: 1px solid var(--border);
   }
