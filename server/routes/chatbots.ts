@@ -1,3 +1,4 @@
+
 import type { Express } from "express";
 import { storage } from "../storage";
 import { insertChatbotConfigSchema, HomeScreenConfigSchema } from "@shared/schema";
@@ -19,15 +20,15 @@ export function setupChatbotRoutes(app: Express) {
     }
   });
 
-  // Get specific chatbot configuration
-  app.get('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
+  // Get specific chatbot configuration by GUID
+  app.get('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
     try {
-      const { id } = req.params;
+      const { guid } = req.params;
       const userId = req.user.claims.sub;
       
-      const chatbot = await storage.getChatbotConfig(parseInt(id));
+      const chatbot = await storage.getChatbotConfigByGuid(userId, guid);
       
-      if (!chatbot || chatbot.userId !== userId) {
+      if (!chatbot) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
       
@@ -61,21 +62,21 @@ export function setupChatbotRoutes(app: Express) {
     }
   });
 
-  // Update chatbot
-  app.put('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
+  // Update chatbot by GUID
+  app.put('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
-      const { id } = req.params;
+      const { guid } = req.params;
       const userId = req.user.claims.sub;
       const body = req.body;
 
-      // Verify ownership
-      const existingChatbot = await storage.getChatbotConfig(parseInt(id));
-      if (!existingChatbot || existingChatbot.userId !== userId) {
+      // Verify ownership and get chatbot
+      const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingChatbot) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
       const updateData = insertChatbotConfigSchema.partial().parse(body);
-      const chatbot = await storage.updateChatbotConfig(parseInt(id), updateData);
+      const chatbot = await storage.updateChatbotConfig(existingChatbot.id, updateData);
       
       res.json(chatbot);
     } catch (error) {
@@ -88,19 +89,19 @@ export function setupChatbotRoutes(app: Express) {
     }
   });
 
-  // Delete chatbot
-  app.delete('/api/chatbots/:id', isAuthenticated, async (req: any, res) => {
+  // Delete chatbot by GUID
+  app.delete('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
-      const { id } = req.params;
+      const { guid } = req.params;
       const userId = req.user.claims.sub;
 
-      // Verify ownership
-      const existingChatbot = await storage.getChatbotConfig(parseInt(id));
-      if (!existingChatbot || existingChatbot.userId !== userId) {
+      // Verify ownership and get chatbot
+      const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingChatbot) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
-      await storage.deleteChatbotConfig(parseInt(id));
+      await storage.deleteChatbotConfig(existingChatbot.id);
       res.json({ message: "Chatbot deleted successfully" });
     } catch (error) {
       console.error("Error deleting chatbot:", error);
@@ -108,23 +109,23 @@ export function setupChatbotRoutes(app: Express) {
     }
   });
 
-  // Update chatbot home screen configuration
-  app.put('/api/chatbots/:id/home-screen', isAuthenticated, async (req: any, res) => {
+  // Update chatbot home screen configuration by GUID
+  app.put('/api/chatbots/:guid/home-screen', isAuthenticated, async (req: any, res) => {
     try {
-      const { id } = req.params;
+      const { guid } = req.params;
       const userId = req.user.claims.sub;
       const { homeScreenConfig } = req.body;
 
-      // Verify ownership
-      const existingChatbot = await storage.getChatbotConfig(parseInt(id));
-      if (!existingChatbot || existingChatbot.userId !== userId) {
+      // Verify ownership and get chatbot
+      const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingChatbot) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
       // Validate home screen config
       const validatedConfig = HomeScreenConfigSchema.parse(homeScreenConfig);
       
-      const updatedChatbot = await storage.updateChatbotConfig(parseInt(id), {
+      const updatedChatbot = await storage.updateChatbotConfig(existingChatbot.id, {
         homeScreenConfig: validatedConfig
       });
 
