@@ -12,12 +12,19 @@ import ChatWidget from "@/components/chat/chat-widget";
 
 interface ChatbotConfig {
   id: number;
+  guid: string;
   name: string;
   description: string;
   model: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  systemPrompt: string;
+  temperature: number;
+  maxTokens: number;
+  welcomeMessage: string;
+  fallbackMessage: string;
+  avatarUrl?: string;
 }
 
 export default function Dashboard() {
@@ -70,20 +77,24 @@ export default function Dashboard() {
     retry: false,
   });
 
-  // Get chatbot GUID from environment for consistency with homepage
+  // Get chatbot GUID from URL parameters or environment
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlChatbotGuid = urlParams.get('chatbot');
   const envChatbotGuid = import.meta.env.VITE_DEFAULT_SITE_CHATBOT_GUID;
+  const targetChatbotGuid = urlChatbotGuid || envChatbotGuid;
 
-  // Always use the public default chatbot endpoint for consistency
-  // This ensures the same default chatbot is used for both logged-in and logged-out users
+  // Always fetch the site default chatbot for consistency across the site
+  // This ensures the same default chatbot is used everywhere regardless of authentication status
   const { data: defaultChatbot } = useQuery<ChatbotConfig>({
     queryKey: ['/api/public/default-chatbot'],
-    enabled: !!envChatbotGuid, // Only fetch if default GUID is configured
+    enabled: true, // Always fetch default chatbot
     retry: false,
   });
 
-  // Get selected chatbot configuration (always use default site chatbot)
+  // Get selected chatbot configuration (always use site default for consistency)
   const getSelectedChatbot = () => {
-    // Always return the default chatbot if configured
+    // Always use the site default chatbot configured via environment variables
+    // This ensures consistent experience across the site for help/support
     if (defaultChatbot) {
       return defaultChatbot;
     }
@@ -105,7 +116,7 @@ export default function Dashboard() {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user?.firstName || user?.email}!
+          Welcome back, {(user as any)?.firstName || (user as any)?.email}!
         </h1>
         <p className="text-muted-foreground mt-2">
           Manage your AI chatbots and view their performance
