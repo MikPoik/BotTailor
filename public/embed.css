@@ -19,11 +19,11 @@
 .chatwidget-message-bubble {
   position: absolute;
   bottom: 80px;
-  max-width: 320px;
+  max-width: 350px;
   background: transparent;
   border-radius: 16px;
   box-shadow: none;
-  padding: 12px;
+  padding: 8px;
   transform: translateY(10px) scale(0.95);
   opacity: 0;
   visibility: hidden;
@@ -62,9 +62,12 @@
 .chatwidget-speech-bubble {
   background: #f8f9fa;
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px 16px;
   margin-bottom: 8px;
   position: relative;
+  min-width: 200px;
+  max-width: 280px;
+  word-wrap: break-word;
 }
 
 .chatwidget-speech-bubble::after {
@@ -82,8 +85,10 @@
   margin: 0;
   color: #2d3748;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
   font-weight: 500;
+  white-space: normal;
+  word-break: normal;
 }
 
 .chatwidget-message-sub {
