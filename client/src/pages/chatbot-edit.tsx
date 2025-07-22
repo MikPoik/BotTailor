@@ -123,7 +123,8 @@ export default function ChatbotEdit() {
       console.log("[DEBUG] Success response:", result);
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log("[DEBUG] Mutation success:", result);
       toast({
         title: "Success",
         description: "Chatbot configuration updated successfully!",
@@ -133,6 +134,8 @@ export default function ChatbotEdit() {
       setLocation("/dashboard");
     },
     onError: (error) => {
+      console.log("[DEBUG] Mutation error:", error);
+      console.log("[DEBUG] Error details:", error.message, error.stack);
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -146,13 +149,15 @@ export default function ChatbotEdit() {
       }
       toast({
         title: "Error",
-        description: "Failed to update chatbot configuration. Please try again.",
+        description: `Failed to update chatbot configuration: ${error.message}`,
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: FormData) => {
+    console.log("[DEBUG] Form data on submit:", data);
+    console.log("[DEBUG] Form errors:", form.formState.errors);
     updateMutation.mutate(data);
   };
 
