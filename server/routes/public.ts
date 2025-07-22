@@ -3,6 +3,7 @@ import { storage } from "../storage";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { renderWidgetSSR } from "./widget-ssr.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,10 @@ export function setupPublicRoutes(app: Express) {
       res.status(404).send('embed.css not found');
     }
   });
+
+  // Server-side rendered widget endpoint (eliminates white screen)
+  app.get('/widget-ssr/:userId/:chatbotGuid', renderWidgetSSR);
+  
   // Get default chatbot configuration for public access
   app.get('/api/public/default-chatbot', async (req, res) => {
     try {
@@ -242,9 +247,13 @@ export function setupPublicRoutes(app: Express) {
           </script>
         `;
 
-        html = html.replace('</head>', `${sessionData}</head>`);
-        res.setHeader('Content-Type', 'text/html');
-        res.send(html);
+        if (html) {
+          html = html.replace('</head>', `${sessionData}</head>`);
+          res.setHeader('Content-Type', 'text/html');
+          res.send(html);
+        } else {
+          res.status(500).send('Failed to load HTML template');
+        }
       } else {
         // In development, inject config and let Vite dev server handle the rest
         req.url = '/';

@@ -89,7 +89,7 @@
       const container = document.createElement('div');
       container.id = 'chatwidget-container';
       container.className = `chatwidget-container ${this.config.position}`;
-      container.style.zIndex = this.config.zIndex;
+      container.style.setProperty('--chatwidget-z-index', this.config.zIndex);
 
       // Create initial message bubble
       const messageBubble = document.createElement('div');
@@ -114,7 +114,7 @@
       const bubble = document.createElement('div');
       bubble.id = 'chatwidget-bubble';
       bubble.className = 'chatwidget-bubble';
-      bubble.style.backgroundColor = this.config.primaryColor;
+      bubble.style.setProperty('--chatwidget-primary-color', this.config.primaryColor);
 
       bubble.innerHTML = `
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -318,37 +318,43 @@
     },
 
     preloadIframes: function(iframe, mobileIframe) {
-      // Start preloading desktop iframe immediately
+      // Start preloading with SSR for instant loading (no white screen)
       try {
-        // Build URL with sessionId if provided, otherwise let server generate it
-        const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+        // Build sessionId parameter
+        const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}` : '';
 
-        // Check if apiUrl already contains a specific widget path
-        let desktopWidgetUrl, mobileWidgetUrl;
+        // Extract userId and chatbotGuid from widget URL for SSR endpoint
+        let baseUrl, ssrPath;
         if (this.config.apiUrl.includes('/widget/')) {
-          // Specific widget URL - use as-is with query parameters
-          const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-          desktopWidgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
-          mobileWidgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
+          const match = this.config.apiUrl.match(/\/widget\/([^\/]+)\/([^\/\?]+)/);
+          const userId = match?.[1] || 'default';
+          const chatbotGuid = match?.[2] || 'default';
+          baseUrl = this.config.apiUrl.split('/widget/')[0];
+          ssrPath = `/widget-ssr/${userId}/${chatbotGuid}`;
         } else {
-          // Base URL - append /chat-widget path
-          desktopWidgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
-          mobileWidgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+          baseUrl = this.config.apiUrl.replace(/\/api\/.*$/, '');
+          ssrPath = `/widget-ssr/default/default`;
         }
 
-        // Force HTTPS for iframe URLs and start preloading
-        iframe.src = this.forceHttps(desktopWidgetUrl);
-        mobileIframe.src = this.forceHttps(mobileWidgetUrl);
+        // Construct SSR URLs (same URL for both desktop and mobile - responsive design handles the difference)
+        const ssrUrl = `${baseUrl}${ssrPath}${sessionParam ? '?' + sessionParam : ''}`;
+        
+        console.log('Preloading iframes with SSR URL:', ssrUrl);
 
-        // Mark that iframes are preloaded
-        iframe.dataset.preloaded = 'true';
-        mobileIframe.dataset.preloaded = 'true';
+        // Force HTTPS and set both iframes to SSR endpoint
+        iframe.src = this.forceHttps(ssrUrl);
+        mobileIframe.src = this.forceHttps(ssrUrl);
+
+        // Mark that iframes are preloaded with SSR
+        iframe.dataset.preloaded = 'ssr';
+        mobileIframe.dataset.preloaded = 'ssr';
       } catch (error) {
-        // Fallback URL construction
+        console.error('SSR preload failed, falling back:', error);
+        // Fallback to regular widget URLs
         iframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=false&embedded=true`);
         mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=true&embedded=true`);
-        iframe.dataset.preloaded = 'true';
-        mobileIframe.dataset.preloaded = 'true';
+        iframe.dataset.preloaded = 'fallback';
+        mobileIframe.dataset.preloaded = 'fallback';
       }
     },
 
