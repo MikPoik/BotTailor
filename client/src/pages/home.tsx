@@ -35,47 +35,22 @@ export default function Home() {
   const envChatbotGuid = import.meta.env.VITE_DEFAULT_SITE_CHATBOT_GUID;
   const targetChatbotGuid = urlChatbotGuid || envChatbotGuid;
 
-  // Fetch specific chatbot by GUID if configured (authenticated users)
-  const { data: specificChatbot } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/${targetChatbotGuid}`],
-    enabled: isAuthenticated && !!targetChatbotGuid,
-    retry: false,
-  });
-
-  // Fetch public chatbot by GUID (for non-authenticated users or public access)
-  const { data: publicChatbot } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/public/chatbots/${targetChatbotGuid}`],
-    enabled: !isAuthenticated && !!targetChatbotGuid,
-    retry: false,
-  });
-
-  // Fetch site default chatbot for non-authenticated users when no specific GUID is provided
+  // Always fetch the site default chatbot for consistency across the site
+  // This ensures the same default chatbot is used everywhere regardless of authentication status
   const { data: defaultChatbot } = useQuery<ChatbotConfig>({
     queryKey: ['/api/public/default-chatbot'],
-    enabled: !isAuthenticated && !targetChatbotGuid,
+    enabled: true, // Always fetch default chatbot
     retry: false,
   });
 
-  // Get selected chatbot configuration
+  // Get selected chatbot configuration (always use site default for consistency)
   const getSelectedChatbot = () => {
-    if (isAuthenticated) {
-      // Authenticated user flow
-      if (specificChatbot) {
-        return specificChatbot;
-      }
-      // Fallback to first available from user's list
-      if (!chatbots || chatbots.length === 0) return undefined;
-      return chatbots.find(bot => bot.isActive) || chatbots[0];
-    } else {
-      // Non-authenticated user flow
-      if (publicChatbot) {
-        return publicChatbot;
-      }
-      if (defaultChatbot) {
-        return defaultChatbot;
-      }
-      return undefined;
+    // Always use the site default chatbot configured via environment variables
+    // This ensures consistent experience across the site for help/support
+    if (defaultChatbot) {
+      return defaultChatbot;
     }
+    return undefined;
   };
 
   const selectedChatbot = getSelectedChatbot();
@@ -164,7 +139,7 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    This is the {publicChatbot ? 'configured' : 'default'} chatbot for this site.
+                    This is the default site chatbot configured with environment variables.
                     <br />
                     Site owner can configure default with environment variables:
                     <br />
