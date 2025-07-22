@@ -241,12 +241,8 @@
       document.body.appendChild(mobileIframe);
       document.body.appendChild(container);
 
-      // Show initial message after a short delay
-      setTimeout(() => {
-        messageBubble.style.opacity = '1';
-        messageBubble.style.visibility = 'visible';
-        messageBubble.style.transform = 'translateY(0) scale(1)';
-      }, 2000);
+      // Fetch and display initial messages or show default
+      this.loadInitialMessages(messageBubble);
 
       // Add CSS animations
       this.addAnimations();
@@ -319,7 +315,7 @@
       const openChat = () => {
         isOpen = true;
         badge.style.display = 'none';
-        
+
         // Hide message bubble when chat opens
         if (messageVisible && messageBubble) {
           messageBubble.style.opacity = '0';
@@ -335,7 +331,7 @@
                 if (!mobileIframe.src) {
                   // Build URL with sessionId if provided, otherwise let server generate it
                   const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-                  
+
                   // Check if apiUrl already contains a specific widget path
                   let widgetUrl;
                   if (this.config.apiUrl.includes('/widget/')) {
@@ -346,7 +342,7 @@
                     // Base URL - append /chat-widget path
                     widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
                   }
-                  
+
                   mobileIframe.src = widgetUrl;
                   // Note: Removed cross-origin config setting due to protocol differences
                 }
@@ -358,7 +354,7 @@
                 if (!iframe.src) {
                   // Build URL with sessionId if provided, otherwise let server generate it
                   const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-                  
+
                   // Check if apiUrl already contains a specific widget path
                   let widgetUrl;
                   if (this.config.apiUrl.includes('/widget/')) {
@@ -369,7 +365,7 @@
                     // Base URL - append /chat-widget path
                     widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
                   }
-                  
+
                   iframe.src = widgetUrl;
                   // Note: Removed cross-origin config setting due to protocol differences
                 }
@@ -442,6 +438,117 @@
           iframe.classList.add('show');
         }
       });
+    },
+
+    loadInitialMessages: function(messageBubble) {
+      // Extract userId and chatbotGuid from apiUrl if available
+      const urlMatch = this.config.apiUrl.match(/\/widget\/([^\/]+)\/([^\/\?]+)/);
+
+      if (urlMatch && urlMatch[1] && urlMatch[2]) {
+        const userId = urlMatch[1];
+        const chatbotGuid = urlMatch[2];
+
+        // Fetch chatbot configuration to get initial messages
+        fetch(`${this.config.apiUrl.split('/widget/')[0]}/api/public/chatbot/${userId}/${chatbotGuid}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.initialMessages && data.initialMessages.length > 0) {
+              this.displayInitialMessages(messageBubble, data.initialMessages);
+            } else {
+              this.showDefaultMessage(messageBubble);
+            }
+          })
+          .catch(error => {
+            console.log('Could not load initial messages, showing default');
+            this.showDefaultMessage(messageBubble);
+          });
+      } else {
+        this.showDefaultMessage(messageBubble);
+      }
+    },
+
+    displayInitialMessages: function(messageBubble, messages) {
+      if (messages.length === 0) {
+        this.showDefaultMessage(messageBubble);
+        return;
+      }
+
+      let currentMessageIndex = 0;
+      const showNextMessage = () => {
+        if (currentMessageIndex >= messages.length) {
+          // Auto-hide after showing all messages
+          setTimeout(() => {
+            if (messageBubble.style.visibility === 'visible') {
+              messageBubble.style.opacity = '0';
+              messageBubble.style.visibility = 'hidden';
+              messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+            }
+          }, 8000);
+          return;
+        }
+
+        const message = messages[currentMessageIndex];
+        messageBubble.innerHTML = `
+          <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <img src="${this.config.avatarUrl || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32'}" 
+                 style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;" alt="Bot">
+            <span style="font-weight: 600; font-size: 14px; color: #1f2937;">${this.config.botName || 'Assistant'}</span>
+            <button onclick="ChatWidget.hideInitialMessage()" style="margin-left: auto; background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; line-height: 1; padding: 0;">&times;</button>
+          </div>
+          <div style="color: #4b5563; font-size: 14px; line-height: 1.4;">${message.content || message}</div>
+        `;
+
+        messageBubble.style.opacity = '1';
+        messageBubble.style.visibility = 'visible';
+        messageBubble.style.transform = 'translateY(0) scale(1)';
+
+        currentMessageIndex++;
+
+        // Show next message after delay if there are more
+        if (currentMessageIndex < messages.length) {
+          setTimeout(showNextMessage, 4000);
+        } else {
+          // Auto-hide after last message
+          setTimeout(() => {
+            if (messageBubble.style.visibility === 'visible') {
+              messageBubble.style.opacity = '0';
+              messageBubble.style.visibility = 'hidden';
+              messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+            }
+          }, 8000);
+        }
+      };
+
+      // Start showing messages after a delay
+      setTimeout(showNextMessage, 3000);
+    },
+
+    showDefaultMessage: function(messageBubble) {
+      // Show default message bubble after a short delay
+      setTimeout(() => {
+        messageBubble.style.opacity = '1';
+        messageBubble.style.visibility = 'visible';
+        messageBubble.style.transform = 'translateY(0) scale(1)';
+
+        // Auto-hide after 10 seconds unless user interacts
+        setTimeout(() => {
+          if (messageBubble.style.visibility === 'visible') {
+            messageBubble.style.opacity = '0';
+            messageBubble.style.visibility = 'hidden';
+            messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+          }
+        }, 10000);
+      }, 3000);
+    },
+
+    // Global method to hide initial message (called from inline onclick)
+    hideInitialMessage: function() {
+      const messageBubble = document.getElementById('chatwidget-message-bubble');
+      if (messageBubble) {
+        messageBubble.style.opacity = '0';
+        messageBubble.style.visibility = 'hidden';
+        messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+      }
     },
 
     // Public API methods

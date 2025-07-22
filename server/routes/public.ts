@@ -64,6 +64,81 @@ export function setupPublicRoutes(app: Express) {
     }
   });
 
+  // Public API to get chatbot configuration for embed widget
+  app.get("/api/public/chatbot/:userId/:chatbotGuid", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId, chatbotGuid } = req.params;
+
+      console.log(`Fetching public chatbot config for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);
+
+      // Get chatbot config from database
+      const chatbotConfig = await storage.getChatbotConfigByGuid(userId, chatbotGuid);
+      if (!chatbotConfig || !chatbotConfig.isActive) {
+        console.log(`Chatbot not found or inactive: ${chatbotGuid}`);
+        return res.status(404).json({ error: 'Chatbot not found or inactive' });
+      }
+
+      // Return only the public configuration data needed for the embed widget
+      const publicConfig = {
+        id: chatbotConfig.id,
+        guid: chatbotConfig.guid,
+        name: chatbotConfig.name,
+        avatarUrl: chatbotConfig.avatarUrl,
+        initialMessages: chatbotConfig.initialMessages || [],
+        welcomeMessage: chatbotConfig.welcomeMessage
+      };
+
+      res.json(publicConfig);
+    } catch (error) {
+      console.error("Error fetching public chatbot config:", error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Embed route with optional GUID parameter
+  app.get("/embed/:guid?", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { guid } = req.params;
+      let html = '';
+
+      // Determine path to static files based on environment
+      const isProduction = process.env.NODE_ENV === 'production';
+      const staticPath = isProduction ? 
+        path.join(__dirname, '../../../dist/public') : 
+        path.join(__dirname, '../../public');
+
+      const embedPath = path.join(staticPath, 'embed.html');
+
+      if (fs.existsSync(embedPath)) {
+        html = fs.readFileSync(embedPath, 'utf-8');
+      } else {
+        // Fallback HTML if embed.html doesn't exist
+        html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Widget</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <div id="chat-widget-container" style="height: 100vh;"></div>
+    <script src="/embed.js${guid ? `?guid=${guid}` : ''}"></script>
+</body>
+</html>`;
+      }
+
+      // If a specific GUID is requested, add it to the widget config
+      if (guid) {
+        (req as any).chatWidgetConfig = { guid };
+      }
+
+      res.send(html);
+    } catch (error) {
+      console.error("Error serving embed widget:", error);
+      res.status(500).send('Error loading chat widget');
+    }
+  });
   // Chat widget route with user and chatbot parameters - only match specific patterns
   app.get("/widget/:userId/:chatbotGuid", async (req, res, next) => {
     try {
@@ -158,51 +233,6 @@ export function setupPublicRoutes(app: Express) {
     } catch (error) {
       console.error('Error serving chatbot widget:', error);
       res.status(500).send('Internal server error');
-    }
-  });
-
-  // Serve embedded widget
-  app.get('/embed/:guid?', async (req, res) => {
-    try {
-      const { guid } = req.params;
-      let html = '';
-
-      // Determine path to static files based on environment
-      const isProduction = process.env.NODE_ENV === 'production';
-      const staticPath = isProduction ? 
-        path.join(__dirname, '../../../dist/public') : 
-        path.join(__dirname, '../../public');
-      
-      const embedPath = path.join(staticPath, 'embed.html');
-      
-      if (fs.existsSync(embedPath)) {
-        html = fs.readFileSync(embedPath, 'utf-8');
-      } else {
-        // Fallback HTML if embed.html doesn't exist
-        html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Chat Widget</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body style="margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <div id="chat-widget-container" style="height: 100vh;"></div>
-    <script src="/embed.js${guid ? `?guid=${guid}` : ''}"></script>
-</body>
-</html>`;
-      }
-
-      // If a specific GUID is requested, add it to the widget config
-      if (guid) {
-        (req as any).chatWidgetConfig = { guid };
-      }
-
-      res.send(html);
-    } catch (error) {
-      console.error("Error serving embed widget:", error);
-      res.status(500).send('Error loading chat widget');
     }
   });
 }

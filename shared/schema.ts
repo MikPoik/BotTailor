@@ -53,6 +53,7 @@ export const chatbotConfigs = pgTable("chatbot_configs", {
   welcomeMessage: text("welcome_message"),
   fallbackMessage: text("fallback_message"),
   homeScreenConfig: jsonb("home_screen_config"), // Dynamic UI configuration
+  initialMessages: jsonb("initial_messages"), // Initial message bubbles for embed widget
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -154,6 +155,7 @@ export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick
   welcomeMessage: true,
   fallbackMessage: true,
   homeScreenConfig: true,
+  initialMessages: true,
 });
 
 export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
