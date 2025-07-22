@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
 import fs from "fs";
 import path from "path";
@@ -64,6 +64,103 @@ export function setupPublicRoutes(app: Express) {
     }
   });
 
+  // Chat widget route with user and chatbot parameters - only match specific patterns
+  app.get("/widget/:userId/:chatbotGuid", async (req, res, next) => {
+    try {
+      const { userId, chatbotGuid } = req.params;
+      const { embedded = "true", mobile = "false" } = req.query;
+
+      console.log(`Loading widget for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);
+
+      // Get chatbot config from database
+      const chatbotConfig = await storage.getChatbotConfigByGuid(userId, chatbotGuid);
+      if (!chatbotConfig || !chatbotConfig.isActive) {
+        console.log(`Chatbot not found or inactive: ${chatbotGuid}`);
+        return res.status(404).send('Chatbot not found or inactive');
+      }
+
+      console.log(`Found chatbot config: ${chatbotConfig.name}`);
+
+      const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const isMobile = req.query.mobile === 'true';
+      const isEmbedded = req.query.embedded === 'true';
+
+      // Force HTTPS in production environments
+      const protocol = process.env.NODE_ENV === "production" ? 'https' : req.protocol;
+      const apiUrl = protocol + '://' + req.get('host');
+
+      console.log(`Environment: ${process.env.NODE_ENV}, Protocol: ${protocol}, API URL: ${apiUrl}`);
+
+      if (process.env.NODE_ENV === "production") {
+        const distPath = path.resolve(__dirname, "../../../dist/public");
+        const htmlPath = path.join(distPath, 'index.html');
+
+        console.log(`Looking for HTML file at: ${htmlPath}`);
+        console.log(`File exists: ${fs.existsSync(htmlPath)}`);
+
+        let html;
+        if (!fs.existsSync(htmlPath)) {
+          console.log(`HTML file not found, trying alternative paths...`);
+          // Try different possible paths
+          const alternativePaths = [
+            path.resolve(__dirname, "./public/index.html"),
+            path.resolve(__dirname, "../public/index.html"), 
+            path.resolve(__dirname, "dist/public/index.html"),
+            path.resolve(process.cwd(), "dist/public/index.html")
+          ];
+
+          let found = false;
+          for (const altPath of alternativePaths) {
+            console.log(`Trying: ${altPath} - exists: ${fs.existsSync(altPath)}`);
+            if (fs.existsSync(altPath)) {
+              html = fs.readFileSync(altPath, 'utf8');
+              console.log(`Successfully loaded HTML from: ${altPath}`);
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            return res.status(500).send('HTML template not found');
+          }
+        } else {
+          html = fs.readFileSync(htmlPath, 'utf8');
+        }
+
+        // Inject session data and chatbot config into the HTML
+        const sessionData = `
+          <script>
+            window.__CHAT_WIDGET_CONFIG__ = {
+              sessionId: "${sessionId}",
+              apiUrl: "${apiUrl}",
+              isMobile: ${isMobile},
+              embedded: ${isEmbedded},
+              chatbotConfig: ${JSON.stringify(chatbotConfig)}
+            };
+          </script>
+        `;
+
+        html = html.replace('</head>', `${sessionData}</head>`);
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+      } else {
+        // In development, inject config and let Vite dev server handle the rest
+        req.url = '/';
+        (req as any).chatWidgetConfig = {
+          sessionId,
+          apiUrl,
+          isMobile,
+          embedded: isEmbedded,
+          chatbotConfig
+        };
+        next();
+      }
+    } catch (error) {
+      console.error('Error serving chatbot widget:', error);
+      res.status(500).send('Internal server error');
+    }
+  });
+
   // Serve embedded widget
   app.get('/embed/:guid?', async (req, res) => {
     try {
@@ -99,7 +196,7 @@ export function setupPublicRoutes(app: Express) {
 
       // If a specific GUID is requested, add it to the widget config
       if (guid) {
-        req.chatWidgetConfig = { guid };
+        (req as any).chatWidgetConfig = { guid };
       }
 
       res.send(html);
