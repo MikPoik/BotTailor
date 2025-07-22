@@ -83,7 +83,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             <button
               key={`${option.id}-${index}`}
               onClick={() => onOptionSelect(option.id, option.payload, option.text)}
-              className="w-full text-left p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors flex items-center space-x-2"
+              className="w-full text-left py-2 px-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors flex items-center space-x-2"
             >
               {option.icon && (
                 <i className={`${option.icon} text-primary`}></i>
