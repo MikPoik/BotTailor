@@ -63,7 +63,7 @@ export function setupChatbotRoutes(app: Express) {
   });
 
   // Update chatbot by GUID
-  app.put('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
+  app.put('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
       const userId = req.user.claims.sub;
@@ -97,7 +97,7 @@ export function setupChatbotRoutes(app: Express) {
   });
 
   // Delete chatbot by GUID
-  app.delete('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
       const userId = req.user.claims.sub;

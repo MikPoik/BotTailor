@@ -105,6 +105,7 @@ export default function ChatbotEdit() {
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
       console.log("[DEBUG] Sending update data:", data);
+      console.log("[DEBUG] Request URL:", `/api/chatbots/guid/${chatbotGuid}`);
       const response = await fetch(`/api/chatbots/guid/${chatbotGuid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
