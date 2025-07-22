@@ -17,11 +17,12 @@ import ChatbotTest from "@/pages/chatbot-test";
 import UIDesigner from "@/pages/ui-designer";
 import AddData from "@/pages/add-data";
 import SurveyBuilder from "@/pages/survey-builder";
+import WidgetTest from "@/pages/widget-test";
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
   const isEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
-  
+
   if (isEmbedded) {
     // For embedded widgets, skip authentication entirely
     return (
@@ -65,6 +66,7 @@ function AuthenticatedRouter() {
           <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
+          <Route path="/widget-test" component={WidgetTest} />
         </>
       )}
       <Route component={NotFound} />
@@ -75,12 +77,12 @@ function AuthenticatedRouter() {
 function Router() {
   // Check if this is an embedded widget context
   const isEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
-  
+
   if (isEmbedded) {
     // For embedded widgets, bypass authentication and navbar entirely
     return <AuthenticatedRouter />;
   }
-  
+
   return (
     <>
       <Navbar />
