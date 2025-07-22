@@ -37,6 +37,51 @@ export default function WidgetTest() {
     }
   }, [chatbots, selectedChatbot]);
 
+  // Load and initialize chat widget
+  useEffect(() => {
+    if (!selectedChatbot || !user) return;
+
+    // Remove existing widget if any
+    const existingContainer = document.getElementById('chatwidget-container');
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+
+    // Remove existing overlay and mobile iframe
+    const existingOverlay = document.getElementById('chatwidget-overlay');
+    if (existingOverlay) {
+      existingOverlay.remove();
+    }
+
+    const existingMobileIframe = document.getElementById('chatwidget-mobile-iframe');
+    if (existingMobileIframe) {
+      existingMobileIframe.remove();
+    }
+
+    // Load embed script
+    const script = document.createElement('script');
+    script.src = '/embed.js';
+    script.onload = () => {
+      // Initialize widget after script loads
+      if ((window as any).ChatWidget) {
+        (window as any).ChatWidget.init({
+          apiUrl: `${window.location.origin}/widget/${user.id}/${selectedChatbot}`,
+          position: position as 'bottom-right' | 'bottom-left',
+          primaryColor: primaryColor
+        });
+      }
+    };
+
+    document.head.appendChild(script);
+
+    // Cleanup function
+    return () => {
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, [selectedChatbot, user, position, primaryColor, widgetKey]);
+
   const refreshWidget = () => {
     setWidgetKey(prev => prev + 1);
   };
@@ -203,24 +248,7 @@ export default function WidgetTest() {
         </div>
       </div>
 
-      {/* Embedded Widget */}
-      {selectedChatbot && user && (
-        <div key={widgetKey}>
-          <script
-            src="/embed.js"
-            onLoad={() => {
-              // Initialize the widget with current settings
-              if ((window as any).ChatWidget) {
-                (window as any).ChatWidget.init({
-                  apiUrl: `${window.location.origin}/widget/${user.id}/${selectedChatbot}`,
-                  position: position,
-                  primaryColor: primaryColor
-                });
-              }
-            }}
-          />
-        </div>
-      )}
+      </old_str>
     </div>
   );
 }
