@@ -235,8 +235,11 @@
         }
 
         if (isMobile()) {
-          // Lazy load mobile iframe if not already loaded
+          // Add loading content to mobile iframe immediately
           if (!mobileIframe.src) {
+            // Show loading content immediately
+            this.showLoadingContent(mobileIframe, true);
+            
             try {
               // Build URL with sessionId if provided, otherwise let server generate it
               const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
@@ -252,19 +255,26 @@
                 widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
               }
 
-              // Force HTTPS for iframe URL
-              mobileIframe.src = this.forceHttps(widgetUrl);
+              // Force HTTPS for iframe URL and load after small delay to show loading content
+              setTimeout(() => {
+                mobileIframe.src = this.forceHttps(widgetUrl);
+              }, 50);
             } catch (error) {
               // Fallback URL construction
-              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=true&embedded=true`);
+              setTimeout(() => {
+                mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=true&embedded=true`);
+              }, 50);
             }
           }
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
           mobileIframe.classList.add('show');
         } else {
-          // Lazy load desktop iframe if not already loaded
+          // Add loading content to desktop iframe immediately
           if (!iframe.src) {
+            // Show loading content immediately
+            this.showLoadingContent(iframe, false);
+            
             try {
               // Build URL with sessionId if provided, otherwise let server generate it
               const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
@@ -280,11 +290,15 @@
                 widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
               }
 
-              // Force HTTPS for iframe URL
-              iframe.src = this.forceHttps(widgetUrl);
+              // Force HTTPS for iframe URL and load after small delay to show loading content
+              setTimeout(() => {
+                iframe.src = this.forceHttps(widgetUrl);
+              }, 50);
             } catch (error) {
               // Fallback URL construction
-              iframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=false&embedded=true`);
+              setTimeout(() => {
+                iframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=false&embedded=true`);
+              }, 50);
             }
           }
           bubble.style.display = 'none';
@@ -362,6 +376,195 @@
         return url.replace('http://', 'https://');
       }
       return url;
+    },
+
+    showLoadingContent: function(iframe, isMobile) {
+      // Create a loading skeleton that matches the React component
+      const loadingHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Loading...</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
+              background: white;
+              height: 100vh;
+              overflow: hidden;
+            }
+            .loading-container { 
+              height: 100vh;
+              display: flex; 
+              flex-direction: column;
+              ${isMobile ? '' : 'width: 384px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);'}
+            }
+            .loading-header { 
+              background: ${this.config.primaryColor}; 
+              padding: 12px; 
+              display: flex; 
+              align-items: center; 
+              justify-content: space-between;
+              ${isMobile ? '' : 'border-radius: 16px 16px 0 0;'}
+            }
+            .loading-avatar { 
+              width: 28px; 
+              height: 28px; 
+              background: rgba(255,255,255,0.3); 
+              border-radius: 50%; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-name { 
+              height: 12px; 
+              width: 80px; 
+              background: rgba(255,255,255,0.3); 
+              border-radius: 4px; 
+              margin: 2px 0; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-status { 
+              height: 8px; 
+              width: 48px; 
+              background: rgba(255,255,255,0.2); 
+              border-radius: 4px; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-close { 
+              width: 24px; 
+              height: 24px; 
+              background: rgba(255,255,255,0.3); 
+              border-radius: 4px; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-tabs { 
+              border-bottom: 1px solid #e5e7eb; 
+              display: flex; 
+              background: white;
+            }
+            .loading-tab { 
+              flex: 1; 
+              padding: 12px; 
+              text-align: center; 
+              background: #f8fafc;
+            }
+            .loading-tab.active { background: #dbeafe; }
+            .loading-content { 
+              flex: 1; 
+              padding: 16px; 
+              background: #f9fafb; 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              justify-content: center; 
+              gap: 16px;
+            }
+            .loading-icon { 
+              width: 64px; 
+              height: 64px; 
+              background: #dbeafe; 
+              border-radius: 50%; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-text { 
+              height: 16px; 
+              width: 120px; 
+              background: #e5e7eb; 
+              border-radius: 4px; 
+              margin: 4px 0; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-buttons { 
+              width: 100%; 
+              display: flex; 
+              flex-direction: column; 
+              gap: 8px;
+            }
+            .loading-button { 
+              height: 40px; 
+              background: white; 
+              border: 1px solid #e5e7eb; 
+              border-radius: 8px; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-input { 
+              padding: 12px; 
+              border-top: 1px solid #e5e7eb; 
+              background: white; 
+              display: flex; 
+              gap: 8px;
+              ${isMobile ? '' : 'border-radius: 0 0 16px 16px;'}
+            }
+            .loading-input-field { 
+              flex: 1; 
+              height: 40px; 
+              background: #f3f4f6; 
+              border-radius: 8px; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            .loading-send { 
+              width: 40px; 
+              height: 40px; 
+              background-color: ${this.config.primaryColor}30; 
+              border-radius: 8px; 
+              animation: pulse 1.5s ease-in-out infinite;
+            }
+            @keyframes pulse { 
+              0%, 100% { opacity: 1; } 
+              50% { opacity: 0.6; } 
+            }
+          </style>
+        </head>
+        <body>
+          <div class="loading-container">
+            <div class="loading-header">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="loading-avatar"></div>
+                <div>
+                  <div class="loading-name"></div>
+                  <div class="loading-status"></div>
+                </div>
+              </div>
+              <div class="loading-close"></div>
+            </div>
+            <div class="loading-tabs">
+              <div class="loading-tab active">🏠</div>
+              <div class="loading-tab">💬</div>
+            </div>
+            <div class="loading-content">
+              <div class="loading-icon"></div>
+              <div style="text-align: center; width: 100%;">
+                <div class="loading-text"></div>
+                <div class="loading-text" style="width: 180px; margin: 8px auto;"></div>
+                <div class="loading-text" style="width: 140px; margin: 8px auto;"></div>
+              </div>
+              <div class="loading-buttons">
+                <div class="loading-button"></div>
+                <div class="loading-button"></div>
+                <div class="loading-button"></div>
+              </div>
+            </div>
+            <div class="loading-input">
+              <div class="loading-input-field"></div>
+              <div class="loading-send"></div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Create a blob URL for the loading content
+      const blob = new Blob([loadingHTML], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Set the iframe src to the loading content
+      iframe.src = blobUrl;
+      
+      // Clean up blob URL after a delay (it will be replaced by the real content)
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 5000);
     },
 
     loadInitialMessages: function(messageBubble) {

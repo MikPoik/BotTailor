@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { MessageCircle, X, Minimize2 } from "lucide-react";
 import TabbedChatInterface from "./tabbed-chat-interface";
+import ChatLoadingSkeleton from "./chat-loading-skeleton";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,6 +22,8 @@ export default function ChatWidget({
 }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [preloadStarted, setPreloadStarted] = useState(false);
   const queryClient = useQueryClient();
 
   // Generate a unique session ID for this chat widget instance
@@ -30,6 +33,37 @@ export default function ChatWidget({
 
   // Preload chat data in background when widget mounts
   const { isSessionLoading, isMessagesLoading } = useChat(sessionId);
+  
+  // Start preloading when widget first mounts (for external embed)
+  useEffect(() => {
+    if (isEmbedded && !preloadStarted) {
+      setPreloadStarted(true);
+      // Small delay to allow initial render, then start preloading
+      setTimeout(() => {
+        queryClient.prefetchQuery({
+          queryKey: ['/api/chat/session', undefined],
+          queryFn: async () => {
+            const response = await fetch('/api/chat/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId })
+            });
+            return response.json();
+          }
+        });
+      }, 100);
+    }
+  }, [isEmbedded, preloadStarted, sessionId, queryClient]);
+
+  // Track when initial loading is complete
+  useEffect(() => {
+    if (!isSessionLoading && !isMessagesLoading && isInitialLoad) {
+      // Add a small delay to ensure smooth transition from skeleton
+      setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 500);
+    }
+  }, [isSessionLoading, isMessagesLoading, isInitialLoad]);
 
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
@@ -76,42 +110,48 @@ export default function ChatWidget({
 
         {/* Mobile chat interface */}
         <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slideUp">
-          {/* Mobile header */}
-          <div 
-            className="text-white p-3 flex items-center justify-between flex-shrink-0"
-            style={{ backgroundColor: primaryColor }}
-          >
-            <div className="flex items-center space-x-2">
-              <img 
-                src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-                alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-7 h-7 rounded-full border-2 border-white"
-              />
-              <div>
-                <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-                <div className="flex items-center space-x-1 text-xs text-blue-100">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                  <span>Online</span>
+          {isInitialLoad ? (
+            <ChatLoadingSkeleton primaryColor={primaryColor} isMobile={true} />
+          ) : (
+            <>
+              {/* Mobile header */}
+              <div 
+                className="text-white p-3 flex items-center justify-between flex-shrink-0"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <div className="flex items-center space-x-2">
+                  <img 
+                    src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
+                    alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
+                    className="w-7 h-7 rounded-full border-2 border-white"
+                  />
+                  <div>
+                    <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
+                    <div className="flex items-center space-x-1 text-xs text-blue-100">
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                      <span>Online</span>
+                    </div>
+                  </div>
                 </div>
+                <button 
+                  onClick={closeChat}
+                  className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-            </div>
-            <button 
-              onClick={closeChat}
-              className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
 
-          {/* Chat content - takes remaining space */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <TabbedChatInterface 
-              sessionId={sessionId} 
-              isMobile={true} 
-              isPreloaded={!isSessionLoading && !isMessagesLoading}
-              chatbotConfig={chatbotConfig}
-            />
-          </div>
+              {/* Chat content - takes remaining space */}
+              <div className="flex-1 flex flex-col min-h-0">
+                <TabbedChatInterface 
+                  sessionId={sessionId} 
+                  isMobile={true} 
+                  isPreloaded={!isSessionLoading && !isMessagesLoading}
+                  chatbotConfig={chatbotConfig}
+                />
+              </div>
+            </>
+          )}
         </div>
       </>
     );
@@ -126,8 +166,17 @@ export default function ChatWidget({
       }
     };
 
+    // Show skeleton during initial load
+    if (isInitialLoad) {
+      return (
+        <div className="h-full flex flex-col">
+          <ChatLoadingSkeleton primaryColor={primaryColor} isMobile={isMobile} />
+        </div>
+      );
+    }
+
     return (
-      <div className="chat-widget-embedded">
+      <div className="chat-widget-embedded animate-in fade-in duration-300">
         {/* Desktop header - sticky at top */}
         <div 
           className="chat-header text-white p-3 flex items-center justify-between"
@@ -193,47 +242,53 @@ export default function ChatWidget({
 
       {/* Chat Interface */}
       {isOpen && (
-        <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden ${
+        <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 ${
           isMobile 
             ? 'fixed inset-4 z-50' 
             : 'w-96 h-[600px]'
         }`}>
-          {/* Chat header */}
-          <div 
-            className="text-white p-3 flex items-center justify-between flex-shrink-0"
-            style={{ backgroundColor: primaryColor }}
-          >
-            <div className="flex items-center space-x-2">
-              <img 
-                src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-                alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-7 h-7 rounded-full border-2 border-white"
-              />
-              <div>
-                <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-                <div className="flex items-center space-x-1 text-xs text-blue-100">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                  <span>Online</span>
+          {isInitialLoad ? (
+            <ChatLoadingSkeleton primaryColor={primaryColor} isMobile={false} />
+          ) : (
+            <>
+              {/* Chat header */}
+              <div 
+                className="text-white p-3 flex items-center justify-between flex-shrink-0"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <div className="flex items-center space-x-2">
+                  <img 
+                    src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
+                    alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
+                    className="w-7 h-7 rounded-full border-2 border-white"
+                  />
+                  <div>
+                    <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
+                    <div className="flex items-center space-x-1 text-xs text-blue-100">
+                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                      <span>Online</span>
+                    </div>
+                  </div>
                 </div>
+                <button 
+                  onClick={toggleChat}
+                  className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </button>
               </div>
-            </div>
-            <button 
-              onClick={toggleChat}
-              className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
-            >
-              <Minimize2 className="h-4 w-4" />
-            </button>
-          </div>
 
-          {/* Chat content - takes remaining space */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <TabbedChatInterface 
-              sessionId={sessionId} 
-              isMobile={isMobile}
-              isPreloaded={!isSessionLoading && !isMessagesLoading}
-              chatbotConfig={chatbotConfig}
-            />
-          </div>
+              {/* Chat content - takes remaining space */}
+              <div className="flex-1 flex flex-col min-h-0">
+                <TabbedChatInterface 
+                  sessionId={sessionId} 
+                  isMobile={isMobile}
+                  isPreloaded={!isSessionLoading && !isMessagesLoading}
+                  chatbotConfig={chatbotConfig}
+                />
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
