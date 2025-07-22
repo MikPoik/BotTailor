@@ -73,21 +73,21 @@ export default function Dashboard() {
   // Get chatbot GUID from environment for consistency with homepage
   const envChatbotGuid = import.meta.env.VITE_DEFAULT_SITE_CHATBOT_GUID;
 
-  // Fetch specific chatbot by GUID if configured
-  const { data: specificChatbot } = useQuery<ChatbotConfig>({
-    queryKey: [`/api/chatbots/guid/${envChatbotGuid}`],
-    enabled: isAuthenticated && !!envChatbotGuid,
+  // Always use the public default chatbot endpoint for consistency
+  // This ensures the same default chatbot is used for both logged-in and logged-out users
+  const { data: defaultChatbot } = useQuery<ChatbotConfig>({
+    queryKey: ['/api/public/default-chatbot'],
+    enabled: !!envChatbotGuid, // Only fetch if default GUID is configured
     retry: false,
   });
 
-  // Get selected chatbot configuration (same logic as homepage)
+  // Get selected chatbot configuration (always use default site chatbot)
   const getSelectedChatbot = () => {
-    if (specificChatbot) {
-      return specificChatbot;
+    // Always return the default chatbot if configured
+    if (defaultChatbot) {
+      return defaultChatbot;
     }
-    // Fallback to first available from user's list
-    if (!chatbots || chatbots.length === 0) return undefined;
-    return chatbots.find(bot => bot.isActive) || chatbots[0];
+    return undefined;
   };
 
   const selectedChatbot = getSelectedChatbot();
