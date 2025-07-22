@@ -16,7 +16,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation, useRoute } from "wouter";
 import { useEffect } from "react";
 import { z } from "zod";
-import { ArrowLeft, Bot, Save, User, X } from "lucide-react";
+import { ArrowLeft, Bot, Save, User, X, Plus, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
@@ -32,6 +32,7 @@ const formSchema = z.object({
   maxTokens: z.number().min(100).max(4000).default(1000),
   welcomeMessage: z.string().optional(),
   fallbackMessage: z.string().optional(),
+  initialMessages: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -79,6 +80,7 @@ export default function ChatbotEdit() {
       maxTokens: 1000,
       welcomeMessage: "Hello! How can I help you today?",
       fallbackMessage: "I'm sorry, I didn't understand that. Could you please rephrase your question?",
+      initialMessages: [],
     },
   });
 
@@ -95,6 +97,7 @@ export default function ChatbotEdit() {
         maxTokens: chatbot.maxTokens || 1000,
         welcomeMessage: chatbot.welcomeMessage || "",
         fallbackMessage: chatbot.fallbackMessage || "",
+        initialMessages: (chatbot.initialMessages as string[]) || [],
       });
     }
   }, [chatbot, form]);
@@ -419,6 +422,59 @@ export default function ChatbotEdit() {
                     <FormDescription>
                       Message shown when the AI cannot understand or respond appropriately
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="initialMessages"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Initial Messages</FormLabel>
+                    <FormDescription>
+                      Messages that appear as bubbles above the chat widget to engage visitors
+                    </FormDescription>
+                    <FormControl>
+                      <div className="space-y-3">
+                        {(field.value || []).map((message, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <Input
+                              value={message}
+                              onChange={(e) => {
+                                const newMessages = [...(field.value || [])];
+                                newMessages[index] = e.target.value;
+                                field.onChange(newMessages);
+                              }}
+                              placeholder="Enter an initial message..."
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newMessages = (field.value || []).filter((_, i) => i !== index);
+                                field.onChange(newMessages);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            field.onChange([...(field.value || []), ""]);
+                          }}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Message
+                        </Button>
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
