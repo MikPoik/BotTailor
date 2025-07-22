@@ -23,7 +23,7 @@
 
       // Validate required config
       if (!this.config.apiUrl) {
-        console.error('ChatWidget: apiUrl is required');
+        // Silent fail in production - widget won't initialize
         return;
       }
 
@@ -59,7 +59,19 @@
       link.type = 'text/css';
 
       // Determine the CSS URL based on the API URL
-      const baseUrl = this.config.apiUrl.split('/widget/')[0] || window.location.origin;
+      let baseUrl;
+      try {
+        if (this.config.apiUrl.includes('/widget/')) {
+          baseUrl = this.config.apiUrl.split('/widget/')[0];
+        } else {
+          // Extract base URL from full API URL
+          const url = new URL(this.config.apiUrl);
+          baseUrl = `${url.protocol}//${url.host}`;
+        }
+      } catch (error) {
+        // Fallback to current origin if URL parsing fails
+        baseUrl = window.location.origin;
+      }
       link.href = `${baseUrl}/embed.css`;
 
       document.head.appendChild(link);
@@ -230,21 +242,26 @@
         if (isMobile()) {
           // Lazy load mobile iframe if not already loaded
           if (!mobileIframe.src) {
-            // Build URL with sessionId if provided, otherwise let server generate it
-            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+            try {
+              // Build URL with sessionId if provided, otherwise let server generate it
+              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
 
-            // Check if apiUrl already contains a specific widget path
-            let widgetUrl;
-            if (this.config.apiUrl.includes('/widget/')) {
-              // Specific widget URL - use as-is with query parameters
-              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-              widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
-            } else {
-              // Base URL - append /chat-widget path
-              widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+              // Check if apiUrl already contains a specific widget path
+              let widgetUrl;
+              if (this.config.apiUrl.includes('/widget/')) {
+                // Specific widget URL - use as-is with query parameters
+                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
+              } else {
+                // Base URL - append /chat-widget path
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+              }
+
+              mobileIframe.src = widgetUrl;
+            } catch (error) {
+              // Fallback URL construction
+              mobileIframe.src = `${this.config.apiUrl}?mobile=true&embedded=true`;
             }
-
-            mobileIframe.src = widgetUrl;
           }
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
@@ -252,21 +269,26 @@
         } else {
           // Lazy load desktop iframe if not already loaded
           if (!iframe.src) {
-            // Build URL with sessionId if provided, otherwise let server generate it
-            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+            try {
+              // Build URL with sessionId if provided, otherwise let server generate it
+              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
 
-            // Check if apiUrl already contains a specific widget path
-            let widgetUrl;
-            if (this.config.apiUrl.includes('/widget/')) {
-              // Specific widget URL - use as-is with query parameters
-              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-              widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
-            } else {
-              // Base URL - append /chat-widget path
-              widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
+              // Check if apiUrl already contains a specific widget path
+              let widgetUrl;
+              if (this.config.apiUrl.includes('/widget/')) {
+                // Specific widget URL - use as-is with query parameters
+                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
+              } else {
+                // Base URL - append /chat-widget path
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
+              }
+
+              iframe.src = widgetUrl;
+            } catch (error) {
+              // Fallback URL construction
+              iframe.src = `${this.config.apiUrl}?mobile=false&embedded=true`;
             }
-
-            iframe.src = widgetUrl;
           }
           bubble.style.display = 'none';
           iframe.style.visibility = 'visible';
@@ -346,8 +368,20 @@
         const chatbotGuid = urlMatch[2];
 
         // Fetch chatbot configuration to get initial messages
-        fetch(`${this.config.apiUrl.split('/widget/')[0]}/api/public/chatbot/${userId}/${chatbotGuid}`)
-          .then(response => response.json())
+        let baseUrl;
+        try {
+          baseUrl = this.config.apiUrl.split('/widget/')[0];
+        } catch (error) {
+          baseUrl = window.location.origin;
+        }
+        
+        fetch(`${baseUrl}/api/public/chatbot/${userId}/${chatbotGuid}`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+          })
           .then(data => {
             if (data.initialMessages && data.initialMessages.length > 0) {
               this.displayInitialMessages(messageBubble, data.initialMessages);
@@ -356,7 +390,7 @@
             }
           })
           .catch(error => {
-            console.log('Could not load initial messages, showing default');
+            // Silent fallback in production
             this.showDefaultMessage(messageBubble);
           });
       } else {
