@@ -9,6 +9,19 @@ const __dirname = path.dirname(__filename);
 
 // Public API routes (no authentication required)
 export function setupPublicRoutes(app: Express) {
+  // Serve embed.js static file
+  app.get('/embed.js', (req: Request, res: Response) => {
+    const publicPath = path.resolve(__dirname, '../../public');
+    const embedPath = path.join(publicPath, 'embed.js');
+    
+    if (fs.existsSync(embedPath)) {
+      res.setHeader('Content-Type', 'application/javascript');
+      res.sendFile(embedPath);
+    } else {
+      console.error('embed.js not found at:', embedPath);
+      res.status(404).send('embed.js not found');
+    }
+  });
   // Get default chatbot configuration for public access
   app.get('/api/public/default-chatbot', async (req, res) => {
     try {

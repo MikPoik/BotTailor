@@ -7,7 +7,23 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// Enable trust proxy for proper IP forwarding
+app.set('trust proxy', true);
+
+// Serve static files from public directory
+const publicPath = path.resolve(__dirname, '../public');
+app.use('/embed.js', express.static(publicPath, { 
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
 
 // Configure CORS to allow cross-origin requests for the embed widget
 app.use(cors({
@@ -16,9 +32,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
