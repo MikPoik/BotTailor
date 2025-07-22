@@ -234,6 +234,9 @@
           messageVisible = false;
         }
 
+        // Hide all initial message bubbles when chat opens
+        ChatWidget.hideAllInitialMessages();
+
         if (isMobile()) {
           // Lazy load mobile iframe if not already loaded
           if (!mobileIframe.src) {
@@ -412,51 +415,47 @@
         return;
       }
 
-      let currentMessageIndex = 0;
-      const showNextMessage = () => {
-        if (currentMessageIndex >= messages.length) {
-          // Auto-hide after showing all messages
-          setTimeout(() => {
-            if (messageBubble.classList.contains('visible')) {
-              messageBubble.classList.remove('visible');
-            }
-          }, 8000);
-          return;
-        }
+      // Hide the default message bubble since we'll create individual ones
+      messageBubble.style.display = 'none';
 
-        const message = messages[currentMessageIndex];
-        messageBubble.innerHTML = `
+      const container = document.getElementById('chatwidget-container');
+      
+      // Create individual bubbles for each message
+      messages.forEach((message, index) => {
+        const individualBubble = document.createElement('div');
+        individualBubble.className = 'chatwidget-initial-message-bubble';
+        individualBubble.setAttribute('data-index', index);
+        
+        individualBubble.innerHTML = `
           <div class="chatwidget-message-content">
             <div class="chatwidget-speech-bubble">
               <p class="chatwidget-message-main">${message.content || message}</p>
             </div>
-            <button id="chatwidget-message-close" class="chatwidget-close-btn">
+            <button class="chatwidget-close-btn" onclick="ChatWidget.hideInitialMessage(${index})">
               <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
               </svg>
             </button>
           </div>
         `;
-
-        messageBubble.classList.add('visible');
-
-        currentMessageIndex++;
-
-        // Show next message after delay if there are more
-        if (currentMessageIndex < messages.length) {
-          setTimeout(showNextMessage, 4000);
-        } else {
-          // Auto-hide after last message
+        
+        // Position the bubble above previous ones
+        individualBubble.style.bottom = `${80 + (index * 80)}px`;
+        
+        container.appendChild(individualBubble);
+        
+        // Show bubble with delay based on index
+        setTimeout(() => {
+          individualBubble.classList.add('visible');
+        }, 3000 + (index * 1000));
+        
+        // Auto-hide after showing all messages (only for the last message)
+        if (index === messages.length - 1) {
           setTimeout(() => {
-            if (messageBubble.classList.contains('visible')) {
-              messageBubble.classList.remove('visible');
-            }
-          }, 8000);
+            this.hideAllInitialMessages();
+          }, 3000 + (messages.length * 1000) + 8000);
         }
-      };
-
-      // Start showing messages after a delay
-      setTimeout(showNextMessage, 3000);
+      });
     },
 
     showDefaultMessage: function(messageBubble) {
@@ -474,11 +473,30 @@
     },
 
     // Global method to hide initial message (called from inline onclick)
-    hideInitialMessage: function() {
-      const messageBubble = document.getElementById('chatwidget-message-bubble');
-      if (messageBubble) {
-        messageBubble.classList.remove('visible');
+    hideInitialMessage: function(index) {
+      if (index !== undefined) {
+        // Hide specific individual bubble
+        const bubble = document.querySelector(`.chatwidget-initial-message-bubble[data-index="${index}"]`);
+        if (bubble) {
+          bubble.classList.remove('visible');
+          setTimeout(() => bubble.remove(), 300);
+        }
+      } else {
+        // Hide default message bubble (legacy method)
+        const messageBubble = document.getElementById('chatwidget-message-bubble');
+        if (messageBubble) {
+          messageBubble.classList.remove('visible');
+        }
       }
+    },
+
+    // Helper method to hide all initial messages
+    hideAllInitialMessages: function() {
+      const allBubbles = document.querySelectorAll('.chatwidget-initial-message-bubble');
+      allBubbles.forEach(bubble => {
+        bubble.classList.remove('visible');
+        setTimeout(() => bubble.remove(), 300);
+      });
     },
 
     // Public API methods
