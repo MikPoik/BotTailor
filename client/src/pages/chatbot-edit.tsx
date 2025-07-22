@@ -104,18 +104,24 @@ export default function ChatbotEdit() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      console.log("[DEBUG] Sending update data:", data);
       const response = await fetch(`/api/chatbots/guid/${chatbotGuid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       
+      console.log("[DEBUG] Response status:", response.status);
+      
       if (!response.ok) {
         const errorText = await response.text();
+        console.log("[DEBUG] Error response:", errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log("[DEBUG] Success response:", result);
+      return result;
     },
     onSuccess: () => {
       toast({
