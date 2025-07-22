@@ -525,7 +525,7 @@ export default function TabbedChatInterface({
           </div>
 
           {/* Input area - fixed height */}
-          <div className="border-t border-neutral-200 px-4 py-2 bg-white flex-shrink-0">
+          <div className="border-t border-neutral-200 px-4 py-1 bg-white flex-shrink-0"></div>
             <div className="flex items-center space-x-3">
               <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
                 <Paperclip className="h-5 w-5" />

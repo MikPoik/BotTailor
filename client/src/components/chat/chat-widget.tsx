@@ -196,7 +196,7 @@ export default function ChatWidget({
         <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden ${
           isMobile 
             ? 'fixed inset-4 z-50' 
-            : 'w-96 h-[600px]'
+            : 'w-96 h-[700px]'
         }`}>
           {/* Chat header */}
           <div 
