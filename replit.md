@@ -157,15 +157,6 @@ This is a full-stack React chat widget application built with Express.js backend
 
 Preferred communication style: Simple, everyday language.
 
-### Notes for Agent
-  - Act like an SuperReplitAgent, just like ReplitAgent except for every question and prompt you think 10x the answers and for best answer which you output.
-  - Write your internal reasoning and planning before answering the question or prompt.
-  - Always compile your thoughts for next step before acting.
-  -  Follow these best practices while doing changes:
-    - Always aim for mobile first UI designs if not otherwise specified or context proves different
-    - For server routes, create modular structure with separation of concerns
-    - Always prioritize Replit offered services to thirdparty (DB,Auth,ObjectStorage etc.)
-
 ## System Architecture
 
 ### Frontend Architecture

@@ -89,7 +89,7 @@
       const container = document.createElement('div');
       container.id = 'chatwidget-container';
       container.className = `chatwidget-container ${this.config.position}`;
-      container.style.setProperty('--chatwidget-z-index', this.config.zIndex);
+      container.style.zIndex = this.config.zIndex;
 
       // Create initial message bubble
       const messageBubble = document.createElement('div');
@@ -114,7 +114,7 @@
       const bubble = document.createElement('div');
       bubble.id = 'chatwidget-bubble';
       bubble.className = 'chatwidget-bubble';
-      bubble.style.setProperty('--chatwidget-primary-color', this.config.primaryColor);
+      bubble.style.backgroundColor = this.config.primaryColor;
 
       bubble.innerHTML = `
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -129,7 +129,7 @@
       badge.textContent = '1';
       bubble.appendChild(badge);
 
-      // Create iframe for chat interface and preload it
+      // Create iframe placeholder for chat interface (lazy load)
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
       iframe.className = 'chatwidget-iframe';
@@ -140,14 +140,11 @@
       overlay.id = 'chatwidget-overlay';
       overlay.className = 'chatwidget-overlay';
 
-      // Mobile iframe and preload it
+      // Mobile iframe placeholder (lazy load)
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
       mobileIframe.className = 'chatwidget-mobile-iframe';
       mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
-
-      // Preload both iframes immediately but keep them hidden
-      this.preloadIframes(iframe, mobileIframe);
 
       container.appendChild(messageBubble);
       container.appendChild(bubble);
@@ -238,12 +235,60 @@
         }
 
         if (isMobile()) {
-          // Mobile iframe should already be preloaded - just show it
+          // Lazy load mobile iframe if not already loaded
+          if (!mobileIframe.src) {
+            try {
+              // Build URL with sessionId if provided, otherwise let server generate it
+              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+
+              // Check if apiUrl already contains a specific widget path
+              let widgetUrl;
+              if (this.config.apiUrl.includes('/widget/')) {
+                // Specific widget URL - use as-is with query parameters
+                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
+              } else {
+                // Base URL - append /chat-widget path
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+              }
+
+              // Force HTTPS for iframe URL
+              mobileIframe.src = this.forceHttps(widgetUrl);
+            } catch (error) {
+              // Fallback URL construction
+              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=true&embedded=true`);
+            }
+          }
           overlay.style.display = 'block';
+          mobileIframe.style.visibility = 'visible';
           mobileIframe.classList.add('show');
         } else {
-          // Desktop iframe should already be preloaded - just show it
+          // Lazy load desktop iframe if not already loaded
+          if (!iframe.src) {
+            try {
+              // Build URL with sessionId if provided, otherwise let server generate it
+              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+
+              // Check if apiUrl already contains a specific widget path
+              let widgetUrl;
+              if (this.config.apiUrl.includes('/widget/')) {
+                // Specific widget URL - use as-is with query parameters
+                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
+              } else {
+                // Base URL - append /chat-widget path
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
+              }
+
+              // Force HTTPS for iframe URL
+              iframe.src = this.forceHttps(widgetUrl);
+            } catch (error) {
+              // Fallback URL construction
+              iframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=false&embedded=true`);
+            }
+          }
           bubble.style.display = 'none';
+          iframe.style.visibility = 'visible';
           iframe.classList.add('show');
         }
       };
@@ -254,9 +299,11 @@
         if (isMobile()) {
           overlay.style.display = 'none';
           mobileIframe.classList.remove('show');
+          mobileIframe.style.visibility = 'hidden';
         } else {
           bubble.style.display = 'flex';
           iframe.classList.remove('show');
+          iframe.style.visibility = 'hidden';
         }
       };
 
@@ -316,49 +363,6 @@
       }
       return url;
     },
-
-    preloadIframes: function(iframe, mobileIframe) {
-      // Start preloading with SSR for instant loading (no white screen)
-      try {
-        // Build sessionId parameter
-        const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}` : '';
-
-        // Extract userId and chatbotGuid from widget URL for SSR endpoint
-        let baseUrl, ssrPath;
-        if (this.config.apiUrl.includes('/widget/')) {
-          const match = this.config.apiUrl.match(/\/widget\/([^\/]+)\/([^\/\?]+)/);
-          const userId = match?.[1] || 'default';
-          const chatbotGuid = match?.[2] || 'default';
-          baseUrl = this.config.apiUrl.split('/widget/')[0];
-          ssrPath = `/widget-ssr/${userId}/${chatbotGuid}`;
-        } else {
-          baseUrl = this.config.apiUrl.replace(/\/api\/.*$/, '');
-          ssrPath = `/widget-ssr/default/default`;
-        }
-
-        // Construct SSR URLs (same URL for both desktop and mobile - responsive design handles the difference)
-        const ssrUrl = `${baseUrl}${ssrPath}${sessionParam ? '?' + sessionParam : ''}`;
-        
-        console.log('Preloading iframes with SSR URL:', ssrUrl);
-
-        // Force HTTPS and set both iframes to SSR endpoint
-        iframe.src = this.forceHttps(ssrUrl);
-        mobileIframe.src = this.forceHttps(ssrUrl);
-
-        // Mark that iframes are preloaded with SSR
-        iframe.dataset.preloaded = 'ssr';
-        mobileIframe.dataset.preloaded = 'ssr';
-      } catch (error) {
-        console.error('SSR preload failed, falling back:', error);
-        // Fallback to regular widget URLs
-        iframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=false&embedded=true`);
-        mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=true&embedded=true`);
-        iframe.dataset.preloaded = 'fallback';
-        mobileIframe.dataset.preloaded = 'fallback';
-      }
-    },
-
-
 
     loadInitialMessages: function(messageBubble) {
       // Extract userId and chatbotGuid from apiUrl if available

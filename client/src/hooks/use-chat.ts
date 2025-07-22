@@ -35,8 +35,6 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       return response.json();
     },
     enabled: !!sessionId && !!session,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus for embedded widgets
   });
 
   const messages: Message[] = (messagesData?.messages || [])
