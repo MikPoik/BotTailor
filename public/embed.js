@@ -96,19 +96,11 @@
       messageBubble.id = 'chatwidget-message-bubble';
       messageBubble.className = `chatwidget-message-bubble ${this.config.position}`;
 
-      // Message bubble content
+      // Message bubble content - simplified to show only text
       messageBubble.innerHTML = `
         <div class="chatwidget-message-content">
-          <div class="chatwidget-avatar" style="background-color: ${this.config.primaryColor};">
-            <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-            </svg>
-          </div>
-          <div class="chatwidget-message-text">
-            <div class="chatwidget-speech-bubble">
-              <p class="chatwidget-message-main">Hello there! Need any help?</p>
-            </div>
-            <p class="chatwidget-message-sub">Click the chat button to get started!</p>
+          <div class="chatwidget-speech-bubble">
+            <p class="chatwidget-message-main">Hello there! Need any help?</p>
           </div>
           <button id="chatwidget-message-close" class="chatwidget-close-btn">
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
@@ -435,15 +427,14 @@
         const message = messages[currentMessageIndex];
         messageBubble.innerHTML = `
           <div class="chatwidget-message-content">
-            <img src="${this.config.avatarUrl || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32'}" 
-                 style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;" alt="Bot">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                <span style="font-weight: 600; font-size: 14px; color: #1f2937;">${this.config.botName || 'Assistant'}</span>
-                <button onclick="ChatWidget.hideInitialMessage()" style="margin-left: auto; background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; line-height: 1; padding: 0;">&times;</button>
-              </div>
-              <div style="color: #4b5563; font-size: 14px; line-height: 1.4;">${message.content || message}</div>
+            <div class="chatwidget-speech-bubble">
+              <p class="chatwidget-message-main">${message.content || message}</p>
             </div>
+            <button id="chatwidget-message-close" class="chatwidget-close-btn">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
           </div>
         `;
 
