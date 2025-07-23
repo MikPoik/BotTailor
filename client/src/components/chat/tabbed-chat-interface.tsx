@@ -81,7 +81,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...message.metadata,
+              ...(message.metadata || {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -159,7 +159,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...message.metadata,
+              ...(message.metadata || {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -215,7 +215,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...message.metadata,
+              ...(message.metadata || {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },

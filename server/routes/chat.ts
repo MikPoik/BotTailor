@@ -7,6 +7,32 @@ import { buildSurveyContext } from "../ai-response-schema";
 
 // Chat-related routes
 export function setupChatRoutes(app: Express) {
+  // Select option route (required for menu option interactions)
+  app.post('/api/chat/:sessionId/select-option', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { optionId, payload, optionText } = req.body;
+      
+      console.log(`[SELECT_OPTION] Session: ${sessionId}, Option: ${optionId}, Text: ${optionText}`);
+      
+      // For now, just acknowledge the selection
+      // This endpoint is used to record the option selection before triggering AI response
+      res.json({ 
+        success: true, 
+        optionId, 
+        payload, 
+        optionText,
+        message: "Option selected successfully" 
+      });
+    } catch (error) {
+      console.error("Error selecting option:", error);
+      res.status(500).json({ 
+        error: "Failed to select option", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
   // Get chat session messages
   app.get('/api/chat/:sessionId/messages', async (req, res) => {
     try {

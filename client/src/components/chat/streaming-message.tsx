@@ -3,6 +3,13 @@ import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
 import RichMessage from "./rich-message";
 
+interface MessageChunk {
+  content: string;
+  messageType: string;
+  metadata?: any;
+  delay?: number;
+}
+
 interface StreamingMessageProps {
   message: Message;
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
@@ -20,9 +27,9 @@ export default function StreamingMessage({
   const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
 
   // Parse chunks from message metadata
-  const chunks: MessageChunk[] = message.metadata?.chunks || [];
-  const isStreaming = message.metadata?.isStreaming || false;
-  const streamingComplete = message.metadata?.streamingComplete || false;
+  const chunks: MessageChunk[] = (message.metadata as any)?.chunks || [];
+  const isStreaming = (message.metadata as any)?.isStreaming || false;
+  const streamingComplete = (message.metadata as any)?.streamingComplete || false;
 
   useEffect(() => {
     if ((!isStreaming && !streamingComplete) || chunks.length === 0) {
@@ -78,10 +85,10 @@ export default function StreamingMessage({
   const [displayedChunks, setDisplayedChunks] = useState<any[]>([]);
 
   useEffect(() => {
-    if (message.metadata?.chunks) {
-      setDisplayedChunks(message.metadata.chunks);
+    if ((message.metadata as any)?.chunks) {
+      setDisplayedChunks((message.metadata as any).chunks);
     }
-  }, [message.metadata?.chunks]);
+  }, [(message.metadata as any)?.chunks]);
 
   return (
     <div className="space-y-2">
@@ -93,8 +100,8 @@ export default function StreamingMessage({
                 content: chunk.content,
                 messageType: chunk.messageType as any,
                 metadata: {
-                  ...message.metadata,
-                  ...chunk.metadata
+                  ...(message.metadata || {}),
+                  ...(chunk.metadata || {})
                 }
               }}
               onOptionSelect={onOptionSelect}
