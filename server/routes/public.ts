@@ -9,13 +9,29 @@ const __dirname = path.dirname(__filename);
 
 // Public API routes (no authentication required)
 export function setupPublicRoutes(app: Express) {
-  // Serve embed.js static file
+  // Serve embed.js static file (handle both with and without trailing slash)
   app.get('/embed.js', (req: Request, res: Response) => {
     const publicPath = path.resolve(__dirname, '../../public');
     const embedPath = path.join(publicPath, 'embed.js');
     
     if (fs.existsSync(embedPath)) {
       res.setHeader('Content-Type', 'application/javascript');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.sendFile(embedPath);
+    } else {
+      console.error('embed.js not found at:', embedPath);
+      res.status(404).send('embed.js not found');
+    }
+  });
+
+  // Handle trailing slash version as well
+  app.get('/embed.js/', (req: Request, res: Response) => {
+    const publicPath = path.resolve(__dirname, '../../public');
+    const embedPath = path.join(publicPath, 'embed.js');
+    
+    if (fs.existsSync(embedPath)) {
+      res.setHeader('Content-Type', 'application/javascript');
+      res.setHeader('Cache-Control', 'no-cache');
       res.sendFile(embedPath);
     } else {
       console.error('embed.js not found at:', embedPath);

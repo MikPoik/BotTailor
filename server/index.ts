@@ -15,15 +15,7 @@ app.use(express.urlencoded({ extended: false }));
 // Enable trust proxy for proper IP forwarding
 app.set('trust proxy', true);
 
-// Serve static files from public directory
-const publicPath = path.resolve(__dirname, '../public');
-app.use('/embed.js', express.static(publicPath, { 
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    }
-  }
-}));
+// Serve static files from public directory - this will be handled by public routes
 
 // Configure CORS to allow cross-origin requests for the embed widget
 app.use(cors({
@@ -80,7 +72,7 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
