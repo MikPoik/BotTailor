@@ -1,0 +1,20 @@
+tabbed-chat-interface.tsx:496  Warning: Each child in a list should have a unique "key" prop.
+
+Check the render method of `TabbedChatInterface`. See https://reactjs.org/link/warning-keys for more information.
+    at MessageBubble (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/src/components/chat/message-bubble.tsx:23:41)
+    at TabbedChatInterface (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/src/components/chat/tabbed-chat-interface.tsx:29:3)
+    at div
+    at div
+    at div
+    at ChatWidget (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/src/components/chat/chat-widget.tsx:25:3)
+    at div
+    at Home (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/src/pages/home.tsx:24:37)
+    at Route (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f337ff:323:16)
+    at Switch (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=95f337ff:379:17)
+    at AuthenticatedRouter (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/src/App.tsx?v=J80MK4FRcgx2_QZkCj4Lr:64:42)
+    at Router
+    at Provider (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GFOGKHJ2.js?v=95f337ff:22:15)
+    at TooltipProvider (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=95f337ff:65:5)
+    at ThemeProvider (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/src/contexts/theme-context.tsx:20:33)
+    at QueryClientProvider (https://a1b1aa46-7e80-4737-b412-ea4f8421e1f5-00-3mv8ly9qrhj2v.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=95f337ff:2805:3)
+    at App

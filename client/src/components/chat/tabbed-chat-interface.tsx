@@ -507,9 +507,9 @@ export default function TabbedChatInterface({
                 </div>
               </div>
             ) : (
-              messages.map((message) => (
+              messages.map((message, index) => (
                 <MessageBubble
-                  key={message.id}
+                  key={`message-${message.id}-${index}`}
                   message={message}
                   onOptionSelect={handleOptionSelect}
                   onQuickReply={handleQuickReply}
