@@ -212,18 +212,56 @@
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
       iframe.className = 'chatwidget-iframe';
-      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
+      
+      // Add initial styles to prevent white screen during transitions
+      iframe.style.width = '400px';
+      iframe.style.height = '600px';
+      iframe.style.border = 'none';
+      iframe.style.borderRadius = '12px';
+      iframe.style.position = 'absolute';
+      iframe.style.bottom = '80px';
+      iframe.style.backgroundColor = 'transparent';
+      iframe.style.visibility = 'hidden';
+      iframe.style.transition = 'all 0.3s ease-out';
+      if (this.config.position === 'bottom-right') {
+        iframe.style.right = '0';
+      } else {
+        iframe.style.left = '0';
+      }
 
       // Mobile overlay for small screens
       const overlay = document.createElement('div');
       overlay.id = 'chatwidget-overlay';
       overlay.className = 'chatwidget-overlay';
+      
+      // Add initial styles to prevent visual glitches
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+      overlay.style.display = 'none';
+      overlay.style.zIndex = this.config.zIndex - 1;
 
       // Mobile iframe placeholder (lazy load)
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
       mobileIframe.className = 'chatwidget-mobile-iframe';
-      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
+      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
+      
+      // Add initial styles to prevent white screen during transitions
+      mobileIframe.style.position = 'fixed';
+      mobileIframe.style.top = '0';
+      mobileIframe.style.left = '0';
+      mobileIframe.style.width = '100%';
+      mobileIframe.style.height = '100%';
+      mobileIframe.style.border = 'none';
+      mobileIframe.style.backgroundColor = 'transparent';
+      mobileIframe.style.visibility = 'hidden';
+      mobileIframe.style.transition = 'all 0.3s ease-out';
+      mobileIframe.style.zIndex = this.config.zIndex;
 
       container.appendChild(messageBubble);
       container.appendChild(bubble);
@@ -424,17 +462,51 @@
         }
       });
 
-      // Handle window resize
+      // Handle window resize with debouncing
+      let resizeTimeout;
       window.addEventListener('resize', () => {
-        if (!isMobile() && overlay.style.display !== 'none') {
-          // Switch from mobile to desktop view
-          overlay.style.display = 'none';
-          mobileIframe.classList.remove('show');
-          mobileIframe.style.visibility = 'hidden';
-          bubble.style.display = 'none';
-          iframe.style.visibility = 'visible';
-          iframe.classList.add('show');
-        }
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const nowMobile = isMobile();
+          
+          if (isOpen) {
+            if (nowMobile && overlay.style.display === 'none') {
+              // Switch from desktop to mobile view
+              iframe.classList.remove('show');
+              iframe.style.visibility = 'hidden';
+              bubble.style.display = 'flex';
+              
+              // Ensure mobile iframe has src before showing
+              if (!mobileIframe.src && iframe.src) {
+                // Transfer the current session to mobile iframe
+                const currentSrc = iframe.src;
+                const mobileUrl = currentSrc.replace('mobile=false', 'mobile=true');
+                mobileIframe.src = mobileUrl;
+              }
+              
+              overlay.style.display = 'block';
+              mobileIframe.style.visibility = 'visible';
+              mobileIframe.classList.add('show');
+            } else if (!nowMobile && overlay.style.display !== 'none') {
+              // Switch from mobile to desktop view
+              overlay.style.display = 'none';
+              mobileIframe.classList.remove('show');
+              mobileIframe.style.visibility = 'hidden';
+              
+              // Ensure desktop iframe has src before showing
+              if (!iframe.src && mobileIframe.src) {
+                // Transfer the current session to desktop iframe
+                const currentSrc = mobileIframe.src;
+                const desktopUrl = currentSrc.replace('mobile=true', 'mobile=false');
+                iframe.src = desktopUrl;
+              }
+              
+              bubble.style.display = 'none';
+              iframe.style.visibility = 'visible';
+              iframe.classList.add('show');
+            }
+          }
+        }, 150); // Debounce resize events
       });
     },
 

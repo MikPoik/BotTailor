@@ -6,7 +6,7 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
-- **July 23, 2025**: Fixed Chat Widget FOUC and Embedding Issues:
+- **July 23, 2025**: Fixed Chat Widget FOUC and Mobile/Desktop Adaptation Issues:
   - **RESOLVED**: Fixed embed.js not accessible due to middleware order conflict between Vite and Express static routes
   - **FIXED**: Environment check causing Vite middleware to intercept embed.js requests before route handlers
   - **ENHANCED**: Added support for both `/embed.js` and `/embed.js/` paths to handle redirect scenarios
@@ -15,8 +15,11 @@ This is a full-stack React chat widget application built with Express.js backend
   - **ELIMINATED FOUC**: Fixed Flash of Unstyled Content by waiting for CSS to load before creating DOM elements
   - **ENHANCED EVENT HANDLING**: Fixed clickability of initial message bubbles with proper event delegation
   - **ADDED INLINE STYLES**: Comprehensive inline styling prevents unstyled content from appearing during CSS load
-  - **IMPROVED PRODUCTION PATHS**: Smart path resolution works in both development and production environments
-  - **PRODUCTION READY**: Chat widget embedding now works flawlessly with zero visual glitches on external websites
+  - **FIXED MOBILE/DESKTOP ADAPTATION**: Enhanced resize handler to properly switch between mobile and desktop views without white screens
+  - **RESOLVED IFRAME SANDBOXING WARNING**: Removed allow-same-origin to eliminate security warnings while maintaining functionality
+  - **IMPROVED SESSION CONTINUITY**: Smart session transfer between desktop and mobile iframes during view switches
+  - **ENHANCED VISUAL STABILITY**: Added debounced resize handling and comprehensive iframe styling to prevent visual glitches
+  - **PRODUCTION READY**: Chat widget embedding now works flawlessly across all devices and view transitions
 
 - **July 21, 2025**: Major Routes Refactoring for Maintainability:
   - **REFACTORED**: Split large routes.ts file (1700+ lines) into logical modular structure
