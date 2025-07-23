@@ -7,48 +7,80 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Helper function to find the correct path for static files in both dev and prod
+function findStaticFilePath(filename: string): string | null {
+  // Try production path first (dist/public)
+  const prodPath = path.resolve(__dirname, '../dist/public', filename);
+  if (fs.existsSync(prodPath)) {
+    return prodPath;
+  }
+  
+  // Try development path (public)
+  const devPath = path.resolve(__dirname, '../../public', filename);
+  if (fs.existsSync(devPath)) {
+    return devPath;
+  }
+  
+  // Try alternative production path (./public relative to server)
+  const altProdPath = path.resolve(__dirname, '../public', filename);
+  if (fs.existsSync(altProdPath)) {
+    return altProdPath;
+  }
+  
+  return null;
+}
+
 // Public API routes (no authentication required)
 export function setupPublicRoutes(app: Express) {
   // Serve embed.js static file (handle both with and without trailing slash)
   app.get('/embed.js', (req: Request, res: Response) => {
-    const publicPath = path.resolve(__dirname, '../../public');
-    const embedPath = path.join(publicPath, 'embed.js');
+    const embedPath = findStaticFilePath('embed.js');
     
-    if (fs.existsSync(embedPath)) {
+    if (embedPath) {
       res.setHeader('Content-Type', 'application/javascript');
       res.setHeader('Cache-Control', 'no-cache');
       res.sendFile(embedPath);
     } else {
-      console.error('embed.js not found at:', embedPath);
+      console.error('embed.js not found. Searched paths:', [
+        path.resolve(__dirname, '../dist/public/embed.js'),
+        path.resolve(__dirname, '../../public/embed.js'),
+        path.resolve(__dirname, '../public/embed.js')
+      ]);
       res.status(404).send('embed.js not found');
     }
   });
 
   // Handle trailing slash version as well
   app.get('/embed.js/', (req: Request, res: Response) => {
-    const publicPath = path.resolve(__dirname, '../../public');
-    const embedPath = path.join(publicPath, 'embed.js');
+    const embedPath = findStaticFilePath('embed.js');
     
-    if (fs.existsSync(embedPath)) {
+    if (embedPath) {
       res.setHeader('Content-Type', 'application/javascript');
       res.setHeader('Cache-Control', 'no-cache');
       res.sendFile(embedPath);
     } else {
-      console.error('embed.js not found at:', embedPath);
+      console.error('embed.js not found. Searched paths:', [
+        path.resolve(__dirname, '../dist/public/embed.js'),
+        path.resolve(__dirname, '../../public/embed.js'),
+        path.resolve(__dirname, '../public/embed.js')
+      ]);
       res.status(404).send('embed.js not found');
     }
   });
 
   // Serve embed.css static file
   app.get('/embed.css', (req: Request, res: Response) => {
-    const publicPath = path.resolve(__dirname, '../../public');
-    const embedCssPath = path.join(publicPath, 'embed.css');
+    const embedCssPath = findStaticFilePath('embed.css');
     
-    if (fs.existsSync(embedCssPath)) {
+    if (embedCssPath) {
       res.setHeader('Content-Type', 'text/css');
       res.sendFile(embedCssPath);
     } else {
-      console.error('embed.css not found at:', embedCssPath);
+      console.error('embed.css not found. Searched paths:', [
+        path.resolve(__dirname, '../dist/public/embed.css'),
+        path.resolve(__dirname, '../../public/embed.css'),
+        path.resolve(__dirname, '../public/embed.css')
+      ]);
       res.status(404).send('embed.css not found');
     }
   });
