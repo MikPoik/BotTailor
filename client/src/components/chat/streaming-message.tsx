@@ -93,7 +93,7 @@ export default function StreamingMessage({
   return (
     <div className="space-y-2">
         {visibleChunks.map((chunk, index) => (
-          <div key={index} className="animate-fadeIn">
+          <div key={`chunk-${message.id}-${index}`} className="animate-fadeIn">
             <RichMessage
               message={{
                 ...message,

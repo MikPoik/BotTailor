@@ -93,7 +93,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
           <div className="flex flex-wrap gap-2 mt-2 pl-0">
             {(message.metadata as any).quickReplies.map((reply: string, index: number) => (
               <button
-                key={index}
+                key={`msg-quickreply-${message.id}-${reply}-${index}`}
                 onClick={() => onQuickReply(reply)}
                 className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
               >
