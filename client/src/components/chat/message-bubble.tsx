@@ -34,7 +34,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
     if (isNaN(date.getTime())) return '';
     return formatDistanceToNow(date, { addSuffix: true });
   };
-  const timeAgo = getTimeAgo(message.createdAt);
+  const timeAgo = getTimeAgo(typeof message.createdAt === 'string' ? message.createdAt : message.createdAt?.toISOString?.());
 
   if (isUser) {
     return (
