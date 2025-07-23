@@ -35,20 +35,18 @@
       // Wait for DOM to be ready
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-          this.loadStyles();
-          this.createWidget();
-          this.setupEventListeners();
+          this.loadStylesAndCreateWidget();
         });
       } else {
-        this.loadStyles();
-        this.createWidget();
-        this.setupEventListeners();
+        this.loadStylesAndCreateWidget();
       }
     },
 
-    loadStyles: function() {
+    loadStylesAndCreateWidget: function() {
       // Check if styles are already loaded
       if (document.getElementById('chatwidget-styles')) {
+        this.createWidget();
+        this.setupEventListeners();
         return;
       }
 
@@ -77,7 +75,33 @@
       baseUrl = this.forceHttps(baseUrl);
       link.href = `${baseUrl}/embed.css`;
 
+      // Wait for CSS to load before creating widget
+      link.onload = () => {
+        this.createWidget();
+        this.setupEventListeners();
+      };
+
+      // Fallback in case CSS fails to load
+      link.onerror = () => {
+        console.warn('Chat widget CSS failed to load, creating widget without styles');
+        this.createWidget();
+        this.setupEventListeners();
+      };
+
+      // Timeout fallback (in case onload never fires)
+      setTimeout(() => {
+        if (!document.getElementById('chatwidget-container')) {
+          this.createWidget();
+          this.setupEventListeners();
+        }
+      }, 2000);
+
       document.head.appendChild(link);
+    },
+
+    loadStyles: function() {
+      // Kept for backward compatibility - this method is now part of loadStylesAndCreateWidget
+      this.loadStylesAndCreateWidget();
     },
 
     generateSessionId: function() {
@@ -90,19 +114,46 @@
       container.id = 'chatwidget-container';
       container.className = `chatwidget-container ${this.config.position}`;
       container.style.zIndex = this.config.zIndex;
+      
+      // Add initial positioning styles to prevent FOUC
+      container.style.position = 'fixed';
+      container.style.bottom = '24px';
+      container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      if (this.config.position === 'bottom-right') {
+        container.style.right = '24px';
+      } else {
+        container.style.left = '24px';
+      }
 
       // Create initial message bubble
       const messageBubble = document.createElement('div');
       messageBubble.id = 'chatwidget-message-bubble';
       messageBubble.className = `chatwidget-message-bubble ${this.config.position}`;
+      
+      // Add initial styles to prevent FOUC
+      messageBubble.style.position = 'absolute';
+      messageBubble.style.bottom = '80px';
+      messageBubble.style.maxWidth = '350px';
+      messageBubble.style.background = 'transparent';
+      messageBubble.style.borderRadius = '16px';
+      messageBubble.style.padding = '8px';
+      messageBubble.style.transform = 'translateY(10px) scale(0.95)';
+      messageBubble.style.opacity = '0';
+      messageBubble.style.visibility = 'hidden';
+      messageBubble.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)';
+      if (this.config.position === 'bottom-right') {
+        messageBubble.style.right = '0';
+      } else {
+        messageBubble.style.left = '0';
+      }
 
       // Message bubble content - simplified to show only text
       messageBubble.innerHTML = `
-        <div class="chatwidget-message-content">
-          <div class="chatwidget-speech-bubble">
-            <p class="chatwidget-message-main">Hello there! Need any help?</p>
+        <div class="chatwidget-message-content" style="display: flex; align-items: flex-start; gap: 12px;">
+          <div class="chatwidget-speech-bubble" style="background: #f8f9fa; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
+            <p class="chatwidget-message-main" style="margin: 0; color: #333; line-height: 1.4;">Hello there! Need any help?</p>
           </div>
-          <button id="chatwidget-message-close" class="chatwidget-close-btn">
+          <button id="chatwidget-message-close" class="chatwidget-close-btn" style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; color: #666;">
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
             </svg>
@@ -115,6 +166,17 @@
       bubble.id = 'chatwidget-bubble';
       bubble.className = 'chatwidget-bubble';
       bubble.style.backgroundColor = this.config.primaryColor;
+      
+      // Add initial styles to prevent FOUC
+      bubble.style.width = '56px';
+      bubble.style.height = '56px';
+      bubble.style.borderRadius = '50%';
+      bubble.style.display = 'flex';
+      bubble.style.alignItems = 'center';
+      bubble.style.justifyContent = 'center';
+      bubble.style.cursor = 'pointer';
+      bubble.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12)';
+      bubble.style.transition = 'all 0.3s ease';
 
       bubble.innerHTML = `
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -127,6 +189,23 @@
       badge.id = 'chatwidget-badge';
       badge.className = 'chatwidget-badge';
       badge.textContent = '1';
+      
+      // Add initial styles to prevent FOUC
+      badge.style.position = 'absolute';
+      badge.style.top = '-6px';
+      badge.style.right = '-6px';
+      badge.style.width = '20px';
+      badge.style.height = '20px';
+      badge.style.borderRadius = '50%';
+      badge.style.background = '#ef4444';
+      badge.style.color = 'white';
+      badge.style.fontSize = '12px';
+      badge.style.fontWeight = 'bold';
+      badge.style.display = 'none';
+      badge.style.alignItems = 'center';
+      badge.style.justifyContent = 'center';
+      badge.style.border = '2px solid white';
+      
       bubble.appendChild(badge);
 
       // Create iframe placeholder for chat interface (lazy load)
@@ -426,12 +505,29 @@
         individualBubble.className = 'chatwidget-initial-message-bubble';
         individualBubble.setAttribute('data-index', index);
         
+        // Add initial styles to prevent FOUC
+        individualBubble.style.position = 'absolute';
+        individualBubble.style.maxWidth = '350px';
+        individualBubble.style.background = 'transparent';
+        individualBubble.style.borderRadius = '16px';
+        individualBubble.style.padding = '8px';
+        individualBubble.style.transform = 'translateY(10px) scale(0.95)';
+        individualBubble.style.opacity = '0';
+        individualBubble.style.visibility = 'hidden';
+        individualBubble.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)';
+        individualBubble.style.cursor = 'pointer';
+        if (this.config.position === 'bottom-right') {
+          individualBubble.style.right = '0';
+        } else {
+          individualBubble.style.left = '0';
+        }
+        
         individualBubble.innerHTML = `
-          <div class="chatwidget-message-content">
-            <div class="chatwidget-speech-bubble">
-              <p class="chatwidget-message-main">${message.content || message}</p>
+          <div class="chatwidget-message-content" style="display: flex; align-items: flex-start; gap: 12px;">
+            <div class="chatwidget-speech-bubble" style="background: #f8f9fa; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
+              <p class="chatwidget-message-main" style="margin: 0; color: #333; line-height: 1.4;">${message.content || message}</p>
             </div>
-            <button class="chatwidget-close-btn" onclick="ChatWidget.hideInitialMessage(${index})">
+            <button class="chatwidget-close-btn" style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; color: #666; hover:background: #f0f0f0;" data-index="${index}">
               <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
               </svg>
@@ -442,10 +538,28 @@
         // Position the bubble above previous ones
         individualBubble.style.bottom = `${80 + (index * 80)}px`;
         
+        // Add event listeners for the individual bubble
+        const closeBtn = individualBubble.querySelector('.chatwidget-close-btn');
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.hideInitialMessage(index);
+        });
+        
+        // Make the bubble clickable to open chat (but not the close button)
+        individualBubble.addEventListener('click', (e) => {
+          if (!closeBtn.contains(e.target)) {
+            const bubble = document.getElementById('chatwidget-bubble');
+            if (bubble) bubble.click();
+          }
+        });
+        
         container.appendChild(individualBubble);
         
         // Show bubble with delay based on index
         setTimeout(() => {
+          individualBubble.style.opacity = '1';
+          individualBubble.style.visibility = 'visible';
+          individualBubble.style.transform = 'translateY(0) scale(1)';
           individualBubble.classList.add('visible');
         }, 3000 + (index * 1000));
         
@@ -461,11 +575,17 @@
     showDefaultMessage: function(messageBubble) {
       // Show default message bubble after a short delay
       setTimeout(() => {
+        messageBubble.style.opacity = '1';
+        messageBubble.style.visibility = 'visible';
+        messageBubble.style.transform = 'translateY(0) scale(1)';
         messageBubble.classList.add('visible');
 
         // Auto-hide after 10 seconds unless user interacts
         setTimeout(() => {
           if (messageBubble.classList.contains('visible')) {
+            messageBubble.style.opacity = '0';
+            messageBubble.style.visibility = 'hidden';
+            messageBubble.style.transform = 'translateY(10px) scale(0.95)';
             messageBubble.classList.remove('visible');
           }
         }, 10000);
