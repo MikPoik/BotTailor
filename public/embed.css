@@ -149,10 +149,9 @@
 }
 
 .chatwidget-iframe {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 384px;
+  position: fixed;
+  bottom: 24px;
+  width: 400px;
   height: 600px;
   border: none;
   border-radius: 12px;
@@ -161,6 +160,14 @@
   display: none;
   visibility: hidden;
   z-index: 1001;
+}
+
+.chatwidget-container.bottom-right .chatwidget-iframe {
+  right: 24px;
+}
+
+.chatwidget-container.bottom-left .chatwidget-iframe {
+  left: 24px;
 }
 
 .chatwidget-overlay {

@@ -219,15 +219,16 @@
       iframe.style.height = '600px';
       iframe.style.border = 'none';
       iframe.style.borderRadius = '12px';
-      iframe.style.position = 'absolute';
-      iframe.style.bottom = '80px';
+      iframe.style.position = 'fixed';
+      iframe.style.bottom = '24px';
       iframe.style.backgroundColor = 'transparent';
       iframe.style.visibility = 'hidden';
       iframe.style.transition = 'all 0.3s ease-out';
+      iframe.style.zIndex = this.config.zIndex;
       if (this.config.position === 'bottom-right') {
-        iframe.style.right = '0';
+        iframe.style.right = '24px';
       } else {
-        iframe.style.left = '0';
+        iframe.style.left = '24px';
       }
 
       // Mobile overlay for small screens
