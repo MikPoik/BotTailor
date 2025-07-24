@@ -173,7 +173,7 @@ export default function ChatbotTest() {
                     asChild
                     className="w-full"
                   >
-                    <Link href={`/chatbots/${chatbot.id}`}>
+                    <Link href={`/chatbots/${chatbot.guid}`}>
                       <Settings className="h-4 w-4 mr-2" />
                       Edit Configuration
                     </Link>
