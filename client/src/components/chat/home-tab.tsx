@@ -133,7 +133,21 @@ export default function HomeTab({
   // If there's a custom config, use dynamic rendering
   if (hasCustomHomeScreen) {
     const handleTopicClick = (topic: any) => {
-      onStartChat(topic.title, topic.message);
+      // Handle survey topics specifically
+      if (topic.actionType === "survey") {
+        // Send clean message to display, but include hidden surveyId for backend parsing
+        const displayMessage = `I'd like to take the ${topic.title} assessment`;
+        const backgroundMessage = `${displayMessage} (surveyId: ${topic.surveyId})`;
+        // Pass a special object that includes both display and internal messages
+        onStartChat(topic.title, {
+          displayMessage,
+          internalMessage: backgroundMessage,
+          actionType: 'survey'
+        });
+      } else {
+        // For regular message topics, send as string message
+        onStartChat(topic.title, topic.message);
+      }
     };
 
     const handleActionClick = (action: any) => {
