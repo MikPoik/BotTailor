@@ -1,0 +1,83 @@
+{
+  "theme": {
+    "textColor": "#1f2937",
+    "primaryColor": "#3b82f6",
+    "backgroundColor": "#ffffff"
+  },
+  "version": "1.0",
+  "components": [
+    {
+      "id": "header_1",
+      "type": "header",
+      "order": 1,
+      "props": {
+        "title": "Oivallus Akatemian palvelut",
+        "subtitle": "Kuinka voimme auttaa sinua tänään?"
+      },
+      "visible": true
+    },
+    {
+      "id": "quick_actions_1",
+      "type": "quick_actions",
+      "order": 2,
+      "props": {
+        "actions": [
+          {
+            "id": "chat_support",
+            "title": "Keskustele Tuen Kanssa",
+            "action": "start_chat",
+            "actionType": "message",
+            "description": "Saat välitöntä apua tukitiimiltämme"
+          },
+          {
+            "id": "explore_services",
+            "title": "Tutustu Palveluihin",
+            "action": "explore_services",
+            "actionType": "message",
+            "description": "Tutustu tarjoamiimme palveluihin"
+          },
+          {
+            "id": "book_appointment",
+            "title": "Varaa Ajanvaraus",
+            "action": "book_appointment",
+            "actionType": "message",
+            "description": "Varaa tapaaminen kanssamme"
+          },
+          {
+            "id": "take_therapy_assessment",
+            "title": "Tee Arvio Terapian Tarpeesta",
+            "action": "take_assessment",
+            "surveyId": 2,
+            "actionType": "survey",
+            "description": "Selvitä, onko terapia sinulle hyödyllistä"
+          }
+        ]
+      },
+      "visible": true
+    },
+    {
+      "id": "topics_1",
+      "type": "topic_grid",
+      "order": 3,
+      "props": {
+        "style": {
+          "layout": "grid",
+          "columns": 1
+        },
+        "topics": [
+          {
+            "id": "popular_topics",
+            "icon": "Star",
+            "title": "Suositut Aiheet",
+            "message": "Näytä suositut aiheet",
+            "popular": true,
+            "category": "general",
+            "actionType": "message",
+            "description": "Usein käytettyä tietoa"
+          }
+        ]
+      },
+      "visible": true
+    }
+  ]
+}
