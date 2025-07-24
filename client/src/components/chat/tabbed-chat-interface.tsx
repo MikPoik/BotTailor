@@ -385,62 +385,54 @@ export default function TabbedChatInterface({
         });
       }, 100);
     } else if (typeof messageOrPayload === "string" && messageOrPayload) {
-      // If a specific message string is provided, send it
-      setInputMessage(messageOrPayload);
+      // If a specific message string is provided, send it directly without showing in input
+      setIsStreaming(true);
+      streamingBubblesRef.current = [];
 
-      // Small delay to ensure the tab switch and input update, then send
-      setTimeout(() => {
-        setIsStreaming(true);
-        streamingBubblesRef.current = [];
+      sendStreamingMessage(
+        messageOrPayload,
+        // onBubbleReceived: Add each complete bubble directly to main messages
+        (receivedMessage: Message) => {
+          // Mark as follow-up if this isn't the first bubble in this streaming sequence
+          const isFollowUp = streamingBubblesRef.current.length > 0;
+          const bubbleWithFlag = {
+            ...receivedMessage,
+            metadata: {
+              ...receivedMessage.metadata,
+              isFollowUp,
+              isStreaming: false, // Mark as permanent message
+            },
+          };
 
-        sendStreamingMessage(
-          messageOrPayload,
-          // onBubbleReceived: Add each complete bubble directly to main messages
-          (receivedMessage: Message) => {
-            // Mark as follow-up if this isn't the first bubble in this streaming sequence
-            const isFollowUp = streamingBubblesRef.current.length > 0;
-            const bubbleWithFlag = {
-              ...receivedMessage,
-              metadata: {
-                ...receivedMessage.metadata,
-                isFollowUp,
-                isStreaming: false, // Mark as permanent message
-              },
-            };
+          // Add bubble directly to main messages query cache
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
 
-            // Add bubble directly to main messages query cache
-            queryClient.setQueryData(
-              ["/api/chat", sessionId, "messages"],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-
-            // Keep track of streaming bubbles for counting
-            streamingBubblesRef.current.push(bubbleWithFlag);
-          },
-          // onAllComplete: Streaming finished, just set streaming state to false
-          (messages: Message[]) => {
-            setIsStreaming(false);
-            // Clear the tracking ref since streaming is complete
-            streamingBubblesRef.current = [];
-            setInputMessage(""); // Clear input after sending
-          },
-          // onError: Handle errors
-          (error: string) => {
-            setIsStreaming(false);
-            streamingBubblesRef.current = [];
-            setInputMessage(""); // Clear input on error
-            console.error("Start chat streaming error:", error);
-          },
-        ).catch((error) => {
+          // Keep track of streaming bubbles for counting
+          streamingBubblesRef.current.push(bubbleWithFlag);
+        },
+        // onAllComplete: Streaming finished, just set streaming state to false
+        (messages: Message[]) => {
+          setIsStreaming(false);
+          // Clear the tracking ref since streaming is complete
+          streamingBubblesRef.current = [];
+        },
+        // onError: Handle errors
+        (error: string) => {
           setIsStreaming(false);
           streamingBubblesRef.current = [];
-          setInputMessage(""); // Clear input on error
-          console.error("Start chat error:", error);
-        });
-      }, 100);
+          console.error("Start chat streaming error:", error);
+        },
+      ).catch((error) => {
+        setIsStreaming(false);
+        streamingBubblesRef.current = [];
+        console.error("Start chat error:", error);
+      });
     }
   };
 
