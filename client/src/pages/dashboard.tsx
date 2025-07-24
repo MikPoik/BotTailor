@@ -222,7 +222,7 @@ export default function Dashboard() {
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/add-data/${chatbot.guid}`}>
+                      <Link href={`/chatbots/${chatbot.guid}/add-data`}>
                         <Globe className="mr-2 h-3 w-3" />
                         Add Data
                       </Link>
@@ -234,7 +234,7 @@ export default function Dashboard() {
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/ui-designer/${chatbot.guid}`}>
+                      <Link href={`/chatbots/${chatbot.guid}/ui-designer`}>
                         <Palette className="mr-2 h-3 w-3" />
                         UI Designer
                       </Link>
