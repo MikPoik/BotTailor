@@ -109,25 +109,6 @@ export function setupChatbotRoutes(app: Express) {
     }
   });
 
-  // Get specific chatbot configuration by GUID with explicit "guid/" prefix
-  app.get('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
-    try {
-      const { guid } = req.params;
-      const userId = req.user.claims.sub;
-      
-      const chatbot = await storage.getChatbotConfigByGuid(userId, guid);
-      
-      if (!chatbot) {
-        return res.status(404).json({ message: "Chatbot not found" });
-      }
-      
-      res.json(chatbot);
-    } catch (error) {
-      console.error("Error fetching chatbot by GUID:", error);
-      res.status(500).json({ message: "Failed to fetch chatbot" });
-    }
-  });
-
   // Update chatbot home screen configuration by GUID
   app.put('/api/chatbots/:guid/home-screen', isAuthenticated, async (req: any, res) => {
     try {
