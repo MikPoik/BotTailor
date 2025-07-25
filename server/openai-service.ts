@@ -284,9 +284,10 @@ export async function* generateStreamingResponse(
     let websiteContext = "";
     if (chatbotConfig?.id) {
       try {
+        const lastMessages = conversationHistory.slice(-4).map(msg => msg.content).join("\n");
         const relevantContent = await storage.searchSimilarContent(
           chatbotConfig.id,
-          userMessage,
+          lastMessages,
           3,
         );
         console.log(
