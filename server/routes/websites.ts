@@ -53,7 +53,7 @@ export function setupWebsiteRoutes(app: Express) {
 
       // Start scanning in the background
       const scanner = new WebsiteScanner();
-      scanner.scanWebsite(source.id, url).catch(error => {
+      scanner.scanWebsite(source.id).catch(error => {
         console.error("Background scanning failed:", error);
       });
 
@@ -119,7 +119,7 @@ export function setupWebsiteRoutes(app: Express) {
 
       // Start scanning in the background
       const scanner = new WebsiteScanner();
-      scanner.scanWebsite(parseInt(sourceId), source.url).catch(error => {
+      scanner.scanWebsite(parseInt(sourceId)).catch(error => {
         console.error("Background rescanning failed:", error);
       });
 

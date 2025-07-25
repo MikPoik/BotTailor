@@ -6,6 +6,11 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 25, 2025**: Fixed website source deletion and scanning issues:
+  - Fixed API endpoint mismatch between frontend and backend for delete/rescan operations
+  - Added comprehensive logging to website scanner for better progress tracking
+  - Fixed fetch timeout issues and improved error handling in content extraction
+  - Enhanced scanning progress updates and embedding generation error handling
 - Change log moved to "changes.md", refer for history and appending notes
 
 ## Notes for agent

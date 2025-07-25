@@ -10,9 +10,13 @@ let openai: OpenAI;
 
 function initializeOpenAI() {
   if (!openai && process.env.OPENAI_API_KEY) {
+    console.log("🔑 Initializing OpenAI client...");
     openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
+    console.log("✅ OpenAI client initialized successfully");
+  } else if (!process.env.OPENAI_API_KEY) {
+    console.error("❌ OPENAI_API_KEY environment variable not found");
   }
   return openai;
 }
@@ -27,6 +31,7 @@ export interface ScanResult {
 export class WebsiteScanner {
   private maxPages: number = 50;
   private delay: number = 1000; // 1 second delay between requests
+  private maxRetries: number = 3; // Max retries for failed requests
 
   async scanWebsite(websiteSourceId: number): Promise<ScanResult> {
     try {
@@ -45,23 +50,52 @@ export class WebsiteScanner {
 
       let scannedCount = 0;
 
-      // For now, use simpler content extraction without Playwright
-      for (const url of urls.slice(
-        0,
-        websiteSource.maxPages || this.maxPages,
-      )) {
-        try {
-          const content = await this.extractContentSimple(url);
-          if (content) {
-            await this.processAndStore(websiteSourceId, url, content);
-            scannedCount++;
-          }
+      const maxPagesToScan = Math.min(urls.length, websiteSource.maxPages || this.maxPages);
+      console.log(`📄 Starting to process ${maxPagesToScan} pages out of ${urls.length} discovered URLs`);
 
-          // Respectful delay between requests
-          await new Promise((resolve) => setTimeout(resolve, this.delay));
-        } catch (error) {
-          console.error(`Error scanning ${url}:`, error);
-          continue;
+      // For now, use simpler content extraction without Playwright
+      for (let i = 0; i < maxPagesToScan; i++) {
+        const url = urls[i];
+        console.log(`🔍 Processing page ${i + 1}/${maxPagesToScan}: ${url}`);
+        
+        let retryCount = 0;
+        let success = false;
+        
+        while (retryCount < this.maxRetries && !success) {
+          try {
+            const content = await this.extractContentSimple(url);
+            if (content) {
+              console.log(`✅ Extracted content from ${url} (${content.content.length} chars)`);
+              await this.processAndStore(websiteSourceId, url, content);
+              scannedCount++;
+              console.log(`💾 Stored content for ${url}, total processed: ${scannedCount}`);
+              success = true;
+            } else {
+              console.log(`⚠️ No content extracted from ${url} (likely filtered out)`);
+              success = true; // No need to retry if content was filtered out
+            }
+
+            // Update progress in database every 5 pages for better visibility
+            if (scannedCount % 5 === 0) {
+              await storage.updateWebsiteSource(websiteSourceId, {
+                totalPages: scannedCount,
+              });
+              console.log(`📊 Progress update: ${scannedCount} pages processed`);
+            }
+
+            // Respectful delay between requests
+            await new Promise((resolve) => setTimeout(resolve, this.delay));
+          } catch (error) {
+            retryCount++;
+            console.error(`❌ Error scanning ${url} (attempt ${retryCount}/${this.maxRetries}):`, error);
+            
+            if (retryCount < this.maxRetries) {
+              console.log(`🔄 Retrying ${url} in ${this.delay * retryCount}ms...`);
+              await new Promise((resolve) => setTimeout(resolve, this.delay * retryCount));
+            } else {
+              console.error(`💀 Failed to process ${url} after ${this.maxRetries} attempts, skipping...`);
+            }
+          }
         }
       }
 
@@ -245,12 +279,17 @@ export class WebsiteScanner {
   ): Promise<{ title: string; content: string } | null> {
     try {
       const fetch = (await import("node-fetch")).default;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
       const response = await fetch(url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (compatible; ChatbotScanner/1.0)",
         },
-        timeout: 10000,
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         console.error(`HTTP ${response.status} for ${url}`);
@@ -316,26 +355,35 @@ export class WebsiteScanner {
     try {
       // Split content into chunks for better embedding
       const chunks = this.splitIntoChunks(content.content, 1000);
+      console.log(`📝 Split content into ${chunks.length} chunks for ${url}`);
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
 
-        // Generate embedding
-        const embedding = await this.generateEmbedding(chunk);
+        try {
+          // Generate embedding
+          console.log(`🧠 Generating embedding for chunk ${i + 1}/${chunks.length} from ${url}`);
+          const embedding = await this.generateEmbedding(chunk);
 
-        const contentData: InsertWebsiteContent = {
-          websiteSourceId,
-          url,
-          title: i === 0 ? content.title : `${content.title} (Part ${i + 1})`,
-          content: chunk,
-          contentType: "text",
-          wordCount: chunk.split(/\s+/).length,
-        };
+          const contentData: InsertWebsiteContent = {
+            websiteSourceId,
+            url,
+            title: i === 0 ? content.title : `${content.title} (Part ${i + 1})`,
+            content: chunk,
+            contentType: "text",
+            wordCount: chunk.split(/\s+/).length,
+          };
 
-        await storage.createWebsiteContent(contentData, embedding);
+          await storage.createWebsiteContent(contentData, embedding);
+          console.log(`💾 Stored chunk ${i + 1}/${chunks.length} from ${url}`);
+        } catch (embeddingError) {
+          console.error(`❌ Failed to generate embedding for chunk ${i + 1} from ${url}:`, embeddingError);
+          throw embeddingError; // Re-throw to fail the entire page processing
+        }
       }
     } catch (error) {
-      console.error("Error processing and storing content:", error);
+      console.error(`❌ Error processing and storing content for ${url}:`, error);
+      throw error; // Re-throw so the main loop can handle it
     }
   }
 
@@ -382,7 +430,15 @@ export class WebsiteScanner {
 
       return response.data[0].embedding;
     } catch (error) {
-      console.error("Error generating embedding:", error);
+      console.error("❌ Error generating embedding:", error);
+      
+      // Add specific error details
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        if ('response' in error) {
+          console.error("API response error:", (error as any).response?.data);
+        }
+      }
       throw error;
     }
   }
