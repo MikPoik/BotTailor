@@ -218,7 +218,7 @@
     max-height: 100vh !important;
   }
 
-  /* Mobile embedded widget styling */
+  /* Chat header for embedded mode */
   .chat-widget-embedded .chat-header {
     @apply flex-shrink-0;
     position: sticky !important;
@@ -274,6 +274,8 @@
     height: 100% !important;
     max-height: 100% !important;
   }
+
+
 
   .chat-message-user {
     @apply rounded-lg rounded-tr-none px-2 py-2 shadow-sm text-white max-w-xs ml-auto;
