@@ -273,20 +273,7 @@
   padding: 16px !important;
 }
 
-/* Ensure iframe content uses full height */
-.chatwidget-iframe html,
-.chatwidget-iframe body {
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
 
-/* Root container in iframe should use full height */
-.chatwidget-iframe #root {
-  height: 100% !important;
-  min-height: 100% !important;
-}
 
 .chatwidget-container.bottom-right .chatwidget-initial-message-bubble {
   right: 0;

@@ -263,9 +263,9 @@
     border-top: 1px solid #e5e7eb !important;
   }
 
-  /* Embedded messages area should use iframe height, not viewport height */
+  /* Embedded messages area should be flexible */
   .embedded-messages-area {
-    max-height: calc(100% - 120px) !important;
+    flex: 1 !important;
     overflow-y: auto !important;
   }
 
@@ -281,19 +281,7 @@
     padding: 16px !important;
   }
 
-  /* Ensure iframe body uses full height */
-  .chat-widget-embedded html,
-  .chat-widget-embedded body {
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
 
-  /* Main container should fill iframe height */
-  .chat-widget-embedded > div {
-    height: 100% !important;
-    min-height: 100% !important;
-  }
 
 
 
