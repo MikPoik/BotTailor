@@ -3,7 +3,7 @@
 .chatwidget-container {
   position: fixed;
   z-index: 1000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Removed font-family to inherit from main app */
 }
 
 .chatwidget-container.bottom-right {
@@ -237,6 +237,19 @@
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
   border: none;
   z-index: 1001;
+}
+
+/* Ensure embedded widget content matches site widget exactly */
+.chatwidget-iframe * {
+  font-family: inherit !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent any external CSS from interfering with embedded widget */
+.chatwidget-iframe body {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
 .chatwidget-container.bottom-right .chatwidget-initial-message-bubble {
