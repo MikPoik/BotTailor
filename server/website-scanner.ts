@@ -10,13 +10,11 @@ let openai: OpenAI;
 
 function initializeOpenAI() {
   if (!openai && process.env.OPENAI_API_KEY) {
-    console.log("🔑 Initializing OpenAI client...");
     openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    console.log("✅ OpenAI client initialized successfully");
   } else if (!process.env.OPENAI_API_KEY) {
-    console.error("❌ OPENAI_API_KEY environment variable not found");
+    console.error("OPENAI_API_KEY environment variable not found");
   }
   return openai;
 }
@@ -51,12 +49,11 @@ export class WebsiteScanner {
       let scannedCount = 0;
 
       const maxPagesToScan = Math.min(urls.length, websiteSource.maxPages || this.maxPages);
-      console.log(`📄 Starting to process ${maxPagesToScan} pages out of ${urls.length} discovered URLs`);
+      console.log(`Starting to process ${maxPagesToScan} pages out of ${urls.length} discovered URLs`);
 
       // For now, use simpler content extraction without Playwright
       for (let i = 0; i < maxPagesToScan; i++) {
         const url = urls[i];
-        console.log(`🔍 Processing page ${i + 1}/${maxPagesToScan}: ${url}`);
         
         let retryCount = 0;
         let success = false;
@@ -65,35 +62,31 @@ export class WebsiteScanner {
           try {
             const content = await this.extractContentSimple(url);
             if (content) {
-              console.log(`✅ Extracted content from ${url} (${content.content.length} chars)`);
               await this.processAndStore(websiteSourceId, url, content);
               scannedCount++;
-              console.log(`💾 Stored content for ${url}, total processed: ${scannedCount}`);
               success = true;
             } else {
-              console.log(`⚠️ No content extracted from ${url} (likely filtered out)`);
               success = true; // No need to retry if content was filtered out
             }
 
-            // Update progress in database every 5 pages for better visibility
-            if (scannedCount % 5 === 0) {
+            // Update progress in database every 10 pages
+            if (scannedCount % 10 === 0) {
               await storage.updateWebsiteSource(websiteSourceId, {
                 totalPages: scannedCount,
               });
-              console.log(`📊 Progress update: ${scannedCount} pages processed`);
+              console.log(`Progress: ${scannedCount} pages processed`);
             }
 
             // Respectful delay between requests
             await new Promise((resolve) => setTimeout(resolve, this.delay));
           } catch (error) {
             retryCount++;
-            console.error(`❌ Error scanning ${url} (attempt ${retryCount}/${this.maxRetries}):`, error);
+            console.error(`Error scanning ${url} (attempt ${retryCount}/${this.maxRetries}):`, error);
             
             if (retryCount < this.maxRetries) {
-              console.log(`🔄 Retrying ${url} in ${this.delay * retryCount}ms...`);
               await new Promise((resolve) => setTimeout(resolve, this.delay * retryCount));
             } else {
-              console.error(`💀 Failed to process ${url} after ${this.maxRetries} attempts, skipping...`);
+              console.error(`Failed to process ${url} after ${this.maxRetries} attempts, skipping...`);
             }
           }
         }
@@ -106,7 +99,7 @@ export class WebsiteScanner {
       });
 
       console.log(
-        `✅ Scan completed for source ${websiteSourceId}: ${scannedCount} pages, status updated to completed`,
+        `Scan completed for source ${websiteSourceId}: ${scannedCount} pages processed`,
       );
 
       return {
@@ -189,21 +182,19 @@ export class WebsiteScanner {
               for (const match of sitemapMatches) {
                 const sitemapPath = match.replace(/Sitemap:\s*/i, '').trim();
                 if (!this.isImageSitemap(sitemapPath)) {
-                  console.log(`📋 Processing sitemap: ${sitemapPath}`);
                   const urls = await this.parseSitemap(sitemapPath);
                   allUrls.push(...urls);
                 } else {
-                  console.log(`🚫 Skipping image sitemap: ${sitemapPath}`);
+                  console.log(`Skipping image sitemap: ${sitemapPath}`);
                 }
               }
               return allUrls;
             }
           } else {
             if (!this.isImageSitemap(sitemapUrl)) {
-              console.log(`📋 Processing sitemap: ${sitemapUrl}`);
               return await this.parseSitemap(sitemapUrl);
             } else {
-              console.log(`🚫 Skipping image sitemap: ${sitemapUrl}`);
+              console.log(`Skipping image sitemap: ${sitemapUrl}`);
             }
           }
         }
@@ -225,7 +216,6 @@ export class WebsiteScanner {
       
       // Check if this is an image sitemap by content
       if (xmlContent.includes('<image:') || xmlContent.includes('xmlns:image=')) {
-        console.log(`🚫 Detected image sitemap content in ${sitemapUrl}, skipping...`);
         return [];
       }
 
@@ -239,8 +229,6 @@ export class WebsiteScanner {
             // Filter out image URLs and non-HTML pages
             if (this.isValidWebPageUrl(urlString)) {
               urls.push(urlString);
-            } else {
-              console.log(`🚫 Skipping non-webpage URL: ${urlString}`);
             }
           }
         }
@@ -251,17 +239,13 @@ export class WebsiteScanner {
           if (sitemap.loc?.[0]) {
             const nestedSitemapUrl = sitemap.loc[0];
             if (!this.isImageSitemap(nestedSitemapUrl)) {
-              console.log(`📋 Processing nested sitemap: ${nestedSitemapUrl}`);
               const nestedUrls = await this.parseSitemap(nestedSitemapUrl);
               urls.push(...nestedUrls);
-            } else {
-              console.log(`🚫 Skipping nested image sitemap: ${nestedSitemapUrl}`);
             }
           }
         }
       }
 
-      console.log(`✅ Extracted ${urls.length} valid webpage URLs from ${sitemapUrl}`);
       return urls;
     } catch (error) {
       console.error("Error parsing sitemap:", error);
@@ -388,14 +372,12 @@ export class WebsiteScanner {
     try {
       // Split content into chunks for better embedding
       const chunks = this.splitIntoChunks(content.content, 1000);
-      console.log(`📝 Split content into ${chunks.length} chunks for ${url}`);
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
 
         try {
           // Generate embedding
-          console.log(`🧠 Generating embedding for chunk ${i + 1}/${chunks.length} from ${url}`);
           const embedding = await this.generateEmbedding(chunk);
 
           const contentData: InsertWebsiteContent = {
@@ -408,14 +390,13 @@ export class WebsiteScanner {
           };
 
           await storage.createWebsiteContent(contentData, embedding);
-          console.log(`💾 Stored chunk ${i + 1}/${chunks.length} from ${url}`);
         } catch (embeddingError) {
-          console.error(`❌ Failed to generate embedding for chunk ${i + 1} from ${url}:`, embeddingError);
+          console.error(`Failed to generate embedding for chunk ${i + 1} from ${url}:`, embeddingError);
           throw embeddingError; // Re-throw to fail the entire page processing
         }
       }
     } catch (error) {
-      console.error(`❌ Error processing and storing content for ${url}:`, error);
+      console.error(`Error processing and storing content for ${url}:`, error);
       throw error; // Re-throw so the main loop can handle it
     }
   }
@@ -501,15 +482,7 @@ export class WebsiteScanner {
 
       return response.data[0].embedding;
     } catch (error) {
-      console.error("❌ Error generating embedding:", error);
-      
-      // Add specific error details
-      if (error instanceof Error) {
-        console.error("Error message:", error.message);
-        if ('response' in error) {
-          console.error("API response error:", (error as any).response?.data);
-        }
-      }
+      console.error("Error generating embedding:", error);
       throw error;
     }
   }

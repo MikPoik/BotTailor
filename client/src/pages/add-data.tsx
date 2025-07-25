@@ -100,17 +100,16 @@ export default function AddData() {
     queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`],
     enabled: isAuthenticated && !!chatbot?.id,
     retry: false,
-    refetchInterval: (data, query) => {
+    refetchInterval: (query) => {
       // Poll every 3 seconds if there are any sources still scanning
+      const data = query.state.data;
       if (!data || !Array.isArray(data)) return false;
       const hasScanning = data.some((source: WebsiteSource) => 
         source.status === 'scanning' || source.status === 'pending'
       );
-      console.log('Polling check:', data.map(s => ({id: s.id, status: s.status})), 'hasScanning:', hasScanning);
       
       // If there was an error (like 401), stop polling to prevent spam
       if (query.state.error) {
-        console.log('Stopping polling due to error:', query.state.error);
         return false;
       }
       
@@ -118,9 +117,6 @@ export default function AddData() {
     },
     refetchOnWindowFocus: true,
     staleTime: 0, // Always consider data stale for fresh updates
-    onError: (error) => {
-      console.error('Error fetching website sources:', error);
-    }
   });
 
   // Add website source mutation
