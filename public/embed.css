@@ -257,75 +257,20 @@
 /* Fix embedded widget input area padding - target all possible selectors */
 .chatwidget-iframe .border-t.border-neutral-200,
 .chatwidget-iframe [class*="border-t"],
-.chatwidget-iframe div[class*="px-4"][class*="py-4"],
-.chatwidget-iframe div[class*="px-4"][class*="bg-white"],
-.chatwidget-iframe div[class*="flex-shrink-0"] {
-  padding: 16px 16px 16px 16px !important;
-  margin: 0 !important;
+.chatwidget-iframe div[class*="px-4"][class*="py-4"] {
+  padding: 16px !important;
+  padding-bottom: 16px !important;
 }
 
 /* Override any extra padding in embedded tabs */
 .chatwidget-iframe [data-radix-tabs-content] .border-t,
-.chatwidget-iframe [data-radix-tabs-content] div[class*="px-4"],
-.chatwidget-iframe [data-radix-tabs-root] > div:last-child {
+.chatwidget-iframe [data-radix-tabs-content] div[class*="px-4"] {
   padding: 16px !important;
-  margin: 0 !important;
 }
 
-/* Remove any bottom padding/margin from the tab navigation area */
-.chatwidget-iframe [data-radix-tabs-list] {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* Fix the specific input container that has the extra space */
-.chatwidget-iframe body,
-.chatwidget-iframe #root,
-.chatwidget-iframe [data-radix-tabs-root] {
-  margin: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* Target the specific Radix Tabs that might be adding extra space */
-.chatwidget-iframe [data-radix-tabs-root] > div,
-.chatwidget-iframe [data-radix-tabs-root] > div > div,
-.chatwidget-iframe [data-radix-tabs-content][data-state="active"] {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-/* Remove any extra spacing from the tabs navigation at bottom */
-.chatwidget-iframe [data-radix-tabs-list][data-orientation="horizontal"] {
-  margin: 0 !important;
-  padding: 0.5rem !important;
-}
-
-/* Ensure the main container has no extra bottom space */
-.chatwidget-iframe .chat-widget-embedded {
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-/* Aggressive targeting of all potential sources of bottom spacing */
-.chatwidget-iframe * {
-  margin-bottom: 0 !important;
-}
-
-.chatwidget-iframe div[class*="px-4"] {
-  padding-bottom: 16px !important;
-}
-
-/* Target the tabs bottom navigation specifically */
-.chatwidget-iframe .bg-white.border-t.border-neutral-200 {
+/* Ensure consistent input area height */
+.chatwidget-iframe div[class*="flex-shrink-0"] {
   padding: 16px !important;
-  margin: 0 !important;
-}
-
-/* Override any default spacing on flex containers */
-.chatwidget-iframe [class*="flex"][class*="items-center"] {
-  margin: 0 !important;
-  padding-top: 16px !important;
-  padding-bottom: 16px !important;
 }
 
 .chatwidget-container.bottom-right .chatwidget-initial-message-bubble {
