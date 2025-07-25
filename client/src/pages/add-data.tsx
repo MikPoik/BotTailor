@@ -138,7 +138,8 @@ export default function AddData() {
   // Delete website source mutation
   const deleteWebsiteMutation = useMutation({
     mutationFn: async (sourceId: number) => {
-      await apiRequest("DELETE", `/api/website-sources/${sourceId}`);
+      if (!chatbot?.id) throw new Error("Chatbot not found");
+      await apiRequest("DELETE", `/api/chatbots/${chatbot.id}/website-sources/${sourceId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`] });
@@ -159,7 +160,8 @@ export default function AddData() {
   // Rescan website mutation
   const rescanMutation = useMutation({
     mutationFn: async (sourceId: number) => {
-      const response = await apiRequest("POST", `/api/website-sources/${sourceId}/rescan`);
+      if (!chatbot?.id) throw new Error("Chatbot not found");
+      const response = await apiRequest("POST", `/api/chatbots/${chatbot.id}/website-sources/${sourceId}/rescan`);
       return response.json();
     },
     onSuccess: () => {
