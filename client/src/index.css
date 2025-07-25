@@ -279,12 +279,6 @@
   .chat-widget-embedded .border-t.border-neutral-200,
   .chat-widget-embedded div[class*="px-4"][class*="py-4"] {
     padding: 16px !important;
-    padding-bottom: 16px !important;
-  }
-
-  /* Specifically target the input container to ensure no extra bottom padding */
-  .chat-widget-embedded [data-radix-tabs-content] > div:last-child {
-    padding-bottom: 16px !important;
   }
 
 
