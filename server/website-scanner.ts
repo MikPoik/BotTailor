@@ -69,12 +69,14 @@ export class WebsiteScanner {
               success = true; // No need to retry if content was filtered out
             }
 
-            // Update progress in database every 10 pages
-            if (scannedCount % 10 === 0) {
+            // Update progress in database every 5 pages or if it's a small site
+            if (scannedCount % 5 === 0 || maxPagesToScan <= 10) {
               await storage.updateWebsiteSource(websiteSourceId, {
                 totalPages: scannedCount,
               });
-              console.log(`Progress: ${scannedCount} pages processed`);
+              if (scannedCount % 5 === 0) {
+                console.log(`Progress: ${scannedCount} pages processed`);
+              }
             }
 
             // Respectful delay between requests
