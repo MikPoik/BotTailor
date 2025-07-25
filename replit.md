@@ -6,6 +6,13 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 25, 2025**: Fixed chat widget styling discrepancies and improved dimensions:
+  - Fixed styling inconsistencies between embedded widget and site widget UI
+  - Resolved conflicting inline styles in embed.js that overrode CSS changes
+  - Made both widgets wider (450px) and taller (75vh, max 800px, min 600px) for better content display
+  - Fixed extra padding issues in embedded widget input area
+  - Ensured identical styling between embedded iframe and site widget interfaces
+  - Added !important CSS rules to override embed.js inline style conflicts
 - **July 25, 2025**: Fixed website source deletion and scanning issues:
   - Fixed API endpoint mismatch between frontend and backend for delete/rescan operations
   - Added comprehensive logging to website scanner for better progress tracking
