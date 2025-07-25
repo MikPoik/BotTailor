@@ -11,6 +11,8 @@ This is a full-stack React chat widget application built with Express.js backend
   - Added comprehensive logging to website scanner for better progress tracking
   - Fixed fetch timeout issues and improved error handling in content extraction
   - Enhanced scanning progress updates and embedding generation error handling
+  - Implemented image sitemap and image URL filtering to prevent indexing non-content files
+  - Added smart URL validation to exclude image files, media, and non-webpage content
 - Change log moved to "changes.md", refer for history and appending notes
 
 ## Notes for agent

@@ -176,19 +176,35 @@ export class WebsiteScanner {
 
     for (const sitemapUrl of sitemapUrls) {
       try {
-        // Use dynamic import for fetch polyfill in case Node.js version doesn't have it
         const fetch = (await import("node-fetch")).default;
         const response = await fetch(sitemapUrl);
         if (response.ok) {
           const content = await response.text();
 
           if (sitemapUrl.endsWith("robots.txt")) {
-            const sitemapMatch = content.match(/Sitemap:\s*(.+)/i);
-            if (sitemapMatch) {
-              return await this.parseSitemap(sitemapMatch[1].trim());
+            const sitemapMatches = content.match(/Sitemap:\s*(.+)/gi);
+            if (sitemapMatches) {
+              // Get all sitemaps from robots.txt, but filter out image sitemaps
+              const allUrls: string[] = [];
+              for (const match of sitemapMatches) {
+                const sitemapPath = match.replace(/Sitemap:\s*/i, '').trim();
+                if (!this.isImageSitemap(sitemapPath)) {
+                  console.log(`📋 Processing sitemap: ${sitemapPath}`);
+                  const urls = await this.parseSitemap(sitemapPath);
+                  allUrls.push(...urls);
+                } else {
+                  console.log(`🚫 Skipping image sitemap: ${sitemapPath}`);
+                }
+              }
+              return allUrls;
             }
           } else {
-            return await this.parseSitemap(sitemapUrl);
+            if (!this.isImageSitemap(sitemapUrl)) {
+              console.log(`📋 Processing sitemap: ${sitemapUrl}`);
+              return await this.parseSitemap(sitemapUrl);
+            } else {
+              console.log(`🚫 Skipping image sitemap: ${sitemapUrl}`);
+            }
           }
         }
       } catch (error) {
@@ -206,14 +222,26 @@ export class WebsiteScanner {
       if (!response.ok) return [];
 
       const xmlContent = await response.text();
-      const parsed = await parseStringPromise(xmlContent);
+      
+      // Check if this is an image sitemap by content
+      if (xmlContent.includes('<image:') || xmlContent.includes('xmlns:image=')) {
+        console.log(`🚫 Detected image sitemap content in ${sitemapUrl}, skipping...`);
+        return [];
+      }
 
+      const parsed = await parseStringPromise(xmlContent);
       const urls: string[] = [];
 
       if (parsed.urlset?.url) {
         for (const url of parsed.urlset.url) {
           if (url.loc?.[0]) {
-            urls.push(url.loc[0]);
+            const urlString = url.loc[0];
+            // Filter out image URLs and non-HTML pages
+            if (this.isValidWebPageUrl(urlString)) {
+              urls.push(urlString);
+            } else {
+              console.log(`🚫 Skipping non-webpage URL: ${urlString}`);
+            }
           }
         }
       }
@@ -221,12 +249,19 @@ export class WebsiteScanner {
       if (parsed.sitemapindex?.sitemap) {
         for (const sitemap of parsed.sitemapindex.sitemap) {
           if (sitemap.loc?.[0]) {
-            const nestedUrls = await this.parseSitemap(sitemap.loc[0]);
-            urls.push(...nestedUrls);
+            const nestedSitemapUrl = sitemap.loc[0];
+            if (!this.isImageSitemap(nestedSitemapUrl)) {
+              console.log(`📋 Processing nested sitemap: ${nestedSitemapUrl}`);
+              const nestedUrls = await this.parseSitemap(nestedSitemapUrl);
+              urls.push(...nestedUrls);
+            } else {
+              console.log(`🚫 Skipping nested image sitemap: ${nestedSitemapUrl}`);
+            }
           }
         }
       }
 
+      console.log(`✅ Extracted ${urls.length} valid webpage URLs from ${sitemapUrl}`);
       return urls;
     } catch (error) {
       console.error("Error parsing sitemap:", error);
@@ -255,9 +290,7 @@ export class WebsiteScanner {
             if (
               absoluteUrl.origin === baseOrigin &&
               !absoluteUrl.pathname.includes("#") &&
-              !absoluteUrl.pathname.match(
-                /\.(pdf|jpg|jpeg|png|gif|zip|doc|docx)$/i,
-              )
+              this.isValidWebPageUrl(absoluteUrl.toString())
             ) {
               links.add(absoluteUrl.toString());
             }
@@ -414,6 +447,44 @@ export class WebsiteScanner {
   private hasNoIndexDirective(robotsContent: string): boolean {
     const content = robotsContent.toLowerCase();
     return content.includes("noindex") || content.includes("none");
+  }
+
+  private isImageSitemap(sitemapUrl: string): boolean {
+    const lowerUrl = sitemapUrl.toLowerCase();
+    return lowerUrl.includes('image') || 
+           lowerUrl.includes('img') || 
+           lowerUrl.includes('photo') || 
+           lowerUrl.includes('picture');
+  }
+
+  private isValidWebPageUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname.toLowerCase();
+      
+      // Skip common image file extensions
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico', '.bmp', '.tiff'];
+      if (imageExtensions.some(ext => pathname.endsWith(ext))) {
+        return false;
+      }
+      
+      // Skip other non-content file types
+      const skipExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.mp4', '.mp3', '.avi', '.mov'];
+      if (skipExtensions.some(ext => pathname.endsWith(ext))) {
+        return false;
+      }
+      
+      // Skip URLs that are clearly image-related
+      const imageKeywords = ['/wp-content/uploads/', '/images/', '/img/', '/photos/', '/gallery/', '/media/'];
+      if (imageKeywords.some(keyword => pathname.includes(keyword))) {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      // Invalid URL, skip it
+      return false;
+    }
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
