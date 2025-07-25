@@ -15,13 +15,54 @@ export function setupChatRoutes(app: Express) {
       
       console.log(`[SELECT_OPTION] Session: ${sessionId}, Option: ${optionId}, Text: ${optionText}`);
       
-      // For now, just acknowledge the selection
-      // This endpoint is used to record the option selection before triggering AI response
+      // Check if there's an active survey session and record the response
+      let surveyResponseRecorded = false;
+      try {
+        const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+        console.log(`[SURVEY RESPONSE] Survey session check:`, surveySession ? {
+          id: surveySession.id,
+          surveyId: surveySession.surveyId,
+          status: surveySession.status,
+          currentQuestionIndex: surveySession.currentQuestionIndex
+        } : null);
+
+        if (surveySession && surveySession.status === 'active') {
+          // Get the survey to find the current question
+          const survey = await storage.getSurvey(surveySession.surveyId);
+          if (survey && survey.surveyConfig?.questions) {
+            const currentQuestion = survey.surveyConfig.questions[surveySession.currentQuestionIndex];
+            
+            if (currentQuestion) {
+              console.log(`[SURVEY RESPONSE] Recording response for question: ${currentQuestion.text}`);
+              console.log(`[SURVEY RESPONSE] Option selected: ${optionId} - ${optionText}`);
+              
+              // Record the survey response
+              const questionId = `question_${surveySession.currentQuestionIndex}`;
+              const response = optionText || optionId;
+              
+              const updatedResponses = { ...surveySession.responses, [questionId]: response };
+              
+              const updatedSession = await storage.updateSurveySession(surveySession.id, {
+                responses: updatedResponses,
+                currentQuestionIndex: surveySession.currentQuestionIndex + 1
+              });
+              
+              console.log(`[SURVEY RESPONSE] Successfully recorded survey response and advanced to question ${updatedSession.currentQuestionIndex + 1}`);
+              surveyResponseRecorded = true;
+            }
+          }
+        }
+      } catch (surveyError) {
+        console.error(`[SURVEY RESPONSE] Error recording survey response:`, surveyError);
+        // Continue with normal response even if survey recording fails
+      }
+      
       res.json({ 
         success: true, 
         optionId, 
         payload, 
         optionText,
+        surveyResponseRecorded,
         message: "Option selected successfully" 
       });
     } catch (error) {

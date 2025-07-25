@@ -226,13 +226,21 @@ ${Object.entries(responses).map(([qId, answer]) => `${qId}: ${answer}`).join('\n
 
   context += `
 **SURVEY FLOW INSTRUCTIONS**
-1. Present the current question with clear menu options
-2. Wait for user response before proceeding
-3. Store the response and advance to next question
-4. Continue until all questions are answered
-5. End with the completion message
+1. Present ONLY the current question shown above with its menu options
+2. DO NOT create your own questions or skip ahead
+3. Wait for user response before proceeding
+4. After user responds, the system will automatically advance to the next question
+5. Continue until all questions are answered
+6. End with the completion message
 
-**IMPORTANT**: This is question ${currentQuestionIndex + 1} of ${config.questions.length}. After user answers, you will be automatically advanced to the next question.
+**CRITICAL SURVEY RULES:**
+- ONLY present the exact question shown in CURRENT QUESTION section above
+- NEVER invent new questions or modify the question text
+- ALWAYS use the exact menu options provided in the OPTIONS section
+- DO NOT advance to the next question yourself - the system handles this automatically
+- If a user selects an option, acknowledge their choice and wait for the next question
+
+**IMPORTANT**: This is question ${currentQuestionIndex + 1} of ${config.questions.length}. Present ONLY this question.
 `;
 
   return context;
