@@ -152,7 +152,9 @@
   position: fixed;
   bottom: 24px;
   width: 400px;
-  height: 600px;
+  height: 75vh;
+  max-height: 800px;
+  min-height: 600px;
   border: none;
   border-radius: 12px;
   box-shadow: 0 25px 50px rgba(0,0,0,0.15);
@@ -250,6 +252,16 @@
   margin: 0 !important;
   padding: 0 !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Fix embedded widget input area padding */
+.chatwidget-iframe .border-t {
+  padding-bottom: 16px !important;
+}
+
+/* Override any extra padding in embedded mode */
+.chatwidget-iframe [data-radix-tabs-content] .border-t {
+  padding: 16px !important;
 }
 
 .chatwidget-container.bottom-right .chatwidget-initial-message-bubble {

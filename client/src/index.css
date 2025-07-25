@@ -275,6 +275,11 @@
     max-height: 100% !important;
   }
 
+  /* Fix embedded widget input area to remove extra padding */
+  .chat-widget-embedded .border-t.border-neutral-200 {
+    padding: 16px !important;
+  }
+
 
 
   .chat-message-user {
