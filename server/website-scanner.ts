@@ -1,9 +1,9 @@
 // import { chromium } from 'playwright'; // Temporarily disabled for initial implementation
-import * as cheerio from 'cheerio';
-import { parseStringPromise } from 'xml2js';
-import OpenAI from 'openai';
-import { storage } from './storage';
-import { WebsiteSource, InsertWebsiteContent } from '@shared/schema';
+import * as cheerio from "cheerio";
+import { parseStringPromise } from "xml2js";
+import OpenAI from "openai";
+import { storage } from "./storage";
+import { WebsiteSource, InsertWebsiteContent } from "@shared/schema";
 
 // Initialize OpenAI client
 let openai: OpenAI;
@@ -32,12 +32,12 @@ export class WebsiteScanner {
     try {
       const websiteSource = await storage.getWebsiteSource(websiteSourceId);
       if (!websiteSource) {
-        return { success: false, message: 'Website source not found' };
+        return { success: false, message: "Website source not found" };
       }
 
-      await storage.updateWebsiteSource(websiteSourceId, { 
-        status: 'scanning',
-        lastScanned: new Date()
+      await storage.updateWebsiteSource(websiteSourceId, {
+        status: "scanning",
+        lastScanned: new Date(),
       });
 
       const urls = await this.discoverUrls(websiteSource);
@@ -46,16 +46,19 @@ export class WebsiteScanner {
       let scannedCount = 0;
 
       // For now, use simpler content extraction without Playwright
-      for (const url of urls.slice(0, websiteSource.maxPages || this.maxPages)) {
+      for (const url of urls.slice(
+        0,
+        websiteSource.maxPages || this.maxPages,
+      )) {
         try {
           const content = await this.extractContentSimple(url);
           if (content) {
             await this.processAndStore(websiteSourceId, url, content);
             scannedCount++;
           }
-          
+
           // Respectful delay between requests
-          await new Promise(resolve => setTimeout(resolve, this.delay));
+          await new Promise((resolve) => setTimeout(resolve, this.delay));
         } catch (error) {
           console.error(`Error scanning ${url}:`, error);
           continue;
@@ -63,30 +66,31 @@ export class WebsiteScanner {
       }
 
       const updateResult = await storage.updateWebsiteSource(websiteSourceId, {
-        status: 'completed',
+        status: "completed",
         totalPages: scannedCount,
-        lastScanned: new Date()
+        lastScanned: new Date(),
       });
 
-      console.log(`✅ Scan completed for source ${websiteSourceId}: ${scannedCount} pages, status updated to completed`);
+      console.log(
+        `✅ Scan completed for source ${websiteSourceId}: ${scannedCount} pages, status updated to completed`,
+      );
 
       return {
         success: true,
         message: `Successfully scanned ${scannedCount} pages`,
-        pagesScanned: scannedCount
+        pagesScanned: scannedCount,
       };
-
     } catch (error) {
-      console.error('Website scanning error:', error);
+      console.error("Website scanning error:", error);
       await storage.updateWebsiteSource(websiteSourceId, {
-        status: 'error',
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        status: "error",
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
 
       return {
         success: false,
-        message: 'Failed to scan website',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: "Failed to scan website",
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -94,32 +98,35 @@ export class WebsiteScanner {
   private async discoverUrls(websiteSource: WebsiteSource): Promise<string[]> {
     const urls = new Set<string>();
     const baseUrl = new URL(websiteSource.url);
-    
+
     // Start with the provided URL
     urls.add(websiteSource.url);
 
     try {
       // Try to find and parse sitemap.xml
       const sitemapUrls = await this.findSitemap(baseUrl.origin);
-      sitemapUrls.forEach(url => urls.add(url));
-      
+      sitemapUrls.forEach((url) => urls.add(url));
+
       // Update the websiteSource with sitemap URL if found
       if (sitemapUrls.length > 0 && !websiteSource.sitemapUrl) {
         await storage.updateWebsiteSource(websiteSource.id, {
-          sitemapUrl: `${baseUrl.origin}/sitemap.xml`
+          sitemapUrl: `${baseUrl.origin}/sitemap.xml`,
         });
       }
     } catch (error) {
-      console.error('Error finding sitemap:', error);
+      console.error("Error finding sitemap:", error);
     }
 
     // If no sitemap found or few URLs, try crawling the main page for links
     if (urls.size < 5) {
       try {
-        const crawledUrls = await this.crawlPageLinks(websiteSource.url, baseUrl.origin);
-        crawledUrls.forEach(url => urls.add(url));
+        const crawledUrls = await this.crawlPageLinks(
+          websiteSource.url,
+          baseUrl.origin,
+        );
+        crawledUrls.forEach((url) => urls.add(url));
       } catch (error) {
-        console.error('Error crawling page links:', error);
+        console.error("Error crawling page links:", error);
       }
     }
 
@@ -136,12 +143,12 @@ export class WebsiteScanner {
     for (const sitemapUrl of sitemapUrls) {
       try {
         // Use dynamic import for fetch polyfill in case Node.js version doesn't have it
-        const fetch = (await import('node-fetch')).default;
+        const fetch = (await import("node-fetch")).default;
         const response = await fetch(sitemapUrl);
         if (response.ok) {
           const content = await response.text();
-          
-          if (sitemapUrl.endsWith('robots.txt')) {
+
+          if (sitemapUrl.endsWith("robots.txt")) {
             const sitemapMatch = content.match(/Sitemap:\s*(.+)/i);
             if (sitemapMatch) {
               return await this.parseSitemap(sitemapMatch[1].trim());
@@ -160,7 +167,7 @@ export class WebsiteScanner {
 
   private async parseSitemap(sitemapUrl: string): Promise<string[]> {
     try {
-      const fetch = (await import('node-fetch')).default;
+      const fetch = (await import("node-fetch")).default;
       const response = await fetch(sitemapUrl);
       if (!response.ok) return [];
 
@@ -188,14 +195,17 @@ export class WebsiteScanner {
 
       return urls;
     } catch (error) {
-      console.error('Error parsing sitemap:', error);
+      console.error("Error parsing sitemap:", error);
       return [];
     }
   }
 
-  private async crawlPageLinks(url: string, baseOrigin: string): Promise<string[]> {
+  private async crawlPageLinks(
+    url: string,
+    baseOrigin: string,
+  ): Promise<string[]> {
     try {
-      const fetch = (await import('node-fetch')).default;
+      const fetch = (await import("node-fetch")).default;
       const response = await fetch(url);
       if (!response.ok) return [];
 
@@ -203,14 +213,18 @@ export class WebsiteScanner {
       const $ = cheerio.load(html);
       const links = new Set<string>();
 
-      $('a[href]').each((_, element) => {
-        const href = $(element).attr('href');
+      $("a[href]").each((_, element) => {
+        const href = $(element).attr("href");
         if (href) {
           try {
             const absoluteUrl = new URL(href, url);
-            if (absoluteUrl.origin === baseOrigin && 
-                !absoluteUrl.pathname.includes('#') &&
-                !absoluteUrl.pathname.match(/\.(pdf|jpg|jpeg|png|gif|zip|doc|docx)$/i)) {
+            if (
+              absoluteUrl.origin === baseOrigin &&
+              !absoluteUrl.pathname.includes("#") &&
+              !absoluteUrl.pathname.match(
+                /\.(pdf|jpg|jpeg|png|gif|zip|doc|docx)$/i,
+              )
+            ) {
               links.add(absoluteUrl.toString());
             }
           } catch (error) {
@@ -221,17 +235,19 @@ export class WebsiteScanner {
 
       return Array.from(links);
     } catch (error) {
-      console.error('Error crawling page links:', error);
+      console.error("Error crawling page links:", error);
       return [];
     }
   }
 
-  private async extractContentSimple(url: string): Promise<{ title: string; content: string } | null> {
+  private async extractContentSimple(
+    url: string,
+  ): Promise<{ title: string; content: string } | null> {
     try {
-      const fetch = (await import('node-fetch')).default;
+      const fetch = (await import("node-fetch")).default;
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; ChatbotScanner/1.0)',
+          "User-Agent": "Mozilla/5.0 (compatible; ChatbotScanner/1.0)",
         },
         timeout: 10000,
       });
@@ -242,7 +258,7 @@ export class WebsiteScanner {
       }
 
       // Check X-Robots-Tag header
-      const robotsHeader = response.headers.get('x-robots-tag');
+      const robotsHeader = response.headers.get("x-robots-tag");
       if (robotsHeader && this.hasNoIndexDirective(robotsHeader)) {
         console.log(`Skipping ${url} due to X-Robots-Tag: ${robotsHeader}`);
         return null;
@@ -254,7 +270,7 @@ export class WebsiteScanner {
       // Check for meta robots no-index tags
       const robotsMetas = $('meta[name="robots"]');
       for (let i = 0; i < robotsMetas.length; i++) {
-        const content = $(robotsMetas[i]).attr('content');
+        const content = $(robotsMetas[i]).attr("content");
         if (content && this.hasNoIndexDirective(content)) {
           console.log(`Skipping ${url} due to meta robots: ${content}`);
           return null;
@@ -262,15 +278,20 @@ export class WebsiteScanner {
       }
 
       // Remove scripts, styles, and other non-content elements
-      $('script, style, nav, header, footer, aside, .advertisement, .ads, .social-share').remove();
+      $(
+        "script, style, nav, header, footer, aside, .advertisement, .ads, .social-share",
+      ).remove();
 
-      const title = $('title').text() || $('h1').first().text() || '';
-      
+      const title = $("title").text() || $("h1").first().text() || "";
+
       // Extract main content
-      const mainContent = $('main, article, .content, .post, #content, #main').first();
-      const content = mainContent.length > 0 ? mainContent.text() : $('body').text();
-      
-      const cleanContent = content.replace(/\s+/g, ' ').trim();
+      const mainContent = $(
+        "main, article, .content, .post, #content, #main",
+      ).first();
+      const content =
+        mainContent.length > 0 ? mainContent.text() : $("body").text();
+
+      const cleanContent = content.replace(/\s+/g, " ").trim();
 
       // Filter out pages with very little content
       if (cleanContent.length < 100) {
@@ -279,7 +300,7 @@ export class WebsiteScanner {
 
       return {
         title: title.trim(),
-        content: cleanContent
+        content: cleanContent,
       };
     } catch (error) {
       console.error(`Error extracting content from ${url}:`, error);
@@ -287,44 +308,51 @@ export class WebsiteScanner {
     }
   }
 
-  private async processAndStore(websiteSourceId: number, url: string, content: { title: string; content: string }) {
+  private async processAndStore(
+    websiteSourceId: number,
+    url: string,
+    content: { title: string; content: string },
+  ) {
     try {
       // Split content into chunks for better embedding
       const chunks = this.splitIntoChunks(content.content, 1000);
-      
+
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        
+
         // Generate embedding
         const embedding = await this.generateEmbedding(chunk);
-        
+
         const contentData: InsertWebsiteContent = {
           websiteSourceId,
           url,
           title: i === 0 ? content.title : `${content.title} (Part ${i + 1})`,
           content: chunk,
-          contentType: 'text',
+          contentType: "text",
           wordCount: chunk.split(/\s+/).length,
         };
 
         await storage.createWebsiteContent(contentData, embedding);
       }
     } catch (error) {
-      console.error('Error processing and storing content:', error);
+      console.error("Error processing and storing content:", error);
     }
   }
 
   private splitIntoChunks(text: string, maxLength: number): string[] {
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
     const chunks: string[] = [];
-    let currentChunk = '';
+    let currentChunk = "";
 
     for (const sentence of sentences) {
-      if (currentChunk.length + sentence.length > maxLength && currentChunk.length > 0) {
+      if (
+        currentChunk.length + sentence.length > maxLength &&
+        currentChunk.length > 0
+      ) {
         chunks.push(currentChunk.trim());
         currentChunk = sentence;
       } else {
-        currentChunk += (currentChunk ? '. ' : '') + sentence;
+        currentChunk += (currentChunk ? ". " : "") + sentence;
       }
     }
 
@@ -337,24 +365,24 @@ export class WebsiteScanner {
 
   private hasNoIndexDirective(robotsContent: string): boolean {
     const content = robotsContent.toLowerCase();
-    return content.includes('noindex') || content.includes('none');
+    return content.includes("noindex") || content.includes("none");
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
     const client = initializeOpenAI();
     if (!client) {
-      throw new Error('OpenAI API key not configured');
+      throw new Error("OpenAI API key not configured");
     }
 
     try {
       const response = await client.embeddings.create({
-        model: 'text-embedding-ada-002',
+        model: "text-embedding-3-small",
         input: text,
       });
 
       return response.data[0].embedding;
     } catch (error) {
-      console.error('Error generating embedding:', error);
+      console.error("Error generating embedding:", error);
       throw error;
     }
   }

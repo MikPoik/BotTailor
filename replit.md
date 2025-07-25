@@ -6,167 +6,27 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
-- **July 23, 2025**: Fixed Chat Widget FOUC and Mobile/Desktop Adaptation Issues:
-  - **RESOLVED**: Fixed embed.js not accessible due to middleware order conflict between Vite and Express static routes
-  - **FIXED**: Environment check causing Vite middleware to intercept embed.js requests before route handlers
-  - **ENHANCED**: Added support for both `/embed.js` and `/embed.js/` paths to handle redirect scenarios
-  - **IMPROVED**: Route registration now properly prioritized before Vite middleware setup in development
-  - **VERIFIED**: All embed endpoints now returning HTTP 200: embed.js, embed.css, and widget routes
-  - **ELIMINATED FOUC**: Fixed Flash of Unstyled Content by waiting for CSS to load before creating DOM elements
-  - **ENHANCED EVENT HANDLING**: Fixed clickability of initial message bubbles with proper event delegation
-  - **ADDED INLINE STYLES**: Comprehensive inline styling prevents unstyled content from appearing during CSS load
-  - **FIXED MOBILE/DESKTOP ADAPTATION**: Enhanced resize handler to properly switch between mobile and desktop views without white screens
-  - **RESOLVED IFRAME SANDBOXING WARNING**: Removed allow-same-origin to eliminate security warnings while maintaining functionality
-  - **IMPROVED SESSION CONTINUITY**: Smart session transfer between desktop and mobile iframes during view switches
-  - **ENHANCED VISUAL STABILITY**: Added debounced resize handling and comprehensive iframe styling to prevent visual glitches
-  - **PRODUCTION READY**: Chat widget embedding now works flawlessly across all devices and view transitions
+- Change log moved to "changes.md", refer for history and appending notes
 
-- **July 21, 2025**: Major Routes Refactoring for Maintainability:
-  - **REFACTORED**: Split large routes.ts file (1700+ lines) into logical modular structure
-  - **CREATED**: Separate route modules: auth.ts, chat.ts, chatbots.ts, surveys.ts, public.ts, uploads.ts, websites.ts
-  - **IMPROVED**: Code maintainability and reduced corruption risk from 344+ LSP errors to 13
-  - **ENHANCED**: Proper error handling in survey session creation with detailed logging and streaming response architecture
-  - **FIXED**: Survey session creation bug that was causing infinite loops in default chatbot
-  - **IMPLEMENTED**: HTTP streaming response handler using generator pattern for real-time AI responses
-  - **RESOLVED**: Function signature mismatch in streaming response calls
-  - **SECURITY**: Maintained all existing security patterns and authentication requirements
-  - **TESTED**: Survey functionality now working end-to-end with proper AI context injection and Finnish question presentation
-  - **PRODUCTION READY**: All functionality preserved with improved architecture, error handling, and confirmed working survey system
+## Notes for agent
 
-- **July 21, 2025**: Enhanced Default Chatbot Security and Configuration:
-  - **IMPROVED**: Updated default chatbot configuration to match embeddable widget security model
-  - **ENHANCED**: Default chatbot now requires both `DEFAULT_SITE_CHATBOT_GUID` and `DEFAULT_SITE_ADMIN_USER_ID` environment variables
-  - **SECURITY**: Added ownership verification for default chatbot using `getChatbotConfigByGuid(userId, guid)` method
-  - **CONSISTENCY**: Default chatbot route now works identically to embeddable widget with proper user context
-  - **USER EXPERIENCE**: Updated configuration hints on home page and dashboard to show both required environment variables
-  - **RESOLVED**: Fixed inconsistency where default chatbot used global GUID lookup while embeddable widget used user-scoped lookup
-  - **PRODUCTION READY**: Default chatbot configuration now secure and consistent with existing widget security patterns
+You can use grep commands to get overview of current routes and functions with these commands when needed:
 
-- **July 21, 2025**: Completed Survey System Phase 2 - AI Integration & Session Management:
-  - **COMPLETED**: Comprehensive survey system with AI context injection and session management
-  - Implemented survey context injection with `buildSurveyContext()` function for AI prompts
-  - Added automatic survey response recording in chat option selection flow
-  - Created survey session management endpoints: start-survey, survey-response, survey-status
-  - Added public API endpoint for getting available surveys for home screen integration
-  - Enhanced home screen schema to support survey launchers with `actionType: 'survey'` 
-  - Integrated survey flow into existing chat streaming with progress tracking
-  - Added survey session database operations: create, update, get by session ID
-  - Implemented automatic question progression and completion detection
-  - Created comprehensive survey context for AI including current question, progress, and previous responses
-  - **FIXED**: Survey ID selection from home screen actions - specific surveys now properly selected instead of defaulting to first
-  - **ENHANCED**: Clean chat display - surveyId hidden from user messages while maintaining backend functionality
-  - **PRODUCTION READY**: Complete survey system from builder to AI-powered conversational flow with proper survey selection
-  - **TESTED**: Survey creation, AI context injection, session management, response recording, and specific survey ID targeting
+For JavaScript/TypeScript function declarations:
+grep -r -n "^ *app\." server/
 
-- **July 18, 2025**: Implemented Survey System Phase 1 - Survey Builder:
-  - **COMPLETED**: Added comprehensive survey system foundation with database schema and API
-  - Created new database tables: `surveys` (survey definitions) and `survey_sessions` (user progress tracking)
-  - Implemented PostgreSQL survey configuration storage using JSON fields for flexible survey structures
-  - Built comprehensive survey builder interface with tabbed UI for questions, settings, and preview
-  - Added full CRUD API endpoints for survey management with proper authentication and ownership verification
-  - Created survey schema with support for single/multiple choice, text input, rating, and conditional flow
-  - Added survey builder link to dashboard with BarChart3 icon for easy access
-  - Integrated survey routing in App.tsx with proper URL structure: `/chatbots/:chatbotId/surveys`
-  - **READY FOR TESTING**: Survey builder UI allows creating, editing, and managing surveys with question types and options
+For JavaScript/TypeScript function declarations:
+grep -r -n "^ *\(function\|export function\|async function\)" server/
 
-- **July 18, 2025**: Enhanced Message Context and Survey Flow Consistency:
-  - **FIXED**: Simplified all interactive message representation in conversation history from complex JSON to clean summaries
-  - **IMPROVED**: AI now receives digestible formats for all message types:
-    - Menu: "[MENU] Presented options: option1, option2, option3"
-    - Quick Replies: "[QUICKREPLIES] Suggested replies: reply1, reply2"
-    - Forms: "[FORM] Contact form with fields: name, email, message"
-    - Cards: "[CARD] Card Title"
-  - **ENHANCED**: Added explicit survey consistency rules requiring every question to include menu options
-  - **RESOLVED**: Menu consistency issues in multi-step surveys and questionnaires
-  - **CLEANED**: Removed "payload: undefined" from option selection messages for cleaner AI context
-  - Applied changes to all conversation history mappings: streaming messages, option selection, and bot response functions
-  - Added robust error handling with response salvage mechanism for schema validation failures
-  - Enhanced system prompt with explicit requirements for bubbles array structure and survey flow rules
-  - **PRODUCTION READY**: Survey chatbots now maintain consistent interactive message presentation throughout conversation flow
+For arrow functions and method definitions:
+grep -r -n "^ *\(const\|let\|var\).*=.*=>" server/
 
-- **July 16, 2025**: Successfully Implemented pgvector Vector Similarity Search:
-  - **COMPLETED**: Full pgvector integration with OpenAI embeddings for semantic content search
-  - Fixed vector storage format using proper SQL casting (`::vector`) for PostgreSQL pgvector extension
-  - Updated database schema to use `vector(1536)` data type matching OpenAI's text-embedding-ada-002 dimensions
-  - Implemented cosine similarity search using pgvector's `<=>` operator for accurate semantic matching
-  - AI responses now include 3 most relevant website content chunks based on vector similarity
-  - Verified working: Website scanning generates embeddings, stores them properly, and performs accurate semantic search
-  - Users can add website URLs that get automatically scanned and converted to searchable vector embeddings
-  - **PRODUCTION READY**: Vector similarity search providing contextually relevant AI responses
+For TypeScript/JavaScript methods in classes or objects:
+grep -r -n "^ *[a-zA-Z_][a-zA-Z0-9_]*\s*(" server/
 
-- **July 15, 2025**: Implemented Website Context Feature for AI-Powered Chatbots:
-  - Added comprehensive website scanning and content extraction system using Playwright and Cheerio
-  - Created vector-based content storage with PostgreSQL database schema (websiteSources, websiteContent tables)
-  - Implemented HTML parsing pipeline that automatically discovers sitemaps and extracts relevant text content
-  - Created "Add Data" management page with URL input, scanning progress tracking, and content management
-  - Integrated website context into OpenAI response generation for more accurate, relevant chatbot answers
-  - Added API endpoints for website source CRUD operations with proper authentication and ownership verification
+For Express route handlers specifically:
+grep -r -n "^ *app\.\(get\|post\|put\|delete\|patch\)" server/
 
-- **July 15, 2025**: Implemented Avatar Upload with Replit Object Storage Integration:
-  - Added comprehensive avatar upload system using Replit Object Storage with "chatbot-avatars" bucket
-  - Created reusable AvatarUpload component with tabbed interface for file upload vs URL input
-  - Integrated Sharp image processing for automatic resizing to 200x200px and compression
-  - Added multer middleware for handling file uploads with 10MB size limit and image type validation
-  - Implemented secure file serving endpoints with proper content-type headers and caching
-  - Updated both chatbot creation and edit forms to use new avatar upload functionality
-  - Fixed object storage data handling by switching to base64 encoding approach (works around downloadAsBytes issues)
-  - Resolved mobile viewport scaling problems with proper CSS font-size controls and text-size-adjust settings
-  - Users can now upload custom avatar images or use image URLs for their chatbots
-  - **CONFIRMED WORKING**: Avatar upload, processing, and serving fully functional in production environment
-
-- **July 15, 2025**: Fixed Embedded Widget Production Path and Security Issues:
-  - Fixed production deployment path resolution for widget routes (`../dist/public` instead of `./public`)
-  - Removed CORS security warnings by adjusting iframe sandbox attributes
-  - Fixed embedded widget authentication bypass for public access without login prompts
-  - Resolved white screen issue when embedding specific chatbot GUIDs in production
-  - Fixed embed.js URL construction to properly handle specific widget paths vs base URLs
-  - Widget embedding with specific bot configurations now works correctly in deployed environment
-  - **CONFIRMED WORKING**: Embedded widgets with specific chatbot GUIDs load properly and maintain configuration
-
-- **July 15, 2025**: Implemented AI-Powered UI Designer for Custom Home Screens:
-  - Created complete component registry system with dynamic home screen rendering
-  - Built AI-powered UI designer service using OpenAI for generating layouts from natural language
-  - Implemented three-panel UI designer page with chat interface, live preview, and JSON code view
-  - Added comprehensive schema support for home screen components (text, cards, quick actions, chat topics)
-  - Integrated custom home screen loading throughout chat widget system for personalized user experiences
-  - Extended database schema with homeScreenConfig field for storing custom UI layouts
-  - Updated public API endpoints to include home screen configurations for widget embedding
-
-- **July 15, 2025**: Fixed Chatbot Testing and Embed Code Issues:
-  - Fixed chatbot testing feature to properly use updated configuration during testing
-  - Enhanced session management to update chatbot configuration when testing
-  - Modified streaming API to accept chatbotConfigId parameter for proper config binding
-  - Updated embed.js to make sessionId optional - server generates it if not provided
-  - Improved chat session linking with specific chatbot configurations for accurate testing
-  - Fixed issue where testing would use default system prompt instead of chatbot-specific prompt
-
-- **July 15, 2025**: Implemented Test Chatbot Feature:
-  - Added dedicated test page `/chatbots/:id/test` for live chatbot testing
-  - Created TabbedChatInterface component with chatbot-specific configuration support
-  - Updated useChat hook to accept optional chatbotConfigId parameter for targeted testing
-  - Enhanced chat session creation to link sessions with specific chatbot configurations
-  - Added embedding instructions with copy-paste code generation for easy website integration
-  - Maintained backward compatibility for existing chat widgets and interfaces
-  - Users can now test their chatbots with actual AI responses before embedding
-
-- **July 12, 2025**: Added Avatar Upload Functionality:
-  - Enhanced chatbot schema with `avatarUrl` field for storing avatar image URLs
-  - Added comprehensive avatar upload UI to chatbot creation form with live preview
-  - Implemented URL-based avatar input with clear functionality
-  - Added placeholder for future file upload functionality with object storage
-  - Fixed server-side validation to properly handle client requests without userId
-  - Streamlined form submission process and removed debugging code
-
-- **July 11, 2025**: Successfully integrated Replit Authentication and Database:
-  - Added PostgreSQL database connection and schema migration
-  - Implemented Replit Auth with OpenID Connect integration
-  - Created comprehensive user authentication system with session management
-  - Added database storage for users, chat sessions, messages, and chatbot configurations
-  - Built top navigation bar with authentication state management
-  - Created landing page for logged-out users and dashboard for authenticated users
-  - Established chatbot configuration system for AI personality management
-  - Added protected API endpoints for chatbot CRUD operations
-  - Updated project architecture to support multi-user environment with role-based access
 
 ## User Preferences
 
