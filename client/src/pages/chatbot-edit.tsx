@@ -292,6 +292,7 @@ export default function ChatbotEdit() {
                       <SelectContent>
                         <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cost-effective)</SelectItem>
                         <SelectItem value="gpt-4o">GPT-4o (Advanced Performance)</SelectItem>
+                        <SelectItem value="gpt-4.1">GPT-4.1 (Most Accurate Performance)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>

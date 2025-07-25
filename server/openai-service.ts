@@ -285,6 +285,7 @@ export async function* generateStreamingResponse(
     if (chatbotConfig?.id) {
       try {
         const lastMessages = conversationHistory.slice(-4).map(msg => msg.content).join("\n");
+        //console.log(`[OpenAI] Last 4 messages for context search: ${lastMessages}`);
         const relevantContent = await storage.searchSimilarContent(
           chatbotConfig.id,
           lastMessages,
@@ -356,7 +357,7 @@ export async function* generateStreamingResponse(
     if (surveyContext) {
       console.log(`[SURVEY] Using survey context in system prompt`);
     }
-    console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
