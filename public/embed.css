@@ -257,7 +257,7 @@
 /* Fix embedded widget input area padding - target all possible selectors */
 .chatwidget-iframe .border-t.border-neutral-200,
 .chatwidget-iframe [class*="border-t"],
-.chatwidget-iframe div[class*="px-4"][class*="py-4"] {
+.chatwidget-iframe div[class*="px-4"][class*="py-1"] {
   padding: 16px !important;
   padding-bottom: 16px !important;
 }
@@ -271,6 +271,21 @@
 /* Ensure consistent input area height */
 .chatwidget-iframe div[class*="flex-shrink-0"] {
   padding: 16px !important;
+}
+
+/* Ensure iframe content uses full height */
+.chatwidget-iframe html,
+.chatwidget-iframe body {
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Root container in iframe should use full height */
+.chatwidget-iframe #root {
+  height: 100% !important;
+  min-height: 100% !important;
 }
 
 .chatwidget-container.bottom-right .chatwidget-initial-message-bubble {
