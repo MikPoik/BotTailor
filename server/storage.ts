@@ -60,14 +60,14 @@ export interface IStorage {
   getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]>;
   createWebsiteContent(content: InsertWebsiteContent, embeddingArray: number[]): Promise<WebsiteContent>;
   searchSimilarContent(chatbotConfigId: number, query: string, limit?: number): Promise<WebsiteContent[]>;
-  
+
   // Survey methods
   getSurveys(chatbotConfigId: number): Promise<Survey[]>;
   getSurvey(id: number): Promise<Survey | undefined>;
   createSurvey(surveyData: InsertSurvey): Promise<Survey>;
   updateSurvey(id: number, data: Partial<Survey>): Promise<Survey | undefined>;
   deleteSurvey(id: number): Promise<void>;
-  
+
   // Survey session methods
   getSurveySession(surveyId: number, sessionId: string): Promise<SurveySession | undefined>;
   createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession>;
@@ -286,7 +286,7 @@ export class DatabaseStorage implements IStorage {
       LIMIT ${limit}
     `);
 
-    return results.rows.map(row => ({
+    const mappedResults = results.rows.map(row => ({
       id: row.id as number,
       websiteSourceId: row.website_source_id as number,
       url: row.url as string,
@@ -297,6 +297,27 @@ export class DatabaseStorage implements IStorage {
       embedding: null, // Don't return the embedding in search results
       createdAt: row.created_at as Date,
     }));
+
+    // Simple deduplication based on content
+    const deduplicatedResults: typeof mappedResults = [];
+    const seenContent = new Set<string>();
+
+    for (const result of mappedResults) {
+      // Use first 300 characters as a simple duplicate check
+      const contentKey = result.content.substring(0, 300).toLowerCase().trim();
+
+      if (!seenContent.has(contentKey)) {
+        seenContent.add(contentKey);
+        deduplicatedResults.push(result);
+      }
+
+      // Stop when we have enough unique results
+      if (deduplicatedResults.length >= limit) {
+        break;
+      }
+    }
+
+    return deduplicatedResults;
   }
 
   // Survey methods
