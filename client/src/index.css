@@ -277,8 +277,18 @@
 
   /* Fix embedded widget input area to remove extra padding */
   .chat-widget-embedded .border-t.border-neutral-200,
-  .chat-widget-embedded div[class*="px-4"][class*="py-4"] {
+  .chat-widget-embedded div[class*="px-4"][class*="py-4"],
+  .chat-widget-embedded div[class*="flex-shrink-0"] {
     padding: 16px !important;
+    margin: 0 !important;
+  }
+
+  /* Remove any extra spacing from the bottom of embedded widget */
+  .chat-widget-embedded,
+  .chat-widget-embedded > div,
+  .chat-widget-embedded [data-radix-tabs-root] {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
 
 
