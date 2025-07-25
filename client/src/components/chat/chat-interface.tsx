@@ -244,7 +244,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
       </div>
 
       {/* Input area */}
-      <div className="border-t border-neutral-200 p-4 bg-white">
+      <div className="border-t border-neutral-200 px-4 py-1 bg-white">
         <div className="flex items-center space-x-3">
           <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
             <Paperclip className="h-5 w-5" />
