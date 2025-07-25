@@ -266,11 +266,18 @@
 .chatwidget-iframe [data-radix-tabs-content] .border-t,
 .chatwidget-iframe [data-radix-tabs-content] div[class*="px-4"] {
   padding: 16px !important;
+  padding-bottom: 16px !important;
 }
 
-/* Ensure consistent input area height */
+/* Ensure consistent input area height and remove extra bottom padding */
 .chatwidget-iframe div[class*="flex-shrink-0"] {
   padding: 16px !important;
+}
+
+/* Specifically target the last child of tabs content to remove extra padding */
+.chatwidget-iframe [data-radix-tabs-content] > div:last-child {
+  padding-bottom: 16px !important;
+  margin-bottom: 0 !important;
 }
 
 .chatwidget-container.bottom-right .chatwidget-initial-message-bubble {
