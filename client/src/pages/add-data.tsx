@@ -435,7 +435,7 @@ export default function AddData() {
                             )}
 
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>Pages: {source.totalPages}/{source.maxPages}</span>
+                              <span>Pages: {source.totalPages}</span>
                               {source.lastScanned && (
                                 <span>
                                   Last scanned: {new Date(source.lastScanned).toLocaleDateString()}

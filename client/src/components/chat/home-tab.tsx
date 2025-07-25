@@ -136,7 +136,7 @@ export default function HomeTab({
       // Handle survey topics specifically
       if (topic.actionType === "survey") {
         // Send clean message to display, but include hidden surveyId for backend parsing
-        const displayMessage = `I'd like to take the ${topic.title} assessment`;
+        const displayMessage = `${topic.title}`;
         const backgroundMessage = `${displayMessage} (surveyId: ${topic.surveyId})`;
         // Pass a special object that includes both display and internal messages
         onStartChat(topic.title, {
@@ -156,7 +156,7 @@ export default function HomeTab({
       // Handle survey actions specifically
       if (action.action === "take_assessment" || action.actionType === "survey") {
         // Send clean message to display, but include hidden surveyId for backend parsing
-        const displayMessage = `I'd like to take the ${action.title} assessment`;
+        const displayMessage = `${action.title}`;
         const backgroundMessage = `${displayMessage} (surveyId: ${action.surveyId})`;
         // Pass a special object that includes both display and internal messages
         onStartChat(action.title, {

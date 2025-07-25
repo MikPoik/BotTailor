@@ -328,7 +328,7 @@ export default function TabbedChatInterface({
       messageOrPayload?.action === "take_assessment"
     ) {
       // Handle legacy survey action - start survey flow (fallback)
-      const surveyMessage = `I'd like to take the ${topic} assessment`;
+      const surveyMessage = `${topic}`;
       setInputMessage("");
 
       // Small delay to ensure the tab switch and input update, then send
