@@ -100,14 +100,27 @@ export default function AddData() {
     queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`],
     enabled: isAuthenticated && !!chatbot?.id,
     retry: false,
-    refetchInterval: (data) => {
+    refetchInterval: (data, query) => {
       // Poll every 3 seconds if there are any sources still scanning
       if (!data || !Array.isArray(data)) return false;
       const hasScanning = data.some((source: WebsiteSource) => 
         source.status === 'scanning' || source.status === 'pending'
       );
+      console.log('Polling check:', data.map(s => ({id: s.id, status: s.status})), 'hasScanning:', hasScanning);
+      
+      // If there was an error (like 401), stop polling to prevent spam
+      if (query.state.error) {
+        console.log('Stopping polling due to error:', query.state.error);
+        return false;
+      }
+      
       return hasScanning ? 3000 : false;
     },
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Always consider data stale for fresh updates
+    onError: (error) => {
+      console.error('Error fetching website sources:', error);
+    }
   });
 
   // Add website source mutation
@@ -193,6 +206,14 @@ export default function AddData() {
 
   const handleRescan = (sourceId: number) => {
     rescanMutation.mutate(sourceId);
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`] });
+    toast({
+      title: "Refreshed",
+      description: "Website sources list has been refreshed.",
+    });
   };
 
   const getStatusIcon = (status: string) => {
@@ -355,10 +376,22 @@ export default function AddData() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Website Sources</CardTitle>
-                <CardDescription>
-                  Manage the websites that provide context for your chatbot.
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Website Sources</CardTitle>
+                    <CardDescription>
+                      Manage the websites that provide context for your chatbot.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={sourcesLoading}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${sourcesLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {sourcesLoading ? (
