@@ -491,7 +491,23 @@ export async function* generateStreamingResponse(
         //console.log(`[OpenAI] Delta: ${delta}`);
         accumulatedContent += delta;
         let jsonEnded = false;
-        if (delta.includes("},{")) {
+        // More comprehensive detection of complete bubble boundaries
+        if (delta.includes("},{") || delta.includes("},\n{") || delta.includes("}, {")) {
+          jsonEnded = true;
+        }
+        
+        // Enhanced detection for complete card bubbles and other message types
+        // Check for patterns that indicate a complete message structure
+        if (accumulatedContent.includes('"messageType":"card"') && 
+            accumulatedContent.includes('"content":') &&
+            (delta.includes('"}') || delta.includes('"}]') || delta.includes('"]}'))) {
+          jsonEnded = true;
+        }
+        
+        // Also trigger for other message types when we see completion patterns
+        if ((accumulatedContent.includes('"messageType":') && 
+             accumulatedContent.includes('"content":')) &&
+            (delta.includes('"}') || delta.includes('"}]') || delta.includes('"]}'))) {
           jsonEnded = true;
         }
 
@@ -583,8 +599,42 @@ export async function* generateStreamingResponse(
                     yield { type: "bubble", bubble };
                     processedBubbles = i + 1;
                   }
+                } else if (bubble.messageType === "card") {
+                  // For card bubbles, ensure metadata is complete if present
+                  if (bubble.metadata) {
+                    // If card has buttons, make sure they're complete
+                    if (bubble.metadata.buttons && Array.isArray(bubble.metadata.buttons)) {
+                      const allButtonsComplete = bubble.metadata.buttons.every(
+                        (btn: any) => btn.id && btn.text && btn.action,
+                      );
+                      if (allButtonsComplete) {
+                        console.log(
+                          `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (card with ${bubble.metadata.buttons.length} buttons)`,
+                        );
+                        await shouldYieldBubble();
+                        yield { type: "bubble", bubble };
+                        processedBubbles = i + 1;
+                      }
+                    } else {
+                      // Card without buttons, just check basic completion
+                      console.log(
+                        `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (simple card)`,
+                      );
+                      await shouldYieldBubble();
+                      yield { type: "bubble", bubble };
+                      processedBubbles = i + 1;
+                    }
+                  } else {
+                    // Card without metadata, stream immediately
+                    console.log(
+                      `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (basic card)`,
+                    );
+                    await shouldYieldBubble();
+                    yield { type: "bubble", bubble };
+                    processedBubbles = i + 1;
+                  }
                 } else {
-                  // For other types (card, image, quickReplies), just check basic completion
+                  // For other types (image, quickReplies), just check basic completion
                   console.log(
                     `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} - "${bubble.content}"`,
                   );
