@@ -288,14 +288,14 @@
   .chat-message-user {
     @apply rounded-lg rounded-tr-none px-2 py-2 shadow-sm text-white max-w-xs ml-auto;
     background-color: var(--chat-user-bg);
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .chat-message-bot {
     @apply rounded-lg rounded-tl-none px-2 py-2 shadow-sm max-w-sm;
     background-color: var(--chat-bot-bg);
     border: 1px solid var(--border);
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .chat-message-bot.no-background {
@@ -317,7 +317,7 @@
     animation-delay: 300ms;
   }
   .rich-message-text {
-    font-size: 1rem; /* Set your desired font size */
+    font-size: 0.9rem; /* Set your desired font size */
   }
 
   .menu-option-button {
@@ -373,7 +373,7 @@
     flex-direction: column;
     height: 100vh;
     animation: slideUp 0.3s ease-out;
-    font-size:1rem !important;
+    font-size:0.9rem !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
   }
