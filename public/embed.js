@@ -27,6 +27,14 @@
         return;
       }
 
+      // Validate that the API URL includes the proper /widget/ path for external embeds
+      // This prevents the widget from showing when accessed through incorrect URLs
+      if (!this.config.apiUrl.includes('/widget/')) {
+        console.warn('Chat widget: API URL must include /widget/ path for proper functionality');
+        // Silent fail - don't show widget for incorrectly formatted URLs
+        return;
+      }
+
       // Session ID will be generated server-side if not provided
       // We'll let the server handle generation when the iframe loads
 

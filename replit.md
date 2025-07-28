@@ -6,6 +6,13 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 28, 2025**: Fixed Widget URL Validation to Prevent Incorrect API Access:
+  - Added route guard to block incorrect widget URLs (replit.app/userId/chatbotGuid) and return proper error
+  - Enhanced embed.js to validate API URLs contain proper /widget/ path before showing chat bubble
+  - Implemented client-side validation to prevent widget initialization with malformed URLs
+  - Fixed issue where widgets partially worked with incorrect URL format showing white screens
+  - Added helpful error messages directing users to correct URL format (/widget/userId/chatbotGuid)
+  - Ensured chat bubbles only appear when proper widget URLs are used for external embeds
 - **July 25, 2025**: Fixed chat widget styling discrepancies and improved dimensions:
   - Fixed styling inconsistencies between embedded widget and site widget UI
   - Resolved conflicting inline styles in embed.js that overrode CSS changes

@@ -214,6 +214,39 @@ export function setupPublicRoutes(app: Express) {
       res.status(500).send('Error loading chat widget');
     }
   });
+
+  // Route guard to prevent incorrect widget URLs from being served by Vite catch-all
+  // This blocks URLs like /:userId/:chatbotGuid that should be /widget/:userId/:chatbotGuid
+  // Only match very specific patterns to avoid interfering with valid routes
+  app.get("/:userId/:chatbotGuid", (req: Request, res: Response, next: NextFunction) => {
+    const { userId, chatbotGuid } = req.params;
+    
+    // Only apply this guard to requests that look exactly like widget URLs
+    // User ID should be numeric (5+ digits), chatbot GUID should be UUID format
+    const userIdRegex = /^\d{5,}$/; // At least 5 digits to avoid false matches
+    const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    // Also check that this isn't an API call or other known route
+    const path = req.path;
+    if (path.startsWith('/api/') || path.startsWith('/embed') || path.startsWith('/static/')) {
+      return next(); // Let other routes handle these
+    }
+    
+    if (userIdRegex.test(userId) && guidRegex.test(chatbotGuid)) {
+      // This looks like an incorrect widget URL - return 404 with helpful message
+      res.status(404).json({
+        error: 'Widget URL format incorrect',
+        message: 'Widget URLs must include the /widget/ prefix',
+        correctUrl: `/widget/${userId}/${chatbotGuid}`,
+        providedUrl: `/${userId}/${chatbotGuid}`
+      });
+      return;
+    }
+    
+    // If it doesn't match the widget pattern, continue to next middleware
+    next();
+  });
+
   // Chat widget route with user and chatbot parameters - only match specific patterns
   app.get("/widget/:userId/:chatbotGuid", async (req, res, next) => {
     try {
@@ -248,7 +281,7 @@ export function setupPublicRoutes(app: Express) {
         console.log(`Looking for HTML file at: ${htmlPath}`);
         console.log(`File exists: ${fs.existsSync(htmlPath)}`);
 
-        let html;
+        let html: string = '';
         if (!fs.existsSync(htmlPath)) {
           console.log(`HTML file not found, trying alternative paths...`);
           // Try different possible paths
