@@ -22,7 +22,14 @@ This is a full-stack React chat widget application built with Express.js backend
   - Added smart URL validation to exclude image files, media, and non-webpage content
 - Change log moved to "changes.md", refer for history and appending notes
 
-## Notes for agent
+
+
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+### Notes for agent
 
 You can use grep commands to get overview of current routes and functions with these commands when needed:
 
@@ -41,10 +48,7 @@ grep -r -n "^ *[a-zA-Z_][a-zA-Z0-9_]*\s*(" server/
 For Express route handlers specifically:
 grep -r -n "^ *app\.\(get\|post\|put\|delete\|patch\)" server/
 
-
-## User Preferences
-
-Preferred communication style: Simple, everyday language.
+Always test the api routes after changes with "curl" command
 
 ## System Architecture
 
