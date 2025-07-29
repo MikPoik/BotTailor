@@ -59,6 +59,7 @@ export const chatbotConfigs = pgTable("chatbot_configs", {
   formRecipientName: varchar("form_recipient_name"), // Name of the recipient
   senderEmail: varchar("sender_email"), // From email address for notifications
   senderName: varchar("sender_name"), // From name for notifications
+  formConfirmationMessage: text("form_confirmation_message"), // Custom message shown after form submission
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -165,6 +166,7 @@ export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick
   formRecipientName: true,
   senderEmail: true,
   senderName: true,
+  formConfirmationMessage: true,
 });
 
 export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({

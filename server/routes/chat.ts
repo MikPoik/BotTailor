@@ -219,6 +219,7 @@ export function setupChatRoutes(app: Express) {
       let recipientName = 'Support Team'; // fallback
       let senderEmail = 'noreply@chatbot.com'; // fallback
       let senderName = 'Chat Assistant'; // fallback
+      let confirmationMessage = 'Thank you! Your message has been sent successfully. We will contact you soon.'; // fallback
       
       if (session?.chatbotConfigId) {
         chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
@@ -236,6 +237,9 @@ export function setupChatRoutes(app: Express) {
         }
         if (chatbotConfig?.senderName) {
           senderName = chatbotConfig.senderName;
+        }
+        if (chatbotConfig?.formConfirmationMessage) {
+          confirmationMessage = chatbotConfig.formConfirmationMessage;
         }
       }
 
@@ -281,7 +285,7 @@ export function setupChatRoutes(app: Express) {
         // Send confirmation message to chat
         await storage.createMessage({
           sessionId,
-          content: 'Kiitos! Viestisi on lähetetty onnistuneesti. Otamme sinuun yhteyttä pian.',
+          content: confirmationMessage,
           sender: 'bot',
           messageType: 'text',
           metadata: {

@@ -587,6 +587,27 @@ export default function ChatbotEdit() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="formConfirmationMessage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Form Confirmation Message</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Thank you! Your message has been sent successfully. We will contact you soon."
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Message displayed in chat after successful form submission
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>

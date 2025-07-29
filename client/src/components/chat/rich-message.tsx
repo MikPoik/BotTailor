@@ -182,10 +182,13 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
           console.log('Form submitted successfully:', result);
           
           // Add confirmation message directly to the chat
+          const confirmationText = chatbotConfig?.formConfirmationMessage || 
+                                 'Thank you! Your message has been sent successfully. We will contact you soon.';
+          
           const confirmationMessage = {
             id: Date.now().toString(),
             sessionId: currentSessionId,
-            content: 'Kiitos! Viestisi on lähetetty onnistuneesti. Otamme sinuun yhteyttä pian.',
+            content: confirmationText,
             sender: 'bot' as const,
             messageType: 'text' as const,
             metadata: { emailSent: true, messageId: result.messageId },
