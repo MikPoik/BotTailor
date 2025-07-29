@@ -90,6 +90,39 @@ export function setupSurveyRoutes(app: Express) {
     }
   });
 
+  // Update survey (simplified endpoint for direct survey updates)
+  app.patch('/api/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { surveyId } = req.params;
+      const userId = req.user.claims.sub;
+      const body = req.body;
+
+      // Get the existing survey first
+      const existingSurvey = await storage.getSurvey(parseInt(surveyId));
+      if (!existingSurvey) {
+        return res.status(404).json({ message: "Survey not found" });
+      }
+
+      // Verify ownership through chatbot
+      const chatbot = await storage.getChatbotConfig(existingSurvey.chatbotConfigId);
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updateData = insertSurveySchema.partial().parse(body);
+      const survey = await storage.updateSurvey(parseInt(surveyId), updateData);
+      
+      res.json(survey);
+    } catch (error) {
+      console.error("Error updating survey:", error);
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to update survey" });
+    }
+  });
+
   // Delete survey
   app.delete('/api/chatbots/:chatbotId/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {

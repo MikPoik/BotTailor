@@ -252,6 +252,8 @@ export default function SurveyBuilderPage() {
   const handleUpdateQuestion = (surveyId: number, questionIndex: number, updates: Partial<SurveyQuestion>) => {
     if (!selectedSurvey) return;
 
+    console.log(`Updating question ${questionIndex} with:`, updates);
+
     const updatedQuestions = selectedSurvey.surveyConfig.questions.map((q: SurveyQuestion, index: number) =>
       index === questionIndex ? { ...q, ...updates } : q
     );
@@ -260,6 +262,8 @@ export default function SurveyBuilderPage() {
       ...selectedSurvey.surveyConfig,
       questions: updatedQuestions,
     };
+
+    console.log('Updated survey config:', updatedConfig);
 
     // Optimistically update the selected survey state
     const optimisticUpdatedSurvey = {
@@ -609,12 +613,14 @@ export default function SurveyBuilderPage() {
                                           <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => {
+                                            onClick={async () => {
                                               if (question.options && question.options.length > 2) {
-                                                const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
-                                                handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
+                                                console.log(`Deleting option ${optionIndex} from question ${index}. Current options:`, question.options);
                                                 
-                                                // Clear local state for deleted option
+                                                const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
+                                                console.log('Updated options after deletion:', updatedOptions);
+                                                
+                                                // Clear local state for deleted option and adjust indices
                                                 setLocalOptionTexts(prev => {
                                                   const newState = { ...prev };
                                                   delete newState[optionKey];
@@ -629,6 +635,9 @@ export default function SurveyBuilderPage() {
                                                   }
                                                   return newState;
                                                 });
+                                                
+                                                // Update the question immediately
+                                                handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
                                               }
                                             }}
                                             disabled={!question.options || question.options.length <= 2}
