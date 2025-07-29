@@ -3,6 +3,7 @@ import { Message } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Function to parse Markdown to HTML
 function parseMarkdown(text: string): string {
@@ -35,6 +36,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
   const { messageType, content, metadata } = message;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
 
   if (messageType === 'card' && metadata) {
     const cardMeta = metadata as any;
