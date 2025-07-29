@@ -54,6 +54,11 @@ export const chatbotConfigs = pgTable("chatbot_configs", {
   fallbackMessage: text("fallback_message"),
   homeScreenConfig: jsonb("home_screen_config"), // Dynamic UI configuration
   initialMessages: jsonb("initial_messages"), // Initial message bubbles for embed widget
+  // Email configuration for form submissions
+  formRecipientEmail: varchar("form_recipient_email"), // Where form submissions are sent
+  formRecipientName: varchar("form_recipient_name"), // Name of the recipient
+  senderEmail: varchar("sender_email"), // From email address for notifications
+  senderName: varchar("sender_name"), // From name for notifications
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -72,7 +77,7 @@ export const messages = pgTable("messages", {
   sessionId: text("session_id").notNull().references(() => chatSessions.sessionId),
   content: text("content").notNull(),
   sender: text("sender").notNull(), // 'user' | 'bot'
-  messageType: text("message_type").notNull().default("text"), // 'text' | 'card' | 'menu' | 'image'
+  messageType: text("message_type").notNull().default("text"), // 'text' | 'card' | 'menu' | 'image' | 'form_submission'
   metadata: jsonb("metadata"), // For rich content data
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -168,7 +173,7 @@ export const insertMessageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   sender: z.enum(["user", "bot", "assistant"]),
-  messageType: z.enum(["text", "image", "audio", "video", "file", "card", "menu", "quickReplies", "form", "system"]).default("text"),
+  messageType: z.enum(["text", "image", "audio", "video", "file", "card", "menu", "quickReplies", "form", "form_submission", "system"]).default("text"),
   metadata: z.record(z.any()).default({}),
 });
 
@@ -372,7 +377,7 @@ export const messageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   sender: z.enum(["user", "bot"]),
-  messageType: z.enum(["text", "card", "menu", "image", "quickReplies", "form"]).default("text"),
+  messageType: z.enum(["text", "card", "menu", "image", "quickReplies", "form", "form_submission"]).default("text"),
   createdAt: z.string(),
   metadata: z.object({
     title: z.string().optional(),

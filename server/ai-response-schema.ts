@@ -29,7 +29,7 @@ const FormFieldSchema = z.object({
 
 // Define individual message bubble schema
 const MessageBubbleSchema = z.object({
-  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form', 'system']),
+  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form', 'form_submission', 'system']),
   content: z.string(),
   metadata: z.object({
     title: z.string().optional(),

@@ -159,12 +159,9 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
           value: formValues[field.id] || ''
         })) || [];
 
-        // For now, use a default recipient email (this should be configurable)
-        const recipientEmail = chatbotConfig?.recipientEmail || 'admin@example.com';
-        const recipientName = chatbotConfig?.recipientName || 'Administrator';
         const formTitle = (metadata as any)?.title || 'Contact Form Submission';
 
-        console.log('Submitting form:', { sessionId: currentSessionId, formData, recipientEmail });
+        console.log('Submitting form:', { sessionId: currentSessionId, formData });
 
         const response = await fetch(`/api/chat/${currentSessionId}/submit-form`, {
           method: 'POST',
@@ -173,8 +170,6 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
           },
           body: JSON.stringify({
             formData,
-            recipientEmail,
-            recipientName,
             formTitle
           })
         });

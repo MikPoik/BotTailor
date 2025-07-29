@@ -33,6 +33,11 @@ const formSchema = z.object({
   welcomeMessage: z.string().optional(),
   fallbackMessage: z.string().optional(),
   initialMessages: z.array(z.string()).optional(),
+  // Email configuration
+  formRecipientEmail: z.string().email("Valid email required").optional(),
+  formRecipientName: z.string().optional(),
+  senderEmail: z.string().email("Valid email required").optional(),
+  senderName: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -81,6 +86,10 @@ export default function ChatbotEdit() {
       welcomeMessage: "Hello! How can I help you today?",
       fallbackMessage: "I'm sorry, I didn't understand that. Could you please rephrase your question?",
       initialMessages: [],
+      formRecipientEmail: "",
+      formRecipientName: "",
+      senderEmail: "",
+      senderName: "",
     },
   });
 
@@ -98,6 +107,10 @@ export default function ChatbotEdit() {
         welcomeMessage: chatbot.welcomeMessage || "",
         fallbackMessage: chatbot.fallbackMessage || "",
         initialMessages: (chatbot.initialMessages as string[]) || [],
+        formRecipientEmail: chatbot.formRecipientEmail || "",
+        formRecipientName: chatbot.formRecipientName || "",
+        senderEmail: chatbot.senderEmail || "",
+        senderName: chatbot.senderName || "",
       });
     }
   }, [chatbot, form]);
@@ -480,6 +493,101 @@ export default function ChatbotEdit() {
                   </FormItem>
                 )}
               />
+            </CardContent>
+          </Card>
+
+          {/* Email Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Email Configuration</CardTitle>
+              <CardDescription>
+                Configure email settings for form submissions and notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="formRecipientEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Form Recipient Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email"
+                          placeholder="recipient@example.com"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Email address where form submissions will be sent
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="formRecipientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Recipient Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Support Team"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Name of the person/team receiving forms
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="senderEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sender Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email"
+                          placeholder="noreply@yourcompany.com"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        From email address for outgoing notifications
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="senderName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sender Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Your Company Chatbot"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        From name for outgoing notifications
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 

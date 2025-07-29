@@ -199,7 +199,7 @@ export function setupChatRoutes(app: Express) {
   app.post('/api/chat/:sessionId/submit-form', async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const { formData, recipientEmail, recipientName, formTitle } = req.body;
+      const { formData, formTitle } = req.body;
 
       console.log(`[FORM_SUBMISSION] Processing form submission for session: ${sessionId}`);
 
@@ -211,21 +211,32 @@ export function setupChatRoutes(app: Express) {
         });
       }
 
-      if (!recipientEmail) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'Recipient email is required' 
-        });
-      }
-
-      // Get chatbot configuration for sender information
+      // Get chatbot configuration for email settings
       const session = await storage.getChatSession(sessionId);
       let chatbotConfig;
       let chatbotName = 'Chat Assistant';
+      let recipientEmail = 'admin@example.com'; // fallback
+      let recipientName = 'Support Team'; // fallback
+      let senderEmail = 'noreply@chatbot.com'; // fallback
+      let senderName = 'Chat Assistant'; // fallback
       
       if (session?.chatbotConfigId) {
         chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
         chatbotName = chatbotConfig?.name || 'Chat Assistant';
+        
+        // Use configured email settings if available
+        if (chatbotConfig?.formRecipientEmail) {
+          recipientEmail = chatbotConfig.formRecipientEmail;
+        }
+        if (chatbotConfig?.formRecipientName) {
+          recipientName = chatbotConfig.formRecipientName;
+        }
+        if (chatbotConfig?.senderEmail) {
+          senderEmail = chatbotConfig.senderEmail;
+        }
+        if (chatbotConfig?.senderName) {
+          senderName = chatbotConfig.senderName;
+        }
       }
 
       // Prepare form submission data
@@ -260,8 +271,8 @@ export function setupChatRoutes(app: Express) {
         submissionData,
         recipientEmail,
         recipientName,
-        chatbotConfig?.senderEmail || 'noreply@chatbot.com',
-        chatbotName
+        senderEmail,
+        senderName
       );
 
       if (emailResult.success) {
