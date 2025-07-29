@@ -68,7 +68,9 @@ grep -r -n "^ *[a-zA-Z_][a-zA-Z0-9_]*\s*(" server/
 For Express route handlers specifically:
 grep -r -n "^ *app\.\(get\|post\|put\|delete\|patch\)" server/
 
-Always test the api routes after changes with "curl" command
+Always test the api routes after changes with "curl" e.g. curl https://localhost:5000 ...
+For server routes, create modular structure with separation of concerns
+UI design choices should be mobile first unless stated otherwise
 
 ## System Architecture
 
