@@ -371,23 +371,24 @@
             try {
               // Build URL with sessionId if provided, otherwise let server generate it
               const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+              const colorParam = `primaryColor=${encodeURIComponent(this.config.primaryColor)}&`;
 
               // Check if apiUrl already contains a specific widget path
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
                 // Specific widget URL - use as-is with query parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${colorParam}mobile=true&embedded=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${colorParam}mobile=true&embedded=true`;
               }
 
               // Force HTTPS for iframe URL
               mobileIframe.src = this.forceHttps(widgetUrl);
             } catch (error) {
               // Fallback URL construction
-              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=true&embedded=true`);
+              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${colorParam}mobile=true&embedded=true`);
             }
           }
           overlay.style.display = 'block';
@@ -399,23 +400,24 @@
             try {
               // Build URL with sessionId if provided, otherwise let server generate it
               const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+              const colorParam = `primaryColor=${encodeURIComponent(this.config.primaryColor)}&`;
 
               // Check if apiUrl already contains a specific widget path
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
                 // Specific widget URL - use as-is with query parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}mobile=false&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${colorParam}mobile=false&embedded=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}mobile=false&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${colorParam}mobile=false&embedded=true`;
               }
 
               // Force HTTPS for iframe URL
               iframe.src = this.forceHttps(widgetUrl);
             } catch (error) {
               // Fallback URL construction
-              iframe.src = this.forceHttps(`${this.config.apiUrl}?mobile=false&embedded=true`);
+              iframe.src = this.forceHttps(`${this.config.apiUrl}?${colorParam}mobile=false&embedded=true`);
             }
           }
           bubble.style.display = 'none';

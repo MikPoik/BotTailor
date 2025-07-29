@@ -49,6 +49,8 @@ export default function ChatWidget({
       /* Chat widget specific styling with primary color */
       .chat-widget-container {
         --primary: ${primaryColor};
+        --primary-foreground: white;
+        --ring: ${primaryColor};
         --chat-bubble-bg: ${primaryColor};
         --chat-user-bg: ${primaryColor};
         --chat-hover: ${primaryColor};
@@ -66,15 +68,27 @@ export default function ChatWidget({
         border-color: ${primaryColor} !important;
       }
       
+      /* All default variant buttons */
+      .chat-widget-container .bg-primary {
+        background-color: ${primaryColor} !important;
+      }
+      
+      .chat-widget-container .hover\\:bg-primary\\/90:hover {
+        background-color: ${primaryColor}e6 !important;
+      }
+      
       /* Primary buttons and interactive elements */
       .chat-widget-container .menu-option-button:hover {
         background-color: ${primaryColor} !important;
       }
       
       /* Input focus ring */
-      .chat-widget-container input:focus {
+      .chat-widget-container input:focus,
+      .chat-widget-container textarea:focus,
+      .chat-widget-container select:focus {
         --tw-ring-color: ${primaryColor} !important;
         border-color: ${primaryColor} !important;
+        box-shadow: 0 0 0 2px ${primaryColor}40 !important;
       }
       
       /* Tab navigation active state */
@@ -83,10 +97,40 @@ export default function ChatWidget({
         border-bottom-color: ${primaryColor} !important;
       }
       
+      /* Tabs trigger active state */
+      .chat-widget-container [data-radix-tabs-trigger][data-state="active"] {
+        color: ${primaryColor} !important;
+      }
+      
       /* Quick reply buttons */
       .chat-widget-container .quick-reply-button:hover {
         background-color: ${primaryColor} !important;
         color: white !important;
+      }
+      
+      /* Progress indicators */
+      .chat-widget-container .border-primary {
+        border-color: ${primaryColor} !important;
+      }
+      
+      /* Links */
+      .chat-widget-container .text-primary {
+        color: ${primaryColor} !important;
+      }
+      
+      /* Interactive hover states */
+      .chat-widget-container .hover\\:text-primary:hover {
+        color: ${primaryColor} !important;
+      }
+      
+      /* Form controls focus states */
+      .chat-widget-container .focus-visible\\:ring-ring:focus-visible {
+        --tw-ring-color: ${primaryColor} !important;
+      }
+      
+      /* Selection and highlight states */
+      .chat-widget-container ::selection {
+        background-color: ${primaryColor}40 !important;
       }
     `;
     document.head.appendChild(style);
@@ -157,7 +201,12 @@ export default function ChatWidget({
             </div>
             <button 
               onClick={closeChat}
-              className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
+              className="text-white p-1.5 rounded transition-colors"
+              style={{ 
+                "&:hover": { backgroundColor: `${primaryColor}cc` }
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}cc`}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <X className="h-4 w-4" />
             </button>
@@ -213,7 +262,9 @@ export default function ChatWidget({
           </div>
           <button 
             onClick={handleEmbeddedClose}
-            className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
+            className="text-white p-1.5 rounded transition-colors"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}cc`}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <Minimize2 className="h-4 w-4" />
           </button>
@@ -294,7 +345,9 @@ export default function ChatWidget({
             </div>
             <button 
               onClick={toggleChat}
-              className="text-white hover:bg-blue-600 p-1.5 rounded transition-colors"
+              className="text-white p-1.5 rounded transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}cc`}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <Minimize2 className="h-4 w-4" />
             </button>

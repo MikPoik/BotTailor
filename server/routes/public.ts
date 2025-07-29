@@ -251,7 +251,7 @@ export function setupPublicRoutes(app: Express) {
   app.get("/widget/:userId/:chatbotGuid", async (req, res, next) => {
     try {
       const { userId, chatbotGuid } = req.params;
-      const { embedded = "true", mobile = "false" } = req.query;
+      const { embedded = "true", mobile = "false", primaryColor = "#2563eb" } = req.query;
 
       console.log(`Loading widget for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);
 
@@ -318,6 +318,7 @@ export function setupPublicRoutes(app: Express) {
               apiUrl: "${apiUrl}",
               isMobile: ${isMobile},
               embedded: ${isEmbedded},
+              primaryColor: "${primaryColor}",
               chatbotConfig: ${JSON.stringify(chatbotConfig)}
             };
           </script>
@@ -334,6 +335,7 @@ export function setupPublicRoutes(app: Express) {
           apiUrl,
           isMobile,
           embedded: isEmbedded,
+          primaryColor,
           chatbotConfig
         };
         next();

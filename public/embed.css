@@ -267,6 +267,8 @@
 /* Dynamic primary color support for embedded widgets */
 .chatwidget-iframe .chat-widget-container {
   --primary: var(--chat-primary-color, #2563eb);
+  --primary-foreground: white;
+  --ring: var(--chat-primary-color, #2563eb);
   --chat-bubble-bg: var(--chat-primary-color, #2563eb);
   --chat-user-bg: var(--chat-primary-color, #2563eb);
   --chat-hover: var(--chat-primary-color, #2563eb);
@@ -281,14 +283,63 @@
   border-color: var(--chat-primary-color, #2563eb) !important;
 }
 
-.chatwidget-iframe .send-input:focus {
+/* All default variant buttons in embedded widgets */
+.chatwidget-iframe .bg-primary {
+  background-color: var(--chat-primary-color, #2563eb) !important;
+}
+
+.chatwidget-iframe .hover\:bg-primary\/90:hover {
+  background-color: var(--chat-primary-color, #2563eb)e6 !important;
+}
+
+.chatwidget-iframe .send-input:focus,
+.chatwidget-iframe input:focus,
+.chatwidget-iframe textarea:focus,
+.chatwidget-iframe select:focus {
   --tw-ring-color: var(--chat-primary-color, #2563eb) !important;
   border-color: var(--chat-primary-color, #2563eb) !important;
+  box-shadow: 0 0 0 2px var(--chat-primary-color, #2563eb)40 !important;
+}
+
+/* Tab navigation active state */
+.chatwidget-iframe [data-state="active"] {
+  color: var(--chat-primary-color, #2563eb) !important;
+  border-bottom-color: var(--chat-primary-color, #2563eb) !important;
+}
+
+/* Tabs trigger active state */
+.chatwidget-iframe [data-radix-tabs-trigger][data-state="active"] {
+  color: var(--chat-primary-color, #2563eb) !important;
 }
 
 .chatwidget-iframe .menu-option-button:hover {
   background-color: var(--chat-primary-color, #2563eb) !important;
   color: white !important;
+}
+
+/* Progress indicators */
+.chatwidget-iframe .border-primary {
+  border-color: var(--chat-primary-color, #2563eb) !important;
+}
+
+/* Links */
+.chatwidget-iframe .text-primary {
+  color: var(--chat-primary-color, #2563eb) !important;
+}
+
+/* Interactive hover states */
+.chatwidget-iframe .hover\:text-primary:hover {
+  color: var(--chat-primary-color, #2563eb) !important;
+}
+
+/* Form controls focus states */
+.chatwidget-iframe .focus-visible\:ring-ring:focus-visible {
+  --tw-ring-color: var(--chat-primary-color, #2563eb) !important;
+}
+
+/* Selection and highlight states */
+.chatwidget-iframe ::selection {
+  background-color: var(--chat-primary-color, #2563eb)40 !important;
 }
 
 /* Prevent any external CSS from interfering with embedded widget */
