@@ -281,7 +281,7 @@ export function setupChatRoutes(app: Express) {
         // Send confirmation message to chat
         await storage.createMessage({
           sessionId,
-          content: 'Thank you! Your form has been submitted successfully.',
+          content: 'Kiitos! Viestisi on lähetetty onnistuneesti. Otamme sinuun yhteyttä pian.',
           sender: 'bot',
           messageType: 'text',
           metadata: {
@@ -301,7 +301,7 @@ export function setupChatRoutes(app: Express) {
         // Send error message to chat
         await storage.createMessage({
           sessionId,
-          content: 'Your form was received, but there was an issue sending the email notification. Please try again or contact support.',
+          content: 'Viestisi vastaanotettiin, mutta sähköposti-ilmoituksen lähettämisessä oli ongelma. Yritä uudelleen tai ota yhteyttä tukeen.',
           sender: 'bot',
           messageType: 'text',
           metadata: {
