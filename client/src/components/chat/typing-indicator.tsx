@@ -14,9 +14,9 @@ export default function TypingIndicator({ chatbotConfig }: TypingIndicatorProps)
       />
       <div className="bg-white rounded-lg rounded-tl-none p-3 shadow-sm border">
         <div className="flex space-x-1">
-          <div className="chat-typing-dots w-2 h-2"></div>
-          <div className="chat-typing-dots w-2 h-2"></div>
-          <div className="chat-typing-dots w-2 h-2"></div>
+          <div className="chat-typing-dots w-1 h-1"></div>
+          <div className="chat-typing-dots w-1 h-1"></div>
+          <div className="chat-typing-dots w-1 h-1"></div>
         </div>
       </div>
     </div>

@@ -202,6 +202,7 @@ Survey "${config.title}" has been completed.
 Completion message: "${config.completionMessage || 'Thank you for completing the survey!'}"
 Previous responses: ${JSON.stringify(responses)}
 Do not ask any more survey questions.
+Offer a contact form or a link to contact us instead.
 `;
   }
 

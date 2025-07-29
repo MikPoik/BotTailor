@@ -85,15 +85,20 @@ export default function ChatWidget({
               <img 
                 src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
                 alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-7 h-7 rounded-full border-2 border-white"
+                className="w10 h-10 rounded-full border-2 border-white"
               />
+
               <div>
+
                 <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
+                {/*
                 <div className="flex items-center space-x-1 text-xs text-blue-100">
                   <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
                   <span>Online</span>
                 </div>
+                */}
               </div>
+
             </div>
             <button 
               onClick={closeChat}
@@ -137,15 +142,19 @@ export default function ChatWidget({
             <img 
               src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
               alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-              className="w-7 h-7 rounded-full border-2 border-white"
+              className="w-10 h-10 rounded-full border-2 border-white"
             />
+
             <div>
               <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
+              {/*
               <div className="flex items-center space-x-1 text-xs text-blue-100">
                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
                 <span>Online</span>
               </div>
+              */}
             </div>
+
           </div>
           <button 
             onClick={handleEmbeddedClose}
@@ -207,15 +216,19 @@ export default function ChatWidget({
               <img 
                 src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
                 alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-7 h-7 rounded-full border-2 border-white"
+                className="w-10 h-10 rounded-full border-2 border-white"
               />
+
               <div>
                 <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
+                {/*
                 <div className="flex items-center space-x-1 text-xs text-blue-100">
                   <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
                   <span>Online</span>
                 </div>
+                */}
               </div>
+
             </div>
             <button 
               onClick={toggleChat}

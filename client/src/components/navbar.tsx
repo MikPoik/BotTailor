@@ -62,9 +62,6 @@ export function Navbar() {
             <Link href="/dashboard" className="text-sm font-medium transition-colors hover:text-primary">
               Dashboard
             </Link>
-            <Link href="/chatbots" className="text-sm font-medium transition-colors hover:text-primary">
-              My Chatbots
-            </Link>
           </div>
         )}
 
@@ -169,13 +166,6 @@ export function Navbar() {
                   onClick={closeMenu}
                 >
                   Dashboard
-                </Link>
-                <Link 
-                  href="/chatbots" 
-                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
-                  onClick={closeMenu}
-                >
-                  My Chatbots
                 </Link>
                 <div className="border-t pt-3 space-y-3">
                   <Link 

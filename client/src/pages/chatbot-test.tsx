@@ -96,7 +96,7 @@ export default function ChatbotTest() {
   const embedCode = `<script src="${window.location.origin}/embed.js"></script>
 <script>
   ChatWidget.init({
-    apiUrl: '${window.location.origin}',
+    apiUrl: '${embedUrl}',
     position: 'bottom-right',
     primaryColor: '#2563eb'
   });
