@@ -15,8 +15,11 @@ function parseMarkdown(text: string): string {
   // Italic text
   html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
 
-  // Links
-  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+  // Markdown links: [text](url)
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // Auto-detect URLs (http/https)
+  html = html.replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 
   // Line breaks
   html = html.replace(/\n/g, '<br />');
