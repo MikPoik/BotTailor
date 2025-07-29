@@ -13,6 +13,10 @@ This is a full-stack React chat widget application built with Express.js backend
   - Fixed database schema validation to include new email fields in insert operations
   - Form submissions now use chatbot-specific email addresses instead of hardcoded defaults
   - Email settings include: formRecipientEmail, formRecipientName, senderEmail, senderName
+  - **CONDITIONAL FORM FUNCTIONALITY**: Forms are now only available when email configuration is properly set up
+  - Modified system prompt to conditionally include/exclude form instructions based on email config presence
+  - Made email fields truly optional in chatbot edit form to allow saving without email setup
+  - When no email config exists, chatbot suggests alternative contact methods instead of offering forms
 - **July 28, 2025**: Fixed Widget URL Validation to Prevent Incorrect API Access:
   - Added route guard to block incorrect widget URLs (replit.app/userId/chatbotGuid) and return proper error
   - Enhanced embed.js to validate API URLs contain proper /widget/ path before showing chat bubble
