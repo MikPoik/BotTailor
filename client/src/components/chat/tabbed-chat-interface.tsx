@@ -10,6 +10,28 @@ import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Color resolution function that prioritizes embed parameters over UI Designer theme
+function resolveColors() {
+  // Get CSS variables from the embed parameters (these take priority)
+  const embedPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary-color').trim();
+  const embedBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-background').trim();
+  const embedTextColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-text').trim();
+  
+  // Helper function to check if a color value is valid (not empty and not just fallback CSS var)
+  const isValidColor = (color: string) => {
+    return color && color !== '' && !color.startsWith('var(--') && color !== 'var(--primary)' && color !== 'var(--background)' && color !== 'var(--foreground)';
+  };
+  
+  // Resolve final colors with embed parameters taking priority
+  const resolvedColors = {
+    primaryColor: isValidColor(embedPrimaryColor) ? embedPrimaryColor : 'var(--primary)',
+    backgroundColor: isValidColor(embedBackgroundColor) ? embedBackgroundColor : 'var(--background)',
+    textColor: isValidColor(embedTextColor) ? embedTextColor : 'var(--foreground)'
+  };
+  
+  return resolvedColors;
+}
+
 interface TabbedChatInterfaceProps {
   sessionId: string;
   isMobile: boolean;
@@ -436,10 +458,13 @@ export default function TabbedChatInterface({
     }
   };
 
+  // Resolve colors with embed parameters taking priority
+  const colors = resolveColors();
+
   if (isSessionLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: colors.backgroundColor, color: colors.textColor }}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.primaryColor }}></div>
       </div>
     );
   }
@@ -478,22 +503,27 @@ export default function TabbedChatInterface({
           style={{
             position: "static",
             width: "100%",
-            background: "transparent",
+            background: colors.backgroundColor,
             border: "none",
             padding: 0,
             margin: 0,
+            color: colors.textColor,
           }}
         >
           {/* Messages area - takes remaining space above input */}
           <div
             className={`flex-1 overflow-y-auto p-4 space-y-4 min-h-0 ${isEmbedded ? "embedded-messages-area" : ""}`}
+            style={{
+              backgroundColor: colors.backgroundColor,
+              color: colors.textColor,
+            }}
           >
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <h3 className="font-medium mb-2">No messages yet</h3>
-                  <p className="text-sm">
+                <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
+                  <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
+                  <h3 className="font-medium mb-2" style={{ color: colors.textColor }}>No messages yet</h3>
+                  <p className="text-sm" style={{ color: colors.textColor, opacity: 0.7 }}>
                     Start a conversation or go to Home to choose a topic
                   </p>
                 </div>
@@ -518,9 +548,22 @@ export default function TabbedChatInterface({
           </div>
 
           {/* Input area - fixed height */}
-          <div className="border-t border-neutral-200 px-4 py-1 bg-white flex-shrink-0">
+          <div 
+            className="border-t px-4 py-1 flex-shrink-0"
+            style={{
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.textColor + '30', // Add transparency to border
+            }}
+          >
             <div className="flex items-center space-x-3">
-              <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
+              <button 
+                className="transition-colors"
+                style={{ 
+                  color: colors.textColor + '80', // Semi-transparent
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = colors.textColor}
+                onMouseLeave={(e) => e.currentTarget.style.color = colors.textColor + '80'}
+              >
                 <Paperclip className="h-5 w-5" />
               </button>
 
@@ -531,9 +574,12 @@ export default function TabbedChatInterface({
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="send-input rounded-full pr-12 border-neutral-300 focus:ring-2 focus:border-transparent"
+                  className="send-input rounded-full pr-12 focus:ring-2 focus:border-transparent"
                   style={{
-                    '--tw-ring-color': 'var(--chat-primary-color, var(--primary))'
+                    backgroundColor: colors.backgroundColor === 'var(--background)' ? 'white' : colors.backgroundColor,
+                    color: colors.textColor,
+                    borderColor: colors.textColor + '40',
+                    '--tw-ring-color': colors.primaryColor
                   } as React.CSSProperties}
                   disabled={isLoading}
                 />
@@ -543,8 +589,9 @@ export default function TabbedChatInterface({
                   size="sm"
                   className="send-button absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
                   style={{
-                    backgroundColor: 'var(--chat-primary-color, var(--primary))',
-                    borderColor: 'var(--chat-primary-color, var(--primary))'
+                    backgroundColor: colors.primaryColor,
+                    borderColor: colors.primaryColor,
+                    color: 'white'
                   }}
                 >
                   <Send className="h-4 w-4" />
@@ -556,22 +603,43 @@ export default function TabbedChatInterface({
       </div>
 
       {/* Tab Navigation - at bottom */}
-      <TabsList className="grid w-full grid-cols-2 h-12 bg-transparent p-0.5">
+      <TabsList 
+        className="grid w-full grid-cols-2 h-12 p-0.5"
+        style={{
+          backgroundColor: colors.backgroundColor,
+        }}
+      >
         <TabsTrigger
           value="home"
-          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
+          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent"
+          style={{
+            color: activeTab === 'home' ? colors.primaryColor : colors.textColor + '80',
+            borderColor: activeTab === 'home' ? colors.primaryColor : 'transparent',
+            backgroundColor: activeTab === 'home' ? colors.primaryColor + '10' : 'transparent',
+          }}
         >
           <Home className="h-4 w-4" />
           <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
         </TabsTrigger>
         <TabsTrigger
           value="chat"
-          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5"
+          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent"
+          style={{
+            color: activeTab === 'chat' ? colors.primaryColor : colors.textColor + '80',
+            borderColor: activeTab === 'chat' ? colors.primaryColor : 'transparent',
+            backgroundColor: activeTab === 'chat' ? colors.primaryColor + '10' : 'transparent',
+          }}
         >
           <MessageCircle className="h-4 w-4" />
           <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
           {messages.length > 0 && (
-            <span className="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+            <span 
+              className="text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center"
+              style={{
+                backgroundColor: colors.primaryColor,
+                color: 'white'
+              }}
+            >
               {messages.length}
             </span>
           )}
