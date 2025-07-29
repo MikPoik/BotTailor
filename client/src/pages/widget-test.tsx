@@ -42,39 +42,35 @@ export default function WidgetTest() {
   useEffect(() => {
     if (!selectedChatbot || !user) return;
 
-    // Clean up any existing widgets
+    // Clean up any existing widgets using the reset method
     const cleanupExistingWidget = () => {
-      // Remove existing widget elements
-      const existingContainer = document.getElementById('chatwidget-container');
-      if (existingContainer) {
-        existingContainer.remove();
-      }
+      if ((window as any).ChatWidget && (window as any).ChatWidget.reset) {
+        // Use the built-in reset method
+        (window as any).ChatWidget.reset();
+      } else {
+        // Fallback manual cleanup if reset method not available
+        const elementsToRemove = [
+          'chatwidget-bubble',
+          'chatwidget-container', 
+          'chatwidget-overlay',
+          'chatwidget-mobile-iframe',
+          'chatwidget-theme-vars',
+          'chatwidget-styles',
+          'chatwidget-iframe',
+          'chatwidget-widget',
+          'chatwidget-animations'
+        ];
 
-      const existingOverlay = document.getElementById('chatwidget-overlay');
-      if (existingOverlay) {
-        existingOverlay.remove();
-      }
+        elementsToRemove.forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.remove();
+          }
+        });
 
-      const existingMobileIframe = document.getElementById('chatwidget-mobile-iframe');
-      if (existingMobileIframe) {
-        existingMobileIframe.remove();
-      }
-
-      // Remove existing theme styles
-      const existingThemeStyles = document.getElementById('chatwidget-theme-vars');
-      if (existingThemeStyles) {
-        existingThemeStyles.remove();
-      }
-
-      // Remove existing CSS
-      const existingCSS = document.getElementById('chatwidget-styles');
-      if (existingCSS) {
-        existingCSS.remove();
-      }
-
-      // Reset ChatWidget
-      if ((window as any).ChatWidget) {
-        (window as any).ChatWidget._initialized = false;
+        if ((window as any).ChatWidget) {
+          (window as any).ChatWidget._initialized = false;
+        }
       }
     };
 
@@ -93,22 +89,26 @@ export default function WidgetTest() {
       // Initialize widget after script loads
       const initWidget = () => {
         if ((window as any).ChatWidget) {
-          (window as any).ChatWidget.init({
-            apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
-            position: position as 'bottom-right' | 'bottom-left',
-            primaryColor: primaryColor,
-            backgroundColor: backgroundColor,
-            textColor: textColor
-          });
+          try {
+            (window as any).ChatWidget.init({
+              apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
+              position: position as 'bottom-right' | 'bottom-left',
+              primaryColor: primaryColor,
+              backgroundColor: backgroundColor,
+              textColor: textColor,
+              _forceReinit: true // Use the force reinit flag we added
+            });
+          } catch (error) {
+            console.log('Widget initialization error:', error);
+          }
+        } else {
+          // If ChatWidget is not available, try again in a short delay
+          setTimeout(initWidget, 50);
         }
       };
 
-      // Check if script is already loaded and execute, otherwise wait for load
-      if ((script as any).readyState === 'complete' || (script as any).readyState === 'loaded') {
-        initWidget();
-      } else {
-        script.onload = initWidget;
-      }
+      // Always call initWidget with a slight delay to ensure cleanup is complete
+      setTimeout(initWidget, 100);
     }, 100);
 
     // Cleanup function

@@ -15,8 +15,8 @@
     _initialized: false,
 
     init: function(options = {}) {
-      // Prevent multiple initializations
-      if (this._initialized) {
+      // Prevent multiple initializations (unless we're resetting)
+      if (this._initialized && !options._forceReinit) {
         return;
       }
 
@@ -773,6 +773,36 @@
 
     setConfig: function(options) {
       this.config = { ...this.config, ...options };
+    },
+
+    // Add reset method for reinitialization
+    reset: function() {
+      this._initialized = false;
+      
+      // Remove all widget elements  
+      const elementsToRemove = [
+        'chatwidget-bubble',
+        'chatwidget-container', 
+        'chatwidget-overlay',
+        'chatwidget-mobile-iframe',
+        'chatwidget-theme-vars',
+        'chatwidget-styles',
+        'chatwidget-iframe',
+        'chatwidget-widget',
+        'chatwidget-animations'
+      ];
+
+      elementsToRemove.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.remove();
+        }
+      });
+
+      // Clear internal state
+      delete this.widget;
+      delete this.bubble;
+      delete this._currentSession;
     }
   };
 
