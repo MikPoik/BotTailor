@@ -44,6 +44,7 @@ export default function UIDesigner() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [editableConfig, setEditableConfig] = useState<string>("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [configKey, setConfigKey] = useState(0); // Force re-render key
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -56,6 +57,7 @@ export default function UIDesigner() {
   useEffect(() => {
     if (chatbot?.homeScreenConfig) {
       setCurrentConfig(chatbot.homeScreenConfig as HomeScreenConfig);
+      setConfigKey(prev => prev + 1); // Force initial render
     }
   }, [chatbot]);
 
@@ -114,6 +116,7 @@ export default function UIDesigner() {
     },
     onSuccess: (data: { config: HomeScreenConfig }) => {
       setCurrentConfig(data.config);
+      setConfigKey(prev => prev + 1); // Force re-render
       setChatHistory(prev => [
         ...prev,
         {
@@ -144,8 +147,11 @@ export default function UIDesigner() {
       const response = await apiRequest("PATCH", `/api/chatbots/guid/${guid}`, { homeScreenConfig: config });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Update the chatbot data in cache and refresh queries
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/guid/${guid}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${guid}`] });
+      
       toast({
         title: "Configuration Saved",
         description: "Your home screen design has been saved successfully!",
@@ -215,6 +221,7 @@ export default function UIDesigner() {
       const parsedConfig = JSON.parse(editableConfig);
       setCurrentConfig(parsedConfig);
       setHasUnsavedChanges(false);
+      setConfigKey(prev => prev + 1); // Force re-render
       toast({
         title: "Configuration Applied",
         description: "Your changes have been applied to the preview!",
@@ -233,6 +240,7 @@ export default function UIDesigner() {
       const parsedConfig = JSON.parse(editableConfig);
       setCurrentConfig(parsedConfig);
       setHasUnsavedChanges(false);
+      setConfigKey(prev => prev + 1); // Force re-render
       saveConfigMutation.mutate(parsedConfig);
     } catch (error) {
       toast({
@@ -407,39 +415,37 @@ export default function UIDesigner() {
             <TabsContent value="code" className="flex-1">
               <Card className="h-full">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CardTitle>Configuration</CardTitle>
-                      {hasUnsavedChanges && (
-                        <Badge variant="destructive">Unsaved Changes</Badge>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {currentConfig && (
-                        <>
-                          <Button variant="outline" size="sm" onClick={handleCopyConfig}>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={handleApplyConfig}
-                            disabled={!hasUnsavedChanges}
-                          >
-                            Apply to Preview
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={handleApplyAndSave}
-                            disabled={saveConfigMutation.isPending || !hasUnsavedChanges}
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Apply & Save
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CardTitle>Configuration</CardTitle>
+                    {hasUnsavedChanges && (
+                      <Badge variant="destructive">Unsaved Changes</Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    {currentConfig && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={handleCopyConfig}>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleApplyConfig}
+                          disabled={!hasUnsavedChanges}
+                        >
+                          Apply to Preview
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={handleApplyAndSave}
+                          disabled={saveConfigMutation.isPending || !hasUnsavedChanges}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Apply & Save
+                        </Button>
+                      </>
+                    )}
                   </div>
                   <CardDescription>
                     Edit the JSON configuration directly. Use "Apply to Preview" to see changes, or "Apply & Save" to update and save permanently. Press Ctrl+S to save quickly.
@@ -483,6 +489,7 @@ export default function UIDesigner() {
                 <div className="h-[500px] overflow-y-auto">
                   {currentConfig ? (
                     <DynamicHomeScreen 
+                      key={configKey}
                       config={currentConfig}
                       onTopicClick={handleTopicClick}
                       onActionClick={(action) => console.log('Action:', action)}
