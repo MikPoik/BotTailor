@@ -15,6 +15,13 @@ interface ChatbotConfig {
   name: string;
   description: string;
   isActive: boolean;
+  homeScreenConfig?: {
+    theme?: {
+      primaryColor?: string;
+      backgroundColor?: string;
+      textColor?: string;
+    };
+  };
 }
 
 export default function WidgetTest() {
@@ -26,6 +33,12 @@ export default function WidgetTest() {
   const { data: chatbots } = useQuery<ChatbotConfig[]>({
     queryKey: ['/api/chatbots'],
     enabled: isAuthenticated,
+  });
+
+  // Fetch detailed config for selected chatbot to get theme colors
+  const { data: selectedChatbotConfig } = useQuery<ChatbotConfig>({
+    queryKey: [`/api/chatbots/${selectedChatbot}`],
+    enabled: isAuthenticated && !!selectedChatbot,
   });
 
   // Auto-select first chatbot when available
@@ -87,11 +100,22 @@ export default function WidgetTest() {
       const initWidget = () => {
         if ((window as any).ChatWidget) {
           try {
-            (window as any).ChatWidget.init({
+            // Get theme colors from the chatbot configuration
+            const theme = selectedChatbotConfig?.homeScreenConfig?.theme;
+            const widgetConfig: any = {
               apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
               position: position as 'bottom-right' | 'bottom-left',
               _forceReinit: true // Use the force reinit flag we added
-            });
+            };
+
+            // Apply theme colors from UI Designer if available
+            if (theme) {
+              if (theme.primaryColor) widgetConfig.primaryColor = theme.primaryColor;
+              if (theme.backgroundColor) widgetConfig.backgroundColor = theme.backgroundColor;
+              if (theme.textColor) widgetConfig.textColor = theme.textColor;
+            }
+
+            (window as any).ChatWidget.init(widgetConfig);
           } catch (error) {
             console.log('Widget initialization error:', error);
           }
@@ -110,7 +134,7 @@ export default function WidgetTest() {
       clearTimeout(timer);
       cleanupExistingWidget();
     };
-  }, [selectedChatbot, user, position, widgetKey]);
+  }, [selectedChatbot, user, position, widgetKey, selectedChatbotConfig]);
 
   const refreshWidget = () => {
     setWidgetKey(prev => prev + 1);
@@ -119,11 +143,34 @@ export default function WidgetTest() {
   const generateEmbedCode = () => {
     if (!selectedChatbot || !user) return "";
 
+    // Get theme colors from the chatbot configuration
+    const theme = selectedChatbotConfig?.homeScreenConfig?.theme;
+    
+    // Build the configuration object
+    const config = {
+      apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
+      position: position
+    };
+
+    // Add theme colors if available
+    const themeParams: string[] = [];
+    if (theme) {
+      if (theme.primaryColor) themeParams.push(`    primaryColor: '${theme.primaryColor}'`);
+      if (theme.backgroundColor) themeParams.push(`    backgroundColor: '${theme.backgroundColor}'`);
+      if (theme.textColor) themeParams.push(`    textColor: '${theme.textColor}'`);
+    }
+
+    const baseParams = [
+      `    apiUrl: '${config.apiUrl}'`,
+      `    position: '${config.position}'`
+    ];
+
+    const allParams = [...baseParams, ...themeParams].join(',\n');
+
     return `<script src="${window.location.origin}/embed.js"></script>
 <script>
   ChatWidget.init({
-    apiUrl: '${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}',
-    position: '${position}'
+${allParams}
   });
 </script>`;
   };
