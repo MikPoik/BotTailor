@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/navbar";
 import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
-import Landing from "@/pages/landing";
+
 import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
 import ChatbotForm from "@/pages/chatbot-form";
@@ -49,7 +49,6 @@ function AuthenticatedRouter() {
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Home} />
-          <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
         </>
@@ -63,7 +62,6 @@ function AuthenticatedRouter() {
           <Route path="/chatbots/:guid/ui-designer" component={UIDesigner} />
           <Route path="/chatbots/:chatbotId/surveys" component={SurveyBuilder} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
-          <Route path="/landing" component={Landing} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
           <Route path="/widget-test" component={WidgetTest} />
