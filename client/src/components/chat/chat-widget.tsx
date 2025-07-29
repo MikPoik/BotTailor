@@ -33,8 +33,11 @@ export default function ChatWidget({
   const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
   const isEmbedded = injectedConfig?.embedded || false;
 
+  // Get chatbot config ID from injected config or props
+  const chatbotConfigId = injectedConfig?.chatbotConfig?.id || chatbotConfig?.id;
+
   // Preload chat data in background when widget mounts
-  const { isSessionLoading, isMessagesLoading } = useChat(sessionId);
+  const { isSessionLoading, isMessagesLoading } = useChat(sessionId, chatbotConfigId);
 
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
@@ -285,6 +288,7 @@ export default function ChatWidget({
               sessionId={sessionId} 
               isMobile={true} 
               isPreloaded={!isSessionLoading && !isMessagesLoading}
+              chatbotConfigId={chatbotConfigId}
               chatbotConfig={chatbotConfig}
             />
           </div>
@@ -344,6 +348,7 @@ export default function ChatWidget({
             isMobile={false} 
             isPreloaded={!isSessionLoading && !isMessagesLoading}
             isEmbedded={true}
+            chatbotConfigId={chatbotConfigId}
             chatbotConfig={chatbotConfig}
           />
         </div>
@@ -426,6 +431,7 @@ export default function ChatWidget({
               sessionId={sessionId} 
               isMobile={isMobile}
               isPreloaded={!isSessionLoading && !isMessagesLoading}
+              chatbotConfigId={chatbotConfigId}
               chatbotConfig={chatbotConfig}
             />
           </div>

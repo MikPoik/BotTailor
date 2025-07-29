@@ -22,6 +22,8 @@ This is a full-stack React chat widget application built with Express.js backend
   - Colors configured in UI Designer Theme tab now apply immediately to preview and are included in AI generation prompts
   - **ENHANCED WIDGET TEST PAGE**: Widget Test now loads theme colors from database homeScreenConfig for authentic testing
   - Widget Test page applies designed colors to both preview widget and generated embed code
+  - **FIXED CHATBOT CONFIGURATION**: Fixed Widget Test to use correct chatbot configuration instead of defaulting to environment variable
+  - Widget now properly passes chatbotConfigId from injected config to ensure correct system prompt and behavior
   - Ensures complete brand consistency when widgets are embedded with specific color requirements
   - Both Home and Chat tabs now respect the same color priority system for unified theming
 - **July 29, 2025**: Enhanced Widget Theming System with Complete Color Support:
