@@ -22,6 +22,8 @@ export default function WidgetTest() {
   const [selectedChatbot, setSelectedChatbot] = useState<string>("");
   const [position, setPosition] = useState<string>("bottom-right");
   const [primaryColor, setPrimaryColor] = useState<string>("#2563eb");
+  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
+  const [textColor, setTextColor] = useState<string>("#1f2937");
   const [widgetKey, setWidgetKey] = useState<number>(0);
 
   const { data: chatbots } = useQuery<ChatbotConfig[]>({
@@ -40,46 +42,81 @@ export default function WidgetTest() {
   useEffect(() => {
     if (!selectedChatbot || !user) return;
 
-    // Remove existing widget if any
-    const existingContainer = document.getElementById('chatwidget-container');
-    if (existingContainer) {
-      existingContainer.remove();
-    }
+    // Clean up any existing widgets
+    const cleanupExistingWidget = () => {
+      // Remove existing widget elements
+      const existingContainer = document.getElementById('chatwidget-container');
+      if (existingContainer) {
+        existingContainer.remove();
+      }
 
-    // Remove existing overlay and mobile iframe
-    const existingOverlay = document.getElementById('chatwidget-overlay');
-    if (existingOverlay) {
-      existingOverlay.remove();
-    }
+      const existingOverlay = document.getElementById('chatwidget-overlay');
+      if (existingOverlay) {
+        existingOverlay.remove();
+      }
 
-    const existingMobileIframe = document.getElementById('chatwidget-mobile-iframe');
-    if (existingMobileIframe) {
-      existingMobileIframe.remove();
-    }
+      const existingMobileIframe = document.getElementById('chatwidget-mobile-iframe');
+      if (existingMobileIframe) {
+        existingMobileIframe.remove();
+      }
 
-    // Load embed script
-    const script = document.createElement('script');
-    script.src = '/embed.js';
-    script.onload = () => {
-      // Initialize widget after script loads
+      // Remove existing theme styles
+      const existingThemeStyles = document.getElementById('chatwidget-theme-vars');
+      if (existingThemeStyles) {
+        existingThemeStyles.remove();
+      }
+
+      // Remove existing CSS
+      const existingCSS = document.getElementById('chatwidget-styles');
+      if (existingCSS) {
+        existingCSS.remove();
+      }
+
+      // Reset ChatWidget
       if ((window as any).ChatWidget) {
-        (window as any).ChatWidget.init({
-          apiUrl: `${window.location.origin}/widget/${user.id}/${selectedChatbot}`,
-          position: position as 'bottom-right' | 'bottom-left',
-          primaryColor: primaryColor
-        });
+        (window as any).ChatWidget._initialized = false;
       }
     };
 
-    document.head.appendChild(script);
+    cleanupExistingWidget();
+
+    // Small delay to ensure cleanup is complete
+    const timer = setTimeout(() => {
+      // Load embed script only if not already loaded
+      let script = document.querySelector('script[src="/embed.js"]') as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.src = '/embed.js';
+        document.head.appendChild(script);
+      }
+
+      // Initialize widget after script loads
+      const initWidget = () => {
+        if ((window as any).ChatWidget) {
+          (window as any).ChatWidget.init({
+            apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
+            position: position as 'bottom-right' | 'bottom-left',
+            primaryColor: primaryColor,
+            backgroundColor: backgroundColor,
+            textColor: textColor
+          });
+        }
+      };
+
+      // Check if script is already loaded and execute, otherwise wait for load
+      if ((script as any).readyState === 'complete' || (script as any).readyState === 'loaded') {
+        initWidget();
+      } else {
+        script.onload = initWidget;
+      }
+    }, 100);
 
     // Cleanup function
     return () => {
-      if (script && script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
+      clearTimeout(timer);
+      cleanupExistingWidget();
     };
-  }, [selectedChatbot, user, position, primaryColor, widgetKey]);
+  }, [selectedChatbot, user, position, primaryColor, backgroundColor, textColor, widgetKey]);
 
   const refreshWidget = () => {
     setWidgetKey(prev => prev + 1);
@@ -91,9 +128,11 @@ export default function WidgetTest() {
     return `<script src="${window.location.origin}/embed.js"></script>
 <script>
   ChatWidget.init({
-    apiUrl: '${window.location.origin}/widget/${user.id}/${selectedChatbot}',
+    apiUrl: '${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}',
     position: '${position}',
-    primaryColor: '${primaryColor}'
+    primaryColor: '${primaryColor}',
+    backgroundColor: '${backgroundColor}',
+    textColor: '${textColor}'
   });
 </script>`;
   };
@@ -145,12 +184,34 @@ export default function WidgetTest() {
             </div>
 
             <div>
-              <Label htmlFor="color-input">Primary Color</Label>
+              <Label htmlFor="primary-color-input">Primary Color</Label>
               <Input
-                id="color-input"
+                id="primary-color-input"
                 type="color"
                 value={primaryColor}
                 onChange={(e) => setPrimaryColor(e.target.value)}
+                className="h-10"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="background-color-input">Background Color</Label>
+              <Input
+                id="background-color-input"
+                type="color"
+                value={backgroundColor}
+                onChange={(e) => setBackgroundColor(e.target.value)}
+                className="h-10"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="text-color-input">Text Color</Label>
+              <Input
+                id="text-color-input"
+                type="color"
+                value={textColor}
+                onChange={(e) => setTextColor(e.target.value)}
                 className="h-10"
               />
             </div>

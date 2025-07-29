@@ -6,6 +6,15 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 29, 2025**: Enhanced Widget Theming System with Complete Color Support:
+  - Added full theme configuration support (primaryColor, backgroundColor, textColor) to embed.js
+  - Updated widget test page with all three color controls and fixed reload loop issue
+  - Enhanced embed.css with comprehensive theme variables for consistent styling
+  - Added CSS variable injection to parent page for proper theme application
+  - Fixed missing PATCH API route for UI designer updates (/api/chatbots/guid/:guid)
+  - Implemented dynamic color calculation for light/dark theme variants in embedded widgets
+  - External widget embedding now supports: primaryColor, backgroundColor, textColor parameters
+  - Widget test page now includes all color controls and prevents infinite reload loops
 - **July 29, 2025**: Added Email Configuration for Form Submissions:
   - Added email configuration fields to chatbot schema (recipient & sender settings)
   - Updated chatbot edit form with email configuration section
