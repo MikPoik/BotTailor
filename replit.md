@@ -6,7 +6,7 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
-- **July 29, 2025**: Implemented Complete Color Priority System for Consistent Widget Theming:
+- **July 29, 2025**: Implemented Complete Color Priority System and Migrated Color Controls to UI Designer:
   - Created color resolution system that prioritizes embed parameters over UI Designer theme colors
   - Updated DynamicHomeScreen component to use resolved colors for consistent styling
   - Modified all UI Designer components (Header, Topics, Quick Actions, etc.) to respect embed color parameters
@@ -15,6 +15,11 @@ This is a full-stack React chat widget application built with Express.js backend
   - Fixed discrepancy where UI Designer theme colors would override embed parameters across all tabs
   - Embed parameters (textColor, backgroundColor, primaryColor) now consistently take precedence throughout widget
   - Added fallback logic: embed parameters → UI Designer theme → default CSS values
+  - **MIGRATED COLOR CONTROLS**: Moved color customization from Widget Test page to UI Designer page
+  - Added new "Theme" tab in UI Designer with comprehensive color controls (primary, background, text)
+  - Integrated theme colors into AI prompts so generated designs automatically use brand colors
+  - Updated Widget Test page to focus purely on testing functionality (chatbot selection, position, embed code)
+  - Colors configured in UI Designer Theme tab now apply immediately to preview and are included in AI generation prompts
   - Ensures complete brand consistency when widgets are embedded with specific color requirements
   - Both Home and Chat tabs now respect the same color priority system for unified theming
 - **July 29, 2025**: Enhanced Widget Theming System with Complete Color Support:

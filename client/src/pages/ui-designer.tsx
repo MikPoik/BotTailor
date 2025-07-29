@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -21,7 +22,8 @@ import {
   MessageSquare, 
   Wand2, 
   Download,
-  RefreshCw
+  RefreshCw,
+  Palette
 } from "lucide-react";
 import type { HomeScreenConfig, ChatbotConfig } from "@shared/schema";
 
@@ -45,6 +47,11 @@ export default function UIDesigner() {
   const [editableConfig, setEditableConfig] = useState<string>("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [configKey, setConfigKey] = useState(0); // Force re-render key
+  
+  // Theme color states
+  const [primaryColor, setPrimaryColor] = useState<string>("#2563eb");
+  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
+  const [textColor, setTextColor] = useState<string>("#1f2937");
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -68,6 +75,14 @@ export default function UIDesigner() {
       setHasUnsavedChanges(false);
     }
   }, [currentConfig]);
+
+  // Apply theme colors to CSS variables
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--chat-primary-color', primaryColor);
+    root.style.setProperty('--chat-background', backgroundColor);
+    root.style.setProperty('--chat-text', textColor);
+  }, [primaryColor, backgroundColor, textColor]);
 
   // Track unsaved changes
   useEffect(() => {
@@ -178,9 +193,19 @@ export default function UIDesigner() {
     setChatHistory(prev => [...prev, userMessage]);
     setIsGenerating(true);
     
+    // Include current theme colors in the prompt context
+    const enhancedPrompt = `${prompt}
+
+Current Theme Colors:
+- Primary Color: ${primaryColor}
+- Background Color: ${backgroundColor}  
+- Text Color: ${textColor}
+
+Please consider these colors when generating the UI design to ensure visual consistency.`;
+    
     try {
       await generateUIMutation.mutateAsync({
-        prompt,
+        prompt: enhancedPrompt,
         currentConfig: currentConfig || undefined,
       });
     } finally {
@@ -326,10 +351,14 @@ export default function UIDesigner() {
         {/* Left Panel - Chat & Code */}
         <div className="flex flex-col">
           <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="chat" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 Chat
+              </TabsTrigger>
+              <TabsTrigger value="theme" className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                Theme
               </TabsTrigger>
               <TabsTrigger value="code" className="flex items-center gap-2">
                 <Code className="h-4 w-4" />
@@ -406,6 +435,127 @@ export default function UIDesigner() {
                     >
                       <Send className="h-4 w-4" />
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Theme Tab */}
+            <TabsContent value="theme" className="flex-1">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    Theme Colors
+                  </CardTitle>
+                  <CardDescription>
+                    Customize the widget colors that will be applied to your design and included in AI prompts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="primary-color">Primary Color</Label>
+                      <div className="flex items-center space-x-3 mt-2">
+                        <Input
+                          id="primary-color"
+                          type="color"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                          className="w-16 h-10 p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                          className="flex-1"
+                          placeholder="#2563eb"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Used for buttons, links, and accent elements
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="background-color">Background Color</Label>
+                      <div className="flex items-center space-x-3 mt-2">
+                        <Input
+                          id="background-color"
+                          type="color"
+                          value={backgroundColor}
+                          onChange={(e) => setBackgroundColor(e.target.value)}
+                          className="w-16 h-10 p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={backgroundColor}
+                          onChange={(e) => setBackgroundColor(e.target.value)}
+                          className="flex-1"
+                          placeholder="#ffffff"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Main background color of the widget
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="text-color">Text Color</Label>
+                      <div className="flex items-center space-x-3 mt-2">
+                        <Input
+                          id="text-color"
+                          type="color"
+                          value={textColor}
+                          onChange={(e) => setTextColor(e.target.value)}
+                          className="w-16 h-10 p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={textColor}
+                          onChange={(e) => setTextColor(e.target.value)}
+                          className="flex-1"
+                          placeholder="#1f2937"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Primary text color throughout the widget
+                      </p>
+                    </div>
+                  </div>
+
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Preview</h4>
+                    <div 
+                      className="border rounded-lg p-4 space-y-3"
+                      style={{
+                        backgroundColor: backgroundColor,
+                        color: textColor,
+                      }}
+                    >
+                      <div className="font-medium">Widget Preview</div>
+                      <p className="text-sm opacity-80">
+                        This is how your text will appear with the current color scheme.
+                      </p>
+                      <Button 
+                        size="sm"
+                        style={{
+                          backgroundColor: primaryColor,
+                          borderColor: primaryColor,
+                          color: backgroundColor,
+                        }}
+                      >
+                        Primary Button
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground bg-muted p-3 rounded-lg">
+                    <strong>Note:</strong> These colors will be automatically included in your AI prompts 
+                    to ensure generated designs match your brand colors. The colors also apply immediately 
+                    to the preview on the right.
                   </div>
                 </CardContent>
               </Card>

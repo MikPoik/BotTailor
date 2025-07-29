@@ -21,9 +21,6 @@ export default function WidgetTest() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [selectedChatbot, setSelectedChatbot] = useState<string>("");
   const [position, setPosition] = useState<string>("bottom-right");
-  const [primaryColor, setPrimaryColor] = useState<string>("#2563eb");
-  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
-  const [textColor, setTextColor] = useState<string>("#1f2937");
   const [widgetKey, setWidgetKey] = useState<number>(0);
 
   const { data: chatbots } = useQuery<ChatbotConfig[]>({
@@ -93,9 +90,6 @@ export default function WidgetTest() {
             (window as any).ChatWidget.init({
               apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
               position: position as 'bottom-right' | 'bottom-left',
-              primaryColor: primaryColor,
-              backgroundColor: backgroundColor,
-              textColor: textColor,
               _forceReinit: true // Use the force reinit flag we added
             });
           } catch (error) {
@@ -116,7 +110,7 @@ export default function WidgetTest() {
       clearTimeout(timer);
       cleanupExistingWidget();
     };
-  }, [selectedChatbot, user, position, primaryColor, backgroundColor, textColor, widgetKey]);
+  }, [selectedChatbot, user, position, widgetKey]);
 
   const refreshWidget = () => {
     setWidgetKey(prev => prev + 1);
@@ -129,10 +123,7 @@ export default function WidgetTest() {
 <script>
   ChatWidget.init({
     apiUrl: '${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}',
-    position: '${position}',
-    primaryColor: '${primaryColor}',
-    backgroundColor: '${backgroundColor}',
-    textColor: '${textColor}'
+    position: '${position}'
   });
 </script>`;
   };
@@ -181,39 +172,6 @@ export default function WidgetTest() {
                   <SelectItem value="bottom-left">Bottom Left</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="primary-color-input">Primary Color</Label>
-              <Input
-                id="primary-color-input"
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="h-10"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="background-color-input">Background Color</Label>
-              <Input
-                id="background-color-input"
-                type="color"
-                value={backgroundColor}
-                onChange={(e) => setBackgroundColor(e.target.value)}
-                className="h-10"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="text-color-input">Text Color</Label>
-              <Input
-                id="text-color-input"
-                type="color"
-                value={textColor}
-                onChange={(e) => setTextColor(e.target.value)}
-                className="h-10"
-              />
             </div>
 
             <Separator />
@@ -293,9 +251,12 @@ export default function WidgetTest() {
               <ul className="text-sm text-neutral-600 space-y-1">
                 <li>• Select different chatbots</li>
                 <li>• Change widget position</li>
-                <li>• Customize primary color</li>
                 <li>• Copy embed code for external sites</li>
               </ul>
+              <p className="text-sm text-neutral-600 mt-4 p-3 bg-blue-50 rounded-lg">
+                <strong>Note:</strong> To customize colors and themes, use the UI Designer page. 
+                Colors configured there will automatically apply to the widget and be included in AI prompts.
+              </p>
             </div>
           </div>
 
