@@ -208,7 +208,7 @@
     height: 85vh;
     min-height: 700px;
     max-height: 90vh;
-    animation: chatWidgetOpen 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
 
   /* Embedded widget styling */
@@ -344,7 +344,7 @@
 @keyframes chatWidgetOpen {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(20px);
+    transform: scale(0.9) translateY(30px);
   }
   to {
     opacity: 1;

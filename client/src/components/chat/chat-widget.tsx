@@ -206,7 +206,7 @@ export default function ChatWidget({
           isMobile 
             ? 'fixed inset-4 z-50' 
             : 'w-[450px]'
-        }`} style={!isMobile ? { height: '75vh', maxHeight: '800px', minHeight: '600px', animation: 'chatWidgetOpen 0.4s cubic-bezier(0.16, 1, 0.3, 1)' } : {}}>
+        }`} style={!isMobile ? { height: '75vh', maxHeight: '800px', minHeight: '600px', animation: 'chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)' } : {}}>
           {/* Chat header */}
           <div 
             className="text-white p-3 flex items-center justify-between flex-shrink-0"
