@@ -47,28 +47,37 @@ interface ComponentRegistryProps {
   component: HomeScreenComponent;
   onTopicClick?: (topic: any) => void;
   onActionClick?: (action: any) => void;
+  resolvedColors?: {
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+  };
 }
 
 // Header Component
-export function HeaderComponent({ component }: ComponentRegistryProps) {
+export function HeaderComponent({ component, resolvedColors }: ComponentRegistryProps) {
   const { title, subtitle, style } = component.props;
+  
+  // Use resolved colors with fallback to component style
+  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
+  const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
 
   return (
     <div 
       className="bg-white border-b border-neutral-200 p-6"
       style={{
-        backgroundColor: style?.backgroundColor || 'white',
-        color: style?.textColor,
+        backgroundColor,
+        color: textColor,
       }}
     >
       <div className="text-center">
         {title && (
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold mb-2" style={{ color: textColor }}>
             {title}
           </h2>
         )}
         {subtitle && (
-          <p className="text-gray-600">
+          <p style={{ color: textColor, opacity: 0.8 }}>
             {subtitle}
           </p>
         )}
@@ -78,11 +87,15 @@ export function HeaderComponent({ component }: ComponentRegistryProps) {
 }
 
 // Category Tabs Component
-export function CategoryTabsComponent({ component }: ComponentRegistryProps) {
+export function CategoryTabsComponent({ component, resolvedColors }: ComponentRegistryProps) {
   const { categories } = component.props;
   const [selectedCategory, setSelectedCategory] = React.useState(categories?.[0] || 'all');
 
   if (!categories || categories.length === 0) return null;
+  
+  // Use resolved colors
+  const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
+  const textColor = resolvedColors?.textColor || 'inherit';
 
   return (
     <div className="flex gap-2 px-4 py-2 overflow-x-auto">
@@ -93,6 +106,11 @@ export function CategoryTabsComponent({ component }: ComponentRegistryProps) {
           size="sm"
           className="flex-shrink-0"
           onClick={() => setSelectedCategory(category)}
+          style={{
+            backgroundColor: selectedCategory === category ? primaryColor : 'transparent',
+            color: selectedCategory === category ? 'white' : textColor,
+            borderColor: primaryColor,
+          }}
         >
           {category.charAt(0).toUpperCase() + category.slice(1)}
         </Button>
@@ -102,7 +120,7 @@ export function CategoryTabsComponent({ component }: ComponentRegistryProps) {
 }
 
 // Topic Grid Component
-export function TopicGridComponent({ component, onTopicClick }: ComponentRegistryProps) {
+export function TopicGridComponent({ component, onTopicClick, resolvedColors }: ComponentRegistryProps) {
   const { topics, style } = component.props;
   const layout = style?.layout || 'grid';
   const columns = style?.columns || 2;
@@ -112,6 +130,11 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
   const gridClass = layout === 'grid' 
     ? `grid grid-cols-1 gap-3`
     : 'space-y-3';
+    
+  // Use resolved colors with fallback to component style
+  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
+  const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
+  const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
 
   // Category colors similar to original design
   const categoryColors = {
@@ -123,27 +146,28 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
 
   return (
     <div className="p-4 space-y-3">
-      <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+      <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
         Topics
       </h3>
       <div className={gridClass}>
         {topics.map((topic) => (
           <div 
             key={topic.id}
-            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-primary rounded-lg border bg-white shadow-sm p-4"
+            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border bg-white shadow-sm p-4"
             onClick={() => onTopicClick?.(topic)}
             style={{
-              backgroundColor: style?.backgroundColor || 'white',
-              color: style?.textColor,
+              backgroundColor,
+              color: textColor,
+              borderLeftColor: primaryColor,
             }}
           >
             <div className="flex items-start gap-3">
-              <div className="text-primary mt-1">
+              <div className="mt-1" style={{ color: primaryColor }}>
                 {getIcon(topic.icon)}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-gray-900">{topic.title}</h4>
+                  <h4 className="font-medium" style={{ color: textColor }}>{topic.title}</h4>
                   {topic.category && (
                     <span className={`text-xs px-2 py-1 rounded-full border ${categoryColors[topic.category as keyof typeof categoryColors] || categoryColors.general}`}>
                       {topic.category}
@@ -153,7 +177,7 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
                     <Badge variant="secondary" className="text-xs">Popular</Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-600">{topic.description}</p>
+                <p className="text-sm" style={{ color: textColor, opacity: 0.8 }}>{topic.description}</p>
               </div>
             </div>
           </div>
@@ -164,37 +188,37 @@ export function TopicGridComponent({ component, onTopicClick }: ComponentRegistr
 }
 
 // Quick Actions Component
-export function QuickActionsComponent({ component, onActionClick }: ComponentRegistryProps) {
+export function QuickActionsComponent({ component, onActionClick, resolvedColors }: ComponentRegistryProps) {
   const { actions, style } = component.props;
 
   if (!actions || actions.length === 0) return null;
+  
+  // Use resolved colors with fallback to component style
+  const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
+  const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
 
   return (
     <div className="p-4 space-y-3">
-      <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+      <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
         Quick Actions
       </h3>
       <div className="grid grid-cols-1 gap-3">
         {actions.map((action, index) => (
-          
           <Button
             key={action.id}
             variant={index === 0 ? "default" : "outline"}
-            className={`h-auto p-4 justify-start ${
-              index === 0 
-                ? "bg-primary hover:bg-primary/90 text-white" 
-                : ""
-            }`}
+            className="h-auto p-4 justify-start"
             onClick={() => onActionClick?.(action)}
             style={{
-              backgroundColor: index === 0 ? undefined : style?.backgroundColor,
-              color: index === 0 ? undefined : style?.textColor,
+              backgroundColor: index === 0 ? primaryColor : 'transparent',
+              color: index === 0 ? 'white' : textColor,
+              borderColor: index === 0 ? primaryColor : textColor,
             }}
           >
             {getIcon(action.icon || 'MessageCircle')}
             <div className="text-left ml-3">
               <div className="font-medium">{action.title}</div>
-              <div className={`text-xs ${index === 0 ? 'opacity-90' : 'text-gray-600'}`}>
+              <div className="text-xs" style={{ opacity: 0.8 }}>
                 {action.description}
               </div>
             </div>
@@ -206,19 +230,23 @@ export function QuickActionsComponent({ component, onActionClick }: ComponentReg
 }
 
 // Footer Component
-export function FooterComponent({ component }: ComponentRegistryProps) {
+export function FooterComponent({ component, resolvedColors }: ComponentRegistryProps) {
   const { title, style } = component.props;
+  
+  // Use resolved colors with fallback to component style
+  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor;
+  const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
 
   return (
     <div 
       className="text-center py-4 px-4 border-t"
       style={{
-        backgroundColor: style?.backgroundColor,
-        color: style?.textColor,
+        backgroundColor,
+        color: textColor,
       }}
     >
       {title && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm" style={{ color: textColor, opacity: 0.7 }}>
           {title}
         </p>
       )}
@@ -238,7 +266,12 @@ const ComponentRegistry = {
 export function renderComponent(
   component: HomeScreenComponent, 
   onTopicClick?: (topic: any) => void,
-  onActionClick?: (action: any) => void
+  onActionClick?: (action: any) => void,
+  resolvedColors?: {
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+  }
 ) {
   const ComponentToRender = ComponentRegistry[component.type];
 
@@ -253,6 +286,7 @@ export function renderComponent(
       component={component}
       onTopicClick={onTopicClick}
       onActionClick={onActionClick}
+      resolvedColors={resolvedColors}
     />
   );
 }
