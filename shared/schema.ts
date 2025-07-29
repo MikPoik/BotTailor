@@ -161,6 +161,10 @@ export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick
   fallbackMessage: true,
   homeScreenConfig: true,
   initialMessages: true,
+  formRecipientEmail: true,
+  formRecipientName: true,
+  senderEmail: true,
+  senderName: true,
 });
 
 export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({

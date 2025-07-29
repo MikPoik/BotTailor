@@ -6,6 +6,13 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **July 29, 2025**: Added Email Configuration for Form Submissions:
+  - Added email configuration fields to chatbot schema (recipient & sender settings)
+  - Updated chatbot edit form with email configuration section
+  - Modified form submission API to use configured email settings from chatbot config
+  - Fixed database schema validation to include new email fields in insert operations
+  - Form submissions now use chatbot-specific email addresses instead of hardcoded defaults
+  - Email settings include: formRecipientEmail, formRecipientName, senderEmail, senderName
 - **July 28, 2025**: Fixed Widget URL Validation to Prevent Incorrect API Access:
   - Added route guard to block incorrect widget URLs (replit.app/userId/chatbotGuid) and return proper error
   - Enhanced embed.js to validate API URLs contain proper /widget/ path before showing chat bubble
