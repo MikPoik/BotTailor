@@ -152,7 +152,14 @@ export default function UIDesigner() {
 
   const handleSaveConfig = () => {
     if (currentConfig) {
-      saveConfigMutation.mutate(currentConfig);
+      try {
+        // Parse the current editable config to ensure we're saving the latest changes
+        const configToSave = JSON.parse(editableConfig);
+        saveConfigMutation.mutate(configToSave);
+      } catch (error) {
+        // Fallback to currentConfig if parsing fails
+        saveConfigMutation.mutate(currentConfig);
+      }
     }
   };
 
