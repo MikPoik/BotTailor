@@ -236,6 +236,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
             onOptionSelect={handleOptionSelect}
             onQuickReply={handleQuickReply}
             chatbotConfig={chatbotConfig}
+            sessionId={sessionId}
           />
         ))}
 

@@ -4,6 +4,7 @@ import { insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateStreamingResponse } from "../openai-service";
 import { buildSurveyContext } from "../ai-response-schema";
+import { brevoEmailService, FormSubmissionData } from "../email-service";
 
 // Chat-related routes
 export function setupChatRoutes(app: Express) {
@@ -191,6 +192,127 @@ export function setupChatRoutes(app: Express) {
         message: 'Internal server error' 
       })}\n\n`);
       res.end();
+    }
+  });
+
+  // Form submission route - handles form data and sends email via Brevo
+  app.post('/api/chat/:sessionId/submit-form', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { formData, recipientEmail, recipientName, formTitle } = req.body;
+
+      console.log(`[FORM_SUBMISSION] Processing form submission for session: ${sessionId}`);
+
+      // Validate required fields
+      if (!formData || !Array.isArray(formData)) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Form data is required and must be an array' 
+        });
+      }
+
+      if (!recipientEmail) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Recipient email is required' 
+        });
+      }
+
+      // Get chatbot configuration for sender information
+      const session = await storage.getChatSession(sessionId);
+      let chatbotConfig;
+      let chatbotName = 'Chat Assistant';
+      
+      if (session?.chatbotConfigId) {
+        chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
+        chatbotName = chatbotConfig?.name || 'Chat Assistant';
+      }
+
+      // Prepare form submission data
+      const submissionData: FormSubmissionData = {
+        sessionId,
+        formFields: formData.map(field => ({
+          id: field.id || 'unknown',
+          label: field.label || 'Unnamed Field',
+          type: field.type || 'text',
+          value: field.value || ''
+        })),
+        metadata: {
+          title: formTitle || 'Contact Form Submission',
+          chatbotName
+        }
+      };
+
+      // Store form submission as a message in the chat
+      await storage.createMessage({
+        sessionId,
+        content: `Form submitted with ${formData.length} fields`,
+        sender: 'user',
+        messageType: 'form_submission',
+        metadata: {
+          formData: submissionData.formFields,
+          submittedAt: new Date().toISOString()
+        }
+      });
+
+      // Send email via Brevo
+      const emailResult = await brevoEmailService.sendFormSubmission(
+        submissionData,
+        recipientEmail,
+        recipientName,
+        chatbotConfig?.senderEmail || 'noreply@chatbot.com',
+        chatbotName
+      );
+
+      if (emailResult.success) {
+        console.log(`[FORM_SUBMISSION] Email sent successfully: ${emailResult.messageId}`);
+        
+        // Send confirmation message to chat
+        await storage.createMessage({
+          sessionId,
+          content: 'Thank you! Your form has been submitted successfully.',
+          sender: 'bot',
+          messageType: 'text',
+          metadata: {
+            emailSent: true,
+            messageId: emailResult.messageId
+          }
+        });
+
+        res.json({
+          success: true,
+          message: 'Form submitted and email sent successfully',
+          messageId: emailResult.messageId
+        });
+      } else {
+        console.error(`[FORM_SUBMISSION] Email failed: ${emailResult.error}`);
+        
+        // Send error message to chat
+        await storage.createMessage({
+          sessionId,
+          content: 'Your form was received, but there was an issue sending the email notification. Please try again or contact support.',
+          sender: 'bot',
+          messageType: 'text',
+          metadata: {
+            emailSent: false,
+            error: emailResult.error
+          }
+        });
+
+        res.status(500).json({
+          success: false,
+          message: 'Form submitted but email delivery failed',
+          error: emailResult.error
+        });
+      }
+
+    } catch (error) {
+      console.error('[FORM_SUBMISSION] Error processing form submission:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process form submission',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 }

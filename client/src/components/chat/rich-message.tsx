@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Message } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
+import { apiRequest } from "@/lib/queryClient";
 
 // Function to parse Markdown to HTML
 function parseMarkdown(text: string): string {
@@ -26,38 +28,42 @@ interface RichMessageProps {
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
   onQuickReply: (reply: string) => void;
   chatbotConfig?: any;
+  sessionId?: string;
 }
 
-export default function RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig }: RichMessageProps) {
+export default function RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: RichMessageProps) {
   const { messageType, content, metadata } = message;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
 
   if (messageType === 'card' && metadata) {
+    const cardMeta = metadata as any;
     return (
       <div className="bg-white rounded-lg rounded-tl-none shadow-sm overflow-hidden border">
-        {metadata.imageUrl && (
+        {cardMeta.imageUrl && (
           <img 
-            src={metadata.imageUrl} 
-            alt={metadata.title || "Card image"} 
+            src={cardMeta.imageUrl} 
+            alt={cardMeta.title || "Card image"} 
             className="w-full h-32 object-cover"
           />
         )}
 
         <div className="p-3">
-          {metadata.title && (
-            <h4 className="font-semibold text-neutral-800 mb-2">{metadata.title}</h4>
+          {cardMeta.title && (
+            <h4 className="font-semibold text-neutral-800 mb-2">{cardMeta.title}</h4>
           )}
 
-          {metadata.description && (
-            <p className="text-sm text-neutral-600 mb-3">{metadata.description}</p>
+          {cardMeta.description && (
+            <p className="text-sm text-neutral-600 mb-3">{cardMeta.description}</p>
           )}
 
-          {content && content !== metadata.title && (
+          {content && content !== cardMeta.title && (
             <p className="text-neutral-800 mb-3">{content}</p>
           )}
 
-          {metadata.buttons && (
+          {cardMeta.buttons && (
             <div className="space-y-2">
-              {metadata.buttons.map((button, index) => (
+              {cardMeta.buttons.map((button: any, index: number) => (
                 <Button
                   key={`${button.id}-${index}`}
                   variant="outline"
@@ -75,11 +81,12 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     );
   }
 
-  if (messageType === 'menu' && metadata?.options) {
+  if (messageType === 'menu' && (metadata as any)?.options) {
+    const menuMeta = metadata as any;
     return (
       <div className="space-y-2">
         <div className="space-y-2">
-          {metadata.options.map((option, index) => (
+          {menuMeta.options.map((option: any, index: number) => (
             <button
               key={`${option.id}-${index}`}
               onClick={() => onOptionSelect(option.id, option.payload, option.text)}
@@ -96,12 +103,13 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     );
   }
 
-  if (messageType === 'image' && metadata?.imageUrl) {
+  if (messageType === 'image' && (metadata as any)?.imageUrl) {
+    const imageMeta = metadata as any;
     return (
       <div className="bg-white rounded-lg rounded-tl-none shadow-sm overflow-hidden border">
         <img 
-          src={metadata.imageUrl} 
-          alt={metadata.title || "Message image"} 
+          src={imageMeta.imageUrl} 
+          alt={imageMeta.title || "Message image"} 
           className="w-full max-h-64 object-cover"
         />
         {content && (
@@ -113,10 +121,11 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     );
   }
 
-  if (messageType === 'quickReplies' && metadata?.quickReplies) {
+  if (messageType === 'quickReplies' && (metadata as any)?.quickReplies) {
+    const quickMeta = metadata as any;
     return (
       <div className="flex flex-wrap gap-2">
-        {metadata.quickReplies.map((reply: string, index: number) => (
+        {quickMeta.quickReplies.map((reply: string, index: number) => (
           <button
             key={`quickreply-${reply}-${index}`}
             onClick={() => onQuickReply(reply)}
@@ -129,12 +138,72 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     );
   }
 
-  if (messageType === 'form' && metadata?.formFields) {
+  if (messageType === 'form' && (metadata as any)?.formFields) {
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+
+      try {
+        const currentSessionId = sessionId || message.sessionId;
+        
+        if (!currentSessionId) {
+          console.error('No session ID available for form submission');
+          return;
+        }
+        
+        // Collect form data
+        const formData = (metadata as any)?.formFields?.map((field: any) => ({
+          id: field.id,
+          label: field.label,
+          type: field.type,
+          value: formValues[field.id] || ''
+        })) || [];
+
+        // For now, use a default recipient email (this should be configurable)
+        const recipientEmail = chatbotConfig?.recipientEmail || 'admin@example.com';
+        const recipientName = chatbotConfig?.recipientName || 'Administrator';
+        const formTitle = (metadata as any)?.title || 'Contact Form Submission';
+
+        console.log('Submitting form:', { sessionId: currentSessionId, formData, recipientEmail });
+
+        const response = await fetch(`/api/chat/${currentSessionId}/submit-form`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            formData,
+            recipientEmail,
+            recipientName,
+            formTitle
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log('Form submitted successfully:', result);
+          // The success message will be added to chat by the backend
+          setFormValues({}); // Clear form
+        } else {
+          console.error('Form submission failed:', result);
+        }
+      } catch (error) {
+        console.error('Error submitting form:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const handleInputChange = (fieldId: string, value: string) => {
+      setFormValues(prev => ({ ...prev, [fieldId]: value }));
+    };
+
     return (
       <div className="bg-white rounded-lg rounded-tl-none shadow-sm border overflow-hidden">
         <div className="p-4">
-          {metadata.title && (
-            <h4 className="font-semibold text-neutral-800 mb-3">{metadata.title}</h4>
+          {(metadata as any)?.title && (
+            <h4 className="font-semibold text-neutral-800 mb-3">{(metadata as any).title}</h4>
           )}
 
           {content && (
@@ -144,8 +213,8 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             />
           )}
 
-          <form className="space-y-4">
-            {metadata.formFields.map((field, index) => (
+          <form className="space-y-4" onSubmit={handleFormSubmit}>
+            {(metadata as any)?.formFields?.map((field: any, index: number) => (
               <div key={`${field.id}-${index}`} className="space-y-2">
                 <label 
                   htmlFor={field.id} 
@@ -161,8 +230,11 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
                     name={field.id}
                     placeholder={field.placeholder}
                     required={field.required}
+                    value={formValues[field.id] || ''}
+                    onChange={(e) => handleInputChange(field.id, e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
                   />
                 ) : (
                   <input
@@ -171,23 +243,22 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
                     type={field.type}
                     placeholder={field.placeholder}
                     required={field.required}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={formValues[field.id] || ''}
+                    onChange={(e) => handleInputChange(field.id, e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
                   />
                 )}
               </div>
             ))}
 
-            {metadata.submitButton && (
+            {(metadata as any)?.submitButton && (
               <Button
                 type="submit"
                 className="w-full mt-4"
-                onClick={(e) => {
-                  e.preventDefault();
-                  // TODO: Implement form submission logic
-                  console.log('Form submitted - logic to be implemented');
-                }}
+                disabled={isSubmitting}
               >
-                {metadata.submitButton.text}
+                {isSubmitting ? 'Submitting...' : (metadata as any).submitButton.text}
               </Button>
             )}
           </form>

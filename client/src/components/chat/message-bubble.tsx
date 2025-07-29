@@ -22,9 +22,10 @@ interface MessageBubbleProps {
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
   onQuickReply: (reply: string) => void;
   chatbotConfig?: any;
+  sessionId?: string;
 }
 
-export default function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig }: MessageBubbleProps) {
+export default function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
   
   // Safe date formatting with validation
@@ -71,6 +72,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
             onOptionSelect={onOptionSelect}
             onQuickReply={onQuickReply}
             chatbotConfig={chatbotConfig}
+            sessionId={sessionId}
           />
         ) : message.messageType === 'text' ? (
           <div className="chat-message-bot">
@@ -85,6 +87,7 @@ export default function MessageBubble({ message, onOptionSelect, onQuickReply, c
             onOptionSelect={onOptionSelect}
             onQuickReply={onQuickReply}
             chatbotConfig={chatbotConfig}
+            sessionId={sessionId}
           />
         )}
 

@@ -15,13 +15,15 @@ interface StreamingMessageProps {
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
   onQuickReply: (reply: string) => void;
   chatbotConfig?: any;
+  sessionId?: string;
 }
 
 export default function StreamingMessage({ 
   message, 
   onOptionSelect, 
   onQuickReply,
-  chatbotConfig
+  chatbotConfig,
+  sessionId
 }: StreamingMessageProps) {
   const [visibleChunks, setVisibleChunks] = useState<MessageChunk[]>([]);
   const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
@@ -78,6 +80,7 @@ export default function StreamingMessage({
         onOptionSelect={onOptionSelect}
         onQuickReply={onQuickReply}
         chatbotConfig={chatbotConfig}
+        sessionId={sessionId}
       />
     );
   }
@@ -107,6 +110,7 @@ export default function StreamingMessage({
               onOptionSelect={onOptionSelect}
               onQuickReply={onQuickReply}
               chatbotConfig={chatbotConfig}
+              sessionId={sessionId}
             />
           </div>
         ))}

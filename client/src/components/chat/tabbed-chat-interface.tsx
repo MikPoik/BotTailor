@@ -506,6 +506,7 @@ export default function TabbedChatInterface({
                   onOptionSelect={handleOptionSelect}
                   onQuickReply={handleQuickReply}
                   chatbotConfig={chatbotConfig}
+                  sessionId={sessionId}
                 />
               ))
             )}
