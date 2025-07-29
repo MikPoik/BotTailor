@@ -20,6 +20,7 @@ export default function ChatWidget({
   chatbotConfig
 }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const queryClient = useQueryClient();
 
@@ -52,9 +53,15 @@ export default function ChatWidget({
   }, [primaryColor]);
 
   const toggleChat = () => {
-    const wasOpen = isOpen;
-    setIsOpen(!isOpen);
-    if (!isOpen) {
+    if (isOpen) {
+      // Start closing animation
+      setIsClosing(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setIsClosing(false);
+      }, 400); // Match animation duration
+    } else {
+      setIsOpen(true);
       setHasNewMessage(false);
       // Refetch messages when opening chat to sync with any new messages
       queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
@@ -62,7 +69,11 @@ export default function ChatWidget({
   };
 
   const closeChat = () => {
-    setIsOpen(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 400); // Match animation duration
   };
 
   if (isMobile && isOpen) {
@@ -201,12 +212,19 @@ export default function ChatWidget({
       )}
 
       {/* Chat Interface */}
-      {isOpen && (
+      {(isOpen || isClosing) && (
         <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fadeIn ${
           isMobile 
             ? 'fixed inset-4 z-50' 
             : 'w-[450px]'
-        }`} style={!isMobile ? { height: '75vh', maxHeight: '800px', minHeight: '600px', animation: 'chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)' } : {}}>
+        }`} style={!isMobile ? { 
+          height: '75vh', 
+          maxHeight: '800px', 
+          minHeight: '600px', 
+          animation: isClosing 
+            ? 'chatWidgetClose 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards' 
+            : 'chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)'
+        } : {}}>
           {/* Chat header */}
           <div 
             className="text-white p-3 flex items-center justify-between flex-shrink-0"
