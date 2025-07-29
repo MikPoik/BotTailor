@@ -43,13 +43,19 @@ export default function ChatWidgetPage() {
     // Check if we have a specific chatbot config from the injected config
     const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     const chatbotConfig = injectedConfig?.chatbotConfig;
-    const primaryColor = injectedConfig?.primaryColor || '#2563eb';
+    const theme = injectedConfig?.theme || { 
+      primaryColor: '#2563eb', 
+      backgroundColor: '#ffffff', 
+      textColor: '#1f2937' 
+    };
     
     return (
       <div className="w-full h-full">
         <ChatWidget 
           sessionId={sessionId} 
-          primaryColor={primaryColor}
+          primaryColor={theme.primaryColor}
+          backgroundColor={theme.backgroundColor}
+          textColor={theme.textColor}
           chatbotConfig={chatbotConfig}
         />
       </div>

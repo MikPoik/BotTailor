@@ -251,7 +251,7 @@ export function setupPublicRoutes(app: Express) {
   app.get("/widget/:userId/:chatbotGuid", async (req, res, next) => {
     try {
       const { userId, chatbotGuid } = req.params;
-      const { embedded = "true", mobile = "false", primaryColor = "#2563eb" } = req.query;
+      const { embedded = "true", mobile = "false" } = req.query;
 
       console.log(`Loading widget for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);
 
@@ -267,6 +267,13 @@ export function setupPublicRoutes(app: Express) {
       const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const isMobile = req.query.mobile === 'true';
       const isEmbedded = req.query.embedded === 'true';
+
+      // Extract theme configuration from chatbot config or use defaults
+      const theme = {
+        primaryColor: (req.query.primaryColor as string) || chatbotConfig.homeScreenConfig?.theme?.primaryColor || '#2563eb',
+        backgroundColor: (req.query.backgroundColor as string) || chatbotConfig.homeScreenConfig?.theme?.backgroundColor || '#ffffff',
+        textColor: (req.query.textColor as string) || chatbotConfig.homeScreenConfig?.theme?.textColor || '#1f2937'
+      };
 
       // Force HTTPS in production environments
       const protocol = process.env.NODE_ENV === "production" ? 'https' : req.protocol;
@@ -318,7 +325,7 @@ export function setupPublicRoutes(app: Express) {
               apiUrl: "${apiUrl}",
               isMobile: ${isMobile},
               embedded: ${isEmbedded},
-              primaryColor: "${primaryColor}",
+              theme: ${JSON.stringify(theme)},
               chatbotConfig: ${JSON.stringify(chatbotConfig)}
             };
           </script>
@@ -335,7 +342,7 @@ export function setupPublicRoutes(app: Express) {
           apiUrl,
           isMobile,
           embedded: isEmbedded,
-          primaryColor,
+          theme,
           chatbotConfig
         };
         next();

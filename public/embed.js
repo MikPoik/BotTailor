@@ -8,6 +8,8 @@
       sessionId: null,
       position: 'bottom-right',
       primaryColor: '#2563eb',
+      backgroundColor: '#ffffff',
+      textColor: '#1f2937',
       zIndex: 1000,
     },
     _initialized: false,
@@ -116,7 +118,50 @@
       return `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     },
 
+    injectThemeVariables: function() {
+      // Inject CSS variables for theme support
+      if (!this.config.primaryColor && !this.config.backgroundColor && !this.config.textColor) {
+        return; // No theme customization needed
+      }
+
+      // Check if we already injected the styles
+      if (document.getElementById('chatwidget-theme-vars')) {
+        return;
+      }
+
+      const style = document.createElement('style');
+      style.id = 'chatwidget-theme-vars';
+      
+      // Determine appropriate muted and border colors based on background
+      const backgroundColor = this.config.backgroundColor || '#ffffff';
+      const isDarkBackground = backgroundColor !== '#ffffff' && backgroundColor !== '#fff';
+      
+      const mutedColor = isDarkBackground ? '#2a2a2a' : '#f1f5f9';
+      const mutedForegroundColor = isDarkBackground ? '#a1a1aa' : '#64748b';
+      const borderColor = isDarkBackground ? '#404040' : '#e2e8f0';
+      const inputColor = isDarkBackground ? '#262626' : '#ffffff';
+      const accentColor = isDarkBackground ? '#262626' : '#f1f5f9';
+      
+      style.textContent = `
+        :root {
+          --chat-primary-color: ${this.config.primaryColor || '#2563eb'};
+          --chat-background: ${backgroundColor};
+          --chat-text: ${this.config.textColor || '#1f2937'};
+          --chat-muted: ${mutedColor};
+          --chat-muted-foreground: ${mutedForegroundColor};
+          --chat-border: ${borderColor};
+          --chat-input: ${inputColor};
+          --chat-accent: ${accentColor};
+        }
+      `;
+      
+      document.head.appendChild(style);
+    },
+
     createWidget: function() {
+      // Inject CSS variables for theme support
+      this.injectThemeVariables();
+      
       // Create iframe container
       const container = document.createElement('div');
       container.id = 'chatwidget-container';
@@ -371,24 +416,24 @@
             try {
               // Build URL with sessionId if provided, otherwise let server generate it
               const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-              const colorParam = `primaryColor=${encodeURIComponent(this.config.primaryColor)}&`;
+              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
               // Check if apiUrl already contains a specific widget path
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
                 // Specific widget URL - use as-is with query parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${colorParam}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=true&embedded=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${colorParam}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=true&embedded=true`;
               }
 
               // Force HTTPS for iframe URL
               mobileIframe.src = this.forceHttps(widgetUrl);
             } catch (error) {
               // Fallback URL construction
-              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${colorParam}mobile=true&embedded=true`);
+              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=true&embedded=true`);
             }
           }
           overlay.style.display = 'block';
@@ -400,24 +445,24 @@
             try {
               // Build URL with sessionId if provided, otherwise let server generate it
               const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-              const colorParam = `primaryColor=${encodeURIComponent(this.config.primaryColor)}&`;
+              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
               // Check if apiUrl already contains a specific widget path
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
                 // Specific widget URL - use as-is with query parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${colorParam}mobile=false&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=false&embedded=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${colorParam}mobile=false&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=false&embedded=true`;
               }
 
               // Force HTTPS for iframe URL
               iframe.src = this.forceHttps(widgetUrl);
             } catch (error) {
               // Fallback URL construction
-              iframe.src = this.forceHttps(`${this.config.apiUrl}?${colorParam}mobile=false&embedded=true`);
+              iframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=false&embedded=true`);
             }
           }
           bubble.style.display = 'none';

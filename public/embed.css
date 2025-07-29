@@ -264,7 +264,7 @@
   box-sizing: border-box !important;
 }
 
-/* Dynamic primary color support for embedded widgets */
+/* Dynamic theme support for embedded widgets */
 .chatwidget-iframe .chat-widget-container {
   --primary: var(--chat-primary-color, #2563eb);
   --primary-foreground: white;
@@ -272,20 +272,59 @@
   --chat-bubble-bg: var(--chat-primary-color, #2563eb);
   --chat-user-bg: var(--chat-primary-color, #2563eb);
   --chat-hover: var(--chat-primary-color, #2563eb);
+  --background: var(--chat-background, #ffffff);
+  --foreground: var(--chat-text, #1f2937);
+  --card: var(--chat-background, #ffffff);
+  --card-foreground: var(--chat-text, #1f2937);
+  --popover: var(--chat-background, #ffffff);
+  --popover-foreground: var(--chat-text, #1f2937);
+  --muted: var(--chat-muted, #f1f5f9);
+  --muted-foreground: var(--chat-muted-foreground, #64748b);
+  --border: var(--chat-border, #e2e8f0);
+  --input: var(--chat-input, #ffffff);
+  --accent: var(--chat-accent, #f1f5f9);
+  --accent-foreground: var(--chat-text, #1f2937);
+}
+
+.chatwidget-iframe .chat-interface,
+.chatwidget-iframe .chat-interface-mobile {
+  background-color: var(--chat-background, #ffffff) !important;
+  color: var(--chat-text, #1f2937) !important;
+}
+
+.chatwidget-iframe .chat-message-bot {
+  background-color: var(--chat-muted, #f1f5f9) !important;
+  color: var(--chat-text, #1f2937) !important;
+  border-color: var(--chat-border, #e2e8f0) !important;
 }
 
 .chatwidget-iframe .chat-message-user {
   background-color: var(--chat-primary-color, #2563eb) !important;
+  color: white !important;
 }
 
 .chatwidget-iframe .send-button {
   background-color: var(--chat-primary-color, #2563eb) !important;
   border-color: var(--chat-primary-color, #2563eb) !important;
+  color: white !important;
+}
+
+.chatwidget-iframe input,
+.chatwidget-iframe textarea {
+  background-color: var(--chat-input, #ffffff) !important;
+  color: var(--chat-text, #1f2937) !important;
+  border-color: var(--chat-border, #e2e8f0) !important;
 }
 
 /* All default variant buttons in embedded widgets */
 .chatwidget-iframe .bg-primary {
   background-color: var(--chat-primary-color, #2563eb) !important;
+  color: white !important;
+}
+
+.chatwidget-iframe .bg-card {
+  background-color: var(--chat-background, #ffffff) !important;
+  color: var(--chat-text, #1f2937) !important;
 }
 
 .chatwidget-iframe .hover\:bg-primary\/90:hover {
@@ -299,6 +338,17 @@
   --tw-ring-color: var(--chat-primary-color, #2563eb) !important;
   border-color: var(--chat-primary-color, #2563eb) !important;
   box-shadow: 0 0 0 2px var(--chat-primary-color, #2563eb)40 !important;
+}
+
+/* Tab navigation background and text */
+.chatwidget-iframe [data-radix-tabs-list] {
+  background: var(--chat-background, #ffffff) !important;
+  border-color: var(--chat-border, #e2e8f0) !important;
+}
+
+/* Tabs trigger default state */
+.chatwidget-iframe [data-radix-tabs-trigger] {
+  color: var(--chat-text, #1f2937) !important;
 }
 
 /* Tab navigation active state */
