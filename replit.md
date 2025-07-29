@@ -38,7 +38,9 @@ Preferred communication style: Simple, everyday language.
 
 ### Notes for agent
 
-You can use grep commands to get overview of current routes and functions with these commands when needed:
+You can use
+
+If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025 grep commands to get overview of current routes and functions with these commands when needed:
 
 For JavaScript/TypeScript function declarations:
 grep -r -n "^ *app\." server/
