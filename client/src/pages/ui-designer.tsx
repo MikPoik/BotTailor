@@ -43,6 +43,7 @@ export default function UIDesigner() {
   const [currentConfig, setCurrentConfig] = useState<HomeScreenConfig | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editableConfig, setEditableConfig] = useState<string>("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -62,8 +63,39 @@ export default function UIDesigner() {
   useEffect(() => {
     if (currentConfig) {
       setEditableConfig(JSON.stringify(currentConfig, null, 2));
+      setHasUnsavedChanges(false);
     }
   }, [currentConfig]);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (currentConfig && editableConfig) {
+      try {
+        const parsedEditable = JSON.parse(editableConfig);
+        const configString = JSON.stringify(currentConfig);
+        const editableString = JSON.stringify(parsedEditable);
+        setHasUnsavedChanges(configString !== editableString);
+      } catch {
+        // If JSON is invalid, consider it as having changes
+        setHasUnsavedChanges(true);
+      }
+    }
+  }, [editableConfig, currentConfig]);
+
+  // Keyboard shortcut for saving
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        if (hasUnsavedChanges && currentConfig) {
+          handleApplyAndSave();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [hasUnsavedChanges, currentConfig]);
 
   // Generate UI mutation
   const generateUIMutation = useMutation({
@@ -157,8 +189,13 @@ export default function UIDesigner() {
         const configToSave = JSON.parse(editableConfig);
         saveConfigMutation.mutate(configToSave);
       } catch (error) {
-        // Fallback to currentConfig if parsing fails
-        saveConfigMutation.mutate(currentConfig);
+        toast({
+          title: "Invalid JSON",
+          description: "Please check your JSON syntax before saving.",
+          variant: "destructive",
+        });
+        console.error("JSON parsing error:", error);
+        return;
       }
     }
   };
@@ -177,6 +214,7 @@ export default function UIDesigner() {
     try {
       const parsedConfig = JSON.parse(editableConfig);
       setCurrentConfig(parsedConfig);
+      setHasUnsavedChanges(false);
       toast({
         title: "Configuration Applied",
         description: "Your changes have been applied to the preview!",
@@ -185,6 +223,21 @@ export default function UIDesigner() {
       toast({
         title: "Invalid JSON",
         description: "Please check your JSON syntax and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleApplyAndSave = () => {
+    try {
+      const parsedConfig = JSON.parse(editableConfig);
+      setCurrentConfig(parsedConfig);
+      setHasUnsavedChanges(false);
+      saveConfigMutation.mutate(parsedConfig);
+    } catch (error) {
+      toast({
+        title: "Invalid JSON",
+        description: "Please check your JSON syntax before saving.",
         variant: "destructive",
       });
     }
@@ -355,7 +408,12 @@ export default function UIDesigner() {
               <Card className="h-full">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Configuration</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle>Configuration</CardTitle>
+                      {hasUnsavedChanges && (
+                        <Badge variant="destructive">Unsaved Changes</Badge>
+                      )}
+                    </div>
                     <div className="flex gap-2">
                       {currentConfig && (
                         <>
@@ -363,15 +421,28 @@ export default function UIDesigner() {
                             <Copy className="h-4 w-4 mr-2" />
                             Copy
                           </Button>
-                          <Button size="sm" onClick={handleApplyConfig}>
-                            Apply Changes
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleApplyConfig}
+                            disabled={!hasUnsavedChanges}
+                          >
+                            Apply to Preview
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={handleApplyAndSave}
+                            disabled={saveConfigMutation.isPending || !hasUnsavedChanges}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Apply & Save
                           </Button>
                         </>
                       )}
                     </div>
                   </div>
                   <CardDescription>
-                    Edit the JSON configuration directly. Click "Apply Changes" to update the preview.
+                    Edit the JSON configuration directly. Use "Apply to Preview" to see changes, or "Apply & Save" to update and save permanently. Press Ctrl+S to save quickly.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col h-full">
