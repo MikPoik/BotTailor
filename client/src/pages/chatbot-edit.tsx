@@ -38,6 +38,7 @@ const formSchema = z.object({
   formRecipientName: z.string().optional(),
   senderEmail: z.string().email("Valid email required").optional(),
   senderName: z.string().optional(),
+  formConfirmationMessage: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -90,6 +91,7 @@ export default function ChatbotEdit() {
       formRecipientName: "",
       senderEmail: "",
       senderName: "",
+      formConfirmationMessage: "",
     },
   });
 
@@ -111,6 +113,7 @@ export default function ChatbotEdit() {
         formRecipientName: chatbot.formRecipientName || "",
         senderEmail: chatbot.senderEmail || "",
         senderName: chatbot.senderName || "",
+        formConfirmationMessage: chatbot.formConfirmationMessage || "",
       });
     }
   }, [chatbot, form]);
