@@ -34,9 +34,9 @@ const formSchema = z.object({
   fallbackMessage: z.string().optional(),
   initialMessages: z.array(z.string()).optional(),
   // Email configuration
-  formRecipientEmail: z.string().email("Valid email required").optional(),
+  formRecipientEmail: z.string().email("Valid email required").or(z.literal("")).optional(),
   formRecipientName: z.string().optional(),
-  senderEmail: z.string().email("Valid email required").optional(),
+  senderEmail: z.string().email("Valid email required").or(z.literal("")).optional(),
   senderName: z.string().optional(),
   formConfirmationMessage: z.string().optional(),
 });

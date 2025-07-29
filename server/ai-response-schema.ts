@@ -64,6 +64,20 @@ export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): 
 
   // Check if email configuration is properly set up for forms
   const hasEmailConfig = chatbotConfig?.formRecipientEmail && chatbotConfig?.senderEmail;
+  console.log(`[SYSTEM_PROMPT] Email config check - formRecipientEmail: ${chatbotConfig?.formRecipientEmail}, senderEmail: ${chatbotConfig?.senderEmail}, hasEmailConfig: ${hasEmailConfig}`);
+
+  // Build message types list conditionally
+  const messageTypes = [
+    "1. TEXT: Simple text responses with optional quick replies",
+    "2. CARD: Rich cards with title, description, image, and action buttons, use only if asked about a product.",
+    "3. MENU: Interactive menus with selectable options", 
+    "4. IMAGE: Image responses with optional text",
+    "5. QUICKREPLIES: Text with suggested quick reply buttons"
+  ];
+  
+  if (hasEmailConfig) {
+    messageTypes.push("6. FORM: Interactive forms with input fields and submit button");
+  }
 
   // Technical structure instructions for message formatting
   const structureInstructions = `
@@ -71,11 +85,7 @@ export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): 
 You respond with multiple message bubbles in a single turn to create natural, human-like conversations.
 
 Message Types Available:
-1. TEXT: Simple text responses with optional quick replies
-2. CARD: Rich cards with title, description, image, and action buttons, use only if asked about a product.  
-3. MENU: Interactive menus with selectable options
-4. IMAGE: Image responses with optional text
-5. QUICKREPLIES: Text with suggested quick reply buttons${hasEmailConfig ? '\n6. FORM: Interactive forms with input fields and submit button' : ''}
+${messageTypes.join('\n')}
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -106,7 +116,8 @@ Example for greetings and options:
   ]
 }
 
-${hasEmailConfig ? `**For Contact Forms:**
+${hasEmailConfig ? 
+`**For Contact Forms:**
 {
   "bubbles": [
     {"messageType": "text", "content": "I'd be happy to help you get in touch with our team!"},
@@ -120,7 +131,8 @@ ${hasEmailConfig ? `**For Contact Forms:**
       "submitButton": {"id": "submit_contact", "text": "Send Message", "action": "submit_form"}
     }}
   ]
-}` : `**For Contact Requests:**
+}` : 
+`**For Contact Requests:**
 When users ask to contact you or leave their information, explain that contact forms are not currently available and suggest alternative ways to get in touch (website, phone, email, etc.) based on the context provided.`}
 
 
