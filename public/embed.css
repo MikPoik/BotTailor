@@ -264,6 +264,33 @@
   box-sizing: border-box !important;
 }
 
+/* Dynamic primary color support for embedded widgets */
+.chatwidget-iframe .chat-widget-container {
+  --primary: var(--chat-primary-color, #2563eb);
+  --chat-bubble-bg: var(--chat-primary-color, #2563eb);
+  --chat-user-bg: var(--chat-primary-color, #2563eb);
+  --chat-hover: var(--chat-primary-color, #2563eb);
+}
+
+.chatwidget-iframe .chat-message-user {
+  background-color: var(--chat-primary-color, #2563eb) !important;
+}
+
+.chatwidget-iframe .send-button {
+  background-color: var(--chat-primary-color, #2563eb) !important;
+  border-color: var(--chat-primary-color, #2563eb) !important;
+}
+
+.chatwidget-iframe .send-input:focus {
+  --tw-ring-color: var(--chat-primary-color, #2563eb) !important;
+  border-color: var(--chat-primary-color, #2563eb) !important;
+}
+
+.chatwidget-iframe .menu-option-button:hover {
+  background-color: var(--chat-primary-color, #2563eb) !important;
+  color: white !important;
+}
+
 /* Prevent any external CSS from interfering with embedded widget */
 .chatwidget-iframe body {
   margin: 0 !important;

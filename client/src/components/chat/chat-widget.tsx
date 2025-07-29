@@ -43,6 +43,50 @@ export default function ChatWidget({
     style.textContent = `
       :root {
         --chat-primary: ${primaryColor};
+        --chat-primary-color: ${primaryColor};
+      }
+      
+      /* Chat widget specific styling with primary color */
+      .chat-widget-container {
+        --primary: ${primaryColor};
+        --chat-bubble-bg: ${primaryColor};
+        --chat-user-bg: ${primaryColor};
+        --chat-hover: ${primaryColor};
+      }
+      
+      /* User message bubbles */
+      .chat-widget-container .chat-message-user {
+        background-color: ${primaryColor} !important;
+      }
+      
+      /* Send button */
+      .chat-widget-container button[type="submit"],
+      .chat-widget-container .send-button {
+        background-color: ${primaryColor} !important;
+        border-color: ${primaryColor} !important;
+      }
+      
+      /* Primary buttons and interactive elements */
+      .chat-widget-container .menu-option-button:hover {
+        background-color: ${primaryColor} !important;
+      }
+      
+      /* Input focus ring */
+      .chat-widget-container input:focus {
+        --tw-ring-color: ${primaryColor} !important;
+        border-color: ${primaryColor} !important;
+      }
+      
+      /* Tab navigation active state */
+      .chat-widget-container [data-state="active"] {
+        color: ${primaryColor} !important;
+        border-bottom-color: ${primaryColor} !important;
+      }
+      
+      /* Quick reply buttons */
+      .chat-widget-container .quick-reply-button:hover {
+        background-color: ${primaryColor} !important;
+        color: white !important;
       }
     `;
     document.head.appendChild(style);
@@ -213,7 +257,7 @@ export default function ChatWidget({
 
       {/* Chat Interface */}
       {(isOpen || isClosing) && (
-        <div className={`bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fadeIn ${
+        <div className={`chat-widget-container bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fadeIn ${
           isMobile 
             ? 'fixed inset-4 z-50' 
             : 'w-[450px]'

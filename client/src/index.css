@@ -287,7 +287,7 @@
 
   .chat-message-user {
     @apply rounded-lg rounded-tr-none px-2 py-2 shadow-sm text-white max-w-xs ml-auto;
-    background-color: var(--chat-user-bg);
+    background-color: var(--chat-primary-color, var(--chat-user-bg));
     font-size: 0.9rem;
   }
 
@@ -325,7 +325,7 @@
   }
 
   .menu-option-button:hover {
-    background-color: var(--primary) !important;
+    background-color: var(--chat-primary-color, var(--primary)) !important;
     color: white !important;
   }
 }

@@ -258,7 +258,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="rounded-full pr-12 border-neutral-300 focus:ring-2 focus:border-transparent"
+              className="rounded-full pr-12 border-neutral-300 focus:ring-2 focus:border-transparent send-input"
               style={{
                 '--tw-ring-color': 'var(--chat-primary-color, var(--primary))'
               } as React.CSSProperties}
@@ -268,7 +268,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
               size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
+              className="send-button absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
               style={{
                 backgroundColor: 'var(--chat-primary-color, var(--primary))',
                 borderColor: 'var(--chat-primary-color, var(--primary))'
