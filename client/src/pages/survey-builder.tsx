@@ -105,8 +105,28 @@ export default function SurveyBuilderPage() {
     mutationFn: async (data: { id: number; updates: Partial<Survey> }) => {
       return await apiRequest("PATCH", `/api/surveys/${data.id}`, data.updates);
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}/surveys`] });
+      
+      // Update the selected survey if it's the one being updated
+      if (selectedSurvey && selectedSurvey.id === variables.id) {
+        // Update the local state with the new data
+        const updatedSurvey = { ...selectedSurvey, ...variables.updates };
+        setSelectedSurvey(updatedSurvey);
+        
+        // Update local form state
+        if (variables.updates.name) {
+          setLocalSurveyName(variables.updates.name);
+        }
+        if (variables.updates.description !== undefined) {
+          setLocalSurveyDescription(variables.updates.description || "");
+        }
+        
+        // Clear unsaved changes flag
+        setHasUnsavedChanges(false);
+      }
+      
       toast({ title: "Survey updated successfully!" });
     },
     onError: (error: any) => {
@@ -217,6 +237,17 @@ export default function SurveyBuilderPage() {
   // Local state for editing questions to prevent constant updates
   const [localQuestionText, setLocalQuestionText] = useState<{ [key: number]: string }>({});
   const [localOptionTexts, setLocalOptionTexts] = useState<{ [key: string]: string }>({});
+  
+  // Auto-save debouncing for survey details
+  useEffect(() => {
+    if (hasUnsavedChanges && selectedSurvey) {
+      const timer = setTimeout(() => {
+        handleSaveSurveyDetails();
+      }, 2000); // Auto-save after 2 seconds of inactivity
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasUnsavedChanges, localSurveyName, localSurveyDescription, selectedSurvey, handleSaveSurveyDetails]);
 
   const handleUpdateQuestion = (surveyId: number, questionIndex: number, updates: Partial<SurveyQuestion>) => {
     if (!selectedSurvey) return;
@@ -229,6 +260,13 @@ export default function SurveyBuilderPage() {
       ...selectedSurvey.surveyConfig,
       questions: updatedQuestions,
     };
+
+    // Optimistically update the selected survey state
+    const optimisticUpdatedSurvey = {
+      ...selectedSurvey,
+      surveyConfig: updatedConfig
+    };
+    setSelectedSurvey(optimisticUpdatedSurvey);
 
     updateSurveyMutation.mutate({
       id: surveyId,
@@ -572,10 +610,28 @@ export default function SurveyBuilderPage() {
                                             variant="outline"
                                             size="sm"
                                             onClick={() => {
-                                              const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
-                                              handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
+                                              if (question.options && question.options.length > 2) {
+                                                const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
+                                                handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
+                                                
+                                                // Clear local state for deleted option
+                                                setLocalOptionTexts(prev => {
+                                                  const newState = { ...prev };
+                                                  delete newState[optionKey];
+                                                  // Adjust indices for remaining options
+                                                  for (let i = optionIndex + 1; i < question.options!.length; i++) {
+                                                    const oldKey = `${index}-${i}`;
+                                                    const newKey = `${index}-${i-1}`;
+                                                    if (newState[oldKey] !== undefined) {
+                                                      newState[newKey] = newState[oldKey];
+                                                      delete newState[oldKey];
+                                                    }
+                                                  }
+                                                  return newState;
+                                                });
+                                              }
                                             }}
-                                            disabled={question.options.length <= 2}
+                                            disabled={!question.options || question.options.length <= 2}
                                           >
                                             <Trash2 className="h-4 w-4" />
                                           </Button>
@@ -586,8 +642,10 @@ export default function SurveyBuilderPage() {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => {
-                                        const newOption = { id: `option${question.options.length + 1}`, text: `Option ${question.options.length + 1}` };
-                                        handleUpdateQuestion(selectedSurvey.id, index, { options: [...question.options, newOption] });
+                                        if (question.options) {
+                                          const newOption = { id: `option${question.options.length + 1}`, text: `Option ${question.options.length + 1}` };
+                                          handleUpdateQuestion(selectedSurvey.id, index, { options: [...question.options, newOption] });
+                                        }
                                       }}
                                     >
                                       <Plus className="h-4 w-4 mr-2" />
