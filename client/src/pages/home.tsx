@@ -112,7 +112,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section id="features" className="py-16 md:py-24 bg-muted/30 px-4 sm:px-6 lg:px-8">
-        <div className="container max-w-6xl">
+        <div className="container max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4">
               Powerful Features
@@ -125,7 +125,7 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto">
             <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
@@ -239,7 +239,7 @@ export default function Home() {
 
       {/* Demo Section */}
       <section id="demo" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="container max-w-4xl text-center">
+        <div className="container max-w-4xl mx-auto text-center">
           <Badge variant="outline" className="mb-4">
             Try It Now
           </Badge>
@@ -251,7 +251,7 @@ export default function Home() {
             See how natural and helpful AI-powered support can be.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 mx-auto">
             <Card className="text-left">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -287,7 +287,7 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="py-16 md:py-24 bg-primary/5 px-4 sm:px-6 lg:px-8">
-        <div className="container max-w-4xl text-center">
+        <div className="container max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-5xl mb-4">
             Ready to transform your customer support?
           </h2>
