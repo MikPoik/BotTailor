@@ -7,6 +7,7 @@ import { setupSurveyRoutes } from "./surveys";
 import { setupPublicRoutes } from "./public";
 import { setupUploadRoutes } from "./uploads";
 import { setupWebsiteRoutes } from "./websites";
+import { setupUIDesignerRoutes } from "./ui-designer";
 
 // Main route registration function
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -18,6 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupPublicRoutes(app);
   setupUploadRoutes(app);
   setupWebsiteRoutes(app);
+  setupUIDesignerRoutes(app);
 
   // Create and return HTTP server
   const server = createServer(app);
