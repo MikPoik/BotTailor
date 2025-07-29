@@ -63,8 +63,16 @@ export default function UIDesigner() {
   // Initialize with existing config or default
   useEffect(() => {
     if (chatbot?.homeScreenConfig) {
-      setCurrentConfig(chatbot.homeScreenConfig as HomeScreenConfig);
+      const config = chatbot.homeScreenConfig as HomeScreenConfig;
+      setCurrentConfig(config);
       setConfigKey(prev => prev + 1); // Force initial render
+      
+      // Initialize theme colors from the loaded configuration
+      if (config.theme) {
+        if (config.theme.primaryColor) setPrimaryColor(config.theme.primaryColor);
+        if (config.theme.backgroundColor) setBackgroundColor(config.theme.backgroundColor);
+        if (config.theme.textColor) setTextColor(config.theme.textColor);
+      }
     }
   }, [chatbot]);
 
@@ -76,13 +84,27 @@ export default function UIDesigner() {
     }
   }, [currentConfig]);
 
-  // Apply theme colors to CSS variables
+  // Apply theme colors to CSS variables and update editable config
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--chat-primary-color', primaryColor);
     root.style.setProperty('--chat-background', backgroundColor);
     root.style.setProperty('--chat-text', textColor);
-  }, [primaryColor, backgroundColor, textColor]);
+    
+    // Update editable config to reflect theme changes
+    if (currentConfig) {
+      const updatedConfig = {
+        ...currentConfig,
+        theme: {
+          ...currentConfig.theme,
+          primaryColor: primaryColor,
+          backgroundColor: backgroundColor,
+          textColor: textColor
+        }
+      };
+      setEditableConfig(JSON.stringify(updatedConfig, null, 2));
+    }
+  }, [primaryColor, backgroundColor, textColor, currentConfig]);
 
   // Track unsaved changes
   useEffect(() => {
@@ -218,6 +240,15 @@ Please consider these colors when generating the UI design to ensure visual cons
       try {
         // Parse the current editable config to ensure we're saving the latest changes
         const configToSave = JSON.parse(editableConfig);
+        
+        // Ensure theme colors from the Theme tab are included in the configuration
+        configToSave.theme = {
+          ...configToSave.theme,
+          primaryColor: primaryColor,
+          backgroundColor: backgroundColor,
+          textColor: textColor
+        };
+        
         saveConfigMutation.mutate(configToSave);
       } catch (error) {
         toast({
@@ -263,6 +294,15 @@ Please consider these colors when generating the UI design to ensure visual cons
   const handleApplyAndSave = () => {
     try {
       const parsedConfig = JSON.parse(editableConfig);
+      
+      // Ensure theme colors from the Theme tab are included in the configuration
+      parsedConfig.theme = {
+        ...parsedConfig.theme,
+        primaryColor: primaryColor,
+        backgroundColor: backgroundColor,
+        textColor: textColor
+      };
+      
       setCurrentConfig(parsedConfig);
       setHasUnsavedChanges(false);
       setConfigKey(prev => prev + 1); // Force re-render

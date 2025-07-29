@@ -233,7 +233,15 @@ export async function modifyHomeScreenConfig(
           role: "system",
           content: `${createSystemPrompt(availableSurveys)}
 
-You are modifying an existing home screen configuration. Keep the existing structure unless specifically asked to change it.`,
+You are modifying an existing home screen configuration. 
+
+CRITICAL: Always preserve the existing theme configuration (colors) unless specifically asked to change them. The theme object contains:
+- primaryColor
+- backgroundColor  
+- textColor
+- Any other theme properties
+
+Keep the existing structure and theme unless specifically requested to modify them.`,
         },
         {
           role: "user",
@@ -299,6 +307,17 @@ Return the updated complete configuration.`,
           });
         }
       });
+    }
+
+    // CRITICAL: Preserve existing theme if AI didn't include it or if it's missing
+    if (currentConfig.theme && (!parsedConfig.theme || Object.keys(parsedConfig.theme).length === 0)) {
+      parsedConfig.theme = currentConfig.theme;
+    } else if (currentConfig.theme && parsedConfig.theme) {
+      // Preserve existing theme properties that weren't explicitly modified
+      parsedConfig.theme = {
+        ...currentConfig.theme,
+        ...parsedConfig.theme
+      };
     }
 
     const validatedConfig = HomeScreenConfigSchema.parse(parsedConfig);
