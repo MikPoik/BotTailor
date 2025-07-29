@@ -139,4 +139,32 @@ export function setupChatbotRoutes(app: Express) {
       res.status(500).json({ message: "Failed to update home screen configuration" });
     }
   });
+
+  // PATCH route for partial chatbot updates by GUID (for UI designer)
+  app.patch('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
+    try {
+      const { guid } = req.params;
+      const userId = req.user.claims.sub;
+      const body = req.body;
+
+      // Verify ownership and get chatbot
+      const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingChatbot) {
+        return res.status(404).json({ message: "Chatbot not found" });
+      }
+
+      // Parse partial update data
+      const updateData = insertChatbotConfigSchema.partial().parse(body);
+      const updatedChatbot = await storage.updateChatbotConfig(existingChatbot.id, updateData);
+      
+      res.json(updatedChatbot);
+    } catch (error) {
+      console.error("Error updating chatbot:", error);
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Failed to update chatbot" });
+    }
+  });
 }
