@@ -180,7 +180,24 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
 
         if (result.success) {
           console.log('Form submitted successfully:', result);
-          // The success message will be added to chat by the backend
+          
+          // Add confirmation message directly to the chat
+          const confirmationMessage = {
+            id: Date.now().toString(),
+            sessionId: currentSessionId,
+            content: 'Kiitos! Viestisi on lähetetty onnistuneesti. Otamme sinuun yhteyttä pian.',
+            sender: 'bot' as const,
+            messageType: 'text' as const,
+            metadata: { emailSent: true, messageId: result.messageId },
+            createdAt: new Date().toISOString(),
+          };
+
+          // Update the query cache with the new message
+          queryClient.setQueryData(['/api/chat', currentSessionId, 'messages'], (old: any) => {
+            if (!old) return { messages: [confirmationMessage] };
+            return { messages: [...old.messages, confirmationMessage] };
+          });
+          
           setFormValues({}); // Clear form
         } else {
           console.error('Form submission failed:', result);
