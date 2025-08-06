@@ -99,6 +99,7 @@ Always test the api routes after changes with "curl" e.g. curl https://localhost
 
 For server routes, create modular structure with separation of concerns
 UI design choices should be mobile first unless stated otherwise.
+Prioritize Replit services to third-party services e.g. database, ObjectStorage, Authentication and so on.
 If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
 
 ## System Architecture
