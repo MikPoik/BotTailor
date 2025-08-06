@@ -45,6 +45,7 @@ export interface IStorage {
   // Chatbot config methods
   getChatbotConfigs(userId: string): Promise<ChatbotConfig[]>;
   getChatbotConfig(id: number): Promise<ChatbotConfig | undefined>;
+  getChatbotConfigByGuid(userId: string, guid: string): Promise<ChatbotConfig | null>;
   createChatbotConfig(config: InsertChatbotConfig): Promise<ChatbotConfig>;
   updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined>;
   deleteChatbotConfig(id: number): Promise<void>;

@@ -6,6 +6,19 @@ This is a full-stack React chat widget application built with Express.js backend
 
 ## Recent Changes
 
+- **August 6, 2025**: Implemented Background Image Upload for Home Screen:
+  - Added `backgroundImageUrl` field to chatbot schema and HomeScreenConfig theme
+  - Created `BackgroundImageUpload` component with file upload and URL input support
+  - Enhanced `uploadBackgroundImage` function in upload service for proper image processing
+  - Added `/api/upload/background` API endpoint for background image uploads
+  - Updated `DynamicHomeScreen` to display background images with overlay for text readability
+  - Extended UI Designer Theme tab with background image upload controls
+  - Background images are processed to max 1200px width while maintaining aspect ratio
+  - Integrated background image saving into theme configuration system
+  - Background images respect the same priority system as colors (embed params > theme > defaults)
+  - Background images are visible only in Home tab of chat widget as requested
+  - Enhanced database schema with `background_image_url` column for chatbot configs
+  - Background images stored in Replit Object Storage under `backgrounds/userId/` path
 - **July 29, 2025**: Implemented Complete Color Priority System and Migrated Color Controls to UI Designer:
   - Created color resolution system that prioritizes embed parameters over UI Designer theme colors
   - Updated DynamicHomeScreen component to use resolved colors for consistent styling

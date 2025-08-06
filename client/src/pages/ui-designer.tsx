@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Palette
 } from "lucide-react";
+import { BackgroundImageUpload } from "@/components/ui/background-image-upload";
 import type { HomeScreenConfig, ChatbotConfig } from "@shared/schema";
 
 interface ChatMessage {
@@ -52,6 +53,7 @@ export default function UIDesigner() {
   const [primaryColor, setPrimaryColor] = useState<string>("#2563eb");
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
   const [textColor, setTextColor] = useState<string>("#1f2937");
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>("");
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -72,6 +74,7 @@ export default function UIDesigner() {
         if (config.theme.primaryColor) setPrimaryColor(config.theme.primaryColor);
         if (config.theme.backgroundColor) setBackgroundColor(config.theme.backgroundColor);
         if (config.theme.textColor) setTextColor(config.theme.textColor);
+        if (config.theme.backgroundImageUrl) setBackgroundImageUrl(config.theme.backgroundImageUrl);
       }
     }
   }, [chatbot]);
@@ -246,7 +249,8 @@ Please consider these colors when generating the UI design to ensure visual cons
           ...configToSave.theme,
           primaryColor: primaryColor,
           backgroundColor: backgroundColor,
-          textColor: textColor
+          textColor: textColor,
+          backgroundImageUrl: backgroundImageUrl
         };
         
         saveConfigMutation.mutate(configToSave);
@@ -300,7 +304,8 @@ Please consider these colors when generating the UI design to ensure visual cons
         ...parsedConfig.theme,
         primaryColor: primaryColor,
         backgroundColor: backgroundColor,
-        textColor: textColor
+        textColor: textColor,
+        backgroundImageUrl: backgroundImageUrl
       };
       
       setCurrentConfig(parsedConfig);
@@ -560,6 +565,24 @@ Please consider these colors when generating the UI design to ensure visual cons
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Primary text color throughout the widget
+                      </p>
+                    </div>
+                  </div>
+
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Background Image</Label>
+                      <div className="mt-2">
+                        <BackgroundImageUpload
+                          value={backgroundImageUrl}
+                          onValueChange={setBackgroundImageUrl}
+                          disabled={saveConfigMutation.isPending}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Optional background image for the home screen. Will be applied behind the content.
                       </p>
                     </div>
                   </div>

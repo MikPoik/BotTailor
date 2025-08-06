@@ -138,12 +138,8 @@ export default function HomeTab({
         // Send clean message to display, but include hidden surveyId for backend parsing
         const displayMessage = `${topic.title}`;
         const backgroundMessage = `${displayMessage} (surveyId: ${topic.surveyId})`;
-        // Pass a special object that includes both display and internal messages
-        onStartChat(topic.title, {
-          displayMessage,
-          internalMessage: backgroundMessage,
-          actionType: 'survey'
-        });
+        // For survey topics, pass the internal message for backend processing
+        onStartChat(topic.title, backgroundMessage);
       } else {
         // For regular message topics, send as string message
         onStartChat(topic.title, topic.message);
@@ -158,12 +154,8 @@ export default function HomeTab({
         // Send clean message to display, but include hidden surveyId for backend parsing
         const displayMessage = `${action.title}`;
         const backgroundMessage = `${displayMessage} (surveyId: ${action.surveyId})`;
-        // Pass a special object that includes both display and internal messages
-        onStartChat(action.title, {
-          displayMessage,
-          internalMessage: backgroundMessage,
-          actionType: 'survey'
-        });
+        // For survey actions, pass the internal message for backend processing
+        onStartChat(action.title, backgroundMessage);
       } else if (action.action === "start_chat") {
         // For regular chat actions, send as string message
         onStartChat(action.title, action.description);

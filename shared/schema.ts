@@ -54,6 +54,7 @@ export const chatbotConfigs = pgTable("chatbot_configs", {
   fallbackMessage: text("fallback_message"),
   homeScreenConfig: jsonb("home_screen_config"), // Dynamic UI configuration
   initialMessages: jsonb("initial_messages"), // Initial message bubbles for embed widget
+  backgroundImageUrl: varchar("background_image_url"), // Background image for home screen
   // Email configuration for form submissions
   formRecipientEmail: varchar("form_recipient_email"), // Where form submissions are sent
   formRecipientName: varchar("form_recipient_name"), // Name of the recipient
@@ -162,6 +163,7 @@ export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick
   fallbackMessage: true,
   homeScreenConfig: true,
   initialMessages: true,
+  backgroundImageUrl: true,
   formRecipientEmail: true,
   formRecipientName: true,
   senderEmail: true,
@@ -326,6 +328,7 @@ export const HomeScreenConfigSchema = z.object({
     backgroundColor: z.string().optional(),
     textColor: z.string().optional(),
     borderRadius: z.string().optional(),
+    backgroundImageUrl: z.string().optional(),
   }).optional(),
   settings: z.object({
     enableSearch: z.boolean().default(false),

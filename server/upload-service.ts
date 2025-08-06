@@ -38,7 +38,7 @@ export const upload = multer({
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      cb(null, false);
     }
   },
 });
@@ -47,6 +47,69 @@ export interface UploadResult {
   success: boolean;
   url?: string;
   error?: string;
+}
+
+export async function uploadBackgroundImage(file: Express.Multer.File, userId: string): Promise<UploadResult> {
+  try {
+    // Check if object storage is available
+    const isInitialized = await ensureClientInitialized();
+    if (!isInitialized) {
+      return {
+        success: false,
+        error: "Object storage is not configured. Please contact administrator."
+      };
+    }
+
+    // Generate unique filename
+    const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = `backgrounds/${userId}/${uuidv4()}.${fileExtension}`;
+
+    // Process image with Sharp - resize to max 1200px width, maintain aspect ratio
+    const processedImage = await sharp(file.buffer)
+      .resize(1200, null, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({
+        quality: 80,
+        progressive: true
+      })
+      .toBuffer();
+
+    // Upload to Replit Object Storage using text method with base64 encoding
+    console.log(`Uploading ${fileName}, processed image size: ${processedImage.length} bytes`);
+    
+    const base64Data = processedImage.toString('base64');
+    const { ok: uploadOk, error: uploadError } = await client.uploadFromText(
+      fileName,
+      base64Data
+    );
+
+    if (!uploadOk) {
+      console.error("Upload failed:", uploadError);
+      return {
+        success: false,
+        error: "Failed to upload file to storage"
+      };
+    }
+    
+    console.log(`Upload successful: ${fileName}`);
+
+    // Return the public URL for the uploaded file
+    const publicUrl = `/api/storage/${fileName}`;
+    
+    return {
+      success: true,
+      url: publicUrl
+    };
+
+  } catch (error) {
+    console.error("Background image upload error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown upload error"
+    };
+  }
 }
 
 export async function uploadAvatar(file: Express.Multer.File, userId: string): Promise<UploadResult> {

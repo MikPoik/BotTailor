@@ -53,20 +53,41 @@ export default function DynamicHomeScreen({
   // Resolve colors with embed parameters taking priority
   const colors = resolveColors(config);
 
+  // Get background image from theme config
+  const backgroundImageUrl = config.theme?.backgroundImageUrl;
+
   return (
     <div 
-      className={`h-full overflow-y-auto ${className || ''}`}
+      className={`h-full overflow-y-auto ${className || ''} relative`}
       style={{
         backgroundColor: colors.backgroundColor,
         color: colors.textColor,
         '--primary': colors.primaryColor,
-        '--chat-primary-color': colors.primaryColor
+        '--chat-primary-color': colors.primaryColor,
+        ...(backgroundImageUrl && {
+          backgroundImage: `url(${backgroundImageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        })
       } as React.CSSProperties}
     >
-      {sortedComponents.map((component) => 
-        renderComponent(component, onTopicClick, onActionClick, colors)
+      {/* Background overlay for better text readability when background image is present */}
+      {backgroundImageUrl && (
+        <div 
+          className="absolute inset-0 bg-black/20 pointer-events-none"
+          style={{
+            backgroundColor: `${colors.backgroundColor}80` // 50% opacity background
+          }}
+        />
       )}
-      <div className="pb-8"></div>
+      {/* Content with relative positioning to appear above background */}
+      <div className="relative z-10">
+        {sortedComponents.map((component) => 
+          renderComponent(component, onTopicClick, onActionClick, colors)
+        )}
+        <div className="pb-8"></div>
+      </div>
     </div>
   );
 }

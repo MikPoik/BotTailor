@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { upload, uploadAvatar, getFileFromStorage } from "../upload-service";
+import { upload, uploadAvatar, uploadBackgroundImage, getFileFromStorage } from "../upload-service";
 import { isAuthenticated } from "../replitAuth";
 
 // File upload routes
@@ -25,10 +25,31 @@ export function setupUploadRoutes(app: Express) {
     }
   });
 
+  // Background image upload
+  app.post('/api/upload/background', isAuthenticated, upload.single('background'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const userId = req.user.claims.sub;
+      const result = await uploadBackgroundImage(req.file, userId);
+
+      if (!result.success) {
+        return res.status(500).json({ message: result.error });
+      }
+
+      res.json({ url: result.url });
+    } catch (error) {
+      console.error("Background image upload error:", error);
+      res.status(500).json({ message: "Failed to upload background image" });
+    }
+  });
+
   // Serve files from storage
   app.get('/api/storage/*', async (req, res) => {
     try {
-      const fileName = req.params[0]; // Get everything after /api/storage/
+      const fileName = req.params[0] || ''; // Get everything after /api/storage/
       const result = await getFileFromStorage(fileName);
 
       if (!result.success) {
@@ -42,7 +63,6 @@ export function setupUploadRoutes(app: Express) {
       
       // Set cache headers
       res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
-      res.setHeader('ETag', result.etag || '');
 
       res.send(result.data);
     } catch (error) {
