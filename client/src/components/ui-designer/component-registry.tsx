@@ -194,6 +194,7 @@ export function QuickActionsComponent({ component, onActionClick, resolvedColors
   if (!actions || actions.length === 0) return null;
   
   // Use resolved colors with fallback to component style
+  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
   const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
   const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
 
@@ -207,15 +208,15 @@ export function QuickActionsComponent({ component, onActionClick, resolvedColors
           <Button
             key={action.id}
             variant={index === 0 ? "default" : "outline"}
-            className="h-auto p-4 justify-start"
+            className="h-auto p-4 justify-start shadow-sm"
             onClick={() => onActionClick?.(action)}
             style={{
-              backgroundColor: index === 0 ? primaryColor : 'transparent',
+              backgroundColor: index === 0 ? primaryColor : backgroundColor,
               color: index === 0 ? 'white' : textColor,
               borderColor: index === 0 ? primaryColor : textColor,
             }}
           >
-            {getIcon(action.icon || 'MessageCircle')}
+            {getIcon('MessageCircle')}
             <div className="text-left ml-3">
               <div className="font-medium">{action.title}</div>
               <div className="text-xs" style={{ opacity: 0.8 }}>
