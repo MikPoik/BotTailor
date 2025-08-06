@@ -364,12 +364,14 @@ export async function* generateStreamingResponse(
       ...conversationHistory,
       { role: "user" as const, content: userMessage },
     ];
+    /*
     console.log('[OpenAI] Conversation history:');
     messages.forEach(msg => {
         if (msg.role !== 'system') {
             console.log(`${msg.role}: ${msg.content}`);
         }
     });
+    */
     const stream = await openai.chat.completions.create({
       model,
       messages,
