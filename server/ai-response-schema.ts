@@ -196,11 +196,23 @@ export function buildSurveyContext(survey: any, surveySession: any): string {
 
   // If survey is completed
   if (currentQuestionIndex >= config.questions.length) {
+    // Build complete Q&A context for completed surveys
+    const qaContext = config.questions.map((question: any, index: number) => {
+      const response = responses[question.id] || 'No response';
+      return `Q${index + 1}: ${question.text}\nA${index + 1}: ${response}`;
+    }).join('\n\n');
+
     return `
 **SURVEY COMPLETED**
-Survey "${config.title}" has been completed. 
+Survey: "${survey.name}" (${config.title})
+${survey.description ? `Description: ${survey.description}` : ''}
+${config.description ? `Survey Details: ${config.description}` : ''}
 Completion message: "${config.completionMessage || 'Thank you for completing the survey!'}"
-Previous responses: ${JSON.stringify(responses)}
+${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ''}
+
+**COMPLETE SURVEY RESPONSES**
+${qaContext}
+
 Do not ask any more survey questions.
 Offer a contact form or a link to contact us instead.
 `;
@@ -211,8 +223,9 @@ Offer a contact form or a link to contact us instead.
 
   let context = `
 **ACTIVE SURVEY CONTEXT**
-Survey: "${config.title}"
-${config.description ? `Description: ${config.description}` : ''}
+Survey: "${survey.name}" (${config.title})
+${survey.description ? `Description: ${survey.description}` : ''}
+${config.description ? `Survey Details: ${config.description}` : ''}
 Progress: Question ${currentQuestionIndex + 1} of ${config.questions.length}
 ${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ''}
 

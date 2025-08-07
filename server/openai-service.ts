@@ -329,9 +329,10 @@ export async function* generateStreamingResponse(
         const survey = await storage.getSurvey(surveySession.surveyId);
         console.log(`[SURVEY AI CONTEXT] Survey found:`, survey ? {
           id: survey.id,
-          title: survey.surveyConfig?.name,
-          description: survey.description
-          questionCount: survey.surveyConfig?.questions?.length
+          name: survey.name,
+          title: (survey.surveyConfig as any)?.title,
+          description: survey.description,
+          questionCount: (survey.surveyConfig as any)?.questions?.length
         } : null);
         
         if (survey) {
