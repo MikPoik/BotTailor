@@ -199,6 +199,7 @@ export default function HomeTab({
   return (
     <div className="h-full overflow-y-auto">
       {/* Welcome Header */}
+      {/*
       <div className="bg-white border-b border-neutral-200 p-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -209,6 +210,7 @@ export default function HomeTab({
           </p>
         </div>
       </div>
+      */}
 
       <div className="p-4 space-y-6 pb-8">
         {/* Quick Actions */}

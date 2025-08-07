@@ -329,7 +329,8 @@ export async function* generateStreamingResponse(
         const survey = await storage.getSurvey(surveySession.surveyId);
         console.log(`[SURVEY AI CONTEXT] Survey found:`, survey ? {
           id: survey.id,
-          title: survey.surveyConfig?.title,
+          title: survey.surveyConfig?.name,
+          description: survey.description
           questionCount: survey.surveyConfig?.questions?.length
         } : null);
         
@@ -357,7 +358,7 @@ export async function* generateStreamingResponse(
     if (surveyContext) {
       console.log(`[SURVEY] Using survey context in system prompt`);
     }
-    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    console.log(`[OpenAI] System prompt: ${systemPrompt}`);
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
