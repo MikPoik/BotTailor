@@ -4,6 +4,19 @@
 
 This project is a full-stack React chat widget application featuring an Express.js backend and a React frontend. Its primary purpose is to provide an embeddable customer support chat widget for any website. The widget supports rich messaging, including text, interactive cards, menus, and quick replies, aiming to offer a comprehensive and customizable communication tool for businesses. The vision is to enable seamless integration of sophisticated chat functionalities, enhancing user engagement and support capabilities across various web platforms.
 
+## Recent Changes
+
+- **August 8, 2025**: Fixed Survey Context Building in OpenAI Service:
+  - Fixed syntax errors in openai-service.ts that prevented proper survey context building
+  - Enhanced survey context to include all available survey fields (name, description, title, aiInstructions)
+  - Improved completed survey context to show both questions and answers instead of just responses
+  - Added proper type casting for surveyConfig access to resolve TypeScript errors
+  - Survey context now includes database survey name/description alongside config title/description
+  - AI prompts for completed surveys now show full Q&A pairs for better context understanding
+  - Survey aiInstructions are now properly injected into AI prompts when available
+  - **FIXED ONGOING SURVEYS**: Previous responses now show both questions and answers (Q1: question text, A1: answer) instead of just raw response values
+  - AI now has complete context of what questions were asked and how they were answered during survey progression
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

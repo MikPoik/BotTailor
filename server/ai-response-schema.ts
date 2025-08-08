@@ -250,8 +250,18 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
   if (Object.keys(responses).length > 0) {
     context += `
 **PREVIOUS RESPONSES**
-${Object.entries(responses).map(([qId, answer]) => `${qId}: ${answer}`).join('\n')}
 `;
+    // Build Q&A pairs for previous responses
+    Object.entries(responses).forEach(([qId, answer]) => {
+      // Find the question by ID
+      const question = config.questions.find((q: any) => q.id === qId);
+      if (question) {
+        const questionIndex = config.questions.findIndex((q: any) => q.id === qId);
+        context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${answer}\n\n`;
+      } else {
+        context += `${qId}: ${answer}\n`;
+      }
+    });
   }
 
   context += `
