@@ -16,7 +16,7 @@ import {
 import type { HomeScreenConfig } from "@shared/schema";
 
 interface HomeTabProps {
-  onStartChat: (topic: string, message?: string) => void;
+  onStartChat: (topic: string, message?: string | any) => void;
   isMobile: boolean;
   isPreloaded?: boolean;
   chatbotConfig?: any;
@@ -135,11 +135,13 @@ export default function HomeTab({
     const handleTopicClick = (topic: any) => {
       // Handle survey topics specifically
       if (topic.actionType === "survey") {
-        // Send clean message to display, but include hidden surveyId for backend parsing
-        const displayMessage = `${topic.title}`;
-        const backgroundMessage = `${displayMessage} (surveyId: ${topic.surveyId})`;
-        // For survey topics, pass the internal message for backend processing
-        onStartChat(topic.title, backgroundMessage);
+        // For survey topics, use the object format that handleStartChat expects
+        const surveyPayload = {
+          actionType: "survey",
+          displayMessage: topic.title,
+          internalMessage: `${topic.title} (surveyId: ${topic.surveyId})`
+        };
+        onStartChat(topic.title, surveyPayload);
       } else {
         // For regular message topics, send as string message
         onStartChat(topic.title, topic.message);
@@ -151,11 +153,13 @@ export default function HomeTab({
 
       // Handle survey actions specifically
       if (action.action === "take_assessment" || action.actionType === "survey") {
-        // Send clean message to display, but include hidden surveyId for backend parsing
-        const displayMessage = `${action.title}`;
-        const backgroundMessage = `${displayMessage} (surveyId: ${action.surveyId})`;
-        // For survey actions, pass the internal message for backend processing
-        onStartChat(action.title, backgroundMessage);
+        // For survey actions, use the object format that handleStartChat expects
+        const surveyPayload = {
+          actionType: "survey",
+          displayMessage: action.title,
+          internalMessage: `${action.title} (surveyId: ${action.surveyId})`
+        };
+        onStartChat(action.title, surveyPayload);
       } else if (action.action === "start_chat") {
         // For regular chat actions, send as string message
         onStartChat(action.title, action.description);
