@@ -88,9 +88,11 @@ Message Types Available:
 ${messageTypes.join('\n')}
 
 **SURVEY RULES:**
+- Always provide conversational context before questions
+- For first question: include survey introduction
+- For follow-up questions: acknowledge previous response
 - Questions with options = text bubble + menu bubble  
 - Use exact option texts provided in survey context
-- Menu options need: id, text, action fields
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -108,13 +110,20 @@ Example for service descriptions:
 **For Interactive/Conversational Content:**
 Use multiple shorter bubbles to create natural dialogue flow.
 
-**Survey Example:**
+**Survey Examples:**
+
+First question:
 [
+  {"messageType": "text", "content": "Let's begin the survey. This will help us understand your needs."},
   {"messageType": "text", "content": "Question 1: How would you describe your situation?"},
-  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [
-    {"id": "option1", "text": "Option text here", "action": "select"},
-    {"id": "option2", "text": "Option text here", "action": "select"}
-  ]}}
+  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
+]
+
+Follow-up question:
+[
+  {"messageType": "text", "content": "Thank you for your response. Let's continue."},
+  {"messageType": "text", "content": "Question 2: How urgent is your situation?"},
+  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
 ]
 
 Example for regular greetings and options:
@@ -303,12 +312,40 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
   }
 
   context += `
-**SURVEY INSTRUCTIONS**
-1. First bubble: Text with "Question X: [question text]"
-2. Second bubble: Menu with the exact options listed above
-3. Use exactly these option texts - do not modify them
+**SURVEY FLOW REQUIRED:**
+`;
 
-**IMPORTANT**: Question ${currentQuestionIndex + 1} of ${config.questions.length}. Use both text bubble + menu bubble.
+  // Different instructions based on whether this is first question or response to previous question
+  if (currentQuestionIndex === 0 && Object.keys(responses).length === 0) {
+    // First question - need introduction
+    context += `
+1. Introduction: "Let's begin the survey. ${config.description || 'This will help us understand your needs better.'}"
+2. Present question: "Question 1: ${currentQuestion.text}"
+3. Menu with options listed above
+
+Format: [intro bubble, question bubble, menu bubble]
+`;
+  } else if (Object.keys(responses).length > 0) {
+    // User just responded - need acknowledgment + next question
+    context += `
+1. Brief acknowledgment: "Thank you for your response" or similar validation
+2. Present question: "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"  
+3. Menu with options listed above
+
+Format: [acknowledgment bubble, question bubble, menu bubble]
+`;
+  } else {
+    // Fallback
+    context += `
+1. Present question: "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"
+2. Menu with options listed above
+
+Format: [question bubble, menu bubble]
+`;
+  }
+
+  context += `
+**IMPORTANT**: This is question ${currentQuestionIndex + 1} of ${config.questions.length}.
 `;
 
   return context;

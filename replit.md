@@ -6,20 +6,20 @@ This project is a full-stack React chat widget application featuring an Express.
 
 ## Recent Changes
 
-- **August 8, 2025 - Latest**: Fixed Survey Flow and Menu Generation Issues:
+- **August 8, 2025 - Latest**: Enhanced Survey Conversational Flow:
   - **FIXED SURVEY MESSAGE DISPLAY**: Survey selections now show clean titles without "(surveyId: X)" text in chat messages
-  - **ENHANCED SURVEY FLOW INSTRUCTIONS**: Updated AI prompts to require text bubble + menu bubble pattern for questions
-  - Added explicit examples for survey question presentation with proper two-bubble approach
-  - Enhanced system prompt with survey response acknowledgment requirements between questions
+  - **IMPROVED CONVERSATIONAL FLOW**: Added proper survey introductions and response acknowledgments
+  - Survey now includes introductory message when starting ("Let's begin the survey...")
+  - Added acknowledgment responses between questions ("Thank you for your response...")
+  - **CONTEXT-AWARE PROMPTS**: System now provides different instructions based on survey progress
+  - First question gets introduction + question + menu format
+  - Follow-up questions get acknowledgment + question + menu format
+  - **SIMPLIFIED AI INSTRUCTIONS**: Streamlined system prompts to reduce complexity and improve consistency
+  - Removed problematic "recovery" logic that was dropping incomplete menu options during streaming
   - **INCREASED TOKEN LIMITS**: Raised maxTokens from 1500 to 2000 to prevent truncated menu options
-  - **ADDED MENU RECOVERY LOGIC**: Implemented automatic filtering of incomplete menu options to prevent "MISSING" entries
-  - When OpenAI generates incomplete menu options, system now recovers complete ones and drops broken entries
   - **COMPREHENSIVE MENU LOGGING**: Enhanced streaming response validation with detailed menu bubble detection
   - Added error logging when survey questions with options fail to generate required menu bubbles
   - Added success logging when survey menus are correctly generated to track proper functionality
-  - **STRENGTHENED AI INSTRUCTIONS**: Added explicit system prompt rules making survey menus mandatory, not optional
-  - Enhanced survey context with detailed menu format examples and critical requirements
-  - Added post-generation validation to detect missing menus in survey responses
 
 - **August 8, 2025**: Fixed Survey Context Building in OpenAI Service:
   - Fixed syntax errors in openai-service.ts that prevented proper survey context building
