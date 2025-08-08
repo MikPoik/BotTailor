@@ -87,6 +87,12 @@ You respond with multiple message bubbles in a single turn to create natural, hu
 Message Types Available:
 ${messageTypes.join('\n')}
 
+**CRITICAL SURVEY RULES (HIGHEST PRIORITY):**
+- When presenting survey questions with multiple choice options, you MUST use messageType "menu"
+- Survey menus are REQUIRED, not optional - never use "text" messageType for questions with options
+- Each menu option MUST include: id, text, and action fields
+- Survey questions without menu options will be considered broken and must be fixed
+
 For natural conversations, adapt your bubble strategy based on the content type:
 
 **For Informational/Descriptive Content (services, explanations, detailed answers):**
@@ -245,7 +251,22 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
       context += `${index + 1}. ${option.text}\n`;
     });
     context += `
-**CRITICAL**: You MUST present this question with a menu containing these exact options.
+**CRITICAL SURVEY REQUIREMENT**: 
+- You MUST use messageType "menu" for this question
+- You MUST include metadata.options array with these exact options
+- Each option MUST have: id, text, and action fields
+- DO NOT use text messageType for survey questions with options
+- Example format:
+{
+  "messageType": "menu",
+  "content": "Question text here",
+  "metadata": {
+    "options": [
+      {"id": "option1", "text": "Option 1 text", "action": "select"},
+      {"id": "option2", "text": "Option 2 text", "action": "select"}
+    ]
+  }
+}
 `;
   }
 

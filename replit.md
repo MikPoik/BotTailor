@@ -6,6 +6,18 @@ This project is a full-stack React chat widget application featuring an Express.
 
 ## Recent Changes
 
+- **August 8, 2025 - Latest**: Enhanced Survey Menu Validation and Detection:
+  - **FIXED SURVEY MESSAGE DISPLAY**: Survey selections now show clean titles without "(surveyId: X)" text in chat messages
+  - Modified home-tab.tsx to use object payload format for survey actions with separate display and internal messages
+  - Updated onStartChat type definition to handle both string and object payloads for survey compatibility
+  - **ADDED COMPREHENSIVE MENU LOGGING**: Enhanced streaming response validation with detailed menu bubble detection
+  - Added error logging when survey questions with options fail to generate required menu bubbles
+  - Added success logging when survey menus are correctly generated to track proper functionality
+  - **STRENGTHENED AI INSTRUCTIONS**: Added explicit system prompt rules making survey menus mandatory, not optional
+  - Enhanced survey context with detailed menu format examples and critical requirements
+  - Added post-generation validation to detect missing menus in survey responses
+  - **IMPROVED ERROR DETECTION**: Menu validation now checks for incomplete option objects and provides detailed diagnostic information
+
 - **August 8, 2025**: Fixed Survey Context Building in OpenAI Service:
   - Fixed syntax errors in openai-service.ts that prevented proper survey context building
   - Enhanced survey context to include all available survey fields (name, description, title, aiInstructions)

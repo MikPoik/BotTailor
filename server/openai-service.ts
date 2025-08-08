@@ -337,6 +337,14 @@ export async function* generateStreamingResponse(
         
         if (survey) {
           surveyContext = buildSurveyContext(survey, surveySession);
+          
+          // Check if current question has options (requires menu)
+          const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
+          const questions = (survey.surveyConfig as any)?.questions;
+          if (questions && questions[currentQuestionIndex]?.options?.length > 0) {
+            console.log(`[SURVEY MENU REQUIRED] Question ${currentQuestionIndex + 1} has ${questions[currentQuestionIndex].options.length} options - MENU BUBBLE REQUIRED`);
+          }
+          
           console.log(`[SURVEY AI CONTEXT] Built survey context (${surveyContext.length} chars) for question index ${surveySession.currentQuestionIndex}:`);
           console.log(surveyContext.substring(0, 800));
         }
@@ -571,7 +579,26 @@ export async function* generateStreamingResponse(
                       await shouldYieldBubble();
                       yield { type: "bubble", bubble };
                       processedBubbles = i + 1;
+                    } else {
+                      console.warn(
+                        `[SURVEY MENU WARNING] Menu bubble ${i + 1} has incomplete options:`,
+                        bubble.metadata.options.map((opt: any) => ({
+                          id: opt?.id || 'MISSING',
+                          text: opt?.text || 'MISSING',
+                          action: opt?.action || 'MISSING'
+                        }))
+                      );
                     }
+                  } else {
+                    console.error(
+                      `[SURVEY MENU ERROR] Menu bubble ${i + 1} missing metadata.options array:`,
+                      {
+                        hasMetadata: !!bubble.metadata,
+                        hasOptions: !!bubble.metadata?.options,
+                        optionsType: typeof bubble.metadata?.options,
+                        optionsLength: Array.isArray(bubble.metadata?.options) ? bubble.metadata.options.length : 'NOT_ARRAY'
+                      }
+                    );
                   }
                 } else if (bubble.messageType === "form") {
                   // For form bubbles, ensure all required form fields are complete
@@ -664,6 +691,41 @@ export async function* generateStreamingResponse(
       console.log(`[OpenAI] Final parse successful, validating schema...`);
 
       const validated = AIResponseSchema.parse(finalParseResult);
+
+      // Check if survey required menu but didn't get one (rebuild survey context for validation)
+      try {
+        const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+        if (surveySession && surveySession.status === 'active') {
+          const survey = await storage.getSurvey(surveySession.surveyId);
+          if (survey) {
+            const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
+            const questions = (survey.surveyConfig as any)?.questions;
+            const currentQuestion = questions?.[currentQuestionIndex];
+            
+            if (currentQuestion?.options?.length > 0) {
+              const hasMenuBubble = validated.bubbles.some(bubble => bubble.messageType === "menu");
+              if (!hasMenuBubble) {
+                console.error(`[SURVEY MENU ERROR] Survey Q${currentQuestionIndex + 1} has ${currentQuestion.options.length} options but NO menu bubble generated!`);
+                console.error(`[SURVEY MENU ERROR] Generated ${validated.bubbles.length} bubbles:`, 
+                  validated.bubbles.map(b => `${b.messageType}: "${b.content?.substring(0, 50)}..."`));
+              } else {
+                console.log(`[SURVEY MENU SUCCESS] Survey Q${currentQuestionIndex + 1} correctly generated menu bubble`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("[SURVEY MENU VALIDATION] Error checking survey menu:", error);
+      }
+      
+      if (false) { // Placeholder conditional to maintain syntax
+        const hasMenuBubble = validated.bubbles.some(bubble => bubble.messageType === "menu");
+        if (!hasMenuBubble) {
+          console.error(`[SURVEY MENU ERROR] Survey context required menu but no menu bubble generated!`);
+          console.error(`[SURVEY MENU ERROR] Generated ${validated.bubbles.length} bubbles:`, 
+            validated.bubbles.map(b => `${b.messageType}: "${b.content?.substring(0, 50)}..."`));
+        }
+      }
 
       // Yield any remaining bubbles that weren't processed during streaming
       for (let i = processedBubbles; i < validated.bubbles.length; i++) {
