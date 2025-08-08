@@ -74,6 +74,9 @@ export interface IStorage {
   createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession>;
   updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined>;
   getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined>;
+
+  // Conversation count methods
+  getConversationCount(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -385,6 +388,18 @@ export class DatabaseStorage implements IStorage {
     const [session] = await db.select().from(surveySessions)
       .where(eq(surveySessions.sessionId, sessionId));
     return session || undefined;
+  }
+
+  // Conversation count method
+  async getConversationCount(userId: string): Promise<number> {
+    // Count unique sessions that are connected to this user's chatbots
+    const result = await db
+      .select({ count: sql<number>`count(distinct ${chatSessions.sessionId})` })
+      .from(chatSessions)
+      .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
+      .where(eq(chatbotConfigs.userId, userId));
+    
+    return result[0]?.count || 0;
   }
 }
 

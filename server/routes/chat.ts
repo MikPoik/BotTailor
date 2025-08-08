@@ -90,6 +90,23 @@ export function setupChatRoutes(app: Express) {
     }
   });
 
+  // Get conversation count for user's chatbots
+  app.get('/api/chat/conversations/count', async (req, res) => {
+    try {
+      // Get user from session/auth
+      const user = (req as any).user;
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const conversationCount = await storage.getConversationCount(user.id);
+      res.json(conversationCount);
+    } catch (error) {
+      console.error("Error fetching conversation count:", error);
+      res.status(500).json({ message: "Failed to fetch conversation count" });
+    }
+  });
+
   // Create new chat session
   app.post('/api/chat/session', async (req, res) => {
     try {
