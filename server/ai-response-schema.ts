@@ -316,9 +316,12 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
 **SURVEY FLOW REQUIRED:**
 `;
 
-  // Different instructions based on whether this is first question or response to previous question
-  if (currentQuestionIndex === 0 && Object.keys(responses).length === 0) {
-    // First question - need introduction
+  // Check if this might be a survey restart (question 1 but user just requested survey)
+  const isLikelyRestart = currentQuestionIndex === 0 && Object.keys(responses).length === 0;
+  
+  // Different instructions based on survey progress
+  if (isLikelyRestart) {
+    // Starting or restarting survey - need introduction
     context += `
 1. Introduction: "Let's begin the survey. ${config.description || 'This will help us understand your needs better.'}"
 2. Present question: "Question 1: ${currentQuestion.text}"
@@ -336,7 +339,7 @@ Format: [intro bubble, question bubble, menu bubble]
 Format: [acknowledgment bubble, question bubble, menu bubble]
 `;
   } else {
-    // Fallback
+    // Continuing survey without recent response
     context += `
 1. Present question: "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"
 2. Menu with options listed above

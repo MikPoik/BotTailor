@@ -6,20 +6,21 @@ This project is a full-stack React chat widget application featuring an Express.
 
 ## Recent Changes
 
-- **August 8, 2025 - Latest**: Enhanced Survey Conversational Flow:
-  - **FIXED SURVEY MESSAGE DISPLAY**: Survey selections now show clean titles without "(surveyId: X)" text in chat messages
+- **August 8, 2025 - Latest**: Enhanced Survey Session Management and Restart Handling:
+  - **SMART SURVEY SESSION MANAGEMENT**: Implemented proper handling for completed and restarted surveys
+  - System now checks for existing survey sessions before creating new ones
+  - Completed surveys can be restarted by resetting the session status and responses
+  - Active surveys continue from where they left off instead of creating duplicates
+  - **SURVEY-SPECIFIC SESSION TRACKING**: Changed from generic session checking to survey-specific session management
+  - Uses `getSurveySession(surveyId, sessionId)` instead of generic session lookup
+  - Each survey maintains its own completion state per chat session
   - **IMPROVED CONVERSATIONAL FLOW**: Added proper survey introductions and response acknowledgments
   - Survey now includes introductory message when starting ("Let's begin the survey...")
   - Added acknowledgment responses between questions ("Thank you for your response...")
-  - **CONTEXT-AWARE PROMPTS**: System now provides different instructions based on survey progress
-  - First question gets introduction + question + menu format
-  - Follow-up questions get acknowledgment + question + menu format
+  - **CONTEXT-AWARE PROMPTS**: System provides different instructions based on survey progress
   - **SIMPLIFIED AI INSTRUCTIONS**: Streamlined system prompts to reduce complexity and improve consistency
-  - Removed problematic "recovery" logic that was dropping incomplete menu options during streaming
   - **INCREASED TOKEN LIMITS**: Raised maxTokens from 1500 to 2000 to prevent truncated menu options
   - **COMPREHENSIVE MENU LOGGING**: Enhanced streaming response validation with detailed menu bubble detection
-  - Added error logging when survey questions with options fail to generate required menu bubbles
-  - Added success logging when survey menus are correctly generated to track proper functionality
 
 - **August 8, 2025**: Fixed Survey Context Building in OpenAI Service:
   - Fixed syntax errors in openai-service.ts that prevented proper survey context building
