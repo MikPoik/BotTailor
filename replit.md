@@ -16,6 +16,8 @@ This project is a full-stack React chat widget application featuring an Express.
   - Survey aiInstructions are now properly injected into AI prompts when available
   - **FIXED ONGOING SURVEYS**: Previous responses now show both questions and answers (Q1: question text, A1: answer) instead of just raw response values
   - AI now has complete context of what questions were asked and how they were answered during survey progression
+  - **FIXED QUESTION ID MAPPING**: Resolved mismatch between indexed question IDs (question_0, question_1) used in storage and survey config question lookup
+  - Survey context now properly handles both indexed question IDs and original question IDs for maximum compatibility
 
 ## User Preferences
 

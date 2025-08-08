@@ -198,7 +198,9 @@ export function buildSurveyContext(survey: any, surveySession: any): string {
   if (currentQuestionIndex >= config.questions.length) {
     // Build complete Q&A context for completed surveys
     const qaContext = config.questions.map((question: any, index: number) => {
-      const response = responses[question.id] || 'No response';
+      // Try indexed ID first (question_0, question_1, etc.), then fallback to question.id
+      const indexedId = `question_${index}`;
+      const response = responses[indexedId] || responses[question.id] || 'No response';
       return `Q${index + 1}: ${question.text}\nA${index + 1}: ${response}`;
     }).join('\n\n');
 
@@ -253,13 +255,25 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
 `;
     // Build Q&A pairs for previous responses
     Object.entries(responses).forEach(([qId, answer]) => {
-      // Find the question by ID
-      const question = config.questions.find((q: any) => q.id === qId);
-      if (question) {
-        const questionIndex = config.questions.findIndex((q: any) => q.id === qId);
-        context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${answer}\n\n`;
+      // Handle indexed question IDs (question_0, question_1, etc.)
+      const indexMatch = qId.match(/^question_(\d+)$/);
+      if (indexMatch) {
+        const questionIndex = parseInt(indexMatch[1], 10);
+        const question = config.questions[questionIndex];
+        if (question) {
+          context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${answer}\n\n`;
+        } else {
+          context += `${qId}: ${answer}\n`;
+        }
       } else {
-        context += `${qId}: ${answer}\n`;
+        // Fallback: try to find question by ID
+        const question = config.questions.find((q: any) => q.id === qId);
+        if (question) {
+          const questionIndex = config.questions.findIndex((q: any) => q.id === qId);
+          context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${answer}\n\n`;
+        } else {
+          context += `${qId}: ${answer}\n`;
+        }
       }
     });
   }
