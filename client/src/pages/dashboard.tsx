@@ -240,8 +240,8 @@ export default function Dashboard() {
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.id}/surveys`}>
-                        <BarChart3 className="mr-2 h-3 w-3" />
+                      <Link href={`/chatbots/${chatbot.guid}/surveys`}>
+                        <BarChart3 className="mr-2 h-4 w-4" />
                         Survey Builder
                       </Link>
                     </Button>

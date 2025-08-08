@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 
 export default function SurveyBuilderPage() {
-  const { chatbotId } = useParams();
+  const { guid } = useParams();
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
@@ -72,23 +72,23 @@ export default function SurveyBuilderPage() {
 
   // Fetch chatbot details
   const { data: chatbot } = useQuery<{ name: string; id: number }>({
-    queryKey: [`/api/chatbots/${chatbotId}`],
-    enabled: !!chatbotId && isAuthenticated,
+    queryKey: [`/api/chatbots/${guid}`],
+    enabled: !!guid && isAuthenticated,
   });
 
   // Fetch surveys for this chatbot
   const { data: surveys = [], isLoading } = useQuery<Survey[]>({
-    queryKey: [`/api/chatbots/${chatbotId}/surveys`],
-    enabled: !!chatbotId && isAuthenticated,
+    queryKey: [`/api/chatbots/${chatbot?.id}/surveys`],
+    enabled: !!chatbot?.id && isAuthenticated,
   });
 
   // Create survey mutation
   const createSurveyMutation = useMutation({
     mutationFn: async (data: { name: string; description: string; surveyConfig: SurveyConfig }) => {
-      return await apiRequest("POST", `/api/chatbots/${chatbotId}/surveys`, data);
+      return await apiRequest("POST", `/api/chatbots/${chatbot?.id}/surveys`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}/surveys`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/surveys`] });
       toast({ title: "Survey created successfully!" });
     },
     onError: (error: any) => {
@@ -107,7 +107,7 @@ export default function SurveyBuilderPage() {
     },
     onSuccess: (data, variables) => {
       // Invalidate queries to refetch data
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}/surveys`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/surveys`] });
       
       // Update the selected survey if it's the one being updated
       if (selectedSurvey && selectedSurvey.id === variables.id) {
@@ -144,7 +144,7 @@ export default function SurveyBuilderPage() {
       return await apiRequest("DELETE", `/api/surveys/${surveyId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotId}/surveys`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/surveys`] });
       setSelectedSurvey(null);
       toast({ title: "Survey deleted successfully!" });
     },
