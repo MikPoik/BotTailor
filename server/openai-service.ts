@@ -65,7 +65,7 @@ export async function generateMultiBubbleResponse(
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10
       : 0.7;
-    const maxTokens = chatbotConfig?.maxTokens || 1500;
+    const maxTokens = chatbotConfig?.maxTokens || 2000;
 
     console.log(
       `[OpenAI] Using model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`,
@@ -359,7 +359,7 @@ export async function* generateStreamingResponse(
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10
       : 0.7;
-    const maxTokens = chatbotConfig?.maxTokens || 1500;
+    const maxTokens = chatbotConfig?.maxTokens || 2000;
 
     console.log(
       `[OpenAI] Streaming with model: ${model}, temperature: ${temperature}, maxTokens: ${maxTokens}`,
@@ -588,6 +588,22 @@ export async function* generateStreamingResponse(
                           action: opt?.action || 'MISSING'
                         }))
                       );
+                      
+                      // Try to fix incomplete options by filtering out incomplete ones
+                      const completeOptions = bubble.metadata.options.filter((opt: any) => 
+                        opt && opt.id && opt.text && opt.action
+                      );
+                      
+                      if (completeOptions.length > 0 && completeOptions.length < bubble.metadata.options.length) {
+                        console.log(`[SURVEY MENU FIX] Recovered ${completeOptions.length} complete options, dropping ${bubble.metadata.options.length - completeOptions.length} incomplete ones`);
+                        bubble.metadata.options = completeOptions;
+                        console.log(
+                          `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} recovered options)`,
+                        );
+                        await shouldYieldBubble();
+                        yield { type: "bubble", bubble };
+                        processedBubbles = i + 1;
+                      }
                     }
                   } else {
                     console.error(
