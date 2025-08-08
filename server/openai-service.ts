@@ -346,7 +346,7 @@ export async function* generateStreamingResponse(
           }
           
           console.log(`[SURVEY AI CONTEXT] Built survey context (${surveyContext.length} chars) for question index ${surveySession.currentQuestionIndex}:`);
-          console.log(surveyContext.substring(0, 800));
+          //console.log(surveyContext.substring(0, 800));
         }
       }
     } catch (error) {
@@ -719,14 +719,7 @@ export async function* generateStreamingResponse(
         console.error("[SURVEY MENU VALIDATION] Error checking survey menu:", error);
       }
       
-      if (false) { // Placeholder conditional to maintain syntax
-        const hasMenuBubble = validated.bubbles.some(bubble => bubble.messageType === "menu");
-        if (!hasMenuBubble) {
-          console.error(`[SURVEY MENU ERROR] Survey context required menu but no menu bubble generated!`);
-          console.error(`[SURVEY MENU ERROR] Generated ${validated.bubbles.length} bubbles:`, 
-            validated.bubbles.map(b => `${b.messageType}: "${b.content?.substring(0, 50)}..."`));
-        }
-      }
+
 
       // Yield any remaining bubbles that weren't processed during streaming
       for (let i = processedBubbles; i < validated.bubbles.length; i++) {

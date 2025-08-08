@@ -68,7 +68,7 @@ export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): 
 
   // Build message types list conditionally
   const messageTypes = [
-    "1. TEXT: Simple text responses with optional quick replies",
+    "1. TEXT: Simple text responses with optional quick replies. You can format text with markdown syntax",
     "2. CARD: Rich cards with title, description, image, and action buttons, use only if asked about a product.",
     "3. MENU: Interactive menus with selectable options", 
     "4. IMAGE: Image responses with optional text",
@@ -93,6 +93,7 @@ ${messageTypes.join('\n')}
 - For follow-up questions: acknowledge previous response
 - Questions with options = text bubble + menu bubble  
 - Use exact option texts provided in survey context
+- Do not invent new options or change existing ones
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -102,13 +103,10 @@ Use fewer, longer bubbles that contain complete information. Each bubble should 
 Example for service descriptions:
 {
   "bubbles": [
-    {"messageType": "text", "content": "Our services are designed to provide comprehensive support for your specific needs. We offer personalized solutions that are tailored to help you achieve your goals effectively. Our team of experts works closely with each client to ensure the best possible outcomes, utilizing proven methodologies and industry best practices to deliver exceptional results."},
-    {"messageType": "text", "content": "Would you like to know more about our offerings, pricing, or how to get started?"}
+    {"messageType": "text", "content": "**Our** services are designed to provide comprehensive support for your specific needs. We offer personalized solutions that are tailored to help you achieve your goals effectively. Our team of experts works closely with each client to ensure the best possible outcomes, utilizing proven methodologies and industry best practices to deliver exceptional results."},
+    {"messageType": "text", "content": "Would you like to know more about our **offerings**, **pricing**, or how to get started?"}
   ]
 }
-
-**For Interactive/Conversational Content:**
-Use multiple shorter bubbles to create natural dialogue flow.
 
 **Survey Examples:**
 
@@ -119,12 +117,15 @@ First question:
   {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
 ]
 
-Follow-up question:
+Follow-up question, aknowledge user's response and validate their feelings. For example :
 [
-  {"messageType": "text", "content": "Thank you for your response. Let's continue."},
+  {"messageType": "text", "content": "Thank you for your response, it is common to feel that way. Let's continue."},
   {"messageType": "text", "content": "Question 2: How urgent is your situation?"},
   {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
 ]
+
+**For Interactive/Conversational Content:**
+Use multiple shorter bubbles to create natural dialogue flow.
 
 Example for regular greetings and options:
 {
