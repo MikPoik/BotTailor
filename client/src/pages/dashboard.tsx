@@ -73,7 +73,7 @@ export default function Dashboard() {
   // Fetch conversation count for user's chatbots
   const { data: conversationCount = 0 } = useQuery<number>({
     queryKey: ["/api/chat/conversations/count"],
-    enabled: isAuthenticated && !!chatbots?.length,
+    enabled: isAuthenticated,
     retry: false,
   });
 
