@@ -367,7 +367,7 @@ export async function* generateStreamingResponse(
     if (surveyContext) {
       console.log(`[SURVEY] Using survey context in system prompt`);
     }
-    console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
