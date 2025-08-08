@@ -87,13 +87,10 @@ You respond with multiple message bubbles in a single turn to create natural, hu
 Message Types Available:
 ${messageTypes.join('\n')}
 
-**CRITICAL SURVEY RULES (HIGHEST PRIORITY):**
-- When presenting survey questions with multiple choice options, you MUST use messageType "menu"
-- Survey menus are REQUIRED, not optional - never use "text" messageType for questions with options
-- Each menu option MUST include: id, text, and action fields
-- ALWAYS present question text in a separate text bubble before the menu bubble
-- For user responses, provide brief acknowledgment before advancing to next question
-- Survey questions without menu options will be considered broken and must be fixed
+**SURVEY RULES:**
+- Questions with options = text bubble + menu bubble  
+- Use exact option texts provided in survey context
+- Menu options need: id, text, action fields
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -111,26 +108,14 @@ Example for service descriptions:
 **For Interactive/Conversational Content:**
 Use multiple shorter bubbles to create natural dialogue flow.
 
-**For Survey Questions:**
-ALWAYS use text bubble + menu bubble pattern:
-{
-  "bubbles": [
-    {"messageType": "text", "content": "Question 1: How would you describe your current situation?"},
-    {"messageType": "menu", "content": "Please select the option that best describes your situation:", "metadata": {"options": [
-      {"id": "option1", "text": "I need help with daily activities", "action": "select"},
-      {"id": "option2", "text": "I'm looking for relationship support", "action": "select"}
-    ]}}
-  ]
-}
-
-**For Survey Response Acknowledgments:**
-{
-  "bubbles": [
-    {"messageType": "text", "content": "Thank you for your response. Let's continue with the next question."},
-    {"messageType": "text", "content": "Question 2: How urgent do you consider your situation?"},
-    {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
-  ]
-}
+**Survey Example:**
+[
+  {"messageType": "text", "content": "Question 1: How would you describe your situation?"},
+  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [
+    {"id": "option1", "text": "Option text here", "action": "select"},
+    {"id": "option2", "text": "Option text here", "action": "select"}
+  ]}}
+]
 
 Example for regular greetings and options:
 {
@@ -274,19 +259,14 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
       context += `${index + 1}. ${option.text}\n`;
     });
     context += `
-**CRITICAL SURVEY REQUIREMENT**: 
-- You MUST use messageType "menu" for this question
-- You MUST include metadata.options array with these exact options
-- Each option MUST have: id, text, and action fields
-- DO NOT use text messageType for survey questions with options
-- Example format:
+**MENU FORMAT REQUIRED**:
 {
   "messageType": "menu",
-  "content": "Question text here",
+  "content": "Please select your answer:",
   "metadata": {
     "options": [
-      {"id": "option1", "text": "Option 1 text", "action": "select"},
-      {"id": "option2", "text": "Option 2 text", "action": "select"}
+      {"id": "option1", "text": "${currentQuestion.options[0].text}", "action": "select"},
+      {"id": "option2", "text": "${currentQuestion.options[1].text}", "action": "select"}
     ]
   }
 }
@@ -323,25 +303,12 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
   }
 
   context += `
-**SURVEY FLOW INSTRUCTIONS**
-1. ALWAYS provide a text bubble with the question before the menu
-2. Present question number and text clearly (e.g., "Question 2: [question text]")  
-3. THEN follow with a menu bubble containing the exact options
-4. For user responses: Give brief acknowledgment before next question
-5. Continue until all questions are answered
+**SURVEY INSTRUCTIONS**
+1. First bubble: Text with "Question X: [question text]"
+2. Second bubble: Menu with the exact options listed above
+3. Use exactly these option texts - do not modify them
 
-**CRITICAL SURVEY RULES:**
-- Use TWO bubbles per question: TEXT bubble + MENU bubble
-- Text bubble: Question number and text for context
-- Menu bubble: Interactive options for selection
-- NEVER present only menu without question context
-- Example proper format:
-[
-  {"messageType": "text", "content": "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"},
-  {"messageType": "menu", "content": "Please select your answer:", "metadata": {"options": [...]}}
-]
-
-**IMPORTANT**: This is question ${currentQuestionIndex + 1} of ${config.questions.length}. Present BOTH question text AND menu options.
+**IMPORTANT**: Question ${currentQuestionIndex + 1} of ${config.questions.length}. Use both text bubble + menu bubble.
 `;
 
   return context;

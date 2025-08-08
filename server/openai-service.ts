@@ -581,29 +581,14 @@ export async function* generateStreamingResponse(
                       processedBubbles = i + 1;
                     } else {
                       console.warn(
-                        `[SURVEY MENU WARNING] Menu bubble ${i + 1} has incomplete options:`,
+                        `[SURVEY MENU WARNING] Menu bubble ${i + 1} has incomplete options, waiting for complete response...`,
                         bubble.metadata.options.map((opt: any) => ({
                           id: opt?.id || 'MISSING',
                           text: opt?.text || 'MISSING',
                           action: opt?.action || 'MISSING'
                         }))
                       );
-                      
-                      // Try to fix incomplete options by filtering out incomplete ones
-                      const completeOptions = bubble.metadata.options.filter((opt: any) => 
-                        opt && opt.id && opt.text && opt.action
-                      );
-                      
-                      if (completeOptions.length > 0 && completeOptions.length < bubble.metadata.options.length) {
-                        console.log(`[SURVEY MENU FIX] Recovered ${completeOptions.length} complete options, dropping ${bubble.metadata.options.length - completeOptions.length} incomplete ones`);
-                        bubble.metadata.options = completeOptions;
-                        console.log(
-                          `[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType} (menu with ${bubble.metadata.options.length} recovered options)`,
-                        );
-                        await shouldYieldBubble();
-                        yield { type: "bubble", bubble };
-                        processedBubbles = i + 1;
-                      }
+                      // Don't process incomplete menus during streaming - wait for final response
                     }
                   } else {
                     console.error(
