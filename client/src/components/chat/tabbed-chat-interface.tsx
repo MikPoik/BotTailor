@@ -109,17 +109,14 @@ export default function TabbedChatInterface({
             },
           };
 
-          // Use setTimeout to break React's automatic batching and ensure bubbles appear one by one
-          setTimeout(() => {
-            // Add bubble directly to main messages query cache
-            queryClient.setQueryData(
-              ["/api/chat", sessionId, "messages"],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-          }, streamingBubblesRef.current.length * 100); // Small staggered delay
+          // Add bubble directly to main messages query cache
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
@@ -190,17 +187,14 @@ export default function TabbedChatInterface({
             },
           };
 
-          // Use setTimeout to break React's automatic batching and ensure bubbles appear one by one
-          setTimeout(() => {
-            // Add bubble directly to main messages query cache
-            queryClient.setQueryData(
-              ["/api/chat", sessionId, "messages"],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-          }, streamingBubblesRef.current.length * 100); // Small staggered delay
+          // Add bubble directly to main messages query cache
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
@@ -249,17 +243,14 @@ export default function TabbedChatInterface({
             },
           };
 
-          // Use setTimeout to break React's automatic batching and ensure bubbles appear one by one
-          setTimeout(() => {
-            // Add bubble directly to main messages query cache
-            queryClient.setQueryData(
-              ["/api/chat", sessionId, "messages"],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-          }, streamingBubblesRef.current.length * 100); // Small staggered delay
+          // Add bubble directly to main messages query cache
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
@@ -320,17 +311,14 @@ export default function TabbedChatInterface({
               },
             };
 
-            // Use setTimeout to break React's automatic batching and ensure bubbles appear one by one
-            setTimeout(() => {
-              // Add bubble directly to main messages query cache
-              queryClient.setQueryData(
-                ["/api/chat", sessionId, "messages"],
-                (old: any) => {
-                  if (!old) return { messages: [bubbleWithFlag] };
-                  return { messages: [...old.messages, bubbleWithFlag] };
-                },
-              );
-            }, streamingBubblesRef.current.length * 100); // Small staggered delay
+            // Add bubble directly to main messages query cache
+            queryClient.setQueryData(
+              ["/api/chat", sessionId, "messages"],
+              (old: any) => {
+                if (!old) return { messages: [bubbleWithFlag] };
+                return { messages: [...old.messages, bubbleWithFlag] };
+              },
+            );
 
             // Keep track of streaming bubbles for counting
             streamingBubblesRef.current.push(bubbleWithFlag);
@@ -385,17 +373,14 @@ export default function TabbedChatInterface({
               },
             };
 
-            // Use setTimeout to break React's automatic batching and ensure bubbles appear one by one
-            setTimeout(() => {
-              // Add bubble directly to main messages query cache
-              queryClient.setQueryData(
-                ["/api/chat", sessionId, "messages"],
-                (old: any) => {
-                  if (!old) return { messages: [bubbleWithFlag] };
-                  return { messages: [...old.messages, bubbleWithFlag] };
-                },
-              );
-            }, streamingBubblesRef.current.length * 100); // Small staggered delay
+            // Add bubble directly to main messages query cache
+            queryClient.setQueryData(
+              ["/api/chat", sessionId, "messages"],
+              (old: any) => {
+                if (!old) return { messages: [bubbleWithFlag] };
+                return { messages: [...old.messages, bubbleWithFlag] };
+              },
+            );
 
             // Keep track of streaming bubbles for counting
             streamingBubblesRef.current.push(bubbleWithFlag);
@@ -441,17 +426,14 @@ export default function TabbedChatInterface({
             },
           };
 
-          // Use setTimeout to break React's automatic batching and ensure bubbles appear one by one
-          setTimeout(() => {
-            // Add bubble directly to main messages query cache
-            queryClient.setQueryData(
-              ["/api/chat", sessionId, "messages"],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-          }, streamingBubblesRef.current.length * 100); // Small staggered delay
+          // Add bubble directly to main messages query cache
+          queryClient.setQueryData(
+            ["/api/chat", sessionId, "messages"],
+            (old: any) => {
+              if (!old) return { messages: [bubbleWithFlag] };
+              return { messages: [...old.messages, bubbleWithFlag] };
+            },
+          );
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
