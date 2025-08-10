@@ -238,9 +238,9 @@ export default function ChatbotTest() {
                     <TabbedChatInterface
                       sessionId={testSessionId}
                       isMobile={false}
-                      isPreloaded={false}
+                      isPreloaded={true}
                       onClose={() => {}} // No close needed for test interface
-                      isEmbedded={false}
+                      isEmbedded={true}
                       chatbotConfigId={chatbot.id}
                       chatbotConfig={chatbot}
                     />
