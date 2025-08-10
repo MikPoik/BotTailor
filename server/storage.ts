@@ -392,12 +392,17 @@ export class DatabaseStorage implements IStorage {
 
   // Conversation count method
   async getConversationCount(userId: string): Promise<number> {
+    console.log(`[CONVERSATION_COUNT] Getting count for user: ${userId}`);
+    
     // Count unique sessions that are connected to this user's chatbots
     const result = await db
       .select({ count: sql<number>`count(distinct ${chatSessions.sessionId})` })
       .from(chatSessions)
       .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
       .where(eq(chatbotConfigs.userId, userId));
+    
+    console.log(`[CONVERSATION_COUNT] Query result:`, result);
+    console.log(`[CONVERSATION_COUNT] Count for user ${userId}:`, result[0]?.count || 0);
     
     return result[0]?.count || 0;
   }
