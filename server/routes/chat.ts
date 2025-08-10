@@ -82,7 +82,7 @@ export function setupChatRoutes(app: Express) {
       const { sessionId } = req.params;
       const messages = await storage.getRecentMessages(sessionId, 50);
       res.json({
-        messages: messages.reverse(), // Reverse to show oldest first
+        messages: messages, // Already ordered by createdAt (oldest first)
         sessionId
       });
     } catch (error) {

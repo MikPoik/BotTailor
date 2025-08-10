@@ -142,6 +142,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(messages)
       .where(eq(messages.sessionId, sessionId))
+      .orderBy(asc(messages.createdAt)) // Order by creation time (oldest first)
       .limit(limit);
   }
 
