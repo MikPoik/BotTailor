@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateStreamingResponse } from "../openai-service";
 import { buildSurveyContext } from "../ai-response-schema";
 import { brevoEmailService, FormSubmissionData } from "../email-service";
+import { isAuthenticated } from "../replitAuth";
 
 // Chat-related routes
 export function setupChatRoutes(app: Express) {
@@ -91,15 +92,10 @@ export function setupChatRoutes(app: Express) {
   });
 
   // Get conversation count for user's chatbots
-  app.get('/api/chat/conversations/count', async (req, res) => {
+  app.get('/api/chat/conversations/count', isAuthenticated, async (req: any, res) => {
     try {
-      // Get user from session/auth
-      const user = (req as any).user;
-      if (!user) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const conversationCount = await storage.getConversationCount(user.id);
+      const userId = req.user.claims.sub;
+      const conversationCount = await storage.getConversationCount(userId);
       res.json(conversationCount);
     } catch (error) {
       console.error("Error fetching conversation count:", error);
