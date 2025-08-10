@@ -17,13 +17,14 @@ export default function ChatWidgetPage() {
     if (injectedConfig && injectedConfig.sessionId) {
       setSessionId(injectedConfig.sessionId);
     } else {
-      // Generate or get session ID from URL params or localStorage
+      // Always generate a new session ID for each page load
+      // This ensures that logged-in users get fresh conversations every time
       const paramSessionId = urlParams.get('sessionId');
       
       if (paramSessionId) {
         setSessionId(paramSessionId);
       } else {
-        // Generate a new session ID
+        // Generate a new session ID - always fresh for each page load
         const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         setSessionId(newSessionId);
       }

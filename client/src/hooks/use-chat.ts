@@ -9,7 +9,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
   // Initialize session
   const { data: session, isLoading: isSessionLoading } = useQuery({
-    queryKey: ['/api/chat/session', chatbotConfigId],
+    queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
     queryFn: async () => {
       const response = await apiRequest('POST', '/api/chat/session', { 
         sessionId,
