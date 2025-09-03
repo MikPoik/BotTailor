@@ -129,25 +129,47 @@ export default function ChatHistory() {
               </div>
             ) : (
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {messagesData?.messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
+                {messagesData?.messages.map((message) => {
+                  // Function to display rich message content appropriately
+                  const getDisplayContent = (msg: Message) => {
+                    switch (msg.messageType) {
+                      case 'form':
+                        return '[Form shown]';
+                      case 'menu':
+                        const menuOptions = msg.metadata?.options?.map((opt: any) => opt.text).join(', ') || '';
+                        return menuOptions ? `Menu: ${menuOptions}` : msg.content;
+                      case 'quickReplies':
+                        const quickReplies = msg.metadata?.quickReplies?.join(', ') || '';
+                        return quickReplies ? `Quick replies: ${quickReplies}` : msg.content;
+                      case 'card':
+                        const title = msg.metadata?.title;
+                        const description = msg.metadata?.description;
+                        return title ? `Card: ${title}${description ? ` - ${description}` : ''}` : msg.content;
+                      default:
+                        return msg.content;
+                    }
+                  };
+
+                  return (
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.sender === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
+                      key={message.id}
+                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className="text-sm">{message.content}</div>
-                      <div className="text-xs opacity-70 mt-1">
-                        {format(new Date(message.createdAt), 'MMM d, HH:mm')}
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          message.sender === 'user'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        <div className="text-sm">{getDisplayContent(message)}</div>
+                        <div className="text-xs opacity-70 mt-1">
+                          {format(new Date(message.createdAt), 'MMM d, HH:mm')}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {messagesData?.messages.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     No messages in this conversation

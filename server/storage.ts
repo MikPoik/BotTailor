@@ -25,7 +25,7 @@ import {
   type InsertSurveySession,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, sql, asc } from "drizzle-orm";
+import { eq, and, or, sql, asc, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -121,7 +121,7 @@ export class DatabaseStorage implements IStorage {
       .from(chatSessions)
       .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
       .where(eq(chatbotConfigs.guid, chatbotGuid))
-      .orderBy(asc(chatSessions.createdAt));
+      .orderBy(desc(chatSessions.createdAt));
   }
 
   async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {
