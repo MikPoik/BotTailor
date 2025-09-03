@@ -94,6 +94,7 @@ ${messageTypes.join('\n')}
 - Questions with options = text bubble + menu bubble  
 - Use exact option texts provided in survey context
 - Do not invent new options or change existing ones
+- Present surveys only if there is active survey context!
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -333,7 +334,7 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
   if (isLikelyRestart) {
     // Starting or restarting survey - need introduction
     context += `
-1. Clear new survey introduction: "Let's start a completely new survey. ${config.description || 'This fresh assessment will help us understand your current needs.'}"
+1. Clear new survey introduction: "Let's start a new survey. ${config.description || 'This fresh assessment will help us understand your current needs.'}"
 2. Present current question: "Question 1: ${currentQuestion.text}"
 3. Menu with exact options listed above (DO NOT create different options)
 

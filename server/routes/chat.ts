@@ -526,25 +526,18 @@ async function handleSurveySessionCreation(
       const chatbotConfig = await storage.getChatbotConfig(configId);
       if (chatbotConfig) {
         const availableSurveys = await storage.getSurveys(configId);
-        console.log(`[SURVEY] Found ${availableSurveys.length} available surveys for chatbot ${configId}:`);
-        availableSurveys.forEach(survey => {
-          console.log(`[SURVEY] - Survey ID: ${survey.id}, Name: "${survey.name}"`);
-        });
+        console.log(`[SURVEY] Found ${availableSurveys.length} available surveys`);
 
         if (availableSurveys.length > 0) {
           // Find target survey first
           let targetSurvey;
           if (targetSurveyId) {
-            console.log(`[SURVEY] Looking for survey with ID: ${targetSurveyId}`);
             targetSurvey = availableSurveys.find(s => s.id === targetSurveyId);
             if (!targetSurvey) {
-              console.log(`[SURVEY] WARNING: Requested surveyId ${targetSurveyId} not found in available surveys, using first available`);
+              console.log(`[SURVEY] WARNING: Requested surveyId ${targetSurveyId} not found, using first available`);
               targetSurvey = availableSurveys[0];
-            } else {
-              console.log(`[SURVEY] Found target survey: ID ${targetSurvey.id}, Name: "${targetSurvey.name}"`);
             }
           } else {
-            console.log(`[SURVEY] No specific surveyId requested, using first available survey`);
             targetSurvey = availableSurveys[0];
           }
 
