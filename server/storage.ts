@@ -34,6 +34,7 @@ export interface IStorage {
 
   // Chat session methods
   getChatSession(sessionId: string): Promise<ChatSession | undefined>;
+  getChatSessionsByChatbotGuid(chatbotGuid: string): Promise<ChatSession[]>;
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
   updateChatSession(sessionId: string, data: Partial<ChatSession>): Promise<ChatSession | undefined>;
 
@@ -105,6 +106,22 @@ export class DatabaseStorage implements IStorage {
   async getChatSession(sessionId: string): Promise<ChatSession | undefined> {
     const [session] = await db.select().from(chatSessions).where(eq(chatSessions.sessionId, sessionId));
     return session || undefined;
+  }
+
+  async getChatSessionsByChatbotGuid(chatbotGuid: string): Promise<ChatSession[]> {
+    return await db
+      .select({
+        id: chatSessions.id,
+        sessionId: chatSessions.sessionId,
+        userId: chatSessions.userId,
+        chatbotConfigId: chatSessions.chatbotConfigId,
+        createdAt: chatSessions.createdAt,
+        updatedAt: chatSessions.updatedAt,
+      })
+      .from(chatSessions)
+      .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
+      .where(eq(chatbotConfigs.guid, chatbotGuid))
+      .orderBy(asc(chatSessions.createdAt));
   }
 
   async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {

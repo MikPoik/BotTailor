@@ -103,6 +103,43 @@ export function setupChatRoutes(app: Express) {
     }
   });
 
+  // Get chat sessions for a specific chatbot (authenticated)
+  app.get('/api/chatbots/:guid/sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const { guid } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Verify the chatbot belongs to the authenticated user
+      const chatbotConfig = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!chatbotConfig) {
+        return res.status(404).json({ message: "Chatbot not found or access denied" });
+      }
+      
+      // Get all chat sessions for this chatbot
+      const sessions = await storage.getChatSessionsByChatbotGuid(guid);
+      
+      // Add message count for each session
+      const sessionsWithCounts = await Promise.all(
+        sessions.map(async (session) => {
+          const messages = await storage.getMessages(session.sessionId);
+          return {
+            ...session,
+            messageCount: messages.length,
+            lastMessageAt: messages.length > 0 ? messages[messages.length - 1].createdAt : session.createdAt
+          };
+        })
+      );
+      
+      res.json({
+        sessions: sessionsWithCounts,
+        chatbotName: chatbotConfig.name
+      });
+    } catch (error) {
+      console.error("Error fetching chatbot sessions:", error);
+      res.status(500).json({ message: "Failed to fetch chatbot sessions" });
+    }
+  });
+
   // Create new chat session
   app.post('/api/chat/session', async (req, res) => {
     try {
