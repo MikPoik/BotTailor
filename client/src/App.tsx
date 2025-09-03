@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/navbar";
 import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
-import { lazy } from "react";
+import { Suspense } from "react";
 
 import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
@@ -20,6 +20,7 @@ import AddData from "@/pages/add-data";
 import SurveyBuilder from "@/pages/survey-builder";
 import WidgetTest from "@/pages/widget-test";
 import ChatHistory from "@/pages/chat-history";
+import ChatbotEmbed from "@/pages/chatbot-embed";
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
@@ -62,10 +63,9 @@ function AuthenticatedRouter() {
           <Route path="/chatbots/:guid/add-data" component={AddData} />
           <Route path="/chatbots/:guid/test" component={ChatbotTest} />
           <Route path="/chatbots/:guid/ui-designer" component={UIDesigner} />
-          <Route path="/chatbots/:guid/analytics" component={lazy(() => import("./pages/chat-history"))} />
-          <Route path="/chatbots/:guid/surveys" component={lazy(() => import("./pages/survey-builder"))} />
-          <Route path="/chatbots/:guid/ui-designer" component={lazy(() => import("./pages/ui-designer"))} />
-          <Route path="/chatbots/:guid/embed" component={lazy(() => import("./pages/chatbot-embed"))} />
+          <Route path="/chatbots/:guid/analytics" component={ChatHistory} />
+          <Route path="/chatbots/:guid/surveys" component={SurveyBuilder} />
+          <Route path="/chatbots/:guid/embed" component={ChatbotEmbed} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
@@ -83,14 +83,26 @@ function Router() {
 
   if (isEmbedded) {
     // For embedded widgets, bypass authentication and navbar entirely
-    return <AuthenticatedRouter />;
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }>
+        <AuthenticatedRouter />
+      </Suspense>
+    );
   }
 
   return (
-    <>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
       <Navbar />
       <AuthenticatedRouter />
-    </>
+    </Suspense>
   );
 }
 
