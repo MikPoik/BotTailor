@@ -519,11 +519,35 @@ export default function TabbedChatInterface({
             }}
           >
             {messages.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
-                  <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />                
-
-                </div>
+              <div className="flex-1 flex flex-col justify-center p-6">
+                {chatbotConfig?.initialMessages && chatbotConfig.initialMessages.length > 0 ? (
+                  <div className="space-y-4 max-w-md mx-auto">
+                    <div className="text-center mb-6" style={{ color: colors.textColor, opacity: 0.8 }}>
+                      <MessageCircle className="h-8 w-8 mx-auto mb-2" style={{ color: colors.textColor, opacity: 0.5 }} />
+                      <p className="text-sm">Start a conversation</p>
+                    </div>
+                    {chatbotConfig.initialMessages.map((message: string, index: number) => (
+                      <div 
+                        key={index}
+                        className="bg-white rounded-lg shadow-sm border p-4 cursor-pointer hover:shadow-md transition-shadow"
+                        style={{ 
+                          borderColor: colors.textColor + '20',
+                          backgroundColor: colors.backgroundColor === 'var(--background)' ? 'white' : colors.backgroundColor 
+                        }}
+                        onClick={() => handleSendMessage(message)}
+                      >
+                        <p className="text-sm" style={{ color: colors.textColor }}>
+                          {message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
+                    <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
+                    <p className="text-sm">Start typing to begin the conversation</p>
+                  </div>
+                )}
               </div>
             ) : (
               messages.map((message, index) => (
