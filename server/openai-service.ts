@@ -345,10 +345,7 @@ export async function* generateStreamingResponse(
             console.log(`[SURVEY MENU REQUIRED] Question ${currentQuestionIndex + 1} has ${questions[currentQuestionIndex].options.length} options - MENU BUBBLE REQUIRED`);
           }
           
-          console.log(`[SURVEY AI CONTEXT] Built survey context (${surveyContext.length} chars) for question index ${surveySession.currentQuestionIndex}:`);
-          console.log("=== FULL SURVEY CONTEXT ===");
-          console.log(surveyContext);
-          console.log("=== END SURVEY CONTEXT ===");
+          console.log(`[SURVEY AI CONTEXT] Built survey context (${surveyContext.length} chars) for question index ${surveySession.currentQuestionIndex}`);
         }
       }
     } catch (error) {
@@ -368,14 +365,7 @@ export async function* generateStreamingResponse(
     );
     if (surveyContext) {
       console.log(`[SURVEY] Using survey context in system prompt`);
-      console.log(`[SURVEY] Survey context length: ${surveyContext.length} chars`);
-    } else {
-      console.log(`[SURVEY] NO survey context found - surveyContext is empty!`);
     }
-    console.log(`[OpenAI] FULL SYSTEM PROMPT (${systemPrompt.length} chars):`);
-    console.log("=== SYSTEM PROMPT START ===");
-    console.log(systemPrompt);
-    console.log("=== SYSTEM PROMPT END ===");
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
