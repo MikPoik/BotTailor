@@ -150,12 +150,12 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
 
       try {
         const currentSessionId = sessionId || message.sessionId;
-        
+
         if (!currentSessionId) {
           console.error('No session ID available for form submission');
           return;
         }
-        
+
         // Collect form data
         const formData = (metadata as any)?.formFields?.map((field: any) => ({
           id: field.id,
@@ -183,11 +183,11 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
 
         if (result.success) {
           console.log('Form submitted successfully:', result);
-          
+
           // Add confirmation message directly to the chat
           const confirmationText = chatbotConfig?.formConfirmationMessage || 
                                  'Thank you! Your message has been sent successfully. We will contact you soon.';
-          
+
           const confirmationMessage = {
             id: Date.now().toString(),
             sessionId: currentSessionId,
@@ -203,7 +203,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             if (!old) return { messages: [confirmationMessage] };
             return { messages: [...old.messages, confirmationMessage] };
           });
-          
+
           setFormValues({}); // Clear form
         } else {
           console.error('Form submission failed:', result);
@@ -218,6 +218,12 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     const handleInputChange = (fieldId: string, value: string) => {
       setFormValues(prev => ({ ...prev, [fieldId]: value }));
     };
+
+    // Check if form is valid based on required fields
+    const isFormValid = (metadata as any)?.formFields?.every((field: any) => 
+      !field.required || (formValues[field.id] && formValues[field.id].trim() !== '')
+    ) || false;
+
 
     return (
       <div className="bg-white rounded-lg rounded-tl-none shadow-sm border overflow-hidden">
@@ -275,10 +281,17 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             {(metadata as any)?.submitButton && (
               <Button
                 type="submit"
-                className="w-full mt-4"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isFormValid}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
-                {isSubmitting ? 'Submitting...' : (metadata as any).submitButton.text}
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Sending...
+                  </div>
+                ) : (
+                  (metadata as any)?.submitButton?.text || 'Send Message'
+                )}
               </Button>
             )}
           </form>
