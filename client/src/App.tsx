@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/navbar";
 import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
+import { lazy } from "react";
 
 import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
@@ -61,8 +62,10 @@ function AuthenticatedRouter() {
           <Route path="/chatbots/:guid/add-data" component={AddData} />
           <Route path="/chatbots/:guid/test" component={ChatbotTest} />
           <Route path="/chatbots/:guid/ui-designer" component={UIDesigner} />
-          <Route path="/chatbots/:guid/surveys" component={SurveyBuilder} />
-          <Route path="/chatbots/:guid/chats" component={ChatHistory} />
+          <Route path="/chatbots/:guid/analytics" component={lazy(() => import("./pages/chat-history"))} />
+          <Route path="/chatbots/:guid/surveys" component={lazy(() => import("./pages/survey-builder"))} />
+          <Route path="/chatbots/:guid/ui-designer" component={lazy(() => import("./pages/ui-designer"))} />
+          <Route path="/chatbots/:guid/embed" component={lazy(() => import("./pages/chatbot-embed"))} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
