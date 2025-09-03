@@ -28,6 +28,13 @@ interface ChatbotConfig {
   welcomeMessage: string;
   fallbackMessage: string;
   avatarUrl?: string;
+  homeScreenConfig?: {
+    theme?: {
+      primaryColor?: string;
+      backgroundColor?: string;
+      textColor?: string;
+    };
+  };
 }
 
 export default function ChatbotEmbed() {
@@ -37,7 +44,6 @@ export default function ChatbotEmbed() {
   const guid = params.guid;
 
   const [position, setPosition] = useState<'bottom-right' | 'bottom-left'>('bottom-right');
-  const [primaryColor, setPrimaryColor] = useState('#2563eb');
   const [customDomain, setCustomDomain] = useState('');
 
   // Redirect to home if not authenticated
@@ -91,12 +97,30 @@ export default function ChatbotEmbed() {
   const baseUrl = window.location.origin;
   const widgetUrl = `${baseUrl}/widget/${user?.id}/${chatbot.guid}`;
   
+  // Get theme colors from UI Designer configuration
+  const theme = chatbot.homeScreenConfig?.theme;
+  
+  // Build embed code with UI Designer colors
+  const buildEmbedParams = () => {
+    const baseParams = [
+      `    apiUrl: '${widgetUrl}'`,
+      `    position: '${position}'`
+    ];
+    
+    const themeParams: string[] = [];
+    if (theme) {
+      if (theme.primaryColor) themeParams.push(`    primaryColor: '${theme.primaryColor}'`);
+      if (theme.backgroundColor) themeParams.push(`    backgroundColor: '${theme.backgroundColor}'`);
+      if (theme.textColor) themeParams.push(`    textColor: '${theme.textColor}'`);
+    }
+    
+    return [...baseParams, ...themeParams].join(',\n');
+  };
+  
   const embedCode = `<script src="${baseUrl}/embed.js"></script>
 <script>
   ChatWidget.init({
-    apiUrl: '${widgetUrl}',
-    position: '${position}',
-    primaryColor: '${primaryColor}'
+${buildEmbedParams()}
   });
 </script>`;
 
@@ -171,25 +195,79 @@ export default function ChatbotEmbed() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div>
-                  <Label htmlFor="primaryColor">Primary Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="primaryColor"
-                      type="color"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-16 h-10"
-                    />
-                    <Input
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      placeholder="#2563eb"
-                      className="flex-1"
-                    />
-                  </div>
+                
+                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
+                  <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">💡 Customize Colors</p>
+                  <p className="text-blue-700 dark:text-blue-200">
+                    To set custom theme colors, use the <strong>UI Designer</strong> page. Colors configured there will automatically appear below and be included in your embed code.
+                  </p>
                 </div>
+
+                {/* Display UI Designer Colors (Read-only) */}
+                {theme && (
+                  <>
+                    {theme.primaryColor && (
+                      <div>
+                        <Label>Primary Color (from UI Designer)</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={theme.primaryColor}
+                            readOnly
+                            className="w-16 h-10 cursor-not-allowed opacity-75"
+                          />
+                          <Input
+                            value={theme.primaryColor}
+                            readOnly
+                            className="flex-1 cursor-not-allowed opacity-75"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {theme.backgroundColor && (
+                      <div>
+                        <Label>Background Color (from UI Designer)</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={theme.backgroundColor}
+                            readOnly
+                            className="w-16 h-10 cursor-not-allowed opacity-75"
+                          />
+                          <Input
+                            value={theme.backgroundColor}
+                            readOnly
+                            className="flex-1 cursor-not-allowed opacity-75"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {theme.textColor && (
+                      <div>
+                        <Label>Text Color (from UI Designer)</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={theme.textColor}
+                            readOnly
+                            className="w-16 h-10 cursor-not-allowed opacity-75"
+                          />
+                          <Input
+                            value={theme.textColor}
+                            readOnly
+                            className="flex-1 cursor-not-allowed opacity-75"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {!theme && (
+                  <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
+                    No custom colors configured. Use the UI Designer to set theme colors.
+                  </div>
+                )}
 
                 <div className="pt-4">
                   <Button onClick={testWidget} className="w-full" variant="outline">
@@ -205,6 +283,12 @@ export default function ChatbotEmbed() {
                 <CardTitle>Quick Links</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
+                <Button variant="outline" size="sm" asChild className="w-full justify-start">
+                  <Link href={`/chatbots/${chatbot.guid}/ui-designer`}>
+                    <Palette className="h-4 w-4 mr-2" />
+                    UI Designer (Set Colors)
+                  </Link>
+                </Button>
                 <Button variant="outline" size="sm" asChild className="w-full justify-start">
                   <Link href={`/chatbots/${chatbot.guid}`}>
                     <Palette className="h-4 w-4 mr-2" />
@@ -330,7 +414,7 @@ export default function ChatbotEmbed() {
                   <div className={`fixed ${position === 'bottom-right' ? 'bottom-4 right-4' : 'bottom-4 left-4'}`}>
                     <div 
                       className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform"
-                      style={{ backgroundColor: primaryColor }}
+                      style={{ backgroundColor: theme?.primaryColor || '#2563eb' }}
                     >
                       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
