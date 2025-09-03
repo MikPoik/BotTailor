@@ -157,7 +157,7 @@ export default function HomeTab({
         const surveyPayload = {
           actionType: "survey",
           displayMessage: action.title,
-          internalMessage: `${action.title} (surveyId: ${action.surveyId})`
+          internalMessage: `Let's begin a New survey, ignoring previous surveys. User message: ${action.title} (surveyId: ${action.surveyId})`
         };
         onStartChat(action.title, surveyPayload);
       } else if (action.action === "start_chat") {

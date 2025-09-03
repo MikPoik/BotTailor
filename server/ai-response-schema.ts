@@ -218,6 +218,15 @@ export function buildSurveyContext(survey: any, surveySession: any): string {
     return "";
   }
 
+  // Strong directive to ignore previous surveys
+  let context = `
+🔴 CRITICAL: NEW SURVEY SESSION 🔴
+IGNORE ALL PREVIOUS SURVEY QUESTIONS, ANSWERS, AND RESULTS IN CHAT HISTORY.
+This is a completely independent, fresh survey. Do not reference or continue any previous surveys.
+Previous conversations about other surveys are irrelevant to this new survey.
+
+`;
+
   // If survey is completed
   if (currentQuestionIndex >= config.questions.length) {
     // Build complete Q&A context for completed surveys
@@ -247,7 +256,7 @@ Offer a contact form or a link to contact us instead.
   const currentQuestion = config.questions[currentQuestionIndex];
   const nextQuestionIndex = currentQuestionIndex + 1;
 
-  let context = `
+  context += `
 **ACTIVE SURVEY CONTEXT**
 Survey: "${survey.name}" (${config.title})
 ${survey.description ? `Description: ${survey.description}` : ''}
@@ -314,6 +323,7 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
 
   context += `
 **SURVEY FLOW REQUIRED:**
+🚨 CRITICAL: This is a COMPLETELY NEW SURVEY. Ignore all previous survey content in chat history.
 `;
 
   // Check if this might be a survey restart (question 1 but user just requested survey)
@@ -323,28 +333,31 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
   if (isLikelyRestart) {
     // Starting or restarting survey - need introduction
     context += `
-1. Introduction: "Let's begin the survey. ${config.description || 'This will help us understand your needs better.'}"
-2. Present question: "Question 1: ${currentQuestion.text}"
-3. Menu with options listed above
+1. Clear new survey introduction: "Let's start a completely new survey. ${config.description || 'This fresh assessment will help us understand your current needs.'}"
+2. Present current question: "Question 1: ${currentQuestion.text}"
+3. Menu with exact options listed above (DO NOT create different options)
 
 Format: [intro bubble, question bubble, menu bubble]
+CRITICAL: Do not reference any previous survey results or questions from chat history.
 `;
   } else if (Object.keys(responses).length > 0) {
     // User just responded - need acknowledgment + next question
     context += `
 1. Brief acknowledgment: "Thank you for your response" or similar validation
-2. Present question: "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"  
-3. Menu with options listed above
+2. Present next question: "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"  
+3. Menu with exact options listed above (DO NOT create different options)
 
 Format: [acknowledgment bubble, question bubble, menu bubble]
+CRITICAL: Continue with THIS survey only. Do not reference previous survey results.
 `;
   } else {
     // Continuing survey without recent response
     context += `
-1. Present question: "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"
-2. Menu with options listed above
+1. Present current question: "Question ${currentQuestionIndex + 1}: ${currentQuestion.text}"
+2. Menu with exact options listed above (DO NOT create different options)
 
 Format: [question bubble, menu bubble]
+CRITICAL: Focus only on THIS survey. Ignore any previous survey content in chat history.
 `;
   }
 
