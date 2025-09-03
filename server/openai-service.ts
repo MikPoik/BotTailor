@@ -313,11 +313,11 @@ export async function* generateStreamingResponse(
 
     // Check for active survey and build context
     let surveyContext = "";
-    console.log(`[SURVEY] Checking for survey context for session: ${sessionId}`);
+    console.log(`[SURVEY] Checking for active survey context for session: ${sessionId}`);
     
     try {
-      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
-      console.log(`[SURVEY AI CONTEXT] Survey session retrieved:`, surveySession ? { 
+      const surveySession = await storage.getActiveSurveySession(sessionId);
+      console.log(`[SURVEY AI CONTEXT] Active survey session retrieved:`, surveySession ? { 
         id: surveySession.id, 
         surveyId: surveySession.surveyId, 
         status: surveySession.status,

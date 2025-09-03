@@ -76,6 +76,10 @@ export interface IStorage {
   updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined>;
   getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined>;
 
+  // Active survey tracking methods
+  setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined>;
+  getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined>;
+
   // Conversation count methods
   getConversationCount(userId: string): Promise<number>;
 }
@@ -115,6 +119,7 @@ export class DatabaseStorage implements IStorage {
         sessionId: chatSessions.sessionId,
         userId: chatSessions.userId,
         chatbotConfigId: chatSessions.chatbotConfigId,
+        activeSurveyId: chatSessions.activeSurveyId,
         createdAt: chatSessions.createdAt,
         updatedAt: chatSessions.updatedAt,
       })
@@ -406,6 +411,27 @@ export class DatabaseStorage implements IStorage {
     const [session] = await db.select().from(surveySessions)
       .where(eq(surveySessions.sessionId, sessionId));
     return session || undefined;
+  }
+
+  // Active survey tracking methods
+  async setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined> {
+    const [session] = await db
+      .update(chatSessions)
+      .set({ activeSurveyId: surveyId, updatedAt: new Date() })
+      .where(eq(chatSessions.sessionId, sessionId))
+      .returning();
+    return session || undefined;
+  }
+
+  async getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined> {
+    // First get the chat session to find the active survey ID
+    const chatSession = await this.getChatSession(sessionId);
+    if (!chatSession || !chatSession.activeSurveyId) {
+      return undefined;
+    }
+
+    // Then get the specific survey session for that survey
+    return await this.getSurveySession(chatSession.activeSurveyId, sessionId);
   }
 
   // Conversation count method

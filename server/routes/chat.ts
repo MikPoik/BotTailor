@@ -20,8 +20,8 @@ export function setupChatRoutes(app: Express) {
       // Check if there's an active survey session and record the response
       let surveyResponseRecorded = false;
       try {
-        const surveySession = await storage.getSurveySessionBySessionId(sessionId);
-        console.log(`[SURVEY RESPONSE] Survey session check:`, surveySession ? {
+        const surveySession = await storage.getActiveSurveySession(sessionId);
+        console.log(`[SURVEY RESPONSE] Active survey session check:`, surveySession ? {
           id: surveySession.id,
           surveyId: surveySession.surveyId,
           status: surveySession.status,

@@ -154,13 +154,39 @@ export function setupSurveyRoutes(app: Express) {
     try {
       const { sessionId, surveyId } = req.body;
 
-      const surveySession = await storage.createSurveySession({
-        surveyId,
-        sessionId,
-        currentQuestionIndex: 0,
-        responses: {},
-        status: 'active'
-      });
+      // Check if there's already an active survey session for this survey
+      const existingSurveySession = await storage.getSurveySession(surveyId, sessionId);
+      
+      let surveySession;
+      if (existingSurveySession) {
+        // If survey exists and is completed, reset it for restart
+        if (existingSurveySession.status === 'completed') {
+          console.log(`[SURVEY_START] Restarting completed survey ${surveyId} for session ${sessionId}`);
+          surveySession = await storage.updateSurveySession(existingSurveySession.id, {
+            currentQuestionIndex: 0,
+            responses: {},
+            status: 'active'
+          });
+        } else {
+          // Continue with existing active survey
+          console.log(`[SURVEY_START] Continuing existing survey ${surveyId} for session ${sessionId}`);
+          surveySession = existingSurveySession;
+        }
+      } else {
+        // Create new survey session
+        console.log(`[SURVEY_START] Creating new survey session ${surveyId} for session ${sessionId}`);
+        surveySession = await storage.createSurveySession({
+          surveyId,
+          sessionId,
+          currentQuestionIndex: 0,
+          responses: {},
+          status: 'active'
+        });
+      }
+
+      // Set this survey as the active survey for the chat session
+      await storage.setActiveSurvey(sessionId, surveyId);
+      console.log(`[SURVEY_START] Set survey ${surveyId} as active for session ${sessionId}`);
 
       res.json(surveySession);
     } catch (error) {
@@ -174,9 +200,9 @@ export function setupSurveyRoutes(app: Express) {
     try {
       const { sessionId, questionId, response } = req.body;
 
-      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      const surveySession = await storage.getActiveSurveySession(sessionId);
       if (!surveySession) {
-        return res.status(404).json({ message: "Survey session not found" });
+        return res.status(404).json({ message: "Active survey session not found" });
       }
 
       const updatedResponses = { ...surveySession.responses, [questionId]: response };
@@ -198,7 +224,7 @@ export function setupSurveyRoutes(app: Express) {
     try {
       const { sessionId } = req.params;
       
-      const surveySession = await storage.getSurveySessionBySessionId(sessionId);
+      const surveySession = await storage.getActiveSurveySession(sessionId);
       if (!surveySession) {
         return res.json({ hasSurvey: false });
       }

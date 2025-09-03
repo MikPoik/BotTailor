@@ -70,6 +70,7 @@ export const chatSessions = pgTable("chat_sessions", {
   sessionId: text("session_id").notNull().unique(),
   userId: varchar("user_id").references(() => users.id),
   chatbotConfigId: integer("chatbot_config_id").references(() => chatbotConfigs.id),
+  activeSurveyId: integer("active_survey_id").references(() => surveys.id), // Track currently active survey
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -175,6 +176,7 @@ export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
   sessionId: true,
   userId: true,
   chatbotConfigId: true,
+  activeSurveyId: true,
 });
 
 export const insertMessageSchema = z.object({
