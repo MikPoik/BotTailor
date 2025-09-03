@@ -346,7 +346,9 @@ export async function* generateStreamingResponse(
           }
           
           console.log(`[SURVEY AI CONTEXT] Built survey context (${surveyContext.length} chars) for question index ${surveySession.currentQuestionIndex}:`);
-          console.log(surveyContext.substring(0, 800));
+          console.log("=== FULL SURVEY CONTEXT ===");
+          console.log(surveyContext);
+          console.log("=== END SURVEY CONTEXT ===");
         }
       }
     } catch (error) {
