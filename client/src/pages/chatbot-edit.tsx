@@ -328,7 +328,7 @@ export default function ChatbotEdit() {
                     <FormControl>
                       <Textarea 
                         placeholder="You are a helpful AI assistant..."
-                        className="min-h-[120px]"
+                        className="min-h-[420px]"
                         {...field} 
                       />
                     </FormControl>

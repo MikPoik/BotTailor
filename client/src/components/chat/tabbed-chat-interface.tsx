@@ -420,7 +420,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...receivedMessage,
             metadata: {
-              ...(receivedMessage.metadata || {}),
+              ...receivedMessage.metadata,
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -521,11 +521,8 @@ export default function TabbedChatInterface({
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
-                  <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
-                  <h3 className="font-medium mb-2" style={{ color: colors.textColor }}>No messages yet</h3>
-                  <p className="text-sm" style={{ color: colors.textColor, opacity: 0.7 }}>
-                    Start a conversation or go to Home to choose a topic
-                  </p>
+                  <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />                
+
                 </div>
               </div>
             ) : (
@@ -570,7 +567,7 @@ export default function TabbedChatInterface({
               <div className="flex-1 relative">
                 <Input
                   type="text"
-                  placeholder="Type your message..."
+                  placeholder=""
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -619,7 +616,7 @@ export default function TabbedChatInterface({
           }}
         >
           <Home className="h-4 w-4" />
-          <span className={isMobile ? "hidden sm:inline" : ""}>Home</span>
+          <span className={isMobile ? "hidden sm:inline" : ""}></span>
         </TabsTrigger>
         <TabsTrigger
           value="chat"
@@ -631,7 +628,7 @@ export default function TabbedChatInterface({
           }}
         >
           <MessageCircle className="h-4 w-4" />
-          <span className={isMobile ? "hidden sm:inline" : ""}>Chat</span>
+          <span className={isMobile ? "hidden sm:inline" : ""}></span>
           {messages.length > 0 && (
             <span 
               className="text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center"
