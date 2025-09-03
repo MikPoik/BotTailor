@@ -2,13 +2,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import ChatWidget from "@/components/chat/chat-widget";
+import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle, TrendingUp, ExternalLink, MoreHorizontal } from "lucide-react";
 
 interface ChatbotConfig {
   id: number;
@@ -214,43 +215,59 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                     <span>Model: {chatbot.model}</span>
                   </div>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 items-center">
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/chatbots/${chatbot.guid}`}>
                         <Settings className="mr-2 h-3 w-3" />
                         Configure
                       </Link>
                     </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.guid}/add-data`}>
-                        <Globe className="mr-2 h-3 w-3" />
-                        Add Data
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.guid}/test`}>
-                        <MessageSquare className="mr-2 h-3 w-3" />
-                        Test
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.guid}/ui-designer`}>
-                        <Palette className="mr-2 h-3 w-3" />
-                        UI Designer
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.guid}/surveys`}>
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        Survey Builder
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/chatbots/${chatbot.guid}/chats`}>
-                        <MessageCircle className="mr-2 h-3 w-3" />
-                        View Chats
-                      </Link>
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/add-data`} className="flex items-center cursor-pointer">
+                            <Globe className="mr-2 h-4 w-4" />
+                            Add Data
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/test`} className="flex items-center cursor-pointer">
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Test
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/ui-designer`} className="flex items-center cursor-pointer">
+                            <Palette className="mr-2 h-4 w-4" />
+                            UI Designer
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/surveys`} className="flex items-center cursor-pointer">
+                            <BarChart3 className="mr-2 h-4 w-4" />
+                            Surveys
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/analytics`} className="flex items-center cursor-pointer">
+                            <TrendingUp className="mr-2 h-4 w-4" />
+                            Analytics
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/embed`} className="flex items-center cursor-pointer">
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Embed
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
