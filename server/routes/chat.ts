@@ -547,7 +547,9 @@ async function handleSurveySessionCreation(
           if (existingSurveySession) {
             if (existingSurveySession.status === 'active') {
               console.log(`[SURVEY] Survey session already active for survey ${targetSurvey.id}, continuing with existing session`);
-              // Continue with existing active session - no action needed
+              // Set this survey as active in case it wasn't already
+              await storage.setActiveSurvey(sessionId, targetSurvey.id);
+              console.log(`[SURVEY] Set survey ${targetSurvey.id} as active for session ${sessionId}`);
             } else if (existingSurveySession.status === 'completed') {
               console.log(`[SURVEY] User has already completed survey ${targetSurvey.id}, offering retake`);
               // Update existing session to restart the survey
@@ -556,7 +558,9 @@ async function handleSurveySessionCreation(
                 responses: {},
                 status: 'active'
               });
-              console.log(`[SURVEY] Restarted completed survey session for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name}`);
+              // Set this survey as active
+              await storage.setActiveSurvey(sessionId, targetSurvey.id);
+              console.log(`[SURVEY] Restarted completed survey session and set as active for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name}`);
             }
           } else {
             // No existing session, create a new one
@@ -571,7 +575,10 @@ async function handleSurveySessionCreation(
                 status: 'active'
               });
               
-              console.log(`[SURVEY] Successfully created survey session:`, {
+              // Set this survey as active in the chat session
+              await storage.setActiveSurvey(sessionId, targetSurvey.id);
+              
+              console.log(`[SURVEY] Successfully created survey session and set as active:`, {
                 id: newSurveySession.id,
                 surveyId: newSurveySession.surveyId,
                 sessionId: newSurveySession.sessionId
