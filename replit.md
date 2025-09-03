@@ -6,7 +6,17 @@ This project is a full-stack React chat widget application featuring an Express.
 
 ## Recent Changes
 
-- **September 3, 2025 - Latest**: Fixed Chat Session Management and UI Designer TypeScript Errors:
+- **September 3, 2025 - Latest**: OpenAI Service Modularization and Architecture Improvements:
+  - **MODULAR OPENAI SERVICE**: Refactored monolithic `openai-service.ts` (805 lines) into focused, maintainable modules
+  - Created `server/openai/` directory with specialized modules: `client.ts`, `context-builder.ts`, `error-handler.ts`, `response-generator.ts`, `response-parser.ts`, `schema.ts`, `streaming-handler.ts`
+  - **IMPROVED MAINTAINABILITY**: Each module handles a single responsibility for easier testing, debugging, and future enhancements
+  - **BACKWARD COMPATIBILITY**: Maintained full API compatibility through `server/openai/index.ts` export layer
+  - **ENHANCED ERROR HANDLING**: Centralized error handling with consistent fallback responses and logging
+  - **CONTEXT SEPARATION**: Website and survey context building logic isolated for better testability
+  - **STREAMING OPTIMIZATION**: Modular streaming handler with improved bubble parsing and validation
+  - All existing functionality preserved with zero breaking changes
+
+- **September 3, 2025**: Fixed Chat Session Management and UI Designer TypeScript Errors:
   - **FIXED CHAT HISTORY PERSISTENCE**: Resolved issue where logged-in users were seeing previous chat history on page reload
   - Updated session caching to include sessionId in query cache key instead of just chatbotConfigId
   - Each unique sessionId now gets its own cache entry, ensuring fresh conversations for each page load

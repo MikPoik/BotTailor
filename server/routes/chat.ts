@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { storage } from "../storage";
 import { insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
-import { generateStreamingResponse } from "../openai-service";
+import { generateStreamingResponse } from "../openai";
 import { buildSurveyContext } from "../ai-response-schema";
 import { brevoEmailService, FormSubmissionData } from "../email-service";
 import { isAuthenticated } from "../replitAuth";
