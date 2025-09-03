@@ -6,7 +6,14 @@ This project is a full-stack React chat widget application featuring an Express.
 
 ## Recent Changes
 
-- **August 8, 2025 - Latest**: Enhanced Survey Session Management and Restart Handling:
+- **September 3, 2025 - Latest**: Fixed Chat Session Management and UI Designer TypeScript Errors:
+  - **FIXED CHAT HISTORY PERSISTENCE**: Resolved issue where logged-in users were seeing previous chat history on page reload
+  - Updated session caching to include sessionId in query cache key instead of just chatbotConfigId
+  - Each unique sessionId now gets its own cache entry, ensuring fresh conversations for each page load
+  - **FIXED UI DESIGNER SERVICE**: Added missing `actionType` property to all default topic objects
+  - All topic objects now properly specify `actionType: "message"` as required by the TypeScript interface
+
+- **August 8, 2025**: Enhanced Survey Session Management and Restart Handling:
   - **SMART SURVEY SESSION MANAGEMENT**: Implemented proper handling for completed and restarted surveys
   - System now checks for existing survey sessions before creating new ones
   - Completed surveys can be restarted by resetting the session status and responses
