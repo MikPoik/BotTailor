@@ -368,8 +368,14 @@ export async function* generateStreamingResponse(
     );
     if (surveyContext) {
       console.log(`[SURVEY] Using survey context in system prompt`);
+      console.log(`[SURVEY] Survey context length: ${surveyContext.length} chars`);
+    } else {
+      console.log(`[SURVEY] NO survey context found - surveyContext is empty!`);
     }
-    //console.log(`[OpenAI] System prompt: ${systemPrompt}`);
+    console.log(`[OpenAI] FULL SYSTEM PROMPT (${systemPrompt.length} chars):`);
+    console.log("=== SYSTEM PROMPT START ===");
+    console.log(systemPrompt);
+    console.log("=== SYSTEM PROMPT END ===");
 
     const messages = [
       { role: "system" as const, content: systemPrompt },
