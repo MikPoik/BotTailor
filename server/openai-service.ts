@@ -346,7 +346,7 @@ export async function* generateStreamingResponse(
           }
           
           console.log(`[SURVEY AI CONTEXT] Built survey context (${surveyContext.length} chars) for question index ${surveySession.currentQuestionIndex}:`);
-          //console.log(surveyContext.substring(0, 800));
+          console.log(surveyContext.substring(0, 800));
         }
       }
     } catch (error) {
