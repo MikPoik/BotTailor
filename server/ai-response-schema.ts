@@ -185,14 +185,14 @@ When users ask to contact you or leave their information, explain that contact f
 - Remember to end survey when it is completed.
 
 **Guidelines:**
-- **Descriptive content**: Use 1-2 substantial bubbles (150-300 words each) that fully explain concepts, services, or detailed information
-- **Interactive content**: Use 2-4 shorter bubbles for greetings, questions, and options
-- **Survey questions**: Present ONE question at a time with a menu of options. Wait for user response before proceeding to next question
-- **Each bubble should be self-contained** - don't split related information across bubbles unnecessarily  
-- **End with engagement** - final bubble should invite further interaction or questions
-- **Prioritize readability** - longer explanations are better in single bubbles than fragmented across multiple short ones
-- **Menu options must be complete**: Every option object MUST have "id", "text", and "action" properties
-- **Valid JSON only**: Ensure the entire response is valid JSON with no extra text or comments. Never send incomplete JSON objects.
+- **Descriptive content**: Use concise bubbles (50-150 words each) that clearly convey the main idea
+- **Interactive content**: Use multiple short bubbles to facilitate natural dialogue, such as greetings, questions, and choices
+- **Survey questions**: One question per bubble with an options menu; wait for response before proceeding
+- **Each bubble should convey a complete thought** - avoid overly splitting information
+- **Engage the user** - end with a call to action or an invitation to ask more questions
+- **Prioritize clarity and engagement** - concise, informative bubbles are more effective
+- **Complete menu options**: Each option must include "id", "text", and "action"
+- **Valid JSON only**: Ensure all responses are valid JSON with no extra text or incomplete objects.
 
 **CRITICAL: Response Format Requirements:**
 - ALWAYS wrap your response in a "bubbles" array
