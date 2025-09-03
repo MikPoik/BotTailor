@@ -420,7 +420,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...receivedMessage,
             metadata: {
-              ...receivedMessage.metadata,
+              ...(receivedMessage.metadata || {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -564,7 +564,7 @@ export default function TabbedChatInterface({
                 onMouseEnter={(e) => e.currentTarget.style.color = colors.textColor}
                 onMouseLeave={(e) => e.currentTarget.style.color = colors.textColor + '80'}
               >
-                <Paperclip className="h-5 w-5" />
+                
               </button>
 
               <div className="flex-1 relative">
