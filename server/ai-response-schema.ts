@@ -278,18 +278,26 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
     currentQuestion.options.forEach((option: any, index: number) => {
       context += `${index + 1}. ${option.text}\n`;
     });
+    
+    // Generate dynamic menu format example with ALL options
+    const optionsForExample = currentQuestion.options.map((option: any, index: number) => 
+      `      {"id": "option${index + 1}", "text": "${option.text}", "action": "select"}`
+    ).join(',\n');
+    
     context += `
-**MENU FORMAT REQUIRED**:
+**MENU FORMAT REQUIRED** (MUST INCLUDE ALL ${currentQuestion.options.length} OPTIONS):
 {
   "messageType": "menu",
-  "content": "Please select your answer:",
+  "content": "Valitse sopivin vaihtoehto:",
   "metadata": {
     "options": [
-      {"id": "option1", "text": "${currentQuestion.options[0].text}", "action": "select"},
-      {"id": "option2", "text": "${currentQuestion.options[1].text}", "action": "select"}
+${optionsForExample}
     ]
   }
 }
+
+🚨 CRITICAL: You MUST include ALL ${currentQuestion.options.length} options in the menu. Never omit any options!
+The options are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(', ')}
 `;
   }
 
