@@ -88,17 +88,23 @@ export default function TabbedChatInterface({
     const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
     
     if (hasNewMessages) {
-      // Always scroll if this is the first message or user is near bottom
-      const shouldScroll = prevMessageCountRef.current === 0 || isUserNearBottom();
+      // Always scroll if:
+      // 1. This is the first message
+      // 2. We're currently streaming (multiple bubbles in same response)
+      // 3. User is near bottom
+      const shouldScroll = 
+        prevMessageCountRef.current === 0 || 
+        isStreaming || 
+        isUserNearBottom();
       
       if (shouldScroll) {
         // Longer delay to ensure DOM is fully updated
-        setTimeout(scrollToBottom, 100);
+        setTimeout(scrollToBottom, 150);
       }
     }
     
     prevMessageCountRef.current = currentMessageCount;
-  }, [messages]);
+  }, [messages, isStreaming]);
 
   // Only auto-switch to chat tab when starting a new conversation, not when manually switching tabs
   // This effect is removed to allow free navigation between tabs
