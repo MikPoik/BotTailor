@@ -78,21 +78,23 @@ export default function TabbedChatInterface({
     const container = messagesContainerRef.current;
     if (!container) return true;
     
-    const threshold = 100; // pixels from bottom
+    const threshold = 200; // pixels from bottom - more generous
     const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
     return isNearBottom;
   };
 
   useEffect(() => {
-    // Only auto-scroll when:
-    // 1. New messages are added (message count increased)
-    // 2. User is already near the bottom (not manually scrolled up)
     const currentMessageCount = messages?.length || 0;
     const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
     
-    if (hasNewMessages && isUserNearBottom()) {
-      // Small delay to ensure DOM is updated
-      setTimeout(scrollToBottom, 50);
+    if (hasNewMessages) {
+      // Always scroll if this is the first message or user is near bottom
+      const shouldScroll = prevMessageCountRef.current === 0 || isUserNearBottom();
+      
+      if (shouldScroll) {
+        // Longer delay to ensure DOM is fully updated
+        setTimeout(scrollToBottom, 100);
+      }
     }
     
     prevMessageCountRef.current = currentMessageCount;
@@ -114,6 +116,9 @@ export default function TabbedChatInterface({
 
     // Switch to chat tab when sending a message
     setActiveTab("chat");
+    
+    // Force scroll to bottom when user sends a message
+    setTimeout(scrollToBottom, 50);
 
     try {
       await sendStreamingMessage(
