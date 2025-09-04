@@ -208,10 +208,18 @@ Be helpful, constructive, and provide actionable suggestions.`;
       // Handle different actions
       switch (action) {
         case 'generate':
-          assistantPrompt += `\n\nUser Request: Generate a complete system prompt for this chatbot. Base it on the chatbot's name, description, and intended use case.`;
+          assistantPrompt += `\n\nUser Request: Generate a complete system prompt for this chatbot. Base it on the chatbot's name, description, and intended use case.
+
+IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
+1. First bubble: ONLY the clean, ready-to-use system prompt without any headers, explanations, or formatting markers
+2. Second bubble: Your analysis and explanation of the prompt choices`;
           break;
         case 'improve':
-          assistantPrompt += `\n\nUser Request: Analyze and improve the current system prompt. Provide the improved version and explain what changes were made and why.`;
+          assistantPrompt += `\n\nUser Request: Analyze and improve the current system prompt. Provide the improved version and explain what changes were made and why.
+
+IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
+1. First bubble: ONLY the clean, improved system prompt without any headers, explanations, formatting markers, or prefixes like "**Improved System Prompt:**"
+2. Second bubble: Your detailed explanation of what changes were made and why`;
           break;
         case 'chat':
           assistantPrompt += `\n\nUser Question: ${userMessage}`;
