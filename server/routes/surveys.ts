@@ -154,7 +154,10 @@ export function setupSurveyRoutes(app: Express) {
     try {
       const { sessionId, surveyId } = req.body;
 
-      // Check if there's already an active survey session for this survey
+      // First deactivate any existing active survey sessions
+      await storage.deactivateAllSurveySessions(sessionId);
+
+      // Check if there's already a survey session for this specific survey
       const existingSurveySession = await storage.getSurveySession(surveyId, sessionId);
       
       let surveySession;
@@ -168,9 +171,11 @@ export function setupSurveyRoutes(app: Express) {
             status: 'active'
           });
         } else {
-          // Continue with existing active survey
-          console.log(`[SURVEY_START] Continuing existing survey ${surveyId} for session ${sessionId}`);
-          surveySession = existingSurveySession;
+          // Reactivate the existing survey session
+          console.log(`[SURVEY_START] Reactivating existing survey ${surveyId} for session ${sessionId}`);
+          surveySession = await storage.updateSurveySession(existingSurveySession.id, {
+            status: 'active'
+          });
         }
       } else {
         // Create new survey session

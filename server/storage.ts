@@ -79,6 +79,7 @@ export interface IStorage {
   // Active survey tracking methods
   setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined>;
   getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined>;
+  deactivateAllSurveySessions(sessionId: string): Promise<void>;
 
   // Conversation count methods
   getConversationCount(userId: string): Promise<number>;
@@ -432,6 +433,19 @@ export class DatabaseStorage implements IStorage {
 
     // Then get the specific survey session for that survey
     return await this.getSurveySession(chatSession.activeSurveyId, sessionId);
+  }
+
+  async deactivateAllSurveySessions(sessionId: string): Promise<void> {
+    // Mark all survey sessions for this chat session as inactive
+    await db
+      .update(surveySessions)
+      .set({ status: 'inactive' })
+      .where(and(
+        eq(surveySessions.sessionId, sessionId),
+        eq(surveySessions.status, 'active')
+      ));
+    
+    console.log(`[SURVEY] Deactivated all active survey sessions for session: ${sessionId}`);
   }
 
   // Conversation count method

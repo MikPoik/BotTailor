@@ -541,16 +541,14 @@ async function handleSurveySessionCreation(
             targetSurvey = availableSurveys[0];
           }
 
+          // First deactivate any existing active survey sessions
+          await storage.deactivateAllSurveySessions(sessionId);
+
           // Check for existing survey session for this specific survey
           const existingSurveySession = await storage.getSurveySession(targetSurvey.id, sessionId);
           
           if (existingSurveySession) {
-            if (existingSurveySession.status === 'active') {
-              console.log(`[SURVEY] Survey session already active for survey ${targetSurvey.id}, continuing with existing session`);
-              // Set this survey as active in case it wasn't already
-              await storage.setActiveSurvey(sessionId, targetSurvey.id);
-              console.log(`[SURVEY] Set survey ${targetSurvey.id} as active for session ${sessionId}`);
-            } else if (existingSurveySession.status === 'completed') {
+            if (existingSurveySession.status === 'completed') {
               console.log(`[SURVEY] User has already completed survey ${targetSurvey.id}, offering retake`);
               // Update existing session to restart the survey
               await storage.updateSurveySession(existingSurveySession.id, {
@@ -558,10 +556,17 @@ async function handleSurveySessionCreation(
                 responses: {},
                 status: 'active'
               });
-              // Set this survey as active
-              await storage.setActiveSurvey(sessionId, targetSurvey.id);
-              console.log(`[SURVEY] Restarted completed survey session and set as active for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name}`);
+            } else {
+              console.log(`[SURVEY] Reactivating existing survey session for survey ${targetSurvey.id}`);
+              // Reactivate the survey session (it was deactivated above)
+              await storage.updateSurveySession(existingSurveySession.id, {
+                status: 'active'
+              });
             }
+            // Set this survey as active
+            await storage.setActiveSurvey(sessionId, targetSurvey.id);
+            console.log(`[SURVEY] Set survey ${targetSurvey.id} as active for session ${sessionId}`);
+            console.log(`[SURVEY] Survey session status updated for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name}`);
           } else {
             // No existing session, create a new one
             console.log(`[SURVEY] Creating new survey session for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name || 'Unknown Survey'}`);
