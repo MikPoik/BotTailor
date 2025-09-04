@@ -89,15 +89,16 @@ export async function uploadBackgroundImage(file: Express.Multer.File, userId: s
     const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
     const fileName = `backgrounds/${userId}/${uuidv4()}.${fileExtension}`;
 
-    // Process image with Sharp - resize to max 1200px width, maintain aspect ratio
+    // Process image with Sharp - optimize for chat widget background
     const processedImage = await sharp(file.buffer)
-      .resize(1200, null, {
+      .resize(800, null, {
         fit: 'inside',
         withoutEnlargement: true
       })
       .jpeg({
-        quality: 80,
-        progressive: true
+        quality: 60,
+        progressive: true,
+        mozjpeg: true
       })
       .toBuffer();
 
