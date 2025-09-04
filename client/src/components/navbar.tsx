@@ -59,9 +59,12 @@ export function Navbar() {
         {/* Desktop Navigation */}
         {!isMobile && isAuthenticated && (
           <div className="mr-4 flex items-center space-x-4 md:mr-6">
-            <Link href="/dashboard" className="text-sm font-medium transition-colors hover:text-primary">
-              Dashboard
-            </Link>
+            <Button variant="ghost" asChild>
+              <Link href="/docs">Documentation</Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
           </div>
         )}
 
@@ -101,7 +104,7 @@ export function Navbar() {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {user?.firstName && user?.lastName 
+                        {user?.firstName && user?.lastName
                           ? `${user.firstName} ${user.lastName}`
                           : user?.email}
                       </p>
@@ -160,32 +163,39 @@ export function Navbar() {
           <div className="container py-4 space-y-3">
             {isAuthenticated ? (
               <>
-                <Link 
-                  href="/dashboard" 
+                <Link
+                  href="/dashboard"
                   className="block text-sm font-medium transition-colors hover:text-primary py-2"
                   onClick={closeMenu}
                 >
                   Dashboard
                 </Link>
+                <Link
+                  href="/docs"
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Documentation
+                </Link>
                 <div className="border-t pt-3 space-y-3">
-                  <Link 
-                    href="/profile" 
+                  <Link
+                    href="/profile"
                     className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
                     onClick={closeMenu}
                   >
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
-                  <Link 
-                    href="/settings" 
+                  <Link
+                    href="/settings"
                     className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
                     onClick={closeMenu}
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Link>
-                  <a 
-                    href="/api/logout" 
+                  <a
+                    href="/api/logout"
                     className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
                     onClick={closeMenu}
                   >
@@ -199,15 +209,15 @@ export function Navbar() {
               </>
             ) : (
               <div className="space-y-3">
-                <Link 
-                  href="/" 
+                <Link
+                  href="/"
                   className="block text-sm font-medium transition-colors hover:text-primary py-2"
                   onClick={closeMenu}
                 >
                   Home
                 </Link>
-                <a 
-                  href="/api/login" 
+                <a
+                  href="/api/login"
                   className="block text-sm font-medium transition-colors hover:text-primary py-2"
                   onClick={closeMenu}
                 >
