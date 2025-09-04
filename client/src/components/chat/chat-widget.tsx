@@ -26,6 +26,9 @@ export default function ChatWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [initialMessages, setInitialMessages] = useState<string[]>([]);
+  const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
+  const [messageTimeouts, setMessageTimeouts] = useState<NodeJS.Timeout[]>([]);
   const queryClient = useQueryClient();
 
   // Generate a unique session ID for this chat widget instance
@@ -43,6 +46,60 @@ export default function ChatWidget({
     'bottom-right': 'bottom-6 right-6',
     'bottom-left': 'bottom-6 left-6'
   };
+
+  // Load initial messages from chatbot config
+  useEffect(() => {
+    if (chatbotConfig?.initialMessages && Array.isArray(chatbotConfig.initialMessages)) {
+      const messages = chatbotConfig.initialMessages.map((msg: any) => 
+        typeof msg === 'string' ? msg : msg.content || msg
+      );
+      setInitialMessages(messages);
+    }
+  }, [chatbotConfig]);
+
+  // Show initial messages with staggered delays
+  useEffect(() => {
+    if (initialMessages.length > 0 && !isOpen && !isEmbedded) {
+      const timeouts: NodeJS.Timeout[] = [];
+      
+      initialMessages.forEach((_, index) => {
+        const timeout = setTimeout(() => {
+          setVisibleMessages(prev => [...prev, index]);
+          
+          // Auto-hide after 8 seconds
+          const hideTimeout = setTimeout(() => {
+            setVisibleMessages(prev => prev.filter(i => i !== index));
+          }, 8000);
+          
+          timeouts.push(hideTimeout);
+        }, index * 2000); // Show each message 2 seconds apart
+        
+        timeouts.push(timeout);
+      });
+      
+      setMessageTimeouts(timeouts);
+      
+      return () => {
+        timeouts.forEach(timeout => clearTimeout(timeout));
+      };
+    }
+  }, [initialMessages, isOpen, isEmbedded]);
+
+  // Hide all initial messages when chat opens
+  useEffect(() => {
+    if (isOpen) {
+      setVisibleMessages([]);
+      messageTimeouts.forEach(timeout => clearTimeout(timeout));
+      setMessageTimeouts([]);
+    }
+  }, [isOpen, messageTimeouts]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      messageTimeouts.forEach(timeout => clearTimeout(timeout));
+    };
+  }, [messageTimeouts]);
 
   useEffect(() => {
     // Custom CSS for theming
@@ -226,6 +283,10 @@ export default function ChatWidget({
     }
   };
 
+  const dismissMessage = (index: number) => {
+    setVisibleMessages(prev => prev.filter(i => i !== index));
+  };
+
   const closeChat = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -272,9 +333,6 @@ export default function ChatWidget({
             <button 
               onClick={closeChat}
               className="text-white p-1.5 rounded transition-colors"
-              style={{ 
-                "&:hover": { backgroundColor: `${primaryColor}cc` }
-              }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}cc`}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
@@ -377,6 +435,48 @@ export default function ChatWidget({
           )}
         </div>
       )}
+
+      {/* Initial Message Bubbles */}
+      {!isOpen && visibleMessages.map((messageIndex) => {
+        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 80);
+        return (
+          <div
+            key={messageIndex}
+            className="absolute animate-fadeIn transition-all duration-300"
+            style={{
+              [position === 'bottom-right' ? 'right' : 'left']: '0',
+              bottom: `${messageBottomOffset}px`,
+              maxWidth: '350px',
+              zIndex: 45
+            }}
+          >
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 m-2 relative">
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <p className="text-gray-800 text-sm leading-relaxed">
+                    {initialMessages[messageIndex]}
+                  </p>
+                </div>
+                <button
+                  onClick={() => dismissMessage(messageIndex)}
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              
+              {/* Arrow pointing to chat bubble */}
+              <div 
+                className="absolute w-3 h-3 bg-white border-r border-b border-gray-200 transform rotate-45"
+                style={{
+                  [position === 'bottom-right' ? 'right' : 'left']: '20px',
+                  bottom: '-6px'
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
 
       {/* Chat Interface */}
       {(isOpen || isClosing) && (
