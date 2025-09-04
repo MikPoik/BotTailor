@@ -490,19 +490,6 @@ export default function Docs() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Live Demo</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button variant="outline" asChild className="w-full">
-                <Link href="/chat-widget">Try Live Demo</Link>
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                Experience the chatbot functionality firsthand with our interactive demo.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </section>
     </div>
