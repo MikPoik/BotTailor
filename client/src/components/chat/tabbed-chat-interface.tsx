@@ -519,17 +519,17 @@ export default function TabbedChatInterface({
             }}
           >
             {(() => {
-              // Create initial messages as assistant messages if chat is empty
+              // Create initial message as assistant message if chat is empty
               const displayMessages = messages.length === 0 && chatbotConfig?.initialMessages && chatbotConfig.initialMessages.length > 0
-                ? chatbotConfig.initialMessages.map((messageText: string, index: number) => ({
-                    id: `initial-${index}`,
+                ? [{
+                    id: `initial-0`,
                     sessionId,
-                    content: messageText,
+                    content: chatbotConfig.initialMessages[0],
                     sender: 'assistant' as const,
                     messageType: 'text' as const,
                     metadata: { isInitial: true },
                     createdAt: new Date().toISOString(),
-                  }))
+                  }]
                 : messages;
 
               if (displayMessages.length === 0) {

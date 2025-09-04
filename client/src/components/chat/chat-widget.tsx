@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Minimize2 } from "lucide-react";
 import TabbedChatInterface from "./tabbed-chat-interface";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ export default function ChatWidget({
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [initialMessages, setInitialMessages] = useState<string[]>([]);
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
-  const [messageTimeouts, setMessageTimeouts] = useState<NodeJS.Timeout[]>([]);
+  const messageTimeouts = useRef<NodeJS.Timeout[]>([]);
   const queryClient = useQueryClient();
 
   // Generate a unique session ID for this chat widget instance
@@ -77,7 +77,7 @@ export default function ChatWidget({
         timeouts.push(timeout);
       });
       
-      setMessageTimeouts(timeouts);
+      messageTimeouts.current = timeouts;
       
       return () => {
         timeouts.forEach(timeout => clearTimeout(timeout));
@@ -89,17 +89,17 @@ export default function ChatWidget({
   useEffect(() => {
     if (isOpen) {
       setVisibleMessages([]);
-      messageTimeouts.forEach(timeout => clearTimeout(timeout));
-      setMessageTimeouts([]);
+      messageTimeouts.current.forEach(timeout => clearTimeout(timeout));
+      messageTimeouts.current = [];
     }
-  }, [isOpen, messageTimeouts]);
+  }, [isOpen]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      messageTimeouts.forEach(timeout => clearTimeout(timeout));
+      messageTimeouts.current.forEach(timeout => clearTimeout(timeout));
     };
-  }, [messageTimeouts]);
+  }, []);
 
   useEffect(() => {
     // Custom CSS for theming
@@ -451,7 +451,14 @@ export default function ChatWidget({
               zIndex: 45
             }}
           >
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 m-2 relative">
+            <div 
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
+              onClick={() => {
+                setIsOpen(true);
+                setHasNewMessage(false);
+                queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+              }}
+            >
               <div className="flex items-start gap-3">
                 <div className="flex-1">
                   <p className="text-gray-800 text-base leading-relaxed font-medium">
@@ -459,7 +466,10 @@ export default function ChatWidget({
                   </p>
                 </div>
                 <button
-                  onClick={() => dismissMessage(messageIndex)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dismissMessage(messageIndex);
+                  }}
                   className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-100"
                 >
                   <X className="w-5 h-5" />
