@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { renderComponent } from "./component-registry";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { HomeScreenConfig } from "@shared/schema";
 
 interface DynamicHomeScreenProps {
