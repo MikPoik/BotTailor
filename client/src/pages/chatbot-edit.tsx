@@ -16,11 +16,12 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation, useRoute } from "wouter";
 import { useEffect } from "react";
 import { z } from "zod";
-import { ArrowLeft, Bot, Save, User, X, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Bot, Save, User, X, Plus, Trash2, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
 import type { ChatbotConfig } from "@shared/schema";
+import PromptAssistantChatbox from "@/components/chat/prompt-assistant-chatbox";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -48,6 +49,7 @@ export default function ChatbotEdit() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/chatbots/:guid");
+  const [promptAssistantOpen, setPromptAssistantOpen] = useState(false);
 
   const chatbotGuid = params?.guid || null;
 
@@ -339,6 +341,36 @@ export default function ChatbotEdit() {
                   </FormItem>
                 )}
               />
+
+              {/* AI Prompt Assistant */}
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    AI Prompt Assistant
+                  </h4>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setPromptAssistantOpen(!promptAssistantOpen)}
+                    type="button"
+                  >
+                    {promptAssistantOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </div>
+                
+                {promptAssistantOpen && (
+                  <PromptAssistantChatbox 
+                    currentPrompt={form.watch('systemPrompt') || ""}
+                    onPromptGenerated={(newPrompt) => form.setValue('systemPrompt', newPrompt)}
+                    chatbotConfig={{ 
+                      name: form.watch('name'), 
+                      description: form.watch('description') 
+                    }}
+                    chatbotGuid={chatbotGuid || ""}
+                  />
+                )}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
