@@ -8,12 +8,59 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Function to extract the actual system prompt from AI response
+function extractSystemPrompt(content: string): string {
+  // Look for patterns like "**Improved System Prompt:**" or "System Prompt:" followed by the actual prompt
+  const patterns = [
+    "**Improved System Prompt:**",
+    "**System Prompt:**", 
+    "System Prompt:",
+    "Improved prompt:",
+    "New prompt:"
+  ];
+  
+  for (const pattern of patterns) {
+    const patternIndex = content.indexOf(pattern);
+    if (patternIndex !== -1) {
+      // Find the start of the actual prompt (after the pattern and any whitespace/newlines)
+      let startIndex = patternIndex + pattern.length;
+      while (startIndex < content.length && /\s/.test(content[startIndex])) {
+        startIndex++;
+      }
+      
+      // Find the end - look for the next "**" or explanation section
+      let endIndex = content.length;
+      const nextPattern = content.indexOf("**", startIndex);
+      const explanationIndex = content.toLowerCase().indexOf("explanation", startIndex);
+      const improvementIndex = content.toLowerCase().indexOf("improvement", startIndex);
+      
+      if (nextPattern !== -1) endIndex = Math.min(endIndex, nextPattern);
+      if (explanationIndex !== -1) endIndex = Math.min(endIndex, explanationIndex);
+      if (improvementIndex !== -1) endIndex = Math.min(endIndex, improvementIndex);
+      
+      const extractedPrompt = content.substring(startIndex, endIndex).trim();
+      if (extractedPrompt && extractedPrompt.length > 20) {
+        return extractedPrompt;
+      }
+    }
+  }
+  
+  // If no pattern matches and it's a simple prompt generation, use the whole content
+  // but exclude obvious explanation text
+  if (!content.includes("**") && !content.toLowerCase().includes("explanation") && content.length < 1000) {
+    return content.trim();
+  }
+  
+  return "";
+}
+
 interface PromptAssistantMessage {
   id: string;
   content: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
   action?: string;
+  extractedPrompt?: string;
 }
 
 interface PromptAssistantChatboxProps {
@@ -62,16 +109,30 @@ export default function PromptAssistantChatbox({
     onSuccess: (data, variables) => {
       const response = data.response;
       
-      // Extract the content from the first bubble if it's a multi-bubble response
-      const assistantContent = response?.bubbles?.[0]?.content || response?.content || "I couldn't generate a response.";
+      // Extract content from all bubbles and combine them
+      let fullContent = "";
+      let extractedPrompt = "";
+      
+      if (response?.bubbles && Array.isArray(response.bubbles)) {
+        // Combine all bubble content
+        fullContent = response.bubbles.map((bubble: any) => bubble.content).join("\n\n");
+        
+        // For generate/improve actions, try to extract the actual prompt
+        if (variables.action === 'generate' || variables.action === 'improve') {
+          extractedPrompt = extractSystemPrompt(fullContent);
+        }
+      } else {
+        fullContent = response?.content || "I couldn't generate a response.";
+      }
       
       // Add assistant response to messages
       const assistantMessage: PromptAssistantMessage = {
         id: Date.now().toString() + '-assistant',
-        content: assistantContent,
+        content: fullContent,
         sender: 'assistant',
         timestamp: new Date(),
-        action: variables.action
+        action: variables.action,
+        extractedPrompt: extractedPrompt || undefined
       };
       
       setMessages(prev => [...prev, assistantMessage]);
@@ -133,12 +194,18 @@ export default function PromptAssistantChatbox({
     });
   };
 
-  const applyPrompt = (prompt: string) => {
-    onPromptGenerated(prompt);
+  const applyPrompt = (message: PromptAssistantMessage) => {
+    const promptToApply = message.extractedPrompt || message.content;
+    onPromptGenerated(promptToApply);
     toast({
       title: "Applied!",
       description: "Prompt has been applied to the system prompt field",
     });
+  };
+
+  const copyPrompt = (message: PromptAssistantMessage) => {
+    const promptToCopy = message.extractedPrompt || message.content;
+    copyToClipboard(promptToCopy);
   };
 
   return (
@@ -198,13 +265,18 @@ export default function PromptAssistantChatbox({
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 {message.sender === 'assistant' && (message.action === 'generate' || message.action === 'improve') && (
                   <div className="flex gap-2 mt-2">
+                    {message.extractedPrompt && (
+                      <div className="text-xs text-muted-foreground mb-1">
+                        ✨ System prompt extracted
+                      </div>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard(message.content)}
+                      onClick={() => copyPrompt(message)}
                       className="h-6 text-xs"
                     >
-                      {copiedPrompt === message.content ? (
+                      {copiedPrompt === (message.extractedPrompt || message.content) ? (
                         <Check className="h-3 w-3" />
                       ) : (
                         <Copy className="h-3 w-3" />
@@ -213,10 +285,10 @@ export default function PromptAssistantChatbox({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => applyPrompt(message.content)}
+                      onClick={() => applyPrompt(message)}
                       className="h-6 text-xs"
                     >
-                      Apply
+                      Apply {message.extractedPrompt ? "Prompt" : "All"}
                     </Button>
                   </div>
                 )}
