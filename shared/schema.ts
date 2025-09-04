@@ -85,13 +85,16 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Website Sources table for storing website URLs and metadata
+// Content Sources table for storing website URLs, text content, and metadata
 export const websiteSources = pgTable("website_sources", {
   id: serial("id").primaryKey(),
   chatbotConfigId: integer("chatbot_config_id").notNull().references(() => chatbotConfigs.id),
-  url: varchar("url", { length: 2048 }).notNull(),
+  sourceType: text("source_type").notNull().default("website"), // 'website' | 'text' | 'file'
+  url: varchar("url", { length: 2048 }), // Optional for text sources
   title: text("title"),
   description: text("description"),
+  textContent: text("text_content"), // For text/file sources
+  fileName: text("file_name"), // Original filename for file sources
   sitemapUrl: varchar("sitemap_url", { length: 2048 }),
   lastScanned: timestamp("last_scanned"),
   totalPages: integer("total_pages").default(0),
@@ -187,14 +190,22 @@ export const insertMessageSchema = z.object({
   metadata: z.record(z.any()).default({}),
 });
 
-// Website sources schemas
+// Content sources schemas
 export const insertWebsiteSourceSchema = createInsertSchema(websiteSources).pick({
   chatbotConfigId: true,
+  sourceType: true,
   url: true,
   title: true,
   description: true,
+  textContent: true,
+  fileName: true,
   sitemapUrl: true,
   maxPages: true,
+}).extend({
+  // Make url optional for text sources
+  url: z.string().url().optional(),
+  // Add validation for sourceType
+  sourceType: z.enum(["website", "text", "file"]).default("website"),
 });
 
 export const insertWebsiteContentSchema = createInsertSchema(websiteContent).omit({
@@ -213,7 +224,7 @@ export type Message = typeof messages.$inferSelect;
 export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
-// Website source types
+// Content source types
 export type WebsiteSource = typeof websiteSources.$inferSelect;
 export type InsertWebsiteSource = z.infer<typeof insertWebsiteSourceSchema>;
 export type WebsiteContent = typeof websiteContent.$inferSelect;

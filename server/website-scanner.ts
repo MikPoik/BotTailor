@@ -488,4 +488,62 @@ export class WebsiteScanner {
       throw error;
     }
   }
+
+  // Process text content directly for text/file sources
+  async processTextContent(websiteSourceId: number, title: string, textContent: string): Promise<void> {
+    try {
+      // Update status to scanning
+      await storage.updateWebsiteSource(websiteSourceId, {
+        status: "scanning",
+        lastScanned: new Date(),
+      });
+
+      // Split content into chunks for better embedding
+      const chunks = this.splitIntoChunks(textContent, 1000);
+      let processedChunks = 0;
+
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+
+        try {
+          // Generate embedding
+          const embedding = await this.generateEmbedding(chunk);
+
+          const contentData: InsertWebsiteContent = {
+            websiteSourceId,
+            url: `text-content-${websiteSourceId}`, // Use a placeholder URL for text content
+            title: i === 0 ? title : `${title} (Part ${i + 1})`,
+            content: chunk,
+            contentType: "text",
+            wordCount: chunk.split(/\s+/).length,
+          };
+
+          await storage.createWebsiteContent(contentData, embedding);
+          processedChunks++;
+        } catch (embeddingError) {
+          console.error(`Failed to generate embedding for chunk ${i + 1}:`, embeddingError);
+          throw embeddingError;
+        }
+      }
+
+      // Update status and total pages processed
+      await storage.updateWebsiteSource(websiteSourceId, {
+        status: "completed",
+        totalPages: processedChunks,
+        lastScanned: new Date(),
+      });
+
+      console.log(`Successfully processed ${processedChunks} text chunks for source ${websiteSourceId}`);
+    } catch (error) {
+      console.error(`Error processing text content for source ${websiteSourceId}:`, error);
+      
+      // Update status to error
+      await storage.updateWebsiteSource(websiteSourceId, {
+        status: "error",
+        errorMessage: error instanceof Error ? error.message : "Failed to process text content",
+      });
+      
+      throw error;
+    }
+  }
 }

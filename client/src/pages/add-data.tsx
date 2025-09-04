@@ -22,15 +22,21 @@ import {
   CheckCircle, 
   AlertCircle, 
   Clock,
-  ExternalLink
+  ExternalLink,
+  FileText,
+  Upload,
+  Type
 } from "lucide-react";
 
 interface WebsiteSource {
   id: number;
   chatbotConfigId: number;
-  url: string;
+  sourceType: 'website' | 'text' | 'file';
+  url?: string;
   title: string | null;
   description: string | null;
+  textContent?: string;
+  fileName?: string;
   sitemapUrl: string | null;
   lastScanned: string | null;
   totalPages: number;
@@ -54,7 +60,14 @@ const addWebsiteSchema = z.object({
   maxPages: z.number().min(1).max(200).default(50),
 });
 
-type FormData = z.infer<typeof addWebsiteSchema>;
+const addTextSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  textContent: z.string().min(10, "Text content must be at least 10 characters"),
+});
+
+type WebsiteFormData = z.infer<typeof addWebsiteSchema>;
+type TextFormData = z.infer<typeof addTextSchema>;
 
 export default function AddData() {
   const { guid } = useParams();
@@ -63,13 +76,25 @@ export default function AddData() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
-  const form = useForm<FormData>({
+  const [activeTab, setActiveTab] = useState<'website' | 'text' | 'file'>('website');
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  const websiteForm = useForm<WebsiteFormData>({
     resolver: zodResolver(addWebsiteSchema),
     defaultValues: {
       url: "",
       title: "",
       description: "",
       maxPages: 50,
+    },
+  });
+
+  const textForm = useForm<TextFormData>({
+    resolver: zodResolver(addTextSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      textContent: "",
     },
   });
 
@@ -119,26 +144,67 @@ export default function AddData() {
     staleTime: 0, // Always consider data stale for fresh updates
   });
 
-  // Add website source mutation
-  const addWebsiteMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+  // Add content source mutation
+  const addContentMutation = useMutation({
+    mutationFn: async (data: any) => {
       if (!chatbot?.id) throw new Error("Chatbot not found");
       const response = await apiRequest("POST", `/api/chatbots/${chatbot.id}/website-sources`, data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`] });
-      form.reset();
+      websiteForm.reset();
+      textForm.reset();
+      setUploadedFile(null);
       toast({
-        title: "Website Added",
-        description: "Website source has been added and scanning started.",
+        title: "Content Added",
+        description: "Content source has been added and processing started.",
       });
     },
     onError: (error: Error) => {
-      console.error("Add website error:", error);
+      console.error("Add content error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to add website source",
+        description: error.message || "Failed to add content source",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Upload file mutation
+  const uploadFileMutation = useMutation({
+    mutationFn: async (data: { file: File; title?: string; description?: string }) => {
+      if (!chatbot?.id) throw new Error("Chatbot not found");
+      const formData = new FormData();
+      formData.append('file', data.file);
+      if (data.title) formData.append('title', data.title);
+      if (data.description) formData.append('description', data.description);
+      
+      const response = await fetch(`/api/chatbots/${chatbot.id}/upload-text-file`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Upload failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/website-sources`] });
+      setUploadedFile(null);
+      toast({
+        title: "File Uploaded",
+        description: "File has been uploaded and processing started.",
+      });
+    },
+    onError: (error: Error) => {
+      console.error("Upload file error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload file",
         variant: "destructive",
       });
     },
@@ -189,9 +255,59 @@ export default function AddData() {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Form submission data:", data);
-    addWebsiteMutation.mutate(data);
+  const onWebsiteSubmit = (data: WebsiteFormData) => {
+    console.log("Website submission data:", data);
+    addContentMutation.mutate({ ...data, sourceType: 'website' });
+  };
+
+  const onTextSubmit = (data: TextFormData) => {
+    console.log("Text submission data:", data);
+    addContentMutation.mutate({ ...data, sourceType: 'text' });
+  };
+
+  const onFileUpload = () => {
+    if (!uploadedFile) {
+      toast({
+        title: "Error",
+        description: "Please select a file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    uploadFileMutation.mutate({ 
+      file: uploadedFile,
+      title: uploadedFile.name,
+      description: `Uploaded file: ${uploadedFile.name}`
+    });
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check file type
+      const allowedTypes = ['text/plain', 'text/csv', 'text/markdown', 'application/json'];
+      if (!allowedTypes.includes(file.type) && !file.type.startsWith('text/')) {
+        toast({
+          title: "Error",
+          description: "Please select a text file (.txt, .csv, .md, .json, etc.)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File size must be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setUploadedFile(file);
+    }
   };
 
   const handleDelete = (sourceId: number) => {
@@ -280,90 +396,244 @@ export default function AddData() {
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Add website sources to provide context for your chatbot. The system will scan your websites and use the content to make responses more relevant.
+            Add content sources to provide context for your chatbot. You can add websites to scan, paste text content directly, or upload text files.
           </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Add Website Form */}
+          {/* Add Content Forms */}
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
-                  Add Website
+                  Add Content
                 </CardTitle>
                 <CardDescription>
-                  Enter a website URL to scan for content. The system will automatically discover pages and extract relevant information.
+                  Choose how you want to add content to your chatbot.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div>
-                    <Label htmlFor="url">Website URL *</Label>
-                    <Input
-                      id="url"
-                      type="url"
-                      placeholder="https://example.com"
-                      {...form.register("url")}
-                    />
-                    {form.formState.errors.url && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {form.formState.errors.url.message}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="title">Title (Optional)</Label>
-                    <Input
-                      id="title"
-                      placeholder="Website name"
-                      {...form.register("title")}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Input
-                      id="description"
-                      placeholder="Brief description"
-                      {...form.register("description")}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="maxPages">Max Pages to Scan</Label>
-                    <Input
-                      id="maxPages"
-                      type="number"
-                      min="1"
-                      max="200"
-                      {...form.register("maxPages", { valueAsNumber: true })}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Limit: 1-200 pages
-                    </p>
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full"
-                    disabled={addWebsiteMutation.isPending}
+                {/* Tab Navigation */}
+                <div className="flex space-x-1 mb-4 bg-muted p-1 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('website')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 'website'
+                        ? 'bg-background shadow-sm text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
                   >
-                    {addWebsiteMutation.isPending ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Website
-                      </>
+                    <Globe className="h-4 w-4" />
+                    Website
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('text')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 'text'
+                        ? 'bg-background shadow-sm text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Type className="h-4 w-4" />
+                    Text
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('file')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === 'file'
+                        ? 'bg-background shadow-sm text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    File
+                  </button>
+                </div>
+
+                {/* Website Form */}
+                {activeTab === 'website' && (
+                  <form onSubmit={websiteForm.handleSubmit(onWebsiteSubmit)} className="space-y-4">
+                    <div>
+                      <Label htmlFor="url">Website URL *</Label>
+                      <Input
+                        id="url"
+                        type="url"
+                        placeholder="https://example.com"
+                        {...websiteForm.register("url")}
+                      />
+                      {websiteForm.formState.errors.url && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {websiteForm.formState.errors.url.message}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="website-title">Title (Optional)</Label>
+                      <Input
+                        id="website-title"
+                        placeholder="Website name"
+                        {...websiteForm.register("title")}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="website-description">Description (Optional)</Label>
+                      <Input
+                        id="website-description"
+                        placeholder="Brief description"
+                        {...websiteForm.register("description")}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="maxPages">Max Pages to Scan</Label>
+                      <Input
+                        id="maxPages"
+                        type="number"
+                        min="1"
+                        max="200"
+                        {...websiteForm.register("maxPages", { valueAsNumber: true })}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Limit: 1-200 pages
+                      </p>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={addContentMutation.isPending}
+                    >
+                      {addContentMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="h-4 w-4 mr-2" />
+                          Add Website
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
+
+                {/* Text Form */}
+                {activeTab === 'text' && (
+                  <form onSubmit={textForm.handleSubmit(onTextSubmit)} className="space-y-4">
+                    <div>
+                      <Label htmlFor="text-title">Title *</Label>
+                      <Input
+                        id="text-title"
+                        placeholder="Content title"
+                        {...textForm.register("title")}
+                      />
+                      {textForm.formState.errors.title && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {textForm.formState.errors.title.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="text-description">Description (Optional)</Label>
+                      <Input
+                        id="text-description"
+                        placeholder="Brief description"
+                        {...textForm.register("description")}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="textContent">Text Content *</Label>
+                      <textarea
+                        id="textContent"
+                        className="w-full min-h-[120px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+                        placeholder="Paste your text content here..."
+                        {...textForm.register("textContent")}
+                      />
+                      {textForm.formState.errors.textContent && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {textForm.formState.errors.textContent.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={addContentMutation.isPending}
+                    >
+                      {addContentMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Type className="h-4 w-4 mr-2" />
+                          Add Text Content
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
+
+                {/* File Upload Form */}
+                {activeTab === 'file' && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="file-upload">Select Text File</Label>
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        accept=".txt,.csv,.md,.json,.xml"
+                        onChange={handleFileChange}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Supported: .txt, .csv, .md, .json, .xml (max 5MB)
+                      </p>
+                    </div>
+
+                    {uploadedFile && (
+                      <div className="p-3 bg-muted rounded-md">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          <span className="text-sm font-medium">{uploadedFile.name}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Size: {(uploadedFile.size / 1024).toFixed(1)}KB
+                        </p>
+                      </div>
                     )}
-                  </Button>
-                </form>
+
+                    <Button 
+                      type="button"
+                      onClick={onFileUpload}
+                      className="w-full"
+                      disabled={!uploadedFile || uploadFileMutation.isPending}
+                    >
+                      {uploadFileMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload File
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -374,9 +644,9 @@ export default function AddData() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Website Sources</CardTitle>
+                    <CardTitle>Content Sources</CardTitle>
                     <CardDescription>
-                      Manage the websites that provide context for your chatbot.
+                      Manage the content sources that provide context for your chatbot.
                     </CardDescription>
                   </div>
                   <Button
@@ -397,9 +667,9 @@ export default function AddData() {
                 ) : !websiteSources || websiteSources.length === 0 ? (
                   <div className="text-center py-8">
                     <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No websites added yet</h3>
+                    <h3 className="text-lg font-medium mb-2">No content sources added yet</h3>
                     <p className="text-muted-foreground">
-                      Add your first website to start providing context for your chatbot.
+                      Add your first content source to start providing context for your chatbot.
                     </p>
                   </div>
                 ) : (
@@ -410,23 +680,44 @@ export default function AddData() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
                               {getStatusIcon(source.status)}
-                              <h3 className="font-medium truncate">
-                                {source.title || source.url}
-                              </h3>
+                              <div className="flex items-center gap-2">
+                                {source.sourceType === 'website' && <Globe className="h-3 w-3" />}
+                                {source.sourceType === 'text' && <Type className="h-3 w-3" />}
+                                {source.sourceType === 'file' && <FileText className="h-3 w-3" />}
+                                <h3 className="font-medium truncate">
+                                  {source.title || source.url || source.fileName || 'Untitled'}
+                                </h3>
+                              </div>
                               {getStatusBadge(source.status)}
                             </div>
                             
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                              <ExternalLink className="h-3 w-3" />
-                              <a 
-                                href={source.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="hover:underline truncate"
-                              >
-                                {source.url}
-                              </a>
-                            </div>
+                            {source.sourceType === 'website' && source.url && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                <ExternalLink className="h-3 w-3" />
+                                <a 
+                                  href={source.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="hover:underline truncate"
+                                >
+                                  {source.url}
+                                </a>
+                              </div>
+                            )}
+                            
+                            {source.sourceType === 'file' && source.fileName && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                <FileText className="h-3 w-3" />
+                                <span className="truncate">File: {source.fileName}</span>
+                              </div>
+                            )}
+                            
+                            {source.sourceType === 'text' && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                <Type className="h-3 w-3" />
+                                <span className="truncate">Text content</span>
+                              </div>
+                            )}
 
                             {source.description && (
                               <p className="text-sm text-muted-foreground mb-2">
@@ -435,10 +726,12 @@ export default function AddData() {
                             )}
 
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>Pages: {source.totalPages}</span>
+                              <span>
+                                {source.sourceType === 'website' ? 'Pages' : 'Chunks'}: {source.totalPages}
+                              </span>
                               {source.lastScanned && (
                                 <span>
-                                  Last scanned: {new Date(source.lastScanned).toLocaleDateString()}
+                                  Last {source.sourceType === 'website' ? 'scanned' : 'processed'}: {new Date(source.lastScanned).toLocaleDateString()}
                                 </span>
                               )}
                             </div>

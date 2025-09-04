@@ -43,6 +43,31 @@ export const upload = multer({
   },
 });
 
+// Configure multer for text file uploads
+export const uploadTextFile = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for text files
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow text files and common document formats
+    const allowedMimeTypes = [
+      'text/plain',
+      'text/csv',
+      'text/markdown',
+      'application/json',
+      'application/xml',
+      'text/xml'
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype) || file.mimetype.startsWith('text/')) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  },
+});
+
 export interface UploadResult {
   success: boolean;
   url?: string;
