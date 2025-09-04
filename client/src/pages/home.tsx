@@ -77,18 +77,14 @@ export default function Home() {
                 <Button size="lg" asChild>
                   <a href="/dashboard">Go to Dashboard</a>
                 </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <a href="#demo">Try Live Demo</a>
-                </Button>
+
               </>
             ) : (
               <>
                 <Button size="lg" asChild>
                   <a href="/api/login">Get Started Free</a>
                 </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <a href="#demo">Try Live Demo</a>
-                </Button>
+
               </>
             )}
           </div>
