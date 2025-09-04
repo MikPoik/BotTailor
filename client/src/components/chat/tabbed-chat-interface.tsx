@@ -56,7 +56,9 @@ export default function TabbedChatInterface({
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const streamingBubblesRef = useRef<any[]>([]);
+  const prevMessageCountRef = useRef(0);
   const queryClient = useQueryClient();
 
   const {
@@ -72,8 +74,28 @@ export default function TabbedChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const isUserNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+    
+    const threshold = 100; // pixels from bottom
+    const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
+    return isNearBottom;
+  };
+
   useEffect(() => {
-    scrollToBottom();
+    // Only auto-scroll when:
+    // 1. New messages are added (message count increased)
+    // 2. User is already near the bottom (not manually scrolled up)
+    const currentMessageCount = messages?.length || 0;
+    const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
+    
+    if (hasNewMessages && isUserNearBottom()) {
+      // Small delay to ensure DOM is updated
+      setTimeout(scrollToBottom, 50);
+    }
+    
+    prevMessageCountRef.current = currentMessageCount;
   }, [messages]);
 
   // Only auto-switch to chat tab when starting a new conversation, not when manually switching tabs
@@ -512,6 +534,7 @@ export default function TabbedChatInterface({
         >
           {/* Messages area - takes remaining space above input */}
           <div
+            ref={messagesContainerRef}
             className={`flex-1 overflow-y-auto p-4 space-y-4 min-h-0 ${isEmbedded ? "embedded-messages-area" : ""}`}
             style={{
               backgroundColor: colors.backgroundColor,
