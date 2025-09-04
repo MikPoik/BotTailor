@@ -118,33 +118,35 @@ export default function PromptAssistantChatbox({
     onSuccess: (data, variables) => {
       const response = data.response;
       
-      // Extract content from all bubbles and combine them
-      let fullContent = "";
-      let extractedPrompt = "";
-      
       if (response?.bubbles && Array.isArray(response.bubbles)) {
-        // Combine all bubble content
-        fullContent = response.bubbles.map((bubble: any) => bubble.content).join("\n\n");
+        // Handle multi-bubble responses by creating separate messages
+        const newMessages: PromptAssistantMessage[] = response.bubbles.map((bubble: any, index: number) => {
+          const isFirstBubble = index === 0;
+          const isPromptBubble = (variables.action === 'generate' || variables.action === 'improve') && isFirstBubble;
+          
+          return {
+            id: Date.now().toString() + '-assistant-' + index,
+            content: bubble.content,
+            sender: 'assistant' as const,
+            timestamp: new Date(),
+            action: variables.action,
+            extractedPrompt: isPromptBubble ? bubble.content : undefined
+          };
+        });
         
-        // For generate/improve actions, try to extract the actual prompt
-        if (variables.action === 'generate' || variables.action === 'improve') {
-          extractedPrompt = extractSystemPrompt(fullContent);
-        }
+        setMessages(prev => [...prev, ...newMessages]);
       } else {
-        fullContent = response?.content || "I couldn't generate a response.";
+        // Single response fallback
+        const assistantMessage: PromptAssistantMessage = {
+          id: Date.now().toString() + '-assistant',
+          content: response?.content || "I couldn't generate a response.",
+          sender: 'assistant',
+          timestamp: new Date(),
+          action: variables.action
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
       }
-      
-      // Add assistant response to messages
-      const assistantMessage: PromptAssistantMessage = {
-        id: Date.now().toString() + '-assistant',
-        content: fullContent,
-        sender: 'assistant',
-        timestamp: new Date(),
-        action: variables.action,
-        extractedPrompt: extractedPrompt || undefined
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
     },
     onError: (error) => {
       toast({
