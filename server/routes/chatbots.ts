@@ -5,7 +5,7 @@ import { insertChatbotConfigSchema, HomeScreenConfigSchema } from "@shared/schem
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { isAuthenticated } from "../replitAuth";
-import { generateMultiBubbleResponse } from "../openai";
+import { generatePromptAssistance } from "../openai";
 
 // Chatbot management routes
 export function setupChatbotRoutes(app: Express) {
@@ -182,69 +182,15 @@ export function setupChatbotRoutes(app: Express) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
-      // Build system prompt for the prompt assistant
-      let assistantPrompt = `You are an expert AI prompt engineer specializing in creating and improving system prompts for chatbots. Your role is to help users create effective, clear, and well-structured system prompts that will make their chatbots perform better.
-
-Context about the chatbot:
-- Name: ${context?.chatbotName || existingChatbot.name || 'Untitled Chatbot'}
-- Description: ${context?.description || existingChatbot.description || 'No description provided'}
-- Current System Prompt: ${context?.currentPrompt || existingChatbot.systemPrompt || 'No current prompt'}
-
-Guidelines for creating effective system prompts:
-1. Be specific about the chatbot's role and personality
-2. Define the chatbot's knowledge domain and limitations
-3. Specify the tone and communication style
-4. Include instructions for handling edge cases
-5. Keep it clear and concise while being comprehensive
-6. Use examples when helpful
-
-Response Format: Always respond with a single message bubble containing either:
-- For "generate" action: A complete new system prompt
-- For "improve" action: An improved version of the existing prompt with explanations
-- For "chat" action: Helpful advice, suggestions, or answers to questions about prompt engineering
-
-Be helpful, constructive, and provide actionable suggestions.`;
-
-      // Handle different actions
-      switch (action) {
-        case 'generate':
-          assistantPrompt += `\n\nUser Request: Generate a complete system prompt for this chatbot. Base it on the chatbot's name, description, and intended use case.
-
-IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
-1. First bubble: ONLY the clean, ready-to-use system prompt without any headers, explanations, or formatting markers
-2. Second bubble: Your analysis and explanation of the prompt choices`;
-          break;
-        case 'improve':
-          assistantPrompt += `\n\nUser Request: Analyze and improve the current system prompt. Provide the improved version and explain what changes were made and why.
-
-IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
-1. First bubble: ONLY the clean, improved system prompt without any headers, explanations, formatting markers, or prefixes like "**Improved System Prompt:**"
-2. Second bubble: Your detailed explanation of what changes were made and why`;
-          break;
-        case 'chat':
-          assistantPrompt += `\n\nUser Question: ${userMessage}`;
-          break;
-        default:
-          return res.status(400).json({ message: "Invalid action. Must be 'generate', 'improve', or 'chat'" });
-      }
-
-      // Use the OpenAI service to generate response
-      const sessionId = `prompt_assistant_${Date.now()}`;
-      const conversationHistory: any[] = [];
-      
-      // Create a minimal chatbot config for the assistant
-      const assistantConfig = {
-        model: "gpt-4.1",
-        temperature: 7,
-        maxTokens: 2000,
-        systemPrompt: assistantPrompt
-      };
-
-      const aiResponse = await generateMultiBubbleResponse(
+      // Use the modular OpenAI service for prompt assistance
+      const aiResponse = await generatePromptAssistance(
+        action,
         userMessage || `Please ${action} a system prompt for this chatbot.`,
-        sessionId,
-        conversationHistory,
-        assistantConfig
+        {
+          name: context?.chatbotName || existingChatbot.name,
+          description: context?.description || existingChatbot.description,
+          currentPrompt: context?.currentPrompt || existingChatbot.systemPrompt
+        }
       );
 
       res.json({
