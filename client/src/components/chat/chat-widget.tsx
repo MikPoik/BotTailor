@@ -438,7 +438,7 @@ export default function ChatWidget({
 
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex) => {
-        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 80);
+        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 120);
         return (
           <div
             key={messageIndex}
@@ -446,31 +446,32 @@ export default function ChatWidget({
             style={{
               [position === 'bottom-right' ? 'right' : 'left']: '0',
               bottom: `${messageBottomOffset}px`,
-              maxWidth: '350px',
+              maxWidth: '380px',
+              minWidth: '280px',
               zIndex: 45
             }}
           >
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 m-2 relative">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 m-2 relative">
               <div className="flex items-start gap-3">
                 <div className="flex-1">
-                  <p className="text-gray-800 text-sm leading-relaxed">
+                  <p className="text-gray-800 text-base leading-relaxed font-medium">
                     {initialMessages[messageIndex]}
                   </p>
                 </div>
                 <button
                   onClick={() => dismissMessage(messageIndex)}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-100"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               
               {/* Arrow pointing to chat bubble */}
               <div 
-                className="absolute w-3 h-3 bg-white border-r border-b border-gray-200 transform rotate-45"
+                className="absolute w-4 h-4 bg-white border-r border-b border-gray-200 transform rotate-45"
                 style={{
-                  [position === 'bottom-right' ? 'right' : 'left']: '20px',
-                  bottom: '-6px'
+                  [position === 'bottom-right' ? 'right' : 'left']: '24px',
+                  bottom: '-8px'
                 }}
               />
             </div>
