@@ -83,10 +83,19 @@ export default function PromptAssistantChatbox({
   const [inputMessage, setInputMessage] = useState("");
   const [copiedPrompt, setCopiedPrompt] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Use setTimeout to ensure the scroll happens after the DOM update
+    setTimeout(() => {
+      if (scrollAreaRef.current) {
+        const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -196,11 +205,14 @@ export default function PromptAssistantChatbox({
 
   const applyPrompt = (message: PromptAssistantMessage) => {
     const promptToApply = message.extractedPrompt || message.content;
-    onPromptGenerated(promptToApply);
-    toast({
-      title: "Applied!",
-      description: "Prompt has been applied to the system prompt field",
-    });
+    // Use setTimeout to prevent form auto-submission
+    setTimeout(() => {
+      onPromptGenerated(promptToApply);
+      toast({
+        title: "Applied!",
+        description: "Prompt has been applied to the system prompt field. Review before saving.",
+      });
+    }, 100);
   };
 
   const copyPrompt = (message: PromptAssistantMessage) => {
@@ -213,9 +225,14 @@ export default function PromptAssistantChatbox({
       {/* Quick Action Buttons */}
       <div className="flex flex-wrap gap-2">
         <Button
+          type="button"
           variant="outline"
           size="sm"
-          onClick={() => handleQuickAction('generate', 'Generate new prompt')}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleQuickAction('generate', 'Generate new prompt');
+          }}
           disabled={promptAssistantMutation.isPending}
           className="flex items-center gap-2"
         >
@@ -223,9 +240,14 @@ export default function PromptAssistantChatbox({
           Generate
         </Button>
         <Button
+          type="button"
           variant="outline"
           size="sm"
-          onClick={() => handleQuickAction('improve', 'Improve current prompt')}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleQuickAction('improve', 'Improve current prompt');
+          }}
           disabled={promptAssistantMutation.isPending || !currentPrompt}
           className="flex items-center gap-2"
         >
@@ -233,9 +255,14 @@ export default function PromptAssistantChatbox({
           Improve
         </Button>
         <Button
+          type="button"
           variant="outline"
           size="sm"
-          onClick={() => handleQuickAction('chat', 'Make it more professional')}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleQuickAction('chat', 'Make it more professional');
+          }}
           disabled={promptAssistantMutation.isPending}
           className="flex items-center gap-2"
         >
@@ -245,7 +272,7 @@ export default function PromptAssistantChatbox({
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="h-64 w-full border rounded-md p-3">
+      <ScrollArea ref={scrollAreaRef} className="h-64 w-full border rounded-md p-3">
         <div className="space-y-3">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground text-sm">
@@ -271,9 +298,14 @@ export default function PromptAssistantChatbox({
                       </div>
                     )}
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyPrompt(message)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        copyPrompt(message);
+                      }}
                       className="h-6 text-xs"
                     >
                       {copiedPrompt === (message.extractedPrompt || message.content) ? (
@@ -283,9 +315,14 @@ export default function PromptAssistantChatbox({
                       )}
                     </Button>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => applyPrompt(message)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        applyPrompt(message);
+                      }}
                       className="h-6 text-xs"
                     >
                       Apply {message.extractedPrompt ? "Prompt" : "All"}
@@ -324,7 +361,12 @@ export default function PromptAssistantChatbox({
           className="flex-1"
         />
         <Button
-          onClick={handleSendMessage}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSendMessage();
+          }}
           disabled={!inputMessage.trim() || promptAssistantMutation.isPending}
           size="sm"
         >
