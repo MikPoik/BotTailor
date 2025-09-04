@@ -64,18 +64,43 @@ export async function* generateStreamingResponse(
       { role: "user" as const, content: userMessage },
     ];
 
-    // Create streaming request
-    const stream = await openai.chat.completions.create({
-      model,
-      messages,
-      stream: true,
-      response_format: {
-        type: "json_schema",
-        json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
-      },
-      temperature,
-      max_tokens: maxTokens,
-    });
+    // Create streaming request with retry logic
+    let stream: any = null;
+    let retryAttempt = 0;
+    const maxRetries = 1;
+    
+    while (retryAttempt <= maxRetries) {
+      try {
+        stream = await openai.chat.completions.create({
+          model,
+          messages,
+          stream: true,
+          response_format: {
+            type: "json_schema",
+            json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
+          },
+          temperature,
+          max_tokens: maxTokens,
+        });
+        break; // Success, exit retry loop
+      } catch (apiError) {
+        retryAttempt++;
+        console.error(`[OpenAI] API call attempt ${retryAttempt} failed:`, apiError);
+        
+        if (retryAttempt <= maxRetries) {
+          console.log(`[OpenAI] Retrying API call (attempt ${retryAttempt + 1}/${maxRetries + 1})...`);
+          // Wait 1 second before retry
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          console.error(`[OpenAI] All retry attempts failed, falling back to error message`);
+          throw apiError; // Re-throw after all retries exhausted
+        }
+      }
+    }
+    
+    if (!stream) {
+      throw new Error("Failed to create OpenAI stream after retries");
+    }
 
     // Streaming state
     let accumulatedContent = "";
