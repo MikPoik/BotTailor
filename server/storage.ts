@@ -104,6 +104,8 @@ export interface IStorage {
   getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | undefined>;
   incrementMessageUsage(userId: string): Promise<void>;
   resetMonthlyMessageUsage(userId: string): Promise<void>;
+  checkBotLimit(userId: string): Promise<boolean>;
+  checkMessageLimit(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -593,6 +595,43 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(subscriptions.userId, userId));
+  }
+
+  async checkBotLimit(userId: string): Promise<boolean> {
+    // Get user's current subscription with plan
+    const subscription = await this.getUserSubscriptionWithPlan(userId);
+    
+    if (!subscription) {
+      // No subscription means no access
+      return false;
+    }
+
+    // Count current bots
+    const currentBots = await this.getChatbotConfigs(userId);
+    
+    // Check if under limit (-1 means unlimited)
+    if (subscription.plan.maxBots === -1) {
+      return true;
+    }
+    
+    return currentBots.length < subscription.plan.maxBots;
+  }
+
+  async checkMessageLimit(userId: string): Promise<boolean> {
+    // Get user's current subscription with plan
+    const subscription = await this.getUserSubscriptionWithPlan(userId);
+    
+    if (!subscription) {
+      // No subscription means no access
+      return false;
+    }
+
+    // Check if under limit (-1 means unlimited)
+    if (subscription.plan.maxMessagesPerMonth === -1) {
+      return true;
+    }
+    
+    return subscription.messagesUsedThisMonth < subscription.plan.maxMessagesPerMonth;
   }
 }
 

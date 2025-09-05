@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bot, LogOut, Settings, User, Menu, X } from "lucide-react";
+import { Bot, LogOut, Settings, User, Menu, X, CreditCard } from "lucide-react";
 import { Link } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -64,6 +64,9 @@ export function Navbar() {
             </Button>
             <Button variant="ghost" asChild>
               <Link href="/dashboard">Dashboard</Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/subscription">Subscription</Link>
             </Button>
           </div>
         )}
@@ -176,6 +179,14 @@ export function Navbar() {
                   onClick={closeMenu}
                 >
                   Documentation
+                </Link>
+                <Link
+                  href="/subscription"
+                  className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Subscription
                 </Link>
                 <div className="border-t pt-3 space-y-3">
                   <Link

@@ -46,6 +46,14 @@ export function setupChatbotRoutes(app: Express) {
       const userId = req.user.claims.sub;
       const body = req.body;
       
+      // Check bot limit before creating
+      const canCreateBot = await storage.checkBotLimit(userId);
+      if (!canCreateBot) {
+        return res.status(403).json({ 
+          message: "Bot limit reached. Please upgrade your subscription to create more chatbots." 
+        });
+      }
+      
       const chatbotData = insertChatbotConfigSchema.parse({
         ...body,
         userId,
