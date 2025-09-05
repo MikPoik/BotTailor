@@ -7,6 +7,8 @@ import {
   websiteContent,
   surveys,
   surveySessions,
+  subscriptionPlans,
+  subscriptions,
   type User, 
   type UpsertUser,
   type ChatSession,
@@ -23,6 +25,10 @@ import {
   type InsertSurvey,
   type SurveySession,
   type InsertSurveySession,
+  type SubscriptionPlan,
+  type InsertSubscriptionPlan,
+  type Subscription,
+  type InsertSubscription,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, sql, asc, desc } from "drizzle-orm";
@@ -83,6 +89,21 @@ export interface IStorage {
 
   // Conversation count methods
   getConversationCount(userId: string): Promise<number>;
+
+  // Subscription plan methods
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
+
+  // Subscription methods
+  getUserSubscription(userId: string): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(id: number, data: Partial<Subscription>): Promise<Subscription | undefined>;
+  updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<Subscription | undefined>;
+  getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | undefined>;
+  incrementMessageUsage(userId: string): Promise<void>;
+  resetMonthlyMessageUsage(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -463,6 +484,115 @@ export class DatabaseStorage implements IStorage {
     console.log(`[CONVERSATION_COUNT] Count for user ${userId}:`, result[0]?.count || 0);
     
     return result[0]?.count || 0;
+  }
+
+  // Subscription plan methods
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db.select().from(subscriptionPlans)
+      .where(eq(subscriptionPlans.isActive, true))
+      .orderBy(asc(subscriptionPlans.price));
+  }
+
+  async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    return plan || undefined;
+  }
+
+  async createSubscriptionPlan(planData: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [plan] = await db
+      .insert(subscriptionPlans)
+      .values(planData)
+      .returning();
+    return plan;
+  }
+
+  async updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db
+      .update(subscriptionPlans)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(subscriptionPlans.id, id))
+      .returning();
+    return plan || undefined;
+  }
+
+  // Subscription methods
+  async getUserSubscription(userId: string): Promise<Subscription | undefined> {
+    const [subscription] = await db.select().from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1);
+    return subscription || undefined;
+  }
+
+  async createSubscription(subscriptionData: InsertSubscription): Promise<Subscription> {
+    const [subscription] = await db
+      .insert(subscriptions)
+      .values(subscriptionData)
+      .returning();
+    return subscription;
+  }
+
+  async updateSubscription(id: number, data: Partial<Subscription>): Promise<Subscription | undefined> {
+    const [subscription] = await db
+      .update(subscriptions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(subscriptions.id, id))
+      .returning();
+    return subscription || undefined;
+  }
+
+  async updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<Subscription | undefined> {
+    const [subscription] = await db
+      .update(subscriptions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId))
+      .returning();
+    return subscription || undefined;
+  }
+
+  async getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | undefined> {
+    const result = await db
+      .select({
+        id: subscriptions.id,
+        userId: subscriptions.userId,
+        planId: subscriptions.planId,
+        stripeSubscriptionId: subscriptions.stripeSubscriptionId,
+        stripeCustomerId: subscriptions.stripeCustomerId,
+        status: subscriptions.status,
+        currentPeriodStart: subscriptions.currentPeriodStart,
+        currentPeriodEnd: subscriptions.currentPeriodEnd,
+        messagesUsedThisMonth: subscriptions.messagesUsedThisMonth,
+        createdAt: subscriptions.createdAt,
+        updatedAt: subscriptions.updatedAt,
+        plan: subscriptionPlans,
+      })
+      .from(subscriptions)
+      .innerJoin(subscriptionPlans, eq(subscriptions.planId, subscriptionPlans.id))
+      .where(eq(subscriptions.userId, userId))
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1);
+
+    return result[0] || undefined;
+  }
+
+  async incrementMessageUsage(userId: string): Promise<void> {
+    await db
+      .update(subscriptions)
+      .set({ 
+        messagesUsedThisMonth: sql`${subscriptions.messagesUsedThisMonth} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptions.userId, userId));
+  }
+
+  async resetMonthlyMessageUsage(userId: string): Promise<void> {
+    await db
+      .update(subscriptions)
+      .set({ 
+        messagesUsedThisMonth: 0,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptions.userId, userId));
   }
 }
 

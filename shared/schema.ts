@@ -143,6 +143,39 @@ export const surveySessions = pgTable("survey_sessions", {
   completedAt: timestamp("completed_at"),
 });
 
+// Subscription Plans table for defining available subscription tiers
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // 'Basic', 'Premium', 'Ultra'
+  description: text("description"),
+  stripePriceId: varchar("stripe_price_id").notNull().unique(),
+  stripeProductId: varchar("stripe_product_id").notNull(),
+  price: integer("price").notNull(), // Price in cents
+  currency: varchar("currency", { length: 3 }).notNull().default("usd"),
+  billingInterval: text("billing_interval").notNull().default("month"), // 'month' | 'year'
+  maxBots: integer("max_bots").notNull(),
+  maxMessagesPerMonth: integer("max_messages_per_month").notNull(),
+  features: jsonb("features"), // Array of feature descriptions
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// User Subscriptions table for tracking user subscription status
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  planId: integer("plan_id").notNull().references(() => subscriptionPlans.id),
+  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  status: text("status").notNull().default("active"), // 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing'
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  messagesUsedThisMonth: integer("messages_used_this_month").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Replit Auth user upsert schema
 export const upsertUserSchema = createInsertSchema(users).pick({
   id: true,
@@ -253,6 +286,38 @@ export type Survey = typeof surveys.$inferSelect;
 export type InsertSurvey = z.infer<typeof insertSurveySchema>;
 export type SurveySession = typeof surveySessions.$inferSelect;
 export type InsertSurveySession = z.infer<typeof insertSurveySessionSchema>;
+
+// Subscription schemas
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).pick({
+  name: true,
+  description: true,
+  stripePriceId: true,
+  stripeProductId: true,
+  price: true,
+  currency: true,
+  billingInterval: true,
+  maxBots: true,
+  maxMessagesPerMonth: true,
+  features: true,
+  isActive: true,
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
+  userId: true,
+  planId: true,
+  stripeSubscriptionId: true,
+  stripeCustomerId: true,
+  status: true,
+  currentPeriodStart: true,
+  currentPeriodEnd: true,
+  messagesUsedThisMonth: true,
+});
+
+// Subscription types
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 
 // Rich message types
 export const RichMessageSchema = z.object({
