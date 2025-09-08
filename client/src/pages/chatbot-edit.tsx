@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +17,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation, useRoute } from "wouter";
 import { useEffect } from "react";
 import { z } from "zod";
-import { ArrowLeft, Bot, Save, User, X, Plus, Trash2, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowLeft, Bot, Save, User, X, Plus, Trash2, Sparkles, ChevronUp, ChevronDown, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
@@ -159,6 +160,47 @@ export default function ChatbotEdit() {
       toast({
         title: "Error",
         description: "Failed to update chatbot configuration. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/chatbots/${chatbotGuid}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Chatbot deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
+      setLocation("/dashboard");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete chatbot. Please try again.",
         variant: "destructive",
       });
     },
@@ -648,30 +690,75 @@ export default function ChatbotEdit() {
           </Card>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              asChild
-            >
-              <Link href="/dashboard">Cancel</Link>
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Update Chatbot
-                </>
-              )}
-            </Button>
+          <div className="flex justify-between items-center">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  type="button" 
+                  variant="destructive"
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Chatbot
+                    </>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    Delete Chatbot
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{chatbot?.name}"? This action cannot be undone. 
+                    All chat history and configuration will be permanently removed.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => deleteMutation.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete Chatbot
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <div className="flex space-x-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                asChild
+              >
+                <Link href="/dashboard">Cancel</Link>
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateMutation.isPending}
+              >
+                {updateMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Update Chatbot
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </Form>
