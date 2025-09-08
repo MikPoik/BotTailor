@@ -237,6 +237,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteChatbotConfig(id: number): Promise<void> {
+    // First, get all chat sessions for this chatbot
+    const sessions = await db.select().from(chatSessions)
+      .where(eq(chatSessions.chatbotConfigId, id));
+    
+    // Delete all messages for these sessions
+    for (const session of sessions) {
+      await db.delete(messages).where(eq(messages.sessionId, session.sessionId));
+    }
+    
+    // Delete all survey sessions for these chat sessions
+    for (const session of sessions) {
+      await db.delete(surveySessions).where(eq(surveySessions.sessionId, session.sessionId));
+    }
+    
+    // Delete all chat sessions for this chatbot
+    await db.delete(chatSessions).where(eq(chatSessions.chatbotConfigId, id));
+    
+    // Delete all surveys for this chatbot
+    const surveys = await db.select().from(surveys)
+      .where(eq(surveys.chatbotConfigId, id));
+    
+    for (const survey of surveys) {
+      // Survey sessions are already deleted above, so just delete the surveys
+      await db.delete(surveys).where(eq(surveys.id, survey.id));
+    }
+    
+    // Delete all website sources and their content for this chatbot
+    const sources = await db.select().from(websiteSources)
+      .where(eq(websiteSources.chatbotConfigId, id));
+    
+    for (const source of sources) {
+      // Delete website content first
+      await db.delete(websiteContent).where(eq(websiteContent.websiteSourceId, source.id));
+      // Then delete the source
+      await db.delete(websiteSources).where(eq(websiteSources.id, source.id));
+    }
+    
+    // Finally, delete the chatbot config
     await db.delete(chatbotConfigs).where(eq(chatbotConfigs.id, id));
   }
 
