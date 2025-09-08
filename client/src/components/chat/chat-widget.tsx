@@ -120,6 +120,11 @@ export default function ChatWidget({
 
   // Helper function to determine if a color is light or dark
   const isLightColor = (color: string): boolean => {
+    // Ensure we have a valid color, default to white if not
+    if (!color || !color.startsWith('#') || color.length !== 7) {
+      return true; // Default to light if invalid color
+    }
+    
     // Convert hex to RGB
     const hex = color.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
