@@ -48,7 +48,10 @@ export default function ChatWidget({
   };
 
   // Resolve primary color for use in dynamic styles
-  const resolvedPrimaryColor = chatbotConfig?.theme?.chat?.primary || primaryColor;
+  // In embedded mode, prioritize URL parameter color over chatbot config theme
+  const resolvedPrimaryColor = isEmbedded 
+    ? primaryColor || chatbotConfig?.theme?.chat?.primary
+    : chatbotConfig?.theme?.chat?.primary || primaryColor;
 
 
   // Load initial messages from chatbot config
