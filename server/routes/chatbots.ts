@@ -197,21 +197,35 @@ export function setupChatbotRoutes(app: Express) {
       const userId = req.user.claims.sub;
       const { action, context, userMessage } = req.body;
 
-      // Verify ownership and get chatbot
-      const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
-      if (!existingChatbot) {
-        return res.status(404).json({ message: "Chatbot not found" });
+      let chatbotConfig;
+      
+      // Handle special case for new chatbot creation
+      if (guid === 'new-chatbot') {
+        // For new chatbots, use the context provided in the request
+        chatbotConfig = {
+          name: context?.chatbotName || context?.name || 'New Chatbot',
+          description: context?.description || 'A new chatbot being created',
+          systemPrompt: context?.currentPrompt || ''
+        };
+      } else {
+        // Verify ownership and get existing chatbot
+        const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
+        if (!existingChatbot) {
+          return res.status(404).json({ message: "Chatbot not found" });
+        }
+        
+        chatbotConfig = {
+          name: context?.chatbotName || existingChatbot.name,
+          description: context?.description || existingChatbot.description,
+          currentPrompt: context?.currentPrompt || existingChatbot.systemPrompt
+        };
       }
 
       // Use the modular OpenAI service for prompt assistance
       const aiResponse = await generatePromptAssistance(
         action,
         userMessage || `Please ${action} a system prompt for this chatbot.`,
-        {
-          name: context?.chatbotName || existingChatbot.name,
-          description: context?.description || existingChatbot.description,
-          currentPrompt: context?.currentPrompt || existingChatbot.systemPrompt
-        }
+        chatbotConfig
       );
 
       res.json({
