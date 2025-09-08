@@ -299,7 +299,7 @@
 }
 
 .chatwidget-iframe .chat-message-user {
-  background-color: var(--chat-primary-color, #2563eb)cc !important;
+  background-color: rgba(from var(--chat-primary-color, #2563eb) r g b / 0.8) !important;
   color: white !important;
 }
 
@@ -328,7 +328,7 @@
 }
 
 .chatwidget-iframe .hover\:bg-primary\/90:hover {
-  background-color: var(--chat-primary-color, #2563eb)e6 !important;
+  background-color: rgba(from var(--chat-primary-color, #2563eb) r g b / 0.9) !important;
 }
 
 .chatwidget-iframe .send-input:focus,
@@ -337,7 +337,7 @@
 .chatwidget-iframe select:focus {
   --tw-ring-color: var(--chat-primary-color, #2563eb) !important;
   border-color: var(--chat-primary-color, #2563eb) !important;
-  box-shadow: 0 0 0 2px var(--chat-primary-color, #2563eb)40 !important;
+  box-shadow: 0 0 0 2px rgba(from var(--chat-primary-color, #2563eb) r g b / 0.25) !important;
 }
 
 /* Tab navigation background and text */
@@ -389,7 +389,7 @@
 
 /* Selection and highlight states */
 .chatwidget-iframe ::selection {
-  background-color: var(--chat-primary-color, #2563eb)40 !important;
+  background-color: rgba(from var(--chat-primary-color, #2563eb) r g b / 0.25) !important;
 }
 
 /* Prevent any external CSS from interfering with embedded widget */
