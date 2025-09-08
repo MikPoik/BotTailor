@@ -59,25 +59,32 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
   const { title, subtitle, style } = component.props;
   
   // Use resolved colors with fallback to component style
-  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
   const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
 
   return (
     <div 
-      className="bg-white border-b border-neutral-200 p-6"
+      className="border-b border-neutral-200 p-6 relative"
       style={{
-        backgroundColor,
+        backgroundColor: 'transparent',
         color: textColor,
       }}
     >
-      <div className="text-center">
+      {/* Optional overlay for better text readability when background image is present */}
+      <div 
+        className="absolute inset-0 bg-black/10 pointer-events-none"
+        style={{
+          backgroundColor: `${resolvedColors?.backgroundColor || 'white'}20`, // 12.5% opacity background
+        }}
+      />
+      
+      <div className="text-center relative z-10">
         {title && (
-          <h2 className="text-2xl font-bold mb-2" style={{ color: textColor }}>
+          <h2 className="text-2xl font-bold mb-2 drop-shadow-sm" style={{ color: textColor }}>
             {title}
           </h2>
         )}
         {subtitle && (
-          <p style={{ color: textColor, opacity: 0.8 }}>
+          <p className="drop-shadow-sm" style={{ color: textColor, opacity: 0.9 }}>
             {subtitle}
           </p>
         )}

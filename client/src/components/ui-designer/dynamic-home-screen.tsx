@@ -103,7 +103,7 @@ export default function DynamicHomeScreen({
           }}
         />
       )}
-      
+
       {/* Skeleton loader while image is loading */}
       {backgroundImageUrl && !imageLoaded && !imageError && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -111,7 +111,6 @@ export default function DynamicHomeScreen({
         </div>
       )}
 
-      {/* Content with relative positioning to appear above background */}
       <div className="relative z-10">
         {sortedComponents.map((component) => 
           renderComponent(component, onTopicClick, onActionClick, colors)
