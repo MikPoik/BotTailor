@@ -54,7 +54,7 @@ export function setupChatbotRoutes(app: Express) {
         const subscription = await storage.getUserSubscriptionWithPlan(userId);
         
         const currentCount = currentBots.length;
-        const maxBots = subscription?.plan?.maxBots || 0;
+        const maxBots = subscription?.plan?.maxBots || 2;
         
         return res.status(403).json({ 
           message: `You have reached your chatbot limit (${currentCount}/${maxBots === -1 ? 'unlimited' : maxBots}). Please upgrade your subscription to create more chatbots.`,
