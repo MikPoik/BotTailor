@@ -301,8 +301,8 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
       {
         name: "Basic",
         description: "Perfect for getting started with chatbots",
-        stripePriceId: "price_basic", // Replace with actual Stripe price ID
-        stripeProductId: "prod_basic", // Replace with actual Stripe product ID
+        stripePriceId: process.env.PRICE_SUB_BASIC, // Replace with actual Stripe price ID
+        stripeProductId: process.env.PROD_SUB_BASIC, // Replace with actual Stripe product ID
         price: 999, // $9.99
         currency: "usd",
         billingInterval: "month",
