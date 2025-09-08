@@ -148,6 +148,7 @@
           --chat-primary-color-alpha-80: ${this.config.primaryColor || '#2563eb'}cc;
           --chat-primary-color-alpha-90: ${this.config.primaryColor || '#2563eb'}e6;
           --chat-primary-color-alpha-25: ${this.config.primaryColor || '#2563eb'}40;
+          --chat-user-bg: ${this.config.primaryColor || '#2563eb'}cc;
           --chat-background: ${backgroundColor};
           --chat-text: ${this.config.textColor || '#1f2937'};
           --chat-muted: ${mutedColor};
