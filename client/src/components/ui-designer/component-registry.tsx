@@ -153,14 +153,12 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
 
   return (
     <div className="p-4 space-y-3">
-      <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
-        Topics
-      </h3>
+
       <div className={gridClass}>
         {topics.map((topic) => (
           <div 
             key={topic.id}
-            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border bg-white shadow-sm p-4"
+            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border bg-white shadow-sm p-3"
             onClick={() => onTopicClick?.(topic)}
             style={{
               backgroundColor,

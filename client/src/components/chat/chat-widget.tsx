@@ -452,14 +452,14 @@ export default function ChatWidget({
             }}
           >
             <div 
-              className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-5 py-1 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
               onClick={() => {
                 setIsOpen(true);
                 setHasNewMessage(false);
                 queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
               }}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-1">
                 <div className="flex-1">
                   <p className="text-gray-800 text-base leading-relaxed font-medium">
                     {initialMessages[messageIndex]}
