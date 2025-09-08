@@ -74,17 +74,18 @@ export default function ChatWidget({
         initialMessages.forEach((_, index) => {
           const timeout = setTimeout(() => {
             setVisibleMessages(prev => [...prev, index]);
-
-            // Auto-hide after 8 seconds
-            const hideTimeout = setTimeout(() => {
-              setVisibleMessages(prev => prev.filter(i => i !== index));
-            }, 8000);
-
-            timeouts.push(hideTimeout);
           }, index * 2000); // Show each message 2 seconds apart
 
           timeouts.push(timeout);
         });
+
+        // Hide all messages together after the last message has been visible for 8 seconds
+        const lastMessageDelay = (initialMessages.length - 1) * 2000;
+        const hideAllTimeout = setTimeout(() => {
+          setVisibleMessages([]);
+        }, lastMessageDelay + 8000);
+
+        timeouts.push(hideAllTimeout);
 
         messageTimeouts.current = timeouts;
         
