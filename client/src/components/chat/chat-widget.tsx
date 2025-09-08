@@ -452,7 +452,7 @@ export default function ChatWidget({
             }}
           >
             <div 
-              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-1 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
               onClick={() => {
                 setIsOpen(true);
                 setHasNewMessage(false);
@@ -470,7 +470,7 @@ export default function ChatWidget({
                     e.stopPropagation();
                     dismissMessage(messageIndex);
                   }}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-100"
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
                 >
                   <X className="w-5 h-5" />
                 </button>
