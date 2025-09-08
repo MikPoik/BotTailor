@@ -22,19 +22,6 @@ function resolveColors() {
     return color && color !== '' && !color.startsWith('var(--') && color !== 'var(--primary)' && color !== 'var(--background)' && color !== 'var(--foreground)';
   };
   
-  // Debug logging for color resolution (only once per session to avoid spam)
-  if (Math.random() < 0.1) { // Only log occasionally
-    console.log('🎨 TabbedChatInterface color resolution:', {
-      embedPrimaryColor,
-      embedBackgroundColor,
-      embedTextColor,
-      isValidEmbed: {
-        primary: isValidColor(embedPrimaryColor),
-        background: isValidColor(embedBackgroundColor),
-        text: isValidColor(embedTextColor)
-      }
-    });
-  }
   
   // Resolve final colors with embed parameters taking priority
   const resolvedColors = {

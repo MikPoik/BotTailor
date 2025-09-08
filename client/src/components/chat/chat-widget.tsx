@@ -150,19 +150,6 @@ export default function ChatWidget({
       // Use brightness detection instead of strict color matching
       const isLightBackground = isLightColor(backgroundColor);
       
-      // Debug logging for mobile styling issues
-      if (isEmbedded) {
-        console.log('💡 CSS injection debug:', {
-          resolvedPrimaryColor,
-          backgroundColor,
-          textColor,
-          isLightBackground,
-          isEmbedded,
-          hasContainerClass: document.querySelector('.chat-widget-container') !== null,
-          userMessageElements: document.querySelectorAll('.chat-message-user').length,
-          botMessageElements: document.querySelectorAll('.chat-message-bot').length
-        });
-      }
       
       style.textContent = `
         :root {
