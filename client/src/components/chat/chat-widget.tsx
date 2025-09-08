@@ -454,9 +454,9 @@ export default function ChatWidget({
       )}
 
       {/* Initial Message Bubbles */}
-      {!isOpen && visibleMessages.map((messageIndex) => {
-        const messageBottomOffset = 80 + (visibleMessages.indexOf(messageIndex) * 80);
-        const uniqueKey = `initial-message-${messageIndex}-${sessionId}-${visibleMessages.indexOf(messageIndex)}`;
+      {!isOpen && visibleMessages.map((messageIndex, bubbleIndex) => {
+        const messageBottomOffset = 80 + (bubbleIndex * 80);
+        const uniqueKey = `bubble-${sessionId}-msg${messageIndex}-pos${bubbleIndex}`;
         return (
           <div
             key={uniqueKey}
