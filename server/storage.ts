@@ -1,6 +1,6 @@
-import { 
-  users, 
-  chatSessions, 
+import {
+  users,
+  chatSessions,
   messages,
   chatbotConfigs,
   websiteSources,
@@ -9,7 +9,7 @@ import {
   surveySessions,
   subscriptionPlans,
   subscriptions,
-  type User, 
+  type User,
   type UpsertUser,
   type ChatSession,
   type InsertChatSession,
@@ -240,40 +240,40 @@ export class DatabaseStorage implements IStorage {
     // First, get all chat sessions for this chatbot
     const sessions = await db.select().from(chatSessions)
       .where(eq(chatSessions.chatbotConfigId, id));
-    
+
     // Delete all messages for these sessions
     for (const session of sessions) {
       await db.delete(messages).where(eq(messages.sessionId, session.sessionId));
     }
-    
+
     // Delete all survey sessions for these chat sessions
     for (const session of sessions) {
       await db.delete(surveySessions).where(eq(surveySessions.sessionId, session.sessionId));
     }
-    
+
     // Delete all chat sessions for this chatbot
     await db.delete(chatSessions).where(eq(chatSessions.chatbotConfigId, id));
-    
+
     // Delete all surveys for this chatbot
-    const surveys = await db.select().from(surveys)
+    const surveysList = await db.select().from(surveys)
       .where(eq(surveys.chatbotConfigId, id));
-    
-    for (const survey of surveys) {
+
+    for (const survey of surveysList) {
       // Survey sessions are already deleted above, so just delete the surveys
       await db.delete(surveys).where(eq(surveys.id, survey.id));
     }
-    
+
     // Delete all website sources and their content for this chatbot
     const sources = await db.select().from(websiteSources)
       .where(eq(websiteSources.chatbotConfigId, id));
-    
+
     for (const source of sources) {
       // Delete website content first
       await db.delete(websiteContent).where(eq(websiteContent.websiteSourceId, source.id));
       // Then delete the source
       await db.delete(websiteSources).where(eq(websiteSources.id, source.id));
     }
-    
+
     // Finally, delete the chatbot config
     await db.delete(chatbotConfigs).where(eq(chatbotConfigs.id, id));
   }
@@ -324,8 +324,8 @@ export class DatabaseStorage implements IStorage {
   async createWebsiteContent(contentData: InsertWebsiteContent, embeddingArray: number[]): Promise<WebsiteContent> {
     const [content] = await db
       .insert(websiteContent)
-      .values({ 
-        ...contentData, 
+      .values({
+        ...contentData,
         embedding: sql`${`[${embeddingArray.join(',')}]`}::vector`
       })
       .returning();
@@ -360,15 +360,15 @@ export class DatabaseStorage implements IStorage {
 
     // Use pgvector cosine distance for similarity search across all sources
     const sourceConditions = sourceIds.map(id => eq(websiteContent.websiteSourceId, id));
-    const whereCondition = sourceConditions.length === 1 
-      ? sourceConditions[0] 
+    const whereCondition = sourceConditions.length === 1
+      ? sourceConditions[0]
       : or(...sourceConditions);
 
     // Execute vector similarity search using pgvector
     const results = await db.execute(sql`
       SELECT id, website_source_id, url, title, content, content_type, word_count, created_at,
              (embedding <=> ${queryVector}::vector) as distance
-      FROM website_content 
+      FROM website_content
       WHERE ${whereCondition}
       AND embedding IS NOT NULL
       ORDER BY embedding <=> ${queryVector}::vector
@@ -505,24 +505,24 @@ export class DatabaseStorage implements IStorage {
         eq(surveySessions.sessionId, sessionId),
         eq(surveySessions.status, 'active')
       ));
-    
+
     console.log(`[SURVEY] Deactivated all active survey sessions for session: ${sessionId}`);
   }
 
   // Conversation count method
   async getConversationCount(userId: string): Promise<number> {
     console.log(`[CONVERSATION_COUNT] Getting count for user: ${userId}`);
-    
+
     // Count unique sessions that are connected to this user's chatbots
     const result = await db
       .select({ count: sql<number>`count(distinct ${chatSessions.sessionId})` })
       .from(chatSessions)
       .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
       .where(eq(chatbotConfigs.userId, userId));
-    
+
     console.log(`[CONVERSATION_COUNT] Query result:`, result);
     console.log(`[CONVERSATION_COUNT] Count for user ${userId}:`, result[0]?.count || 0);
-    
+
     return result[0]?.count || 0;
   }
 
@@ -618,7 +618,7 @@ export class DatabaseStorage implements IStorage {
   async incrementMessageUsage(userId: string): Promise<void> {
     await db
       .update(subscriptions)
-      .set({ 
+      .set({
         messagesUsedThisMonth: sql`${subscriptions.messagesUsedThisMonth} + 1`,
         updatedAt: new Date()
       })
@@ -628,7 +628,7 @@ export class DatabaseStorage implements IStorage {
   async resetMonthlyMessageUsage(userId: string): Promise<void> {
     await db
       .update(subscriptions)
-      .set({ 
+      .set({
         messagesUsedThisMonth: 0,
         updatedAt: new Date()
       })
@@ -638,7 +638,7 @@ export class DatabaseStorage implements IStorage {
   async checkBotLimit(userId: string): Promise<boolean> {
     // Get user's current subscription with plan
     const subscription = await this.getUserSubscriptionWithPlan(userId);
-    
+
     if (!subscription) {
       // No subscription means no access
       return false;
@@ -646,19 +646,19 @@ export class DatabaseStorage implements IStorage {
 
     // Count current bots
     const currentBots = await this.getChatbotConfigs(userId);
-    
+
     // Check if under limit (-1 means unlimited)
     if (subscription.plan.maxBots === -1) {
       return true;
     }
-    
+
     return currentBots.length < subscription.plan.maxBots;
   }
 
   async checkMessageLimit(userId: string): Promise<boolean> {
     // Get user's current subscription with plan
     const subscription = await this.getUserSubscriptionWithPlan(userId);
-    
+
     if (!subscription) {
       // No subscription means no access
       return false;
@@ -668,7 +668,7 @@ export class DatabaseStorage implements IStorage {
     if (subscription.plan.maxMessagesPerMonth === -1) {
       return true;
     }
-    
+
     return subscription.messagesUsedThisMonth < subscription.plan.maxMessagesPerMonth;
   }
 }
