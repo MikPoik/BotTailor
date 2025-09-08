@@ -61,33 +61,42 @@ export default function ChatWidget({
     }
   }, [chatbotConfig]);
 
-  // Show initial messages with staggered delays
+  // Show initial messages with staggered delays - only if not shown before
   useEffect(() => {
     if (initialMessages.length > 0 && !isOpen && !isEmbedded) {
-      const timeouts: NodeJS.Timeout[] = [];
+      // Check if initial messages have been shown before using localStorage
+      const storageKey = `chat-initial-messages-shown-${chatbotConfigId || 'default'}`;
+      const hasShownBefore = localStorage.getItem(storageKey) === 'true';
+      
+      if (!hasShownBefore) {
+        const timeouts: NodeJS.Timeout[] = [];
 
-      initialMessages.forEach((_, index) => {
-        const timeout = setTimeout(() => {
-          setVisibleMessages(prev => [...prev, index]);
+        initialMessages.forEach((_, index) => {
+          const timeout = setTimeout(() => {
+            setVisibleMessages(prev => [...prev, index]);
 
-          // Auto-hide after 8 seconds
-          const hideTimeout = setTimeout(() => {
-            setVisibleMessages(prev => prev.filter(i => i !== index));
-          }, 8000);
+            // Auto-hide after 8 seconds
+            const hideTimeout = setTimeout(() => {
+              setVisibleMessages(prev => prev.filter(i => i !== index));
+            }, 8000);
 
-          timeouts.push(hideTimeout);
-        }, index * 2000); // Show each message 2 seconds apart
+            timeouts.push(hideTimeout);
+          }, index * 2000); // Show each message 2 seconds apart
 
-        timeouts.push(timeout);
-      });
+          timeouts.push(timeout);
+        });
 
-      messageTimeouts.current = timeouts;
+        messageTimeouts.current = timeouts;
+        
+        // Mark as shown in localStorage
+        localStorage.setItem(storageKey, 'true');
 
-      return () => {
-        timeouts.forEach(timeout => clearTimeout(timeout));
-      };
+        return () => {
+          timeouts.forEach(timeout => clearTimeout(timeout));
+        };
+      }
     }
-  }, [initialMessages, isOpen, isEmbedded]);
+  }, [initialMessages, isOpen, isEmbedded, chatbotConfigId]);
 
   // Hide all initial messages when chat opens
   useEffect(() => {
