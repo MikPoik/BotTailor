@@ -188,7 +188,7 @@ export default function ChatWidget({
 
         /* User message bubbles */
         .chat-widget-container .chat-message-user {
-          background-color: ${resolvedPrimaryColor} !important;
+          background-color: ${resolvedPrimaryColor}cc !important;
           color: white !important;
         }
 
