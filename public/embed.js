@@ -443,7 +443,10 @@
               mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=true&embedded=true`);
             }
           }
+          // Debug: Check if bubble hiding works in mobile
+          console.log('🔧 Mobile chat opening - hiding bubble:', bubble?.style?.display);
           bubble.style.display = 'none';
+          console.log('🔧 Bubble hidden, display now:', bubble?.style?.display);
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
           mobileIframe.classList.add('show');

@@ -47,10 +47,24 @@ export default function ChatWidgetPage() {
     
     // Read theme colors from URL parameters first, then fallback to injected config, then defaults
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Debug logging for mobile investigation
+    const urlPrimaryColor = urlParams.get('primaryColor');
+    const urlBackgroundColor = urlParams.get('backgroundColor');
+    const urlTextColor = urlParams.get('textColor');
+    
+    console.log('🔍 Mobile embed URL params debug:', {
+      url: window.location.href,
+      primaryColor: urlPrimaryColor,
+      backgroundColor: urlBackgroundColor,
+      textColor: urlTextColor,
+      injectedConfig: injectedConfig?.theme
+    });
+    
     const theme = {
-      primaryColor: urlParams.get('primaryColor') || injectedConfig?.theme?.primaryColor || '#2563eb',
-      backgroundColor: urlParams.get('backgroundColor') || injectedConfig?.theme?.backgroundColor || '#ffffff',
-      textColor: urlParams.get('textColor') || injectedConfig?.theme?.textColor || '#1f2937'
+      primaryColor: urlPrimaryColor || injectedConfig?.theme?.primaryColor || '#2563eb',
+      backgroundColor: urlBackgroundColor || injectedConfig?.theme?.backgroundColor || '#ffffff',
+      textColor: urlTextColor || injectedConfig?.theme?.textColor || '#1f2937'
     };
     
     return (

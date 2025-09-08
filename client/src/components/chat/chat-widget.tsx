@@ -150,6 +150,17 @@ export default function ChatWidget({
       // Use brightness detection instead of strict color matching
       const isLightBackground = isLightColor(backgroundColor);
       
+      // Debug logging for mobile styling issues
+      if (isEmbedded) {
+        console.log('💡 CSS injection debug:', {
+          resolvedPrimaryColor,
+          backgroundColor,
+          textColor,
+          isLightBackground,
+          isEmbedded
+        });
+      }
+      
       style.textContent = `
         :root {
           --chat-primary: ${resolvedPrimaryColor};
