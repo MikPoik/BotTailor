@@ -115,6 +115,19 @@ export default function ChatWidget({
     };
   }, []);
 
+  // Helper function to determine if a color is light or dark
+  const isLightColor = (color: string): boolean => {
+    // Convert hex to RGB
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate luminance using the relative luminance formula
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5; // Return true if light, false if dark
+  };
+
   // Inject CSS synchronously to prevent FOUC
   useEffect(() => {
     const injectThemeStyles = () => {
@@ -125,6 +138,10 @@ export default function ChatWidget({
 
       const style = document.createElement('style');
       style.id = 'chat-widget-theme-styles';
+      
+      // Use brightness detection instead of strict color matching
+      const isLightBackground = isLightColor(backgroundColor);
+      
       style.textContent = `
         :root {
           --chat-primary: ${resolvedPrimaryColor};
@@ -147,11 +164,11 @@ export default function ChatWidget({
           --card-foreground: ${textColor};
           --popover: ${backgroundColor};
           --popover-foreground: ${textColor};
-          --muted: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'};
-          --muted-foreground: ${textColor === '#1f2937' ? '#64748b' : '#a1a1aa'};
-          --border: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'};
-          --input: ${backgroundColor === '#ffffff' ? '#ffffff' : '#262626'};
-          --accent: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#262626'};
+          --muted: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'};
+          --muted-foreground: ${isLightBackground ? '#64748b' : '#a1a1aa'};
+          --border: ${isLightBackground ? '#e2e8f0' : '#404040'};
+          --input: ${isLightBackground ? '#ffffff' : '#262626'};
+          --accent: ${isLightBackground ? '#f1f5f9' : '#262626'};
           --accent-foreground: ${textColor};
         }
 
@@ -164,9 +181,9 @@ export default function ChatWidget({
 
         /* Bot message bubbles - use a contrasting color */
         .chat-widget-container .chat-message-bot {
-          background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
+          background-color: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'} !important;
           color: ${textColor} !important;
-          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
         /* User message bubbles */
@@ -202,9 +219,9 @@ export default function ChatWidget({
         /* Input and form elements */
         .chat-widget-container input,
         .chat-widget-container textarea {
-          background-color: ${backgroundColor === '#ffffff' ? '#ffffff' : '#262626'} !important;
+          background-color: ${isLightBackground ? '#ffffff' : '#262626'} !important;
           color: ${textColor} !important;
-          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
         /* Input focus ring */
@@ -219,7 +236,7 @@ export default function ChatWidget({
         /* Tab navigation background and text */
         .chat-widget-container [data-radix-tabs-list] {
           background: ${backgroundColor} !important;
-          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
         /* Tab navigation active state */
@@ -246,9 +263,9 @@ export default function ChatWidget({
 
         /* Quick reply buttons */
         .chat-widget-container .quick-reply-button {
-          background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
+          background-color: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'} !important;
           color: ${textColor} !important;
-          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
         .chat-widget-container .quick-reply-button:hover {
