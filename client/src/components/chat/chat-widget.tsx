@@ -102,8 +102,14 @@ export default function ChatWidget({
   }, []);
 
   useEffect(() => {
-    // Custom CSS for theming
+    // Custom CSS for theming - inject immediately to prevent FOUC
+    let existingStyle = document.getElementById('chat-widget-theme-styles');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
     const style = document.createElement('style');
+    style.id = 'chat-widget-theme-styles';
     style.textContent = `
       :root {
         --chat-primary: ${primaryColor};
@@ -263,7 +269,10 @@ export default function ChatWidget({
     document.head.appendChild(style);
 
     return () => {
-      document.head.removeChild(style);
+      const existingStyle = document.getElementById('chat-widget-theme-styles');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
     };
   }, [primaryColor, backgroundColor, textColor]);
 
@@ -441,7 +450,7 @@ export default function ChatWidget({
         const messageBottomOffset = 80 + (visibleMessages.indexOf(messageIndex) * 80);
         return (
           <div
-            key={`initial-message-${messageIndex}-${sessionId}`}
+            key={`initial-message-${messageIndex}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`}
             className="absolute animate-fadeIn transition-all duration-300"
             style={{
               [position === 'bottom-right' ? 'right' : 'left']: '0',
