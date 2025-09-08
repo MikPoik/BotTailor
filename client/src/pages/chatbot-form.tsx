@@ -17,11 +17,12 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { insertChatbotConfigSchema } from "@shared/schema";
 import { z } from "zod";
-import { ArrowLeft, Bot, Save, Upload, User, X, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Bot, Save, Upload, User, X, Plus, Trash2, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import PromptAssistantChatbox from "@/components/chat/prompt-assistant-chatbox";
 
 // Create a more explicit form schema to ensure proper typing
 const formSchema = z.object({
@@ -43,6 +44,7 @@ export default function ChatbotForm() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [promptAssistantOpen, setPromptAssistantOpen] = useState(false);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -286,7 +288,7 @@ export default function ChatbotForm() {
                     <FormControl>
                       <Textarea 
                         placeholder="You are a helpful AI assistant..."
-                        className="min-h-[120px]"
+                        className="min-h-[420px]"
                         {...field} 
                       />
                     </FormControl>
@@ -297,6 +299,36 @@ export default function ChatbotForm() {
                   </FormItem>
                 )}
               />
+
+              {/* AI Prompt Assistant */}
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    AI Prompt Assistant
+                  </h4>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setPromptAssistantOpen(!promptAssistantOpen)}
+                    type="button"
+                  >
+                    {promptAssistantOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </div>
+                
+                {promptAssistantOpen && (
+                  <PromptAssistantChatbox 
+                    currentPrompt={form.watch('systemPrompt') || ""}
+                    onPromptGenerated={(newPrompt) => form.setValue('systemPrompt', newPrompt)}
+                    chatbotConfig={{ 
+                      name: form.watch('name'), 
+                      description: form.watch('description') 
+                    }}
+                    chatbotGuid="new-chatbot"
+                  />
+                )}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
