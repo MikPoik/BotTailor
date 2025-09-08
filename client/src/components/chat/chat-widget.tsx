@@ -179,9 +179,9 @@ export default function ChatWidget({
           color: ${textColor} !important;
         }
 
-        /* Bot message bubbles - use a contrasting color */
+        /* Bot message bubbles - use white background */
         .chat-widget-container .chat-message-bot {
-          background-color: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'} !important;
+          background-color: ${isLightBackground ? '#ffffff' : '#2a2a2a'} !important;
           color: ${textColor} !important;
           border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
