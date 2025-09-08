@@ -49,8 +49,21 @@ export function setupChatbotRoutes(app: Express) {
       // Check bot limit before creating
       const canCreateBot = await storage.checkBotLimit(userId);
       if (!canCreateBot) {
+        // Get current usage details for better error message
+        const currentBots = await storage.getChatbotConfigs(userId);
+        const subscription = await storage.getUserSubscriptionWithPlan(userId);
+        
+        const currentCount = currentBots.length;
+        const maxBots = subscription?.plan?.maxBots || 0;
+        
         return res.status(403).json({ 
-          message: "Bot limit reached. Please upgrade your subscription to create more chatbots." 
+          message: `You have reached your chatbot limit (${currentCount}/${maxBots === -1 ? 'unlimited' : maxBots}). Please upgrade your subscription to create more chatbots.`,
+          details: {
+            currentBots: currentCount,
+            maxBots: maxBots,
+            planName: subscription?.plan?.name || 'Free',
+            upgradeRequired: true
+          }
         });
       }
       
