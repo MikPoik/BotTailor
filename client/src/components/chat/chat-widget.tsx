@@ -61,24 +61,24 @@ export default function ChatWidget({
   useEffect(() => {
     if (initialMessages.length > 0 && !isOpen && !isEmbedded) {
       const timeouts: NodeJS.Timeout[] = [];
-      
+
       initialMessages.forEach((_, index) => {
         const timeout = setTimeout(() => {
           setVisibleMessages(prev => [...prev, index]);
-          
+
           // Auto-hide after 8 seconds
           const hideTimeout = setTimeout(() => {
             setVisibleMessages(prev => prev.filter(i => i !== index));
           }, 8000);
-          
+
           timeouts.push(hideTimeout);
         }, index * 2000); // Show each message 2 seconds apart
-        
+
         timeouts.push(timeout);
       });
-      
+
       messageTimeouts.current = timeouts;
-      
+
       return () => {
         timeouts.forEach(timeout => clearTimeout(timeout));
       };
@@ -111,7 +111,7 @@ export default function ChatWidget({
         --chat-background: ${backgroundColor};
         --chat-text: ${textColor};
       }
-      
+
       /* Chat widget specific styling with complete theme */
       .chat-widget-container {
         --primary: ${primaryColor};
@@ -133,27 +133,27 @@ export default function ChatWidget({
         --accent: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#262626'};
         --accent-foreground: ${textColor};
       }
-      
+
       /* Main chat interface background and text */
       .chat-widget-container .chat-interface,
       .chat-widget-container .chat-interface-mobile {
         background-color: ${backgroundColor} !important;
         color: ${textColor} !important;
       }
-      
+
       /* Bot message bubbles - use a contrasting color */
       .chat-widget-container .chat-message-bot {
         background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
         color: ${textColor} !important;
         border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
       }
-      
+
       /* User message bubbles */
       .chat-widget-container .chat-message-user {
         background-color: ${primaryColor} !important;
         color: white !important;
       }
-      
+
       /* Send button */
       .chat-widget-container button[type="submit"],
       .chat-widget-container .send-button {
@@ -161,23 +161,23 @@ export default function ChatWidget({
         border-color: ${primaryColor} !important;
         color: white !important;
       }
-      
+
       /* All default variant buttons */
       .chat-widget-container .bg-primary {
         background-color: ${primaryColor} !important;
         color: white !important;
       }
-      
+
       .chat-widget-container .hover\\:bg-primary\\/90:hover {
         background-color: ${primaryColor}e6 !important;
       }
-      
+
       /* Primary buttons and interactive elements */
       .chat-widget-container .menu-option-button:hover {
         background-color: ${primaryColor} !important;
         color: white !important;
       }
-      
+
       /* Input and form elements */
       .chat-widget-container input,
       .chat-widget-container textarea {
@@ -185,7 +185,7 @@ export default function ChatWidget({
         color: ${textColor} !important;
         border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
       }
-      
+
       /* Input focus ring */
       .chat-widget-container input:focus,
       .chat-widget-container textarea:focus,
@@ -194,67 +194,67 @@ export default function ChatWidget({
         border-color: ${primaryColor} !important;
         box-shadow: 0 0 0 2px ${primaryColor}40 !important;
       }
-      
+
       /* Tab navigation background and text */
       .chat-widget-container [data-radix-tabs-list] {
         background: ${backgroundColor} !important;
         border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
       }
-      
+
       /* Tab navigation active state */
       .chat-widget-container [data-state="active"] {
         color: ${primaryColor} !important;
         border-bottom-color: ${primaryColor} !important;
       }
-      
+
       /* Tabs trigger default state */
       .chat-widget-container [data-radix-tabs-trigger] {
         color: ${textColor} !important;
       }
-      
+
       /* Tabs trigger active state */
       .chat-widget-container [data-radix-tabs-trigger][data-state="active"] {
         color: ${primaryColor} !important;
       }
-      
+
       /* Card backgrounds */
       .chat-widget-container .bg-card {
         background-color: ${backgroundColor} !important;
         color: ${textColor} !important;
       }
-      
+
       /* Quick reply buttons */
       .chat-widget-container .quick-reply-button {
         background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
         color: ${textColor} !important;
         border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
       }
-      
+
       .chat-widget-container .quick-reply-button:hover {
         background-color: ${primaryColor} !important;
         color: white !important;
       }
-      
+
       /* Progress indicators */
       .chat-widget-container .border-primary {
         border-color: ${primaryColor} !important;
       }
-      
+
       /* Links */
       .chat-widget-container .text-primary {
         color: ${primaryColor} !important;
       }
-      
+
       /* Interactive hover states */
       .chat-widget-container .hover\\:text-primary:hover {
         color: ${primaryColor} !important;
       }
-      
+
       /* Form controls focus states */
       .chat-widget-container .focus-visible\\:ring-ring:focus-visible {
         --tw-ring-color: ${primaryColor} !important;
       }
-      
+
       /* Selection and highlight states */
       .chat-widget-container ::selection {
         background-color: ${primaryColor}40 !important;
@@ -438,7 +438,7 @@ export default function ChatWidget({
 
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex) => {
-        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 140);
+        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 90);
         return (
           <div
             key={`initial-message-${messageIndex}-${sessionId}`}
@@ -452,15 +452,15 @@ export default function ChatWidget({
             }}
           >
             <div 
-              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-1 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
               onClick={() => {
                 setIsOpen(true);
                 setHasNewMessage(false);
                 queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
               }}
             >
-              <div className="flex items-start gap-1">
-                <div className="flex-1">
+              <div className="flex items-start gap-2">
+                <div className="flex-1 pr-2">
                   <p className="text-gray-800 text-sm leading-relaxed font-normal">
                     {initialMessages[messageIndex]}
                   </p>
@@ -470,12 +470,12 @@ export default function ChatWidget({
                     e.stopPropagation();
                     dismissMessage(messageIndex);
                   }}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 -mt-1 -mr-1"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-              
+
               {/* Arrow pointing to chat bubble */}
               <div 
                 className="absolute w-4 h-4 bg-white border-r border-b border-gray-200 transform rotate-45"
