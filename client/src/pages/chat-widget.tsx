@@ -44,10 +44,13 @@ export default function ChatWidgetPage() {
     // Check if we have a specific chatbot config from the injected config
     const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     const chatbotConfig = injectedConfig?.chatbotConfig;
-    const theme = injectedConfig?.theme || { 
-      primaryColor: '#2563eb', 
-      backgroundColor: '#ffffff', 
-      textColor: '#1f2937' 
+    
+    // Read theme colors from URL parameters first, then fallback to injected config, then defaults
+    const urlParams = new URLSearchParams(window.location.search);
+    const theme = {
+      primaryColor: urlParams.get('primaryColor') || injectedConfig?.theme?.primaryColor || '#2563eb',
+      backgroundColor: urlParams.get('backgroundColor') || injectedConfig?.theme?.backgroundColor || '#ffffff',
+      textColor: urlParams.get('textColor') || injectedConfig?.theme?.textColor || '#1f2937'
     };
     
     return (
