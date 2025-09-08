@@ -188,9 +188,8 @@ export default function ChatWidget({
 
         /* User message bubbles */
         .chat-widget-container .chat-message-user {
-          background-color: ${isLightBackground ? '#ffffff' : '#2a2a2a'} !important;
-          color: ${textColor} !important;
-          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
+          background-color: ${resolvedPrimaryColor} !important;
+          color: white !important;
         }
 
         /* Send button */
