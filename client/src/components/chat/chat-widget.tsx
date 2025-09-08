@@ -47,6 +47,10 @@ export default function ChatWidget({
     'bottom-left': 'bottom-6 left-6'
   };
 
+  // Resolve primary color for use in dynamic styles
+  const resolvedPrimaryColor = chatbotConfig?.theme?.chat?.primary || primaryColor;
+
+
   // Load initial messages from chatbot config
   useEffect(() => {
     if (chatbotConfig?.initialMessages && Array.isArray(chatbotConfig.initialMessages)) {
@@ -107,25 +111,25 @@ export default function ChatWidget({
     if (existingStyle) {
       existingStyle.remove();
     }
-    
+
     const style = document.createElement('style');
     style.id = 'chat-widget-theme-styles';
     style.textContent = `
       :root {
-        --chat-primary: ${primaryColor};
-        --chat-primary-color: ${primaryColor};
+        --chat-primary: ${resolvedPrimaryColor};
+        --chat-primary-color: ${resolvedPrimaryColor};
         --chat-background: ${backgroundColor};
         --chat-text: ${textColor};
       }
 
       /* Chat widget specific styling with complete theme */
       .chat-widget-container {
-        --primary: ${primaryColor};
+        --primary: ${resolvedPrimaryColor};
         --primary-foreground: white;
-        --ring: ${primaryColor};
-        --chat-bubble-bg: ${primaryColor};
-        --chat-user-bg: ${primaryColor};
-        --chat-hover: ${primaryColor};
+        --ring: ${resolvedPrimaryColor};
+        --chat-bubble-bg: ${resolvedPrimaryColor};
+        --chat-user-bg: ${resolvedPrimaryColor};
+        --chat-hover: ${resolvedPrimaryColor};
         --background: ${backgroundColor};
         --foreground: ${textColor};
         --card: ${backgroundColor};
@@ -156,31 +160,31 @@ export default function ChatWidget({
 
       /* User message bubbles */
       .chat-widget-container .chat-message-user {
-        background-color: ${primaryColor} !important;
+        background-color: ${resolvedPrimaryColor} !important;
         color: white !important;
       }
 
       /* Send button */
       .chat-widget-container button[type="submit"],
       .chat-widget-container .send-button {
-        background-color: ${primaryColor} !important;
-        border-color: ${primaryColor} !important;
+        background-color: ${resolvedPrimaryColor} !important;
+        border-color: ${resolvedPrimaryColor} !important;
         color: white !important;
       }
 
       /* All default variant buttons */
       .chat-widget-container .bg-primary {
-        background-color: ${primaryColor} !important;
+        background-color: ${resolvedPrimaryColor} !important;
         color: white !important;
       }
 
       .chat-widget-container .hover\\:bg-primary\\/90:hover {
-        background-color: ${primaryColor}e6 !important;
+        background-color: ${resolvedPrimaryColor}e6 !important;
       }
 
       /* Primary buttons and interactive elements */
       .chat-widget-container .menu-option-button:hover {
-        background-color: ${primaryColor} !important;
+        background-color: ${resolvedPrimaryColor} !important;
         color: white !important;
       }
 
@@ -196,9 +200,9 @@ export default function ChatWidget({
       .chat-widget-container input:focus,
       .chat-widget-container textarea:focus,
       .chat-widget-container select:focus {
-        --tw-ring-color: ${primaryColor} !important;
-        border-color: ${primaryColor} !important;
-        box-shadow: 0 0 0 2px ${primaryColor}40 !important;
+        --tw-ring-color: ${resolvedPrimaryColor} !important;
+        border-color: ${resolvedPrimaryColor} !important;
+        box-shadow: 0 0 0 2px ${resolvedPrimaryColor}40 !important;
       }
 
       /* Tab navigation background and text */
@@ -209,8 +213,8 @@ export default function ChatWidget({
 
       /* Tab navigation active state */
       .chat-widget-container [data-state="active"] {
-        color: ${primaryColor} !important;
-        border-bottom-color: ${primaryColor} !important;
+        color: ${resolvedPrimaryColor} !important;
+        border-bottom-color: ${resolvedPrimaryColor} !important;
       }
 
       /* Tabs trigger default state */
@@ -220,7 +224,7 @@ export default function ChatWidget({
 
       /* Tabs trigger active state */
       .chat-widget-container [data-radix-tabs-trigger][data-state="active"] {
-        color: ${primaryColor} !important;
+        color: ${resolvedPrimaryColor} !important;
       }
 
       /* Card backgrounds */
@@ -237,33 +241,33 @@ export default function ChatWidget({
       }
 
       .chat-widget-container .quick-reply-button:hover {
-        background-color: ${primaryColor} !important;
+        background-color: ${resolvedPrimaryColor} !important;
         color: white !important;
       }
 
       /* Progress indicators */
       .chat-widget-container .border-primary {
-        border-color: ${primaryColor} !important;
+        border-color: ${resolvedPrimaryColor} !important;
       }
 
       /* Links */
       .chat-widget-container .text-primary {
-        color: ${primaryColor} !important;
+        color: ${resolvedPrimaryColor} !important;
       }
 
       /* Interactive hover states */
       .chat-widget-container .hover\\:text-primary:hover {
-        color: ${primaryColor} !important;
+        color: ${resolvedPrimaryColor} !important;
       }
 
       /* Form controls focus states */
       .chat-widget-container .focus-visible\\:ring-ring:focus-visible {
-        --tw-ring-color: ${primaryColor} !important;
+        --tw-ring-color: ${resolvedPrimaryColor} !important;
       }
 
       /* Selection and highlight states */
       .chat-widget-container ::selection {
-        background-color: ${primaryColor}40 !important;
+        background-color: ${resolvedPrimaryColor}40 !important;
       }
     `;
     document.head.appendChild(style);
@@ -274,7 +278,7 @@ export default function ChatWidget({
         existingStyle.remove();
       }
     };
-  }, [primaryColor, backgroundColor, textColor]);
+  }, [resolvedPrimaryColor, backgroundColor, textColor]);
 
   const toggleChat = () => {
     if (isOpen) {
@@ -318,7 +322,7 @@ export default function ChatWidget({
           {/* Mobile header */}
           <div 
             className="text-white p-3 flex items-center justify-between flex-shrink-0"
-            style={{ backgroundColor: primaryColor }}
+            style={{ backgroundColor: resolvedPrimaryColor }}
           >
             <div className="flex items-center space-x-2">
               <img 
@@ -342,7 +346,7 @@ export default function ChatWidget({
             <button 
               onClick={closeChat}
               className="text-white p-1.5 rounded transition-colors"
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}cc`}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <X className="h-4 w-4" />
@@ -378,7 +382,7 @@ export default function ChatWidget({
         {/* Desktop header - sticky at top */}
         <div 
           className="chat-header text-white p-3 flex items-center justify-between"
-          style={{ backgroundColor: primaryColor }}
+          style={{ backgroundColor: resolvedPrimaryColor }}
         >
           <div className="flex items-center space-x-2">
             <img 
@@ -401,7 +405,7 @@ export default function ChatWidget({
           <button 
             onClick={handleEmbeddedClose}
             className="text-white p-1.5 rounded transition-colors"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}cc`}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <Minimize2 className="h-4 w-4" />
@@ -432,7 +436,7 @@ export default function ChatWidget({
           <button
             onClick={toggleChat}
             className="w-16 h-16 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
-            style={{ backgroundColor: primaryColor }}
+            style={{ backgroundColor: resolvedPrimaryColor }}
           >
             <MessageCircle className="w-6 h-6 text-white" />
           </button>
@@ -515,7 +519,7 @@ export default function ChatWidget({
           {/* Chat header */}
           <div 
             className="text-white p-3 flex items-center justify-between flex-shrink-0"
-            style={{ backgroundColor: primaryColor }}
+            style={{ backgroundColor: resolvedPrimaryColor }}
           >
             <div className="flex items-center space-x-2">
               <img 
@@ -538,7 +542,7 @@ export default function ChatWidget({
             <button 
               onClick={toggleChat}
               className="text-white p-1.5 rounded transition-colors"
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${primaryColor}cc`}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <Minimize2 className="h-4 w-4" />
