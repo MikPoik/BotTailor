@@ -299,7 +299,7 @@
 }
 
 .chatwidget-iframe .chat-message-user {
-  background-color: var(--chat-primary-color, #2563eb) !important;
+  background-color: var(--chat-primary-color, #2563eb)cc !important;
   color: white !important;
 }
 
