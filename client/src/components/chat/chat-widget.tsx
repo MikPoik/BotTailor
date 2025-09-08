@@ -456,9 +456,10 @@ export default function ChatWidget({
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex) => {
         const messageBottomOffset = 80 + (visibleMessages.indexOf(messageIndex) * 80);
+        const uniqueKey = `initial-message-${messageIndex}-${sessionId}-${visibleMessages.indexOf(messageIndex)}`;
         return (
           <div
-            key={`initial-message-${messageIndex}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`}
+            key={uniqueKey}
             className="absolute animate-fadeIn transition-all duration-300"
             style={{
               [position === 'bottom-right' ? 'right' : 'left']: '0',
@@ -469,7 +470,7 @@ export default function ChatWidget({
             }}
           >
             <div 
-              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-3 py-2 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
               onClick={() => {
                 setIsOpen(true);
                 setHasNewMessage(false);
@@ -477,7 +478,7 @@ export default function ChatWidget({
               }}
             >
               <div className="flex items-start gap-2">
-                <div className="flex-1 pr-2">
+                <div className="flex-1 pr-1">
                   <p className="text-gray-800 text-sm leading-relaxed font-normal">
                     {initialMessages[messageIndex]}
                   </p>
@@ -489,7 +490,7 @@ export default function ChatWidget({
                   }}
                   className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 -mt-1 -mr-1"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
