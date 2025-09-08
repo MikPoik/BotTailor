@@ -26,6 +26,13 @@ interface ChatbotConfig {
   welcomeMessage: string;
   fallbackMessage: string;
   avatarUrl?: string;
+  homeScreenConfig?: {
+    theme?: {
+      primaryColor?: string;
+      backgroundColor?: string;
+      textColor?: string;
+    };
+  };
 }
 
 export default function Dashboard() {
@@ -330,11 +337,13 @@ export default function Dashboard() {
       </div>
 
       {/* Chat Widget */}
-      {sessionId && (
+      {sessionId && selectedChatbot && (
         <ChatWidget 
           sessionId={sessionId}
           position="bottom-right"
-          primaryColor="#3b82f6"
+          primaryColor={selectedChatbot.homeScreenConfig?.theme?.primaryColor || "#3b82f6"}
+          backgroundColor={selectedChatbot.homeScreenConfig?.theme?.backgroundColor || "#ffffff"}
+          textColor={selectedChatbot.homeScreenConfig?.theme?.textColor || "#1f2937"}
           chatbotConfig={selectedChatbot}
         />
       )}
