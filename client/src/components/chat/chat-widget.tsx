@@ -157,7 +157,10 @@ export default function ChatWidget({
           backgroundColor,
           textColor,
           isLightBackground,
-          isEmbedded
+          isEmbedded,
+          hasContainerClass: document.querySelector('.chat-widget-container') !== null,
+          userMessageElements: document.querySelectorAll('.chat-message-user').length,
+          botMessageElements: document.querySelectorAll('.chat-message-bot').length
         });
       }
       
@@ -198,15 +201,17 @@ export default function ChatWidget({
           color: ${textColor} !important;
         }
 
-        /* Bot message bubbles - use white background */
-        .chat-widget-container .chat-message-bot {
+        /* Bot message bubbles - use white background - multiple selectors for embedded vs development */
+        .chat-widget-container .chat-message-bot,
+        .chat-message-bot {
           background-color: ${isLightBackground ? '#ffffff' : '#2a2a2a'} !important;
           color: ${textColor} !important;
           border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
-        /* User message bubbles */
-        .chat-widget-container .chat-message-user {
+        /* User message bubbles - multiple selectors for embedded vs development */
+        .chat-widget-container .chat-message-user,
+        .chat-message-user {
           background-color: ${resolvedPrimaryColor}cc !important;
           color: white !important;
         }
