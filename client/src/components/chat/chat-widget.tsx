@@ -438,7 +438,7 @@ export default function ChatWidget({
 
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex) => {
-        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 90);
+        const messageBottomOffset = 80 + (visibleMessages.indexOf(messageIndex) * 80);
         return (
           <div
             key={`initial-message-${messageIndex}-${sessionId}`}
@@ -472,7 +472,7 @@ export default function ChatWidget({
                   }}
                   className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 -mt-1 -mr-1"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
