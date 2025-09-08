@@ -105,172 +105,176 @@ export default function ChatWidget({
     };
   }, []);
 
+  // Inject CSS synchronously to prevent FOUC
   useEffect(() => {
-    // Custom CSS for theming - inject immediately to prevent FOUC
-    let existingStyle = document.getElementById('chat-widget-theme-styles');
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-
-    const style = document.createElement('style');
-    style.id = 'chat-widget-theme-styles';
-    style.textContent = `
-      :root {
-        --chat-primary: ${resolvedPrimaryColor};
-        --chat-primary-color: ${resolvedPrimaryColor};
-        --chat-background: ${backgroundColor};
-        --chat-text: ${textColor};
+    const injectThemeStyles = () => {
+      let existingStyle = document.getElementById('chat-widget-theme-styles');
+      if (existingStyle) {
+        existingStyle.remove();
       }
 
-      /* Chat widget specific styling with complete theme */
-      .chat-widget-container {
-        --primary: ${resolvedPrimaryColor};
-        --primary-foreground: white;
-        --ring: ${resolvedPrimaryColor};
-        --chat-bubble-bg: ${resolvedPrimaryColor};
-        --chat-user-bg: ${resolvedPrimaryColor};
-        --chat-hover: ${resolvedPrimaryColor};
-        --background: ${backgroundColor};
-        --foreground: ${textColor};
-        --card: ${backgroundColor};
-        --card-foreground: ${textColor};
-        --popover: ${backgroundColor};
-        --popover-foreground: ${textColor};
-        --muted: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'};
-        --muted-foreground: ${textColor === '#1f2937' ? '#64748b' : '#a1a1aa'};
-        --border: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'};
-        --input: ${backgroundColor === '#ffffff' ? '#ffffff' : '#262626'};
-        --accent: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#262626'};
-        --accent-foreground: ${textColor};
-      }
+      const style = document.createElement('style');
+      style.id = 'chat-widget-theme-styles';
+      style.textContent = `
+        :root {
+          --chat-primary: ${resolvedPrimaryColor};
+          --chat-primary-color: ${resolvedPrimaryColor};
+          --chat-background: ${backgroundColor};
+          --chat-text: ${textColor};
+        }
 
-      /* Main chat interface background and text */
-      .chat-widget-container .chat-interface,
-      .chat-widget-container .chat-interface-mobile {
-        background-color: ${backgroundColor} !important;
-        color: ${textColor} !important;
-      }
+        /* Chat widget specific styling with complete theme */
+        .chat-widget-container {
+          --primary: ${resolvedPrimaryColor};
+          --primary-foreground: white;
+          --ring: ${resolvedPrimaryColor};
+          --chat-bubble-bg: ${resolvedPrimaryColor};
+          --chat-user-bg: ${resolvedPrimaryColor};
+          --chat-hover: ${resolvedPrimaryColor};
+          --background: ${backgroundColor};
+          --foreground: ${textColor};
+          --card: ${backgroundColor};
+          --card-foreground: ${textColor};
+          --popover: ${backgroundColor};
+          --popover-foreground: ${textColor};
+          --muted: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'};
+          --muted-foreground: ${textColor === '#1f2937' ? '#64748b' : '#a1a1aa'};
+          --border: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'};
+          --input: ${backgroundColor === '#ffffff' ? '#ffffff' : '#262626'};
+          --accent: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#262626'};
+          --accent-foreground: ${textColor};
+        }
 
-      /* Bot message bubbles - use a contrasting color */
-      .chat-widget-container .chat-message-bot {
-        background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
-        color: ${textColor} !important;
-        border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
-      }
+        /* Main chat interface background and text */
+        .chat-widget-container .chat-interface,
+        .chat-widget-container .chat-interface-mobile {
+          background-color: ${backgroundColor} !important;
+          color: ${textColor} !important;
+        }
 
-      /* User message bubbles */
-      .chat-widget-container .chat-message-user {
-        background-color: ${resolvedPrimaryColor} !important;
-        color: white !important;
-      }
+        /* Bot message bubbles - use a contrasting color */
+        .chat-widget-container .chat-message-bot {
+          background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
+          color: ${textColor} !important;
+          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+        }
 
-      /* Send button */
-      .chat-widget-container button[type="submit"],
-      .chat-widget-container .send-button {
-        background-color: ${resolvedPrimaryColor} !important;
-        border-color: ${resolvedPrimaryColor} !important;
-        color: white !important;
-      }
+        /* User message bubbles */
+        .chat-widget-container .chat-message-user {
+          background-color: ${resolvedPrimaryColor} !important;
+          color: white !important;
+        }
 
-      /* All default variant buttons */
-      .chat-widget-container .bg-primary {
-        background-color: ${resolvedPrimaryColor} !important;
-        color: white !important;
-      }
+        /* Send button */
+        .chat-widget-container button[type="submit"],
+        .chat-widget-container .send-button {
+          background-color: ${resolvedPrimaryColor} !important;
+          border-color: ${resolvedPrimaryColor} !important;
+          color: white !important;
+        }
 
-      .chat-widget-container .hover\\:bg-primary\\/90:hover {
-        background-color: ${resolvedPrimaryColor}e6 !important;
-      }
+        /* All default variant buttons */
+        .chat-widget-container .bg-primary {
+          background-color: ${resolvedPrimaryColor} !important;
+          color: white !important;
+        }
 
-      /* Primary buttons and interactive elements */
-      .chat-widget-container .menu-option-button:hover {
-        background-color: ${resolvedPrimaryColor} !important;
-        color: white !important;
-      }
+        .chat-widget-container .hover\\:bg-primary\\/90:hover {
+          background-color: ${resolvedPrimaryColor}e6 !important;
+        }
 
-      /* Input and form elements */
-      .chat-widget-container input,
-      .chat-widget-container textarea {
-        background-color: ${backgroundColor === '#ffffff' ? '#ffffff' : '#262626'} !important;
-        color: ${textColor} !important;
-        border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
-      }
+        /* Primary buttons and interactive elements */
+        .chat-widget-container .menu-option-button:hover {
+          background-color: ${resolvedPrimaryColor} !important;
+          color: white !important;
+        }
 
-      /* Input focus ring */
-      .chat-widget-container input:focus,
-      .chat-widget-container textarea:focus,
-      .chat-widget-container select:focus {
-        --tw-ring-color: ${resolvedPrimaryColor} !important;
-        border-color: ${resolvedPrimaryColor} !important;
-        box-shadow: 0 0 0 2px ${resolvedPrimaryColor}40 !important;
-      }
+        /* Input and form elements */
+        .chat-widget-container input,
+        .chat-widget-container textarea {
+          background-color: ${backgroundColor === '#ffffff' ? '#ffffff' : '#262626'} !important;
+          color: ${textColor} !important;
+          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+        }
 
-      /* Tab navigation background and text */
-      .chat-widget-container [data-radix-tabs-list] {
-        background: ${backgroundColor} !important;
-        border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
-      }
+        /* Input focus ring */
+        .chat-widget-container input:focus,
+        .chat-widget-container textarea:focus,
+        .chat-widget-container select:focus {
+          --tw-ring-color: ${resolvedPrimaryColor} !important;
+          border-color: ${resolvedPrimaryColor} !important;
+          box-shadow: 0 0 0 2px ${resolvedPrimaryColor}40 !important;
+        }
 
-      /* Tab navigation active state */
-      .chat-widget-container [data-state="active"] {
-        color: ${resolvedPrimaryColor} !important;
-        border-bottom-color: ${resolvedPrimaryColor} !important;
-      }
+        /* Tab navigation background and text */
+        .chat-widget-container [data-radix-tabs-list] {
+          background: ${backgroundColor} !important;
+          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+        }
 
-      /* Tabs trigger default state */
-      .chat-widget-container [data-radix-tabs-trigger] {
-        color: ${textColor} !important;
-      }
+        /* Tab navigation active state */
+        .chat-widget-container [data-state="active"] {
+          color: ${resolvedPrimaryColor} !important;
+          border-bottom-color: ${resolvedPrimaryColor} !important;
+        }
 
-      /* Tabs trigger active state */
-      .chat-widget-container [data-radix-tabs-trigger][data-state="active"] {
-        color: ${resolvedPrimaryColor} !important;
-      }
+        /* Tabs trigger default state */
+        .chat-widget-container [data-radix-tabs-trigger] {
+          color: ${textColor} !important;
+        }
 
-      /* Card backgrounds */
-      .chat-widget-container .bg-card {
-        background-color: ${backgroundColor} !important;
-        color: ${textColor} !important;
-      }
+        /* Tabs trigger active state */
+        .chat-widget-container [data-radix-tabs-trigger][data-state="active"] {
+          color: ${resolvedPrimaryColor} !important;
+        }
 
-      /* Quick reply buttons */
-      .chat-widget-container .quick-reply-button {
-        background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
-        color: ${textColor} !important;
-        border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
-      }
+        /* Card backgrounds */
+        .chat-widget-container .bg-card {
+          background-color: ${backgroundColor} !important;
+          color: ${textColor} !important;
+        }
 
-      .chat-widget-container .quick-reply-button:hover {
-        background-color: ${resolvedPrimaryColor} !important;
-        color: white !important;
-      }
+        /* Quick reply buttons */
+        .chat-widget-container .quick-reply-button {
+          background-color: ${backgroundColor === '#ffffff' ? '#f1f5f9' : '#2a2a2a'} !important;
+          color: ${textColor} !important;
+          border-color: ${backgroundColor === '#ffffff' ? '#e2e8f0' : '#404040'} !important;
+        }
 
-      /* Progress indicators */
-      .chat-widget-container .border-primary {
-        border-color: ${resolvedPrimaryColor} !important;
-      }
+        .chat-widget-container .quick-reply-button:hover {
+          background-color: ${resolvedPrimaryColor} !important;
+          color: white !important;
+        }
 
-      /* Links */
-      .chat-widget-container .text-primary {
-        color: ${resolvedPrimaryColor} !important;
-      }
+        /* Progress indicators */
+        .chat-widget-container .border-primary {
+          border-color: ${resolvedPrimaryColor} !important;
+        }
 
-      /* Interactive hover states */
-      .chat-widget-container .hover\\:text-primary:hover {
-        color: ${resolvedPrimaryColor} !important;
-      }
+        /* Links */
+        .chat-widget-container .text-primary {
+          color: ${resolvedPrimaryColor} !important;
+        }
 
-      /* Form controls focus states */
-      .chat-widget-container .focus-visible\\:ring-ring:focus-visible {
-        --tw-ring-color: ${resolvedPrimaryColor} !important;
-      }
+        /* Interactive hover states */
+        .chat-widget-container .hover\\:text-primary:hover {
+          color: ${resolvedPrimaryColor} !important;
+        }
 
-      /* Selection and highlight states */
-      .chat-widget-container ::selection {
-        background-color: ${resolvedPrimaryColor}40 !important;
-      }
-    `;
-    document.head.appendChild(style);
+        /* Form controls focus states */
+        .chat-widget-container .focus-visible\\:ring-ring:focus-visible {
+          --tw-ring-color: ${resolvedPrimaryColor} !important;
+        }
+
+        /* Selection and highlight states */
+        .chat-widget-container ::selection {
+          background-color: ${resolvedPrimaryColor}40 !important;
+        }
+      `;
+      document.head.appendChild(style);
+    };
+    
+    injectThemeStyles(); // Call the function directly
 
     return () => {
       const existingStyle = document.getElementById('chat-widget-theme-styles');
