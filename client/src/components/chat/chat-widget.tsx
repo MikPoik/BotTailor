@@ -438,10 +438,10 @@ export default function ChatWidget({
 
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex) => {
-        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 120);
+        const messageBottomOffset = 90 + (visibleMessages.indexOf(messageIndex) * 140);
         return (
           <div
-            key={messageIndex}
+            key={`initial-message-${messageIndex}-${sessionId}`}
             className="absolute animate-fadeIn transition-all duration-300"
             style={{
               [position === 'bottom-right' ? 'right' : 'left']: '0',
