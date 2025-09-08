@@ -108,10 +108,7 @@ export default function ChatbotForm() {
         description: "Chatbot configuration created successfully!",
         action: (
           <div className="text-xs space-y-1">
-            <div>Embed code:</div>
-            <code className="text-xs break-all">
-              &lt;script src="{window.location.origin}/embed.js" data-chatbot="{data.guid}"&gt;&lt;/script&gt;
-            </code>
+
           </div>
         ),
       });
