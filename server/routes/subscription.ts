@@ -128,7 +128,7 @@ subscriptionRouter.post("/create-checkout-session", isAuthenticated, async (req:
 
 // Stripe webhook handler (exported for direct mounting at /api/webhook)
 export const webhookHandler = express.Router();
-webhookHandler.post("/", express.raw({ type: 'application/json' }), async (req, res) => {
+webhookHandler.post("/", async (req, res) => {
   console.log(`[STRIPE_WEBHOOK] Received webhook request`);
   console.log(`[STRIPE_WEBHOOK] Headers:`, req.headers);
   console.log(`[STRIPE_WEBHOOK] Body length:`, req.body?.length);

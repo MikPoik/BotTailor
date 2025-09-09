@@ -9,6 +9,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Handle webhook routes BEFORE JSON parsing to preserve raw body for Stripe signature verification
+app.use('/api/webhook', express.raw({ type: 'application/json' }));
+
+// Apply JSON parsing to all other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
