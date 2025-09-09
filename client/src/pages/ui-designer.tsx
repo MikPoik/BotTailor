@@ -40,7 +40,7 @@ export default function UIDesigner() {
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [prompt, setPrompt] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [currentConfig, setCurrentConfig] = useState<HomeScreenConfig | null>(null);
@@ -48,7 +48,7 @@ export default function UIDesigner() {
   const [editableConfig, setEditableConfig] = useState<string>("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [configKey, setConfigKey] = useState(0); // Force re-render key
-  
+
   // Theme color states
   const [primaryColor, setPrimaryColor] = useState<string>("#2563eb");
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
@@ -68,7 +68,7 @@ export default function UIDesigner() {
       const config = chatbot.homeScreenConfig as HomeScreenConfig;
       setCurrentConfig(config);
       setConfigKey(prev => prev + 1); // Force initial render
-      
+
       // Initialize theme colors from the loaded configuration
       if (config.theme) {
         if (config.theme.primaryColor) setPrimaryColor(config.theme.primaryColor);
@@ -93,7 +93,7 @@ export default function UIDesigner() {
     root.style.setProperty('--chat-primary-color', primaryColor);
     root.style.setProperty('--chat-background', backgroundColor);
     root.style.setProperty('--chat-text', textColor);
-    
+
     // Update editable config to reflect theme changes
     if (currentConfig) {
       const updatedConfig = {
@@ -145,12 +145,12 @@ export default function UIDesigner() {
       const endpoint = data.currentConfig 
         ? `/api/ui-designer/modify`
         : `/api/ui-designer/generate`;
-      
+
       const payload = {
         ...data,
         chatbotId: chatbot?.id
       };
-      
+
       const response = await apiRequest("POST", endpoint, payload);
       return response.json();
     },
@@ -191,7 +191,7 @@ export default function UIDesigner() {
       // Update the chatbot data in cache and refresh queries
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/guid/${guid}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${guid}`] });
-      
+
       toast({
         title: "Configuration Saved",
         description: "Your home screen design has been saved successfully!",
@@ -208,16 +208,16 @@ export default function UIDesigner() {
 
   const handleSendPrompt = async () => {
     if (!prompt.trim()) return;
-    
+
     const userMessage: ChatMessage = {
       role: 'user',
       content: prompt,
       timestamp: new Date(),
     };
-    
+
     setChatHistory(prev => [...prev, userMessage]);
     setIsGenerating(true);
-    
+
     // Include current theme colors in the prompt context
     const enhancedPrompt = `${prompt}
 
@@ -227,7 +227,7 @@ Current Theme Colors:
 - Text Color: ${textColor}
 
 Please consider these colors when generating the UI design to ensure visual consistency.`;
-    
+
     try {
       await generateUIMutation.mutateAsync({
         prompt: enhancedPrompt,
@@ -243,7 +243,7 @@ Please consider these colors when generating the UI design to ensure visual cons
       try {
         // Parse the current editable config to ensure we're saving the latest changes
         const configToSave = JSON.parse(editableConfig);
-        
+
         // Ensure theme colors from the Theme tab are included in the configuration
         configToSave.theme = {
           ...configToSave.theme,
@@ -252,7 +252,7 @@ Please consider these colors when generating the UI design to ensure visual cons
           textColor: textColor,
           backgroundImageUrl: backgroundImageUrl
         };
-        
+
         saveConfigMutation.mutate(configToSave);
       } catch (error) {
         toast({
@@ -298,7 +298,7 @@ Please consider these colors when generating the UI design to ensure visual cons
   const handleApplyAndSave = () => {
     try {
       const parsedConfig = JSON.parse(editableConfig);
-      
+
       // Ensure theme colors from the Theme tab are included in the configuration
       parsedConfig.theme = {
         ...parsedConfig.theme,
@@ -307,7 +307,7 @@ Please consider these colors when generating the UI design to ensure visual cons
         textColor: textColor,
         backgroundImageUrl: backgroundImageUrl
       };
-      
+
       setCurrentConfig(parsedConfig);
       setHasUnsavedChanges(false);
       setConfigKey(prev => prev + 1); // Force re-render
@@ -392,7 +392,7 @@ Please consider these colors when generating the UI design to ensure visual cons
 
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(80vh-200px)]">
-        
+
         {/* Left Panel - Chat & Code */}
         <div className="flex flex-col">
           <Tabs defaultValue="chat" className="flex-1 flex flex-col">
@@ -410,11 +410,11 @@ Please consider these colors when generating the UI design to ensure visual cons
                 Code
               </TabsTrigger>
             </TabsList>
-            
+
             {/* Chat Tab */}
-            <TabsContent value="chat" className="flex-1 flex flex-col">
-              <Card className="flex-1 flex flex-col">
-                <CardHeader>
+            <TabsContent value="chat" className="flex-1 flex flex-col min-h-0">
+              <Card className="flex-1 flex flex-col min-h-0">
+                <CardHeader className="flex-shrink-0">
                   <CardTitle className="flex items-center gap-2">
                     <Wand2 className="h-5 w-5" />
                     AI Designer Assistant
@@ -423,9 +423,9 @@ Please consider these colors when generating the UI design to ensure visual cons
                     Tell me what kind of home screen you want to create
                   </CardDescription>
                 </CardHeader>
-                
+
                 {/* Chat History */}
-                <CardContent className="flex-1 flex flex-col">
+                <CardContent className="flex-1 flex flex-col min-h-0">
                   <div className="flex-1 overflow-y-auto space-y-4 mb-4 min-h-0">
                     {chatHistory.length === 0 && (
                       <div className="text-center text-muted-foreground py-8">
@@ -436,7 +436,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                         </p>
                       </div>
                     )}
-                    
+
                     {chatHistory.map((message, index) => (
                       <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] rounded-lg p-3 ${
@@ -451,7 +451,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                         </div>
                       </div>
                     ))}
-                    
+
                     {isGenerating && (
                       <div className="flex justify-start">
                         <div className="bg-muted rounded-lg p-3 max-w-[80%]">
@@ -463,9 +463,9 @@ Please consider these colors when generating the UI design to ensure visual cons
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Input */}
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Input
                       placeholder="Describe your home screen design..."
                       value={prompt}
@@ -484,11 +484,11 @@ Please consider these colors when generating the UI design to ensure visual cons
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             {/* Theme Tab */}
-            <TabsContent value="theme" className="flex-1">
-              <Card className="h-full">
-                <CardHeader>
+            <TabsContent value="theme" className="flex-1 min-h-0">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-shrink-0">
                   <CardTitle className="flex items-center gap-2">
                     <Palette className="h-5 w-5" />
                     Theme Colors
@@ -497,7 +497,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                     Customize the widget colors that will be applied to your design and included in AI prompts
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="flex-1 overflow-y-auto space-y-6">
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="primary-color">Primary Color</Label>
@@ -570,7 +570,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                   </div>
 
                   <Separator />
-                  
+
                   <div className="space-y-4">
                     <div>
                       <Label>Background Image</Label>
@@ -588,7 +588,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                   </div>
 
                   <Separator />
-                  
+
                   <div className="space-y-3">
                     <h4 className="font-medium">Preview</h4>
                     <div 
@@ -623,11 +623,11 @@ Please consider these colors when generating the UI design to ensure visual cons
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             {/* Code Tab */}
-            <TabsContent value="code" className="flex-1">
-              <Card className="h-[700px]">
-                <CardHeader>
+            <TabsContent value="code" className="flex-1 min-h-0">
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <CardTitle>Configuration</CardTitle>
                     {hasUnsavedChanges && (
@@ -664,16 +664,16 @@ Please consider these colors when generating the UI design to ensure visual cons
                     Edit the JSON configuration directly. Use "Apply to Preview" to see changes, or "Apply & Save" to update and save permanently. Press Ctrl+S to save quickly.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col h-full">
+                <CardContent className="flex-1 flex flex-col min-h-0 p-6 pt-0">
                   {currentConfig ? (
                     <Textarea
                       value={editableConfig}
                       onChange={(e) => setEditableConfig(e.target.value)}
-                      className="flex-1 font-mono text-xs resize-none"
+                      className="flex-1 font-mono text-xs resize-none min-h-0"
                       placeholder="Edit your configuration here..."
                     />
                   ) : (
-                    <div className="flex-1 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
+                    <div className="flex-1 bg-muted rounded-lg flex items-center justify-center text-muted-foreground min-h-0">
                       No configuration generated yet
                     </div>
                   )}
