@@ -4,10 +4,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Bot, MessageSquare, Settings, Globe, Palette, BarChart3, Code, ExternalLink, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 
 export default function Docs() {
+  useEffect(() => {
+    // Set page title and meta description for SEO
+    document.title = "Documentation - BotTailor | Complete Guide to AI Chatbot Creation";
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Complete guide to creating, customizing, and deploying AI chatbots with BotTailor. Learn embedding, configuration, and best practices.');
+    }
+  }, []);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, codeId: string) => {
@@ -41,15 +50,15 @@ export default function Docs() {
   return (
     <div className="container max-w-6xl py-8 px-4 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="mb-8">
+      <header className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <Bot className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight">Documentation</h1>
+          <Bot className="h-8 w-8 text-primary" aria-hidden="true" />
+          <h1 className="text-3xl font-bold tracking-tight">BotTailor Documentation</h1>
         </div>
         <p className="text-muted-foreground text-lg">
-          Complete guide to creating, customizing, and deploying AI chatbots
+          Complete guide to creating, customizing, and deploying AI chatbots with our platform
         </p>
-      </div>
+      </header>
 
       {/* Quick Start */}
       <section className="mb-12">

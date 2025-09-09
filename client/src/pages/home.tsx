@@ -41,6 +41,14 @@ export default function Home() {
   });
 
   useEffect(() => {
+    // Set page title and meta description dynamically
+    document.title = "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants";
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Create intelligent, customizable AI chatbots for your website in minutes. Deploy anywhere with our powerful AI platform. No coding required - start free today!');
+    }
+
     const generateSessionId = () => {
       return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     };
@@ -58,13 +66,13 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen relative">
       {/* Hero Section */}
-      <section className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 md:py-24">
+      <section className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 md:py-24" role="banner">
         <div className="container max-w-6xl text-center">
-          <div className="mb-8">
+          <header className="mb-8">
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <Bot className="h-20 w-20 text-primary" />
-                <Sparkles className="h-6 w-6 text-yellow-500 absolute -top-1 -right-1 animate-pulse" />
+                <Bot className="h-20 w-20 text-primary" aria-hidden="true" />
+                <Sparkles className="h-6 w-6 text-yellow-500 absolute -top-1 -right-1 animate-pulse" aria-hidden="true" />
               </div>
             </div>
             <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl mb-6">
@@ -72,7 +80,7 @@ export default function Home() {
               <br />
               <span className="text-primary">Made Simple</span>
             </h1>
-          </div>
+          </header>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Create intelligent, customizable chatbots that understand your business. 
             Deploy anywhere in minutes with our powerful AI platform.
@@ -114,19 +122,19 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-16 md:py-24 bg-muted/30 px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-16 md:py-24 bg-muted/30 px-4 sm:px-6 lg:px-8" itemScope itemType="https://schema.org/ItemList">
         <div className="container max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <header className="text-center mb-16">
             <Badge variant="outline" className="mb-4">
               Powerful Features
             </Badge>
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl mb-4">
+            <h2 className="text-3xl font-bold tracking-tight md:text-5xl mb-4" itemProp="name">
               Everything you need for intelligent conversations
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto" itemProp="description">
               Build chatbots that actually understand your customers and provide real value
             </p>
-          </div>
+          </header>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto">
             <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
@@ -281,6 +289,66 @@ export default function Home() {
                 <p className="text-muted-foreground">
                   Get immediate answers to your questions. No waiting, 
                   no phone queues, just instant intelligent assistance.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8" itemScope itemType="https://schema.org/FAQPage">
+        <div className="container max-w-4xl mx-auto">
+          <header className="text-center mb-12">
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Get answers to common questions about BotTailor AI chatbots
+            </p>
+          </header>
+          
+          <div className="grid gap-6">
+            <Card itemScope itemType="https://schema.org/Question">
+              <CardHeader>
+                <CardTitle itemProp="name">How quickly can I create a chatbot?</CardTitle>
+              </CardHeader>
+              <CardContent itemScope itemType="https://schema.org/Answer">
+                <p itemProp="text" className="text-muted-foreground">
+                  You can create and deploy a fully functional AI chatbot in under 5 minutes. Our intuitive setup wizard guides you through the entire process, from configuration to deployment.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card itemScope itemType="https://schema.org/Question">
+              <CardHeader>
+                <CardTitle itemProp="name">Do I need coding skills to use BotTailor?</CardTitle>
+              </CardHeader>
+              <CardContent itemScope itemType="https://schema.org/Answer">
+                <p itemProp="text" className="text-muted-foreground">
+                  No coding required! Our visual builder and drag-and-drop interface make it easy for anyone to create professional chatbots. Advanced users can access additional configuration options.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card itemScope itemType="https://schema.org/Question">
+              <CardHeader>
+                <CardTitle itemProp="name">Can I customize the chatbot's appearance?</CardTitle>
+              </CardHeader>
+              <CardContent itemScope itemType="https://schema.org/Answer">
+                <p itemProp="text" className="text-muted-foreground">
+                  Absolutely! Customize colors, upload custom avatars, add background images, and match your brand perfectly. The chatbot adapts to your website's design seamlessly.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card itemScope itemType="https://schema.org/Question">
+              <CardHeader>
+                <CardTitle itemProp="name">What websites can I embed the chatbot on?</CardTitle>
+              </CardHeader>
+              <CardContent itemScope itemType="https://schema.org/Answer">
+                <p itemProp="text" className="text-muted-foreground">
+                  BotTailor works on any website - WordPress, Shopify, custom HTML sites, and more. Simply copy our one-line embed code and paste it into your website.
                 </p>
               </CardContent>
             </Card>

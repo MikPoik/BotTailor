@@ -14,19 +14,19 @@ function findStaticFilePath(filename: string): string | null {
   if (fs.existsSync(prodPath)) {
     return prodPath;
   }
-  
+
   // Try development path (public)
   const devPath = path.resolve(__dirname, '../../public', filename);
   if (fs.existsSync(devPath)) {
     return devPath;
   }
-  
+
   // Try alternative production path (./public relative to server)
   const altProdPath = path.resolve(__dirname, '../public', filename);
   if (fs.existsSync(altProdPath)) {
     return altProdPath;
   }
-  
+
   return null;
 }
 
@@ -35,7 +35,7 @@ export function setupPublicRoutes(app: Express) {
   // Serve embed.js static file (handle both with and without trailing slash)
   app.get('/embed.js', (req: Request, res: Response) => {
     const embedPath = findStaticFilePath('embed.js');
-    
+
     if (embedPath) {
       res.setHeader('Content-Type', 'application/javascript');
       res.setHeader('Cache-Control', 'no-cache');
@@ -53,7 +53,7 @@ export function setupPublicRoutes(app: Express) {
   // Handle trailing slash version as well
   app.get('/embed.js/', (req: Request, res: Response) => {
     const embedPath = findStaticFilePath('embed.js');
-    
+
     if (embedPath) {
       res.setHeader('Content-Type', 'application/javascript');
       res.setHeader('Cache-Control', 'no-cache');
@@ -71,7 +71,7 @@ export function setupPublicRoutes(app: Express) {
   // Serve embed.css static file
   app.get('/embed.css', (req: Request, res: Response) => {
     const embedCssPath = findStaticFilePath('embed.css');
-    
+
     if (embedCssPath) {
       res.setHeader('Content-Type', 'text/css');
       res.sendFile(embedCssPath);
@@ -91,7 +91,7 @@ export function setupPublicRoutes(app: Express) {
       const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
 
       if (!defaultGuid || !defaultUserId) {
-        return res.status(404).json({ 
+        return res.status(404).json({
           message: "Default chatbot not configured",
           hint: "Set DEFAULT_SITE_CHATBOT_GUID and DEFAULT_SITE_ADMIN_USER_ID environment variables"
         });
@@ -101,7 +101,7 @@ export function setupPublicRoutes(app: Express) {
 
       const chatbotConfig = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
       if (!chatbotConfig) {
-        return res.status(404).json({ 
+        return res.status(404).json({
           message: "Default chatbot configuration not found",
           hint: `No chatbot found with GUID ${defaultGuid} for user ${defaultUserId}`
         });
@@ -178,8 +178,8 @@ export function setupPublicRoutes(app: Express) {
 
       // Determine path to static files based on environment
       const isProduction = process.env.NODE_ENV === 'production';
-      const staticPath = isProduction ? 
-        path.join(__dirname, '../../../dist/public') : 
+      const staticPath = isProduction ?
+        path.join(__dirname, '../../../dist/public') :
         path.join(__dirname, '../../public');
 
       const embedPath = path.join(staticPath, 'embed.html');
@@ -220,18 +220,18 @@ export function setupPublicRoutes(app: Express) {
   // Only match very specific patterns to avoid interfering with valid routes
   app.get("/:userId/:chatbotGuid", (req: Request, res: Response, next: NextFunction) => {
     const { userId, chatbotGuid } = req.params;
-    
+
     // Only apply this guard to requests that look exactly like widget URLs
     // User ID should be numeric (5+ digits), chatbot GUID should be UUID format
     const userIdRegex = /^\d{5,}$/; // At least 5 digits to avoid false matches
     const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    
+
     // Also check that this isn't an API call or other known route
     const path = req.path;
     if (path.startsWith('/api/') || path.startsWith('/embed') || path.startsWith('/static/')) {
       return next(); // Let other routes handle these
     }
-    
+
     if (userIdRegex.test(userId) && guidRegex.test(chatbotGuid)) {
       // This looks like an incorrect widget URL - return 404 with helpful message
       res.status(404).json({
@@ -242,7 +242,7 @@ export function setupPublicRoutes(app: Express) {
       });
       return;
     }
-    
+
     // If it doesn't match the widget pattern, continue to next middleware
     next();
   });
@@ -294,7 +294,7 @@ export function setupPublicRoutes(app: Express) {
           // Try different possible paths
           const alternativePaths = [
             path.resolve(__dirname, "./public/index.html"),
-            path.resolve(__dirname, "../public/index.html"), 
+            path.resolve(__dirname, "../public/index.html"),
             path.resolve(__dirname, "dist/public/index.html"),
             path.resolve(process.cwd(), "dist/public/index.html")
           ];

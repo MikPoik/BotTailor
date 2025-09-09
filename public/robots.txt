@@ -1,0 +1,14 @@
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://your-domain.com/sitemap.xml
+
+# Block admin and API routes from indexing
+Disallow: /api/
+Disallow: /dashboard/admin/
+Disallow: /admin/
+
+# Allow specific public endpoints
+Allow: /api/public/
