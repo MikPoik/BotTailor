@@ -230,14 +230,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.log(`[STRIPE_WEBHOOK] Retrieved subscription status: ${stripeSubscription.status}`);
 
     // Create or update subscription in database
+    console.log(`[STRIPE_WEBHOOK] Raw subscription data - currentPeriodStart: ${stripeSubscription.currentPeriodStart}, currentPeriodEnd: ${stripeSubscription.currentPeriodEnd}`);
+    
+    // Safely convert timestamps to dates
+    const currentPeriodStart = stripeSubscription.currentPeriodStart 
+      ? new Date(stripeSubscription.currentPeriodStart * 1000)
+      : null;
+    const currentPeriodEnd = stripeSubscription.currentPeriodEnd 
+      ? new Date(stripeSubscription.currentPeriodEnd * 1000)
+      : null;
+      
+    console.log(`[STRIPE_WEBHOOK] Converted dates - start: ${currentPeriodStart}, end: ${currentPeriodEnd}`);
+    
     const subscriptionData = {
       userId,
       planId: parseInt(planId),
       stripeSubscriptionId: stripeSubscription.id,
       stripeCustomerId: stripeSubscription.customer as string,
       status: stripeSubscription.status,
-      currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+      currentPeriodStart,
+      currentPeriodEnd,
       messagesUsedThisMonth: 0,
     };
 
@@ -270,17 +282,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
     console.log('[STRIPE_WEBHOOK] Processing customer.subscription.updated');
+    console.log(`[STRIPE_WEBHOOK] Subscription periods - start: ${subscription.currentPeriodStart}, end: ${subscription.currentPeriodEnd}`);
     
     const updateData = {
       status: subscription.status,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      currentPeriodStart: subscription.currentPeriodStart 
+        ? new Date(subscription.currentPeriodStart * 1000) 
+        : null,
+      currentPeriodEnd: subscription.currentPeriodEnd 
+        ? new Date(subscription.currentPeriodEnd * 1000) 
+        : null,
     };
 
     await storage.updateSubscriptionByStripeId(subscription.id, updateData);
     console.log(`[STRIPE_WEBHOOK] Subscription ${subscription.id} updated`);
   } catch (error) {
     console.error('Error handling subscription updated:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
   }
 }
 
