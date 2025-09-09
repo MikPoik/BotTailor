@@ -699,7 +699,7 @@ Please consider these colors when generating the UI design to ensure visual cons
             </CardHeader>
             <CardContent className="p-0">
               <div className="border rounded-lg overflow-hidden bg-background">
-                <div className="h-[700px] overflow-y-auto">
+                <div className="h-[800px] overflow-y-auto">
                   {currentConfig ? (
                     <DynamicHomeScreen 
                       key={configKey}
