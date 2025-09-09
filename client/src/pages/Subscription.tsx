@@ -219,15 +219,17 @@ export default function Subscription() {
               </CardContent>
 
               <CardFooter>
-                <Button
-                  className="w-full"
-                  variant={isPremium ? "default" : "outline"}
-                  onClick={() => handleSubscribe(plan.id)}
-                  disabled={isCurrentPlan || isLoading}
-                >
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isCurrentPlan ? 'Current Plan' : 'Subscribe Now'}
-                </Button>
+                {plan.name !== 'Free' && (
+                  <Button
+                    className="w-full"
+                    variant={isPremium ? "default" : "outline"}
+                    onClick={() => handleSubscribe(plan.id)}
+                    disabled={isCurrentPlan || isLoading}
+                  >
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isCurrentPlan ? 'Current Plan' : 'Subscribe Now'}
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           );
