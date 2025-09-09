@@ -74,6 +74,12 @@ When creating survey launchers, use:
 ## Response Format:
 Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No additional text or explanation.
 
+**CRITICAL REQUIREMENTS:**
+- Every component MUST have an "id" field (unique string identifier)
+- Every component MUST have an "order" field (numeric position starting from 1)
+- Every component MUST have a "visible" field (boolean, typically true)
+- Every component MUST have a "type" field matching the available types
+
 Generate engaging home screen layouts based on the user's requirements.`;
   console.log(`[UI Designer] System prompt: ${createSystemPrompt()}`);
 }
@@ -134,7 +140,18 @@ export async function generateHomeScreenConfig(
 
     // Add some basic validation and cleanup before schema validation
     if (parsedConfig.components) {
-      parsedConfig.components.forEach((component: any) => {
+      parsedConfig.components.forEach((component: any, index: number) => {
+        // Ensure required component fields exist
+        if (!component.id) {
+          component.id = `${component.type}_${Date.now()}_${index}`;
+        }
+        if (typeof component.order !== 'number') {
+          component.order = index + 1;
+        }
+        if (typeof component.visible !== 'boolean') {
+          component.visible = true;
+        }
+        
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {
             // Ensure description exists for actions
@@ -266,7 +283,18 @@ Return the updated complete configuration.`,
 
     // Add the same cleanup logic as in generateHomeScreenConfig
     if (parsedConfig.components) {
-      parsedConfig.components.forEach((component: any) => {
+      parsedConfig.components.forEach((component: any, index: number) => {
+        // Ensure required component fields exist
+        if (!component.id) {
+          component.id = `${component.type}_${Date.now()}_${index}`;
+        }
+        if (typeof component.order !== 'number') {
+          component.order = index + 1;
+        }
+        if (typeof component.visible !== 'boolean') {
+          component.visible = true;
+        }
+        
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {
             if (!action.description) {
