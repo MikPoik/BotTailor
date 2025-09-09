@@ -326,7 +326,7 @@ export default function Home() {
               </CardHeader>
               <CardContent itemScope itemType="https://schema.org/Answer">
                 <p itemProp="text" className="text-muted-foreground">
-                  No coding required! Our visual builder and drag-and-drop interface make it easy for anyone to create professional chatbots. Advanced users can access additional configuration options.
+                  No coding required! Our AI builder interface makes it easy for anyone to create professional chatbots. Advanced users can access additional configuration options.
                 </p>
               </CardContent>
             </Card>

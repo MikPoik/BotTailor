@@ -648,8 +648,8 @@ export class DatabaseStorage implements IStorage {
     const subscription = await this.getUserSubscriptionWithPlan(userId);
 
     if (!subscription) {
-      // No subscription means no access, temporarily allow 2 bots for free tier
-      return true;
+      // No subscription means no access
+      return false;
     }
 
     // Count current bots
