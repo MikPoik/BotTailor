@@ -74,7 +74,7 @@ export default function ChatbotTest() {
 
   if (!chatbot) {
     return (
-      <div className="container max-w-4xl py-8">
+      <div className="container max-w-4xl mx-auto py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Chatbot Not Found</h1>
           <p className="text-muted-foreground mb-4">
@@ -104,7 +104,7 @@ export default function ChatbotTest() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-6xl py-8 px-4 sm:px-6 lg:px-8">
+      <div className="container max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">

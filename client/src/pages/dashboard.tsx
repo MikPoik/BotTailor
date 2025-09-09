@@ -120,7 +120,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container max-w-7xl py-8 px-4 sm:px-6 lg:px-8">
+    <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">

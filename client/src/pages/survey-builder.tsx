@@ -319,7 +319,7 @@ export default function SurveyBuilderPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="container max-w-4xl py-8">
+      <div className="container max-w-4xl mx-auto py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
           <p className="text-muted-foreground">Please log in to access the survey builder.</p>
@@ -338,7 +338,7 @@ export default function SurveyBuilderPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl py-8 px-4 sm:px-6 lg:px-8">
+      <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">

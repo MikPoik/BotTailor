@@ -26,7 +26,7 @@ export function Navbar() {
   if (isLoading) {
     return (
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
+        <div className="container mx-auto flex h-14 items-center">
           <div className="mr-4 flex">
             <Link href="/" className="mr-6 flex items-center space-x-2">
               <Bot className="h-6 w-6" />
@@ -45,7 +45,7 @@ export function Navbar() {
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+      <div className="container mx-auto flex h-14 items-center">
         {/* Logo */}
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
@@ -166,7 +166,7 @@ export function Navbar() {
       {/* Mobile Menu */}
       {isMobile && isMenuOpen && (
         <div className="border-t bg-background/95 backdrop-blur">
-          <div className="container py-4 space-y-3">
+          <div className="container mx-auto py-4 space-y-3">
             {isAuthenticated ? (
               <>
                 <Link
