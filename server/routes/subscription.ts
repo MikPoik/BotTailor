@@ -130,16 +130,12 @@ subscriptionRouter.post("/create-checkout-session", isAuthenticated, async (req:
 export const webhookHandler = express.Router();
 webhookHandler.post("/", async (req, res) => {
   console.log(`[STRIPE_WEBHOOK] Received webhook request`);
-  console.log(`[STRIPE_WEBHOOK] Headers:`, req.headers);
-  console.log(`[STRIPE_WEBHOOK] Body length:`, req.body?.length);
   
   try {
     const stripeClient = initializeStripe();
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    console.log(`[STRIPE_WEBHOOK] Signature present:`, !!sig);
-    console.log(`[STRIPE_WEBHOOK] Webhook secret present:`, !!webhookSecret);
 
     if (!sig || !webhookSecret) {
       console.error("[STRIPE_WEBHOOK] Missing signature or webhook secret");
@@ -150,38 +146,31 @@ webhookHandler.post("/", async (req, res) => {
 
     try {
       event = stripeClient.webhooks.constructEvent(req.body, sig, webhookSecret);
-      console.log(`[STRIPE_WEBHOOK] Signature verification successful`);
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
       return res.status(400).json({ error: "Invalid signature" });
     }
 
     console.log(`[STRIPE_WEBHOOK] Processing event: ${event.type}, ID: ${event.id}`);
-    console.log(`[STRIPE_WEBHOOK] Event data keys:`, Object.keys(event.data.object));
 
     switch (event.type) {
       case 'checkout.session.completed':
-        console.log(`[STRIPE_WEBHOOK] Handling checkout.session.completed`);
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
         break;
 
       case 'customer.subscription.updated':
-        console.log(`[STRIPE_WEBHOOK] Handling customer.subscription.updated`);
         await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
         break;
 
       case 'customer.subscription.deleted':
-        console.log(`[STRIPE_WEBHOOK] Handling customer.subscription.deleted`);
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
 
       case 'invoice.payment_succeeded':
-        console.log(`[STRIPE_WEBHOOK] Handling invoice.payment_succeeded`);
         await handlePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
 
       case 'invoice.payment_failed':
-        console.log(`[STRIPE_WEBHOOK] Handling invoice.payment_failed`);
         await handlePaymentFailed(event.data.object as Stripe.Invoice);
         break;
 
@@ -189,11 +178,9 @@ webhookHandler.post("/", async (req, res) => {
         console.log(`[STRIPE_WEBHOOK] Unhandled event type: ${event.type}`);
     }
 
-    console.log(`[STRIPE_WEBHOOK] Event ${event.type} processed successfully`);
     res.json({ received: true });
   } catch (error) {
     console.error("Error processing webhook:", error);
-    console.error("Error stack:", error.stack);
     res.status(500).json({ error: "Webhook processing failed" });
   }
 });
@@ -201,18 +188,11 @@ webhookHandler.post("/", async (req, res) => {
 // Webhook event handlers
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   try {
-    console.log('[STRIPE_WEBHOOK] Processing checkout.session.completed');
-    console.log('[STRIPE_WEBHOOK] Session ID:', session.id);
-    console.log('[STRIPE_WEBHOOK] Session metadata:', session.metadata);
-    console.log('[STRIPE_WEBHOOK] Session subscription ID:', session.subscription);
-    
     const userId = session.metadata?.userId;
     const planId = session.metadata?.planId;
 
-    console.log(`[STRIPE_WEBHOOK] Extracted userId: ${userId}, planId: ${planId}`);
-
     if (!userId || !planId) {
-      console.error('Missing metadata in checkout session:', { userId, planId, metadata: session.metadata });
+      console.error('[STRIPE_WEBHOOK] Missing metadata in checkout session:', { userId, planId });
       return;
     }
 
@@ -223,16 +203,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       return;
     }
 
-    console.log(`[STRIPE_WEBHOOK] Retrieving Stripe subscription: ${session.subscription}`);
     const stripeSubscription = await stripeClient.subscriptions.retrieve(
       session.subscription as string
     );
-    console.log(`[STRIPE_WEBHOOK] Retrieved subscription status: ${stripeSubscription.status}`);
-
-    // Create or update subscription in database
-    console.log(`[STRIPE_WEBHOOK] Raw subscription data - current_period_start: ${(stripeSubscription as any).current_period_start}, current_period_end: ${(stripeSubscription as any).current_period_end}`);
-    
-    // Safely convert timestamps to dates (using snake_case property names from Stripe)
+    // Convert timestamps to dates (using snake_case property names from Stripe)
     const currentPeriodStart = (stripeSubscription as any).current_period_start 
       ? new Date((stripeSubscription as any).current_period_start * 1000)
       : null;
@@ -240,7 +214,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       ? new Date((stripeSubscription as any).current_period_end * 1000)
       : null;
       
-    console.log(`[STRIPE_WEBHOOK] Converted dates - start: ${currentPeriodStart}, end: ${currentPeriodEnd}`);
     
     const subscriptionData = {
       userId,
@@ -253,37 +226,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       messagesUsedThisMonth: 0,
     };
 
-    console.log(`[STRIPE_WEBHOOK] Subscription data to save:`, subscriptionData);
-
     // Check if subscription already exists
-    console.log(`[STRIPE_WEBHOOK] Checking for existing subscription for user: ${userId}`);
     const existingSubscription = await storage.getUserSubscription(userId);
-    console.log(`[STRIPE_WEBHOOK] Existing subscription found:`, !!existingSubscription);
     
     if (existingSubscription) {
-      console.log(`[STRIPE_WEBHOOK] Updating existing subscription ID: ${existingSubscription.id}`);
       await storage.updateSubscription(existingSubscription.id, subscriptionData);
-      console.log(`[STRIPE_WEBHOOK] Subscription updated successfully`);
     } else {
-      console.log(`[STRIPE_WEBHOOK] Creating new subscription`);
-      const newSubscription = await storage.createSubscription(subscriptionData);
-      console.log(`[STRIPE_WEBHOOK] New subscription created with ID: ${newSubscription.id}`);
+      await storage.createSubscription(subscriptionData);
     }
 
     console.log(`[STRIPE_WEBHOOK] Subscription created/updated for user ${userId}`);
   } catch (error) {
     console.error('Error handling checkout completed:', error);
-    console.error('Error details:', error.message);
-    console.error('Error stack:', error.stack);
     throw error; // Re-throw to ensure webhook returns error status
   }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
-    console.log('[STRIPE_WEBHOOK] Processing customer.subscription.updated');
-    console.log(`[STRIPE_WEBHOOK] Subscription periods - start: ${(subscription as any).current_period_start}, end: ${(subscription as any).current_period_end}`);
-    
     // Get current subscription from database to check if billing period changed
     const existingSubscription = await storage.getSubscriptionByStripeId(subscription.id);
     
@@ -317,8 +277,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     console.log(`[STRIPE_WEBHOOK] Subscription ${subscription.id} updated${shouldResetMessageCount ? ' (message count reset)' : ''}`);
   } catch (error) {
     console.error('Error handling subscription updated:', error);
-    console.error('Error details:', error.message);
-    console.error('Error stack:', error.stack);
   }
 }
 
@@ -363,8 +321,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     }
   } catch (error) {
     console.error('Error handling payment succeeded:', error);
-    console.error('Error details:', error.message);
-    console.error('Error stack:', error.stack);
   }
 }
 
@@ -372,8 +328,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
     console.log('[STRIPE_WEBHOOK] Processing invoice.payment_failed');
     
-    if (invoice.subscription) {
-      await storage.updateSubscriptionByStripeId(invoice.subscription as string, {
+    if ((invoice as any).subscription) {
+      await storage.updateSubscriptionByStripeId((invoice as any).subscription as string, {
         status: 'past_due',
       });
     }
@@ -393,8 +349,8 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
       {
         name: "Basic",
         description: "Perfect for getting started with chatbots",
-        stripePriceId: process.env.PRICE_SUB_BASIC, // Replace with actual Stripe price ID
-        stripeProductId: process.env.PROD_SUB_BASIC, // Replace with actual Stripe product ID
+        stripePriceId: process.env.PRICE_SUB_BASIC || '', // Replace with actual Stripe price ID
+        stripeProductId: process.env.PROD_SUB_BASIC || '', // Replace with actual Stripe product ID
         price: 999, // $9.99
         currency: "usd",
         billingInterval: "month",
