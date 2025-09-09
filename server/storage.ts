@@ -107,6 +107,7 @@ export interface IStorage {
   resetMonthlyMessageUsage(userId: string): Promise<void>;
   checkBotLimit(userId: string): Promise<boolean>;
   checkMessageLimit(userId: string): Promise<boolean>;
+  getOrCreateFreeSubscription(userId: string): Promise<Subscription & { plan: SubscriptionPlan }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -643,13 +644,43 @@ export class DatabaseStorage implements IStorage {
       .where(eq(subscriptions.userId, userId));
   }
 
+  async getOrCreateFreeSubscription(userId: string): Promise<Subscription & { plan: SubscriptionPlan }> {
+    // First check if user already has a subscription
+    const existing = await this.getUserSubscriptionWithPlan(userId);
+    if (existing) {
+      return existing;
+    }
+
+    // Get the free plan
+    const freePlan = await db.select().from(subscriptionPlans)
+      .where(eq(subscriptionPlans.name, 'Free'))
+      .limit(1);
+    
+    if (!freePlan || freePlan.length === 0) {
+      throw new Error('Free subscription plan not found');
+    }
+
+    // Create free subscription for user
+    const subscription = await this.createSubscription({
+      userId,
+      planId: freePlan[0].id,
+      status: 'active',
+      messagesUsedThisMonth: 0
+    });
+
+    return {
+      ...subscription,
+      plan: freePlan[0]
+    };
+  }
+
   async checkBotLimit(userId: string): Promise<boolean> {
-    // Get user's current subscription with plan
-    const subscription = await this.getUserSubscriptionWithPlan(userId);
+    // Get user's current subscription with plan, or create free subscription
+    let subscription = await this.getUserSubscriptionWithPlan(userId);
 
     if (!subscription) {
-      // No subscription means no access
-      return false;
+      // Auto-assign free subscription for new users
+      subscription = await this.getOrCreateFreeSubscription(userId);
     }
 
     // Count current bots
@@ -664,12 +695,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkMessageLimit(userId: string): Promise<boolean> {
-    // Get user's current subscription with plan
-    const subscription = await this.getUserSubscriptionWithPlan(userId);
+    // Get user's current subscription with plan, or create free subscription
+    let subscription = await this.getUserSubscriptionWithPlan(userId);
 
     if (!subscription) {
-      // No subscription means no access
-      return false;
+      // Auto-assign free subscription for new users
+      subscription = await this.getOrCreateFreeSubscription(userId);
     }
 
     // Check if under limit (-1 means unlimited)
@@ -677,7 +708,8 @@ export class DatabaseStorage implements IStorage {
       return true;
     }
 
-    return subscription.messagesUsedThisMonth < subscription.plan.maxMessagesPerMonth;
+    const messagesUsed = subscription.messagesUsedThisMonth || 0;
+    return messagesUsed < subscription.plan.maxMessagesPerMonth;
   }
 }
 
