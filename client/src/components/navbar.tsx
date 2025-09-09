@@ -56,24 +56,27 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        {!isMobile && isAuthenticated && (
-          <div className="mr-4 flex items-center space-x-4 md:mr-6">
-            <Button variant="ghost" asChild>
-              <Link href="/docs">Documentation</Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/subscription">Subscription</Link>
-            </Button>
-          </div>
-        )}
+        {/* Spacer to push content to center and right */}
+        <div className="flex flex-1 items-center justify-center">
+          {/* Desktop Navigation - Centered */}
+          {!isMobile && isAuthenticated && (
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" asChild>
+                <Link href="/docs">Documentation</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/subscription">Subscription</Link>
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Desktop User Menu */}
         {!isMobile && (
-          <div className="flex flex-1 items-center justify-end space-x-2">
+          <div className="flex items-center space-x-2">
              <ThemeToggle />
             {!isAuthenticated ? (
               <Button asChild>
