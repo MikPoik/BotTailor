@@ -150,7 +150,7 @@ export default function ChatbotForm() {
     
 
   return (
-    <div className="container max-w-4xl py-8 px-4 sm:px-6 lg:px-8">
+    <div className="container max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">

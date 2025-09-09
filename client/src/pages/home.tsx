@@ -67,7 +67,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen relative">
       {/* Hero Section */}
       <section className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 md:py-24" role="banner">
-        <div className="container max-w-6xl text-center">
+        <div className="container max-w-6xl mx-auto text-center">
           <header className="mb-8">
             <div className="flex justify-center mb-6">
               <div className="relative">
