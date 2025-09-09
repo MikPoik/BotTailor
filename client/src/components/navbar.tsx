@@ -45,9 +45,9 @@ export function Navbar() {
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+      <div className="container flex h-14 items-center justify-center">
         {/* Logo */}
-        <div className="mr-4 flex items-center">
+        <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Bot className="h-6 w-6" />
             <span className="font-bold">
@@ -58,7 +58,7 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         {!isMobile && isAuthenticated && (
-          <div className="mr-4 flex items-center space-x-4 md:mr-6">
+          <div className="ml-8 flex items-center space-x-4">
             <Button variant="ghost" asChild>
               <Link href="/docs">Documentation</Link>
             </Button>
@@ -71,21 +71,9 @@ export function Navbar() {
           </div>
         )}
 
-        {/* Mobile Menu Button */}
-        {isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleMenu}
-            className="ml-auto mr-2"
-          >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        )}
-
         {/* Desktop User Menu */}
         {!isMobile && (
-          <div className="flex flex-1 items-center justify-end space-x-2">
+          <div className="ml-8 flex items-center space-x-2">
              <ThemeToggle />
             {!isAuthenticated ? (
               <Button asChild>
@@ -142,9 +130,21 @@ export function Navbar() {
           </div>
         )}
 
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleMenu}
+            className="absolute right-4"
+          >
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        )}
+
         {/* Mobile User Avatar */}
         {isMobile && isAuthenticated && (
-          <Avatar className="h-8 w-8 ml-auto">
+          <Avatar className="h-8 w-8 absolute right-16">
             <AvatarImage src={user?.profileImageUrl || ""} alt={user?.email || ""} />
             <AvatarFallback>
               {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
@@ -154,7 +154,7 @@ export function Navbar() {
 
         {/* Mobile Login Button */}
         {isMobile && !isAuthenticated && (
-          <Button asChild className="ml-auto">
+          <Button asChild className="absolute right-16">
             <a href="/api/login">Log In</a>
           </Button>
         )}
