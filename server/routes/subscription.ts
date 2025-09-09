@@ -284,18 +284,37 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     console.log('[STRIPE_WEBHOOK] Processing customer.subscription.updated');
     console.log(`[STRIPE_WEBHOOK] Subscription periods - start: ${subscription.currentPeriodStart}, end: ${subscription.currentPeriodEnd}`);
     
+    // Get current subscription from database to check if billing period changed
+    const existingSubscription = await storage.getSubscriptionByStripeId(subscription.id);
+    
+    const newPeriodStart = subscription.currentPeriodStart 
+      ? new Date(subscription.currentPeriodStart * 1000) 
+      : null;
+    const newPeriodEnd = subscription.currentPeriodEnd 
+      ? new Date(subscription.currentPeriodEnd * 1000) 
+      : null;
+    
+    let shouldResetMessageCount = false;
+    
+    // Check if billing period has changed (new billing cycle started)
+    if (existingSubscription && existingSubscription.currentPeriodStart && newPeriodStart) {
+      const existingPeriodStart = new Date(existingSubscription.currentPeriodStart);
+      if (newPeriodStart.getTime() !== existingPeriodStart.getTime()) {
+        shouldResetMessageCount = true;
+        console.log(`[STRIPE_WEBHOOK] New billing cycle detected - resetting message count`);
+        console.log(`[STRIPE_WEBHOOK] Previous period: ${existingPeriodStart}, New period: ${newPeriodStart}`);
+      }
+    }
+    
     const updateData = {
       status: subscription.status,
-      currentPeriodStart: subscription.currentPeriodStart 
-        ? new Date(subscription.currentPeriodStart * 1000) 
-        : null,
-      currentPeriodEnd: subscription.currentPeriodEnd 
-        ? new Date(subscription.currentPeriodEnd * 1000) 
-        : null,
+      currentPeriodStart: newPeriodStart,
+      currentPeriodEnd: newPeriodEnd,
+      ...(shouldResetMessageCount && { messagesUsedThisMonth: 0 })
     };
 
     await storage.updateSubscriptionByStripeId(subscription.id, updateData);
-    console.log(`[STRIPE_WEBHOOK] Subscription ${subscription.id} updated`);
+    console.log(`[STRIPE_WEBHOOK] Subscription ${subscription.id} updated${shouldResetMessageCount ? ' (message count reset)' : ''}`);
   } catch (error) {
     console.error('Error handling subscription updated:', error);
     console.error('Error details:', error.message);
