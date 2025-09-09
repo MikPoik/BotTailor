@@ -79,6 +79,28 @@ Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No add
 - Every component MUST have an "order" field (numeric position starting from 1)
 - Every component MUST have a "visible" field (boolean, typically true)
 - Every component MUST have a "type" field matching the available types
+- Every component MUST have a "props" field (object with component-specific properties)
+- The root object MUST have a "components" field (array of components)
+- The root object MUST have a "version" field (string, typically "1.0")
+
+**EXAMPLE STRUCTURE:**
+{
+  "version": "1.0",
+  "components": [
+    {
+      "id": "header_1",
+      "type": "header",
+      "props": {
+        "title": "Welcome",
+        "subtitle": "How can we help?"
+      },
+      "order": 1,
+      "visible": true
+    }
+  ],
+  "theme": {},
+  "settings": {}
+}
 
 Generate engaging home screen layouts based on the user's requirements.`;
   console.log(`[UI Designer] System prompt: ${createSystemPrompt()}`);
@@ -109,7 +131,7 @@ export async function generateHomeScreenConfig(
       availableSurveys = surveyResults.map((survey) => ({
         id: survey.id,
         name: survey.name,
-        title: survey.surveyConfig?.title || survey.name,
+        title: (survey.surveyConfig as any)?.title || survey.name,
         description: survey.description,
       }));
     }
@@ -138,18 +160,28 @@ export async function generateHomeScreenConfig(
     // Parse and validate the response
     const parsedConfig = JSON.parse(jsonResponse);
 
+    // Ensure components array exists
+    if (!parsedConfig.components || !Array.isArray(parsedConfig.components)) {
+      parsedConfig.components = [];
+    }
+
     // Add some basic validation and cleanup before schema validation
     if (parsedConfig.components) {
       parsedConfig.components.forEach((component: any, index: number) => {
         // Ensure required component fields exist
         if (!component.id) {
-          component.id = `${component.type}_${Date.now()}_${index}`;
+          component.id = `${component.type || 'component'}_${Date.now()}_${index}`;
         }
         if (typeof component.order !== 'number') {
           component.order = index + 1;
         }
         if (typeof component.visible !== 'boolean') {
           component.visible = true;
+        }
+        
+        // Ensure props object exists
+        if (!component.props) {
+          component.props = {};
         }
         
         if (component.props?.actions) {
@@ -238,7 +270,7 @@ export async function modifyHomeScreenConfig(
       availableSurveys = surveyResults.map((survey) => ({
         id: survey.id,
         name: survey.name,
-        title: survey.surveyConfig?.title || survey.name,
+        title: (survey.surveyConfig as any)?.title || survey.name,
         description: survey.description,
       }));
     }
@@ -281,18 +313,28 @@ Return the updated complete configuration.`,
     // Parse and validate the response
     const parsedConfig = JSON.parse(jsonResponse);
 
+    // Ensure components array exists
+    if (!parsedConfig.components || !Array.isArray(parsedConfig.components)) {
+      parsedConfig.components = [];
+    }
+
     // Add the same cleanup logic as in generateHomeScreenConfig
     if (parsedConfig.components) {
       parsedConfig.components.forEach((component: any, index: number) => {
         // Ensure required component fields exist
         if (!component.id) {
-          component.id = `${component.type}_${Date.now()}_${index}`;
+          component.id = `${component.type || 'component'}_${Date.now()}_${index}`;
         }
         if (typeof component.order !== 'number') {
           component.order = index + 1;
         }
         if (typeof component.visible !== 'boolean') {
           component.visible = true;
+        }
+        
+        // Ensure props object exists
+        if (!component.props) {
+          component.props = {};
         }
         
         if (component.props?.actions) {
