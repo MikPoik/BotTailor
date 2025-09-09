@@ -25,7 +25,7 @@ export default function Docs() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const embedCode = `<script src="https://your-domain.com/embed.js"></script>
+  const embedCode = `<script src="https://bottailor.com/embed.js"></script>
 <script>
   ChatWidget.init({
     chatbotId: 'YOUR_CHATBOT_GUID',
@@ -34,7 +34,7 @@ export default function Docs() {
   });
 </script>`;
 
-  const advancedEmbedCode = `<script src="https://your-domain.com/embed.js"></script>
+  const advancedEmbedCode = `<script src="https://bottailor.com/embed.js"></script>
 <script>
   ChatWidget.init({
     chatbotId: 'YOUR_CHATBOT_GUID',

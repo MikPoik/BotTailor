@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://your-domain.com/sitemap.xml
+Sitemap: https://bottailor.com/sitemap.xml
 
 # Block admin and API routes from indexing
 Disallow: /api/
