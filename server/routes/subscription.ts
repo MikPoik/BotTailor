@@ -230,14 +230,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.log(`[STRIPE_WEBHOOK] Retrieved subscription status: ${stripeSubscription.status}`);
 
     // Create or update subscription in database
-    console.log(`[STRIPE_WEBHOOK] Raw subscription data - currentPeriodStart: ${stripeSubscription.currentPeriodStart}, currentPeriodEnd: ${stripeSubscription.currentPeriodEnd}`);
+    console.log(`[STRIPE_WEBHOOK] Raw subscription data - current_period_start: ${(stripeSubscription as any).current_period_start}, current_period_end: ${(stripeSubscription as any).current_period_end}`);
     
-    // Safely convert timestamps to dates
-    const currentPeriodStart = stripeSubscription.currentPeriodStart 
-      ? new Date(stripeSubscription.currentPeriodStart * 1000)
+    // Safely convert timestamps to dates (using snake_case property names from Stripe)
+    const currentPeriodStart = (stripeSubscription as any).current_period_start 
+      ? new Date((stripeSubscription as any).current_period_start * 1000)
       : null;
-    const currentPeriodEnd = stripeSubscription.currentPeriodEnd 
-      ? new Date(stripeSubscription.currentPeriodEnd * 1000)
+    const currentPeriodEnd = (stripeSubscription as any).current_period_end 
+      ? new Date((stripeSubscription as any).current_period_end * 1000)
       : null;
       
     console.log(`[STRIPE_WEBHOOK] Converted dates - start: ${currentPeriodStart}, end: ${currentPeriodEnd}`);
@@ -282,16 +282,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
     console.log('[STRIPE_WEBHOOK] Processing customer.subscription.updated');
-    console.log(`[STRIPE_WEBHOOK] Subscription periods - start: ${subscription.currentPeriodStart}, end: ${subscription.currentPeriodEnd}`);
+    console.log(`[STRIPE_WEBHOOK] Subscription periods - start: ${(subscription as any).current_period_start}, end: ${(subscription as any).current_period_end}`);
     
     // Get current subscription from database to check if billing period changed
     const existingSubscription = await storage.getSubscriptionByStripeId(subscription.id);
     
-    const newPeriodStart = subscription.currentPeriodStart 
-      ? new Date(subscription.currentPeriodStart * 1000) 
+    const newPeriodStart = (subscription as any).current_period_start 
+      ? new Date((subscription as any).current_period_start * 1000) 
       : null;
-    const newPeriodEnd = subscription.currentPeriodEnd 
-      ? new Date(subscription.currentPeriodEnd * 1000) 
+    const newPeriodEnd = (subscription as any).current_period_end 
+      ? new Date((subscription as any).current_period_end * 1000) 
       : null;
     
     let shouldResetMessageCount = false;
@@ -339,14 +339,32 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
     console.log('[STRIPE_WEBHOOK] Processing invoice.payment_succeeded');
+    console.log(`[STRIPE_WEBHOOK] Billing reason: ${(invoice as any).billing_reason}`);
+    console.log(`[STRIPE_WEBHOOK] Invoice subscription: ${(invoice as any).subscription}`);
     
-    if (invoice.subscription) {
-      await storage.updateSubscriptionByStripeId(invoice.subscription as string, {
+    if ((invoice as any).subscription) {
+      const subscriptionId = (invoice as any).subscription as string;
+      
+      // Check if this is a subscription renewal (billing_reason: subscription_cycle)
+      const isRenewal = (invoice as any).billing_reason === 'subscription_cycle';
+      
+      const updateData: any = {
         status: 'active',
-      });
+      };
+      
+      // Reset message count for renewals
+      if (isRenewal) {
+        updateData.messagesUsedThisMonth = 0;
+        console.log(`[STRIPE_WEBHOOK] Subscription renewal detected - resetting message count`);
+      }
+      
+      await storage.updateSubscriptionByStripeId(subscriptionId, updateData);
+      console.log(`[STRIPE_WEBHOOK] Subscription ${subscriptionId} updated${isRenewal ? ' (message count reset for renewal)' : ''}`);
     }
   } catch (error) {
     console.error('Error handling payment succeeded:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
   }
 }
 
