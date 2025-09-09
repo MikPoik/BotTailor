@@ -207,7 +207,7 @@
       // Message bubble content - simplified to show only text
       messageBubble.innerHTML = `
         <div class="chatwidget-message-content" style="display: flex; align-items: flex-start; gap: 12px;">
-          <div class="chatwidget-speech-bubble" style="background: #f8f9fa; border-radius: 12px; padding: 12px 14px; margin-bottom: 6px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
+          <div class="chatwidget-speech-bubble" style="background: #f8f9fa; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
             <p class="chatwidget-message-main" style="margin: 0; color: #333; line-height: 1.4;">Hello there! Need any help?</p>
           </div>
           <button id="chatwidget-message-close" class="chatwidget-close-btn" style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; color: #666;">
@@ -674,7 +674,7 @@
         
         individualBubble.innerHTML = `
           <div class="chatwidget-message-content" style="display: flex; align-items: flex-start; gap: 12px;">
-            <div class="chatwidget-speech-bubble" style="background: #f8f9fa; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
+            <div class="chatwidget-speech-bubble" style="background: #f8f9fa; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
               <p class="chatwidget-message-main" style="margin: 0; color: #333; line-height: 1.4;">${message.content || message}</p>
             </div>
             <button class="chatwidget-close-btn" style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; color: #666; hover:background: #f0f0f0;" data-index="${index}">
