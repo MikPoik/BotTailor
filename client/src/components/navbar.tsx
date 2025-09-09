@@ -45,9 +45,9 @@ export function Navbar() {
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-center">
+      <div className="container flex h-14 items-center">
         {/* Logo */}
-        <div className="flex items-center">
+        <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Bot className="h-6 w-6" />
             <span className="font-bold">
@@ -58,7 +58,7 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         {!isMobile && isAuthenticated && (
-          <div className="ml-8 flex items-center space-x-4">
+          <div className="mr-4 flex items-center space-x-4 md:mr-6">
             <Button variant="ghost" asChild>
               <Link href="/docs">Documentation</Link>
             </Button>
@@ -73,7 +73,7 @@ export function Navbar() {
 
         {/* Desktop User Menu */}
         {!isMobile && (
-          <div className="ml-8 flex items-center space-x-2">
+          <div className="flex flex-1 items-center justify-end space-x-2">
              <ThemeToggle />
             {!isAuthenticated ? (
               <Button asChild>
@@ -136,7 +136,7 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={toggleMenu}
-            className="absolute right-4"
+            className="ml-auto mr-2"
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
@@ -144,7 +144,7 @@ export function Navbar() {
 
         {/* Mobile User Avatar */}
         {isMobile && isAuthenticated && (
-          <Avatar className="h-8 w-8 absolute right-16">
+          <Avatar className="h-8 w-8 ml-auto">
             <AvatarImage src={user?.profileImageUrl || ""} alt={user?.email || ""} />
             <AvatarFallback>
               {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
@@ -154,7 +154,7 @@ export function Navbar() {
 
         {/* Mobile Login Button */}
         {isMobile && !isAuthenticated && (
-          <Button asChild className="absolute right-16">
+          <Button asChild className="ml-auto">
             <a href="/api/login">Log In</a>
           </Button>
         )}
