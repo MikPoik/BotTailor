@@ -483,13 +483,25 @@
         isOpen = false;
 
         if (isMobile()) {
-          overlay.style.display = 'none';
+          // Add closing animation for mobile
+          mobileIframe.classList.add('closing');
           mobileIframe.classList.remove('show');
-          mobileIframe.style.visibility = 'hidden';
+          
+          setTimeout(() => {
+            overlay.style.display = 'none';
+            mobileIframe.style.visibility = 'hidden';
+            mobileIframe.classList.remove('closing');
+          }, 300); // Match animation duration
         } else {
-          bubble.style.display = 'flex';
+          // Add closing animation for desktop
+          iframe.classList.add('closing');
           iframe.classList.remove('show');
-          iframe.style.visibility = 'hidden';
+          
+          setTimeout(() => {
+            bubble.style.display = 'flex';
+            iframe.style.visibility = 'hidden';
+            iframe.classList.remove('closing');
+          }, 400); // Match animation duration
         }
       };
 

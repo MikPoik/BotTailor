@@ -209,9 +209,36 @@
   }
 }
 
+@keyframes chatwidget-open {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes chatwidget-close {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(30px);
+  }
+}
+
 @keyframes chatwidget-slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+@keyframes chatwidget-slideDown {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
 }
 
 @keyframes chatwidget-close {
@@ -227,12 +254,22 @@
 
 .chatwidget-iframe.show {
   display: block !important;
-  animation: chatwidget-fadeIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+  visibility: visible !important;
+  animation: chatwidget-open 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.chatwidget-iframe.closing {
+  animation: chatwidget-close 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
 .chatwidget-mobile-iframe.show {
   display: block !important;
+  visibility: visible !important;
   animation: chatwidget-slideUp 0.3s ease-out;
+}
+
+.chatwidget-mobile-iframe.closing {
+  animation: chatwidget-slideDown 0.3s ease-in forwards;
 }
 
 /* Message bubble visible state */
