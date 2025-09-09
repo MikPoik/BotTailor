@@ -391,7 +391,7 @@ Please consider these colors when generating the UI design to ensure visual cons
       </div>
 
       {/* Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(80vh-200px)]">
         
         {/* Left Panel - Chat & Code */}
         <div className="flex flex-col">
@@ -626,7 +626,7 @@ Please consider these colors when generating the UI design to ensure visual cons
             
             {/* Code Tab */}
             <TabsContent value="code" className="flex-1">
-              <Card className="h-full">
+              <Card className="h-[700px]">
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <CardTitle>Configuration</CardTitle>
@@ -699,7 +699,7 @@ Please consider these colors when generating the UI design to ensure visual cons
             </CardHeader>
             <CardContent className="p-0">
               <div className="border rounded-lg overflow-hidden bg-background">
-                <div className="h-[500px] overflow-y-auto">
+                <div className="h-[700px] overflow-y-auto">
                   {currentConfig ? (
                     <DynamicHomeScreen 
                       key={configKey}
