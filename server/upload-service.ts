@@ -1,13 +1,21 @@
-import { Client } from "@replit/object-storage";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import { Request } from "express";
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
 
-// Initialize Replit Object Storage client with specific bucket
-const client = new Client({
-  bucketName: "chatbot-avatars"
+// Initialize S3 client for Google Cloud Storage
+const s3Client = new S3Client({
+  endpoint: "https://storage.googleapis.com",
+  region: "auto", // GCS S3 interop uses "auto" region
+  credentials: {
+    accessKeyId: process.env.GCP_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.GCP_SECRET_ACCESS_KEY!,
+  },
+  forcePathStyle: true,
 });
+
+const bucketName = process.env.GCP_BUCKET_NAME || "chatbot-avatars";
 
 // Initialize the client with a default bucket if needed
 let isClientInitialized = false;
@@ -15,11 +23,16 @@ let isClientInitialized = false;
 async function ensureClientInitialized() {
   if (!isClientInitialized) {
     try {
-      // Test if client works by attempting to list files
-      await client.list();
+      // Check required environment variables
+      if (!process.env.GCP_ACCESS_KEY_ID || !process.env.GCP_SECRET_ACCESS_KEY || !bucketName) {
+        throw new Error("Missing required GCP environment variables: GCP_ACCESS_KEY_ID, GCP_SECRET_ACCESS_KEY, GCP_BUCKET_NAME");
+      }
+      
+      // Test connectivity with a lightweight bucket check
+      await s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
       isClientInitialized = true;
     } catch (error) {
-      console.warn("Object storage not properly configured:", error);
+      console.warn("GCP Storage not properly configured:", error);
       isClientInitialized = false;
     }
   }
@@ -76,18 +89,17 @@ export interface UploadResult {
 
 export async function uploadBackgroundImage(file: Express.Multer.File, userId: string): Promise<UploadResult> {
   try {
-    // Check if object storage is available
+    // Check if GCP storage is available
     const isInitialized = await ensureClientInitialized();
     if (!isInitialized) {
       return {
         success: false,
-        error: "Object storage is not configured. Please contact administrator."
+        error: "GCP Storage is not configured. Please contact administrator."
       };
     }
 
-    // Generate unique filename
-    const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = `backgrounds/${userId}/${uuidv4()}.${fileExtension}`;
+    // Generate unique filename - always use .jpg since we convert to JPEG
+    const fileName = `backgrounds/${userId}/${uuidv4()}.jpg`;
 
     // Process image with Sharp - optimize for chat widget background
     const processedImage = await sharp(file.buffer)
@@ -102,22 +114,18 @@ export async function uploadBackgroundImage(file: Express.Multer.File, userId: s
       })
       .toBuffer();
 
-    // Upload to Replit Object Storage using text method with base64 encoding
+    // Upload to GCP Storage using S3 interface
     console.log(`Uploading ${fileName}, processed image size: ${processedImage.length} bytes`);
     
-    const base64Data = processedImage.toString('base64');
-    const { ok: uploadOk, error: uploadError } = await client.uploadFromText(
-      fileName,
-      base64Data
-    );
+    const uploadCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: processedImage,
+      ContentType: 'image/jpeg',
+      CacheControl: 'public, max-age=31536000' // 1 year cache
+    });
 
-    if (!uploadOk) {
-      console.error("Upload failed:", uploadError);
-      return {
-        success: false,
-        error: "Failed to upload file to storage"
-      };
-    }
+    await s3Client.send(uploadCommand);
     
     console.log(`Upload successful: ${fileName}`);
 
@@ -140,18 +148,17 @@ export async function uploadBackgroundImage(file: Express.Multer.File, userId: s
 
 export async function uploadAvatar(file: Express.Multer.File, userId: string): Promise<UploadResult> {
   try {
-    // Check if object storage is available
+    // Check if GCP storage is available
     const isInitialized = await ensureClientInitialized();
     if (!isInitialized) {
       return {
         success: false,
-        error: "Object storage is not configured. Please contact administrator."
+        error: "GCP Storage is not configured. Please contact administrator."
       };
     }
 
-    // Generate unique filename
-    const fileExtension = file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = `avatars/${userId}/${uuidv4()}.${fileExtension}`;
+    // Generate unique filename - always use .jpg since we convert to JPEG
+    const fileName = `avatars/${userId}/${uuidv4()}.jpg`;
 
     // Process image with Sharp - resize to 200x200 and compress
     const processedImage = await sharp(file.buffer)
@@ -165,23 +172,18 @@ export async function uploadAvatar(file: Express.Multer.File, userId: string): P
       })
       .toBuffer();
 
-    // Upload to Replit Object Storage using text method with base64 encoding
-    // This works around the downloadAsBytes issue
+    // Upload to GCP Storage using S3 interface
     console.log(`Uploading ${fileName}, processed image size: ${processedImage.length} bytes`);
     
-    const base64Data = processedImage.toString('base64');
-    const { ok: uploadOk, error: uploadError } = await client.uploadFromText(
-      fileName,
-      base64Data
-    );
+    const uploadCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: processedImage,
+      ContentType: 'image/jpeg',
+      CacheControl: 'public, max-age=31536000' // 1 year cache
+    });
 
-    if (!uploadOk) {
-      console.error("Upload failed:", uploadError);
-      return {
-        success: false,
-        error: "Failed to upload file to storage"
-      };
-    }
+    await s3Client.send(uploadCommand);
     
     console.log(`Upload successful: ${fileName}`);
 
@@ -204,49 +206,65 @@ export async function uploadAvatar(file: Express.Multer.File, userId: string): P
 
 export async function getFileFromStorage(fileName: string): Promise<{ success: boolean; data?: Buffer; error?: string; contentType?: string }> {
   try {
-    // Check if object storage is available
+    // Check if GCP storage is available
     const isInitialized = await ensureClientInitialized();
     if (!isInitialized) {
       return {
         success: false,
-        error: "Object storage is not configured"
+        error: "GCP Storage is not configured"
       };
     }
 
-    // Download the base64 encoded data
-    const { ok, value, error } = await client.downloadAsText(fileName);
+    // Download the file using S3 interface
+    const getCommand = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+    });
     
-    if (!ok) {
+    const response = await s3Client.send(getCommand);
+    
+    if (!response.Body) {
       return {
         success: false,
-        error: error || "File not found"
+        error: "File not found"
       };
     }
 
-    // Determine content type based on file extension
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    let contentType = 'application/octet-stream';
+    // Determine content type - prefer S3 metadata, fallback to file extension
+    let contentType = response.ContentType || 'application/octet-stream';
     
-    switch (extension) {
-      case 'jpg':
-      case 'jpeg':
-        contentType = 'image/jpeg';
-        break;
-      case 'png':
-        contentType = 'image/png';
-        break;
-      case 'gif':
-        contentType = 'image/gif';
-        break;
-      case 'webp':
-        contentType = 'image/webp';
-        break;
+    if (!response.ContentType) {
+      const extension = fileName.split('.').pop()?.toLowerCase();
+      switch (extension) {
+        case 'jpg':
+        case 'jpeg':
+          contentType = 'image/jpeg';
+          break;
+        case 'png':
+          contentType = 'image/png';
+          break;
+        case 'gif':
+          contentType = 'image/gif';
+          break;
+        case 'webp':
+          contentType = 'image/webp';
+          break;
+      }
     }
 
-    // Convert base64 back to binary data
-    const data = Buffer.from(value, 'base64');
+    // Convert stream to buffer
+    const streamToBuffer = async (stream: any): Promise<Buffer> => {
+      const chunks: Buffer[] = [];
+      return new Promise((resolve, reject) => {
+        stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+        stream.on('error', reject);
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+    };
     
-    console.log(`File ${fileName}: retrieved ${value.length} base64 chars, converted to ${data.length} bytes`);
+    const data = await streamToBuffer(response.Body);
+    
+    console.log(`File ${fileName}: retrieved ${data.length} bytes`);
 
     return {
       success: true,
@@ -265,8 +283,13 @@ export async function getFileFromStorage(fileName: string): Promise<{ success: b
 
 export async function deleteFile(fileName: string): Promise<boolean> {
   try {
-    const { ok } = await client.delete(fileName);
-    return ok;
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+    });
+    
+    await s3Client.send(deleteCommand);
+    return true;
   } catch (error) {
     console.error("File deletion error:", error);
     return false;
