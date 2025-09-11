@@ -49,7 +49,7 @@ export function setupUploadRoutes(app: Express) {
   // Serve files from storage
   app.get('/api/storage/*', async (req, res) => {
     try {
-      const fileName = req.params[0] || ''; // Get everything after /api/storage/
+      const fileName = (req.params as any)[0] || ''; // Get everything after /api/storage/
       const result = await getFileFromStorage(fileName);
 
       if (!result.success) {
