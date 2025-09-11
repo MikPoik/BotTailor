@@ -1,4 +1,5 @@
-# fly.toml app configuration file generated for bottailor on 2025-09-11T11:38:41Z
+
+# fly.toml app configuration file generated for bottailor on 2025-09-10T11:12:59Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -9,7 +10,7 @@ primary_region = 'arn'
 [build]
 
 [http_service]
-  internal_port = 3000
+  internal_port = 5000
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
@@ -17,17 +18,13 @@ primary_region = 'arn'
   processes = ['app']
 
 [[services]]
-  protocol = ''
-  internal_port = 0
+  protocol = 'tcp'
+  internal_port = 5000
 
   [[services.ports]]
     port = 80
     handlers = ['http']
     force_https = true
-
-  [[services.ports]]
-    port = 8080
-    handlers = ['tls', 'http']
 
   [[services.ports]]
     port = 443
