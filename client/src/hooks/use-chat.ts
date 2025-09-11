@@ -5,6 +5,12 @@ import { Message, ChatSession } from "@shared/schema";
 
 export function useChat(sessionId: string, chatbotConfigId?: number) {
   const [isTyping, setIsTyping] = useState(false);
+  const [readOnlyMode, setReadOnlyMode] = useState(false);
+  const [limitExceededInfo, setLimitExceededInfo] = useState<{
+    message: string;
+    showContactForm: boolean;
+    chatbotConfig?: any;
+  } | null>(null);
   const queryClient = useQueryClient();
 
   // Initialize session
@@ -40,6 +46,42 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   const messages: Message[] = (messagesData?.messages || [])
     .filter((msg: Message) => msg.messageType !== 'system'); // Filter out system messages from UI
 
+  // Check for existing limit exceeded state on page load
+  useEffect(() => {
+    const limitKey = `chat-limit-exceeded-${sessionId}`;
+    const limitState = localStorage.getItem(limitKey);
+    if (limitState) {
+      try {
+        const parsed = JSON.parse(limitState);
+        if (parsed.exceeded) {
+          setReadOnlyMode(true);
+          setLimitExceededInfo({
+            message: parsed.message,
+            showContactForm: parsed.showContactForm,
+            chatbotConfig: parsed.chatbotConfig
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to parse limit state from localStorage:', error);
+      }
+    }
+  }, [sessionId]);
+
+  // Clear read-only state after a reasonable time (1 hour) to allow recovery
+  useEffect(() => {
+    if (readOnlyMode) {
+      const recoveryTimer = setTimeout(() => {
+        const limitKey = `chat-limit-exceeded-${sessionId}`;
+        localStorage.removeItem(limitKey);
+        setReadOnlyMode(false);
+        setLimitExceededInfo(null);
+        console.log('[CHAT] Cleared read-only state for potential recovery');
+      }, 60 * 60 * 1000); // 1 hour
+
+      return () => clearTimeout(recoveryTimer);
+    }
+  }, [readOnlyMode, sessionId]);
+
   // Streaming message function with real-time bubble parsing
   const sendStreamingMessage = async (
     userDisplayText: string,
@@ -53,13 +95,13 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
       // Add optimistic user message to messages array
       const optimisticUserMessage: Message = {
-        id: Date.now().toString(),
+        id: Date.now(), // Use number for consistency with schema
         sessionId,
         content: userDisplayText,
         sender: 'user',
         messageType: 'text',
         metadata: {},
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(), // Use ISO string for consistency with backend
       };
 
       queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
@@ -115,6 +157,21 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
               } else if (data.type === 'complete') {
                 setIsTyping(false);
                 onAllComplete?.(data.messages);
+              } else if (data.type === 'limit_exceeded') {
+                setIsTyping(false);
+                setReadOnlyMode(true);
+                setLimitExceededInfo({
+                  message: data.message,
+                  showContactForm: data.showContactForm,
+                  chatbotConfig: data.chatbotConfig
+                });
+                // Store in localStorage to persist across page loads
+                localStorage.setItem(`chat-limit-exceeded-${sessionId}`, JSON.stringify({
+                  exceeded: true,
+                  message: data.message,
+                  showContactForm: data.showContactForm
+                }));
+                onError?.(data.message);
               } else if (data.type === 'error') {
                 setIsTyping(false);
                 onError?.(data.message);
@@ -206,5 +263,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     isSessionLoading,
     isMessagesLoading,
     session: session?.session,
+    readOnlyMode,
+    limitExceededInfo,
   };
 }

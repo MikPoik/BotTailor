@@ -69,6 +69,8 @@ export default function TabbedChatInterface({
     selectOption,
     isLoading,
     isSessionLoading,
+    readOnlyMode,
+    limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
 
   const scrollToBottom = () => {
@@ -115,7 +117,7 @@ export default function TabbedChatInterface({
       typeof inputMessage === "string"
         ? inputMessage
         : String(inputMessage || "");
-    if (!messageText.trim() || isLoading || isStreaming) return;
+    if (!messageText.trim() || isLoading || isStreaming || readOnlyMode) return;
 
     setInputMessage("");
     setIsStreaming(true);
@@ -186,7 +188,7 @@ export default function TabbedChatInterface({
     payload?: any,
     optionText?: string,
   ) => {
-    if (isLoading || isStreaming) return;
+    if (isLoading || isStreaming || readOnlyMode) return;
 
     console.log(`[FRONTEND] Option selected: ${optionId} - ${optionText}`);
 
@@ -256,7 +258,7 @@ export default function TabbedChatInterface({
   };
 
   const handleQuickReply = async (reply: string) => {
-    if (isLoading || isStreaming) return;
+    if (isLoading || isStreaming || readOnlyMode) return;
 
     setIsStreaming(true);
     streamingBubblesRef.current = [];
@@ -593,6 +595,48 @@ export default function TabbedChatInterface({
             {(isTyping || isStreaming) && (
               <TypingIndicator chatbotConfig={chatbotConfig} />
             )}
+
+            {/* Limit exceeded message */}
+            {readOnlyMode && limitExceededInfo && (
+              <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center">
+                      <MessageCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-orange-800 dark:text-orange-200 mb-3">
+                      {limitExceededInfo.message}
+                    </p>
+                    {limitExceededInfo.showContactForm && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
+                          Leave your contact details:
+                        </h4>
+                        <div className="space-y-2">
+                          <input
+                            type="email"
+                            placeholder="Your email address"
+                            className="w-full px-3 py-2 text-sm border border-orange-300 dark:border-orange-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-orange-900/30"
+                          />
+                          <button 
+                            className="w-full px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
+                            onClick={() => {
+                              // TODO: Implement email submission using existing form system
+                              console.log('Submit contact form');
+                            }}
+                          >
+                            Send Contact Request
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
 
@@ -619,7 +663,7 @@ export default function TabbedChatInterface({
               <div className="flex-1 relative">
                 <Input
                   type="text"
-                  placeholder=""
+                  placeholder={readOnlyMode ? "Chat temporarily unavailable" : ""}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -630,11 +674,11 @@ export default function TabbedChatInterface({
                     borderColor: colors.textColor + '40',
                     '--tw-ring-color': colors.primaryColor
                   } as React.CSSProperties}
-                  disabled={isLoading}
+                  disabled={isLoading || readOnlyMode}
                 />
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isLoading}
+                  disabled={!inputMessage.trim() || isLoading || readOnlyMode}
                   size="sm"
                   className="send-button absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
                   style={{

@@ -219,6 +219,83 @@ export function setupChatRoutes(app: Express) {
         message: userMessage 
       })}\n\n`);
 
+      // Check message limits before generating AI response
+      const currentChatbotConfigId = chatbotConfigId || session?.chatbotConfigId;
+      if (currentChatbotConfigId) {
+        const chatbotConfig = await storage.getChatbotConfig(currentChatbotConfigId);
+        if (chatbotConfig) {
+          // Check if the chatbot owner has exceeded their message limit
+          const canSendMessage = await storage.checkMessageLimit(chatbotConfig.userId);
+          
+          if (!canSendMessage) {
+            console.log(`[LIMIT] Message limit exceeded for user ${chatbotConfig.userId}`);
+            
+            // Use the chatbot's configured fallback message or a default
+            const limitMessage = chatbotConfig.fallbackMessage || 
+              "I'm temporarily unavailable due to high usage. Please try again later or leave your contact details and we'll reach out to you.";
+            
+            // Send limit exceeded event with read-only mode and fallback message
+            res.write(`data: ${JSON.stringify({ 
+              type: 'limit_exceeded', 
+              message: limitMessage,
+              readOnlyMode: true,
+              showContactForm: true,
+              chatbotConfig: {
+                name: chatbotConfig.name,
+                fallbackMessage: chatbotConfig.fallbackMessage
+              }
+            })}\n\n`);
+            
+            res.end();
+            return;
+          } else {
+            // Increment message usage for successful requests
+            await storage.incrementMessageUsage(chatbotConfig.userId);
+          }
+        } else {
+          // Could not find chatbot config - return error to prevent bypass
+          console.warn(`[LIMIT] Could not find chatbot config ${currentChatbotConfigId}, denying request`);
+          res.write(`data: ${JSON.stringify({ 
+            type: 'limit_exceeded', 
+            message: "Chat service is temporarily unavailable. Please try again later.",
+            readOnlyMode: true,
+            showContactForm: false
+          })}\n\n`);
+          res.end();
+          return;
+        }
+      } else {
+        // No chatbot config ID available - check against default admin user or deny
+        const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
+        if (defaultUserId) {
+          const canSendMessage = await storage.checkMessageLimit(defaultUserId);
+          if (!canSendMessage) {
+            console.log(`[LIMIT] Message limit exceeded for default user ${defaultUserId}`);
+            res.write(`data: ${JSON.stringify({ 
+              type: 'limit_exceeded', 
+              message: "Chat service is temporarily unavailable due to high usage. Please try again later.",
+              readOnlyMode: true,
+              showContactForm: false
+            })}\n\n`);
+            res.end();
+            return;
+          } else {
+            await storage.incrementMessageUsage(defaultUserId);
+          }
+        } else {
+          // No default user configured - deny request to prevent bypass
+          console.warn(`[LIMIT] No chatbot config or default user, denying request`);
+          res.write(`data: ${JSON.stringify({ 
+            type: 'limit_exceeded', 
+            message: "Chat service is temporarily unavailable. Please try again later.",
+            readOnlyMode: true,
+            showContactForm: false
+          })}\n\n`);
+          res.end();
+          return;
+        }
+      }
+
       // Handle survey session creation for survey requests
       try {
         await handleSurveySessionCreation(sessionId, internalMessage || messageData.content, chatbotConfigId, session);
