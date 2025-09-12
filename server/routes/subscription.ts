@@ -347,6 +347,19 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
 
     const plans = [
       {
+        name: "Free",
+        description: "Get started with basic chatbot functionality",
+        stripePriceId: "price_free", // No actual Stripe price for free plan
+        stripeProductId: "prod_free", // No actual Stripe product for free plan
+        price: 0, // Free
+        currency: "usd",
+        billingInterval: "month",
+        maxBots: 1,
+        maxMessagesPerMonth: 100,
+        features: ["1 Chatbot", "100 messages/month", "Community support"],
+        isActive: true,
+      },
+      {
         name: "Basic",
         description: "Perfect for getting started with chatbots",
         stripePriceId: process.env.PRICE_SUB_BASIC || '', // Replace with actual Stripe price ID
