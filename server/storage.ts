@@ -608,6 +608,7 @@ export class DatabaseStorage implements IStorage {
         stripeSubscriptionId: subscriptions.stripeSubscriptionId,
         stripeCustomerId: subscriptions.stripeCustomerId,
         status: subscriptions.status,
+        cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd, // Add missing field!
         currentPeriodStart: subscriptions.currentPeriodStart,
         currentPeriodEnd: subscriptions.currentPeriodEnd,
         messagesUsedThisMonth: subscriptions.messagesUsedThisMonth,

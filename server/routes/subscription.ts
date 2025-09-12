@@ -64,6 +64,7 @@ subscriptionRouter.get("/current", isAuthenticated, async (req: any, res) => {
       req.user.claims.sub,
     );
 
+
     // Return null instead of 404 when no subscription exists
     res.json(subscription);
   } catch (error) {
