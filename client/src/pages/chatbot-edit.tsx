@@ -38,8 +38,6 @@ const formSchema = z.object({
   // Email configuration
   formRecipientEmail: z.string().email("Valid email required").or(z.literal("")).optional(),
   formRecipientName: z.string().optional(),
-  senderEmail: z.string().email("Valid email required").or(z.literal("")).optional(),
-  senderName: z.string().optional(),
   formConfirmationMessage: z.string().optional(),
 });
 
@@ -92,8 +90,6 @@ export default function ChatbotEdit() {
       initialMessages: [],
       formRecipientEmail: "",
       formRecipientName: "",
-      senderEmail: "",
-      senderName: "",
       formConfirmationMessage: "",
     },
   });
@@ -114,8 +110,6 @@ export default function ChatbotEdit() {
         initialMessages: (chatbot.initialMessages as string[]) || [],
         formRecipientEmail: chatbot.formRecipientEmail || "",
         formRecipientName: chatbot.formRecipientName || "",
-        senderEmail: chatbot.senderEmail || "",
-        senderName: chatbot.senderName || "",
         formConfirmationMessage: chatbot.formConfirmationMessage || "",
       });
     }
@@ -618,47 +612,6 @@ export default function ChatbotEdit() {
                       </FormControl>
                       <FormDescription>
                         Name of the person/team receiving forms
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="senderEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sender Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email"
-                          placeholder="noreply@yourcompany.com"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        From email address for outgoing notifications
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="senderName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sender Name</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Your Company Chatbot"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        From name for outgoing notifications
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

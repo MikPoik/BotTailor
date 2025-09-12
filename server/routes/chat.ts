@@ -239,7 +239,7 @@ export function setupChatRoutes(app: Express) {
               type: 'limit_exceeded', 
               message: limitMessage,
               readOnlyMode: true,
-              showContactForm: true,
+              showContactForm: !!chatbotConfig.formRecipientEmail,
               chatbotConfig: {
                 name: chatbotConfig.name,
                 fallbackMessage: chatbotConfig.fallbackMessage
