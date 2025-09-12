@@ -73,6 +73,21 @@ export default function TabbedChatInterface({
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
 
+  // Contact form state
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [contactError, setContactError] = useState("");
+  const [contactFieldErrors, setContactFieldErrors] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -180,6 +195,93 @@ export default function TabbedChatInterface({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(inputMessage);
+    }
+  };
+
+  const validateContactForm = () => {
+    const errors = { name: "", email: "", message: "" };
+    let isValid = true;
+
+    // Name validation
+    if (!contactForm.name.trim()) {
+      errors.name = "Name is required";
+      isValid = false;
+    } else if (contactForm.name.trim().length < 2) {
+      errors.name = "Name must be at least 2 characters";
+      isValid = false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!contactForm.email.trim()) {
+      errors.email = "Email is required";
+      isValid = false;
+    } else if (!emailRegex.test(contactForm.email.trim())) {
+      errors.email = "Please enter a valid email address";
+      isValid = false;
+    }
+
+    // Message validation
+    if (!contactForm.message.trim()) {
+      errors.message = "Message is required";
+      isValid = false;
+    } else if (contactForm.message.trim().length < 10) {
+      errors.message = "Message must be at least 10 characters";
+      isValid = false;
+    } else if (contactForm.message.trim().length > 1000) {
+      errors.message = "Message must be less than 1000 characters";
+      isValid = false;
+    }
+
+    setContactFieldErrors(errors);
+    return isValid;
+  };
+
+  const isContactFormValid = () => {
+    return contactForm.name.trim().length >= 2 &&
+           /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email.trim()) &&
+           contactForm.message.trim().length >= 10 &&
+           contactForm.message.trim().length <= 1000;
+  };
+
+  const handleContactFormSubmit = async () => {
+    setContactError("");
+    
+    if (!validateContactForm()) {
+      return;
+    }
+
+    setIsSubmittingContact(true);
+    try {
+      const response = await fetch(`/api/chat/${sessionId}/submit-form`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          formData: [
+            { id: 'name', label: 'Name', value: contactForm.name.trim() },
+            { id: 'email', label: 'Email', value: contactForm.email.trim() },
+            { id: 'message', label: 'Message', value: contactForm.message.trim() }
+          ],
+          formTitle: 'Contact Request - Message Limit Exceeded'
+        })
+      });
+
+      if (response.ok) {
+        setContactSubmitted(true);
+        setContactForm({ name: "", email: "", message: "" });
+        setContactFieldErrors({ name: "", email: "", message: "" });
+        // Auto-hide success message after 10 seconds
+        setTimeout(() => setContactSubmitted(false), 10000);
+      } else {
+        const errorData = await response.text();
+        setContactError("Failed to send message. Please try again.");
+      }
+    } catch (error) {
+      setContactError("Network error. Please check your connection and try again.");
+    } finally {
+      setIsSubmittingContact(false);
     }
   };
 
@@ -609,26 +711,96 @@ export default function TabbedChatInterface({
                     <p className="text-sm text-orange-800 dark:text-orange-200 mb-3">
                       {limitExceededInfo.message}
                     </p>
-                    {limitExceededInfo.showContactForm && (
+                    {limitExceededInfo.showContactForm && !contactSubmitted && (
                       <div className="mt-4">
                         <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
                           Leave your contact details:
                         </h4>
-                        <div className="space-y-2">
-                          <input
-                            type="email"
-                            placeholder="Your email address"
-                            className="w-full px-3 py-2 text-sm border border-orange-300 dark:border-orange-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-orange-900/30"
-                          />
+                        <div className="space-y-3">
+                          <div>
+                            <input
+                              type="text"
+                              placeholder="Your name"
+                              value={contactForm.name}
+                              onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
+                              disabled={isSubmittingContact}
+                              maxLength={50}
+                              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 dark:bg-orange-900/30 ${
+                                contactFieldErrors.name 
+                                  ? 'border-red-400 dark:border-red-600 focus:ring-red-500' 
+                                  : 'border-orange-300 dark:border-orange-700 focus:ring-orange-500'
+                              }`}
+                            />
+                            {contactFieldErrors.name && (
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.name}</p>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <input
+                              type="email"
+                              placeholder="Your email address"
+                              value={contactForm.email}
+                              onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                              disabled={isSubmittingContact}
+                              maxLength={100}
+                              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 dark:bg-orange-900/30 ${
+                                contactFieldErrors.email 
+                                  ? 'border-red-400 dark:border-red-600 focus:ring-red-500' 
+                                  : 'border-orange-300 dark:border-orange-700 focus:ring-orange-500'
+                              }`}
+                            />
+                            {contactFieldErrors.email && (
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.email}</p>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <textarea
+                              placeholder="Your message (10-1000 characters)"
+                              value={contactForm.message}
+                              onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                              disabled={isSubmittingContact}
+                              rows={3}
+                              maxLength={1000}
+                              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 dark:bg-orange-900/30 resize-none ${
+                                contactFieldErrors.message 
+                                  ? 'border-red-400 dark:border-red-600 focus:ring-red-500' 
+                                  : 'border-orange-300 dark:border-orange-700 focus:ring-orange-500'
+                              }`}
+                            />
+                            {contactFieldErrors.message && (
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.message}</p>
+                            )}
+                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                              {contactForm.message.length}/1000 characters
+                            </p>
+                          </div>
+
+                          {contactError && (
+                            <div className="p-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-md">
+                              <p className="text-xs text-red-800 dark:text-red-200">{contactError}</p>
+                            </div>
+                          )}
+                          
                           <button 
-                            className="w-full px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
-                            onClick={() => {
-                              // TODO: Implement email submission using existing form system
-                              console.log('Submit contact form');
-                            }}
+                            className="w-full px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md transition-colors flex items-center justify-center"
+                            onClick={handleContactFormSubmit}
+                            disabled={isSubmittingContact || !isContactFormValid()}
                           >
-                            Send Contact Request
+                            {isSubmittingContact && <MessageCircle className="w-4 h-4 mr-2 animate-spin" />}
+                            {isSubmittingContact ? 'Sending...' : 'Send Contact Request'}
                           </button>
+                        </div>
+                      </div>
+                    )}
+                    {limitExceededInfo.showContactForm && contactSubmitted && (
+                      <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-md">
+                        <div className="flex items-center space-x-2">
+                          <MessageCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            Thank you! Your message has been sent successfully. We'll get back to you soon.
+                          </p>
                         </div>
                       </div>
                     )}

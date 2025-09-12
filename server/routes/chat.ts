@@ -342,32 +342,37 @@ export function setupChatRoutes(app: Express) {
       const session = await storage.getChatSession(sessionId);
       let chatbotConfig;
       let chatbotName = 'Chat Assistant';
-      let recipientEmail = 'admin@example.com'; // fallback
-      let recipientName = 'Support Team'; // fallback
-      let senderEmail = 'noreply@chatbot.com'; // fallback
-      let senderName = 'Chat Assistant'; // fallback
-      let confirmationMessage = 'Thank you! Your message has been sent successfully. We will contact you soon.'; // fallback
+      let recipientEmail: string | null = null;
+      let recipientName = 'Support Team';
+      let confirmationMessage = 'Thank you! Your message has been sent successfully. We will contact you soon.';
+      
+      // Use environment variables or safe defaults for sender information
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@chatbot.com';
+      const senderName = process.env.BREVO_SENDER_NAME || 'Chat Assistant';
       
       if (session?.chatbotConfigId) {
         chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
         chatbotName = chatbotConfig?.name || 'Chat Assistant';
         
-        // Use configured email settings if available
+        // Only use configured recipient email (no fallbacks for security)
         if (chatbotConfig?.formRecipientEmail) {
           recipientEmail = chatbotConfig.formRecipientEmail;
         }
         if (chatbotConfig?.formRecipientName) {
           recipientName = chatbotConfig.formRecipientName;
         }
-        if (chatbotConfig?.senderEmail) {
-          senderEmail = chatbotConfig.senderEmail;
-        }
-        if (chatbotConfig?.senderName) {
-          senderName = chatbotConfig.senderName;
-        }
         if (chatbotConfig?.formConfirmationMessage) {
           confirmationMessage = chatbotConfig.formConfirmationMessage;
         }
+      }
+
+      // Security check: Ensure recipient email is configured
+      if (!recipientEmail) {
+        console.warn(`[FORM_SUBMISSION] No recipient email configured for session: ${sessionId}`);
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Contact form is not available - no recipient email configured' 
+        });
       }
 
       // Prepare form submission data
