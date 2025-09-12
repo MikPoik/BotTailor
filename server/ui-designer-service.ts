@@ -103,7 +103,6 @@ Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No add
 }
 
 Generate engaging home screen layouts based on the user's requirements.`;
-  console.log(`[UI Designer] System prompt: ${createSystemPrompt()}`);
 }
 
 export async function generateHomeScreenConfig(
@@ -135,6 +134,8 @@ export async function generateHomeScreenConfig(
         description: survey.description,
       }));
     }
+
+    console.log(`[UI Designer] Found ${availableSurveys.length} available surveys for chatbot ${chatbotId}`);
 
     const response = await openai.chat.completions.create({
       model: "gpt-4.1", // the newest OpenAI model is "gpt-4.1" which was released May 13, 2025. do not change this unless explicitly requested by the user

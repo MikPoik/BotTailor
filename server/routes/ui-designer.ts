@@ -25,7 +25,7 @@ export function setupUIDesignerRoutes(app: Express) {
       
       console.log(`[UI DESIGNER] Generating new config for user: ${userId}`);
       
-      const config = await generateHomeScreenConfig(validatedData.prompt);
+      const config = await generateHomeScreenConfig(validatedData.prompt, validatedData.chatbotId);
       
       res.json({ config });
     } catch (error) {
