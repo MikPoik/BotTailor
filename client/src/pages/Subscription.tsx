@@ -184,8 +184,11 @@ export default function Subscription() {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Badge variant="outline" className="capitalize">
-                  {currentSubscription.status}
+                <Badge 
+                  variant={currentSubscription.cancelAtPeriodEnd ? "destructive" : "outline"} 
+                  className="capitalize"
+                >
+                  {currentSubscription.cancelAtPeriodEnd ? 'Canceled' : currentSubscription.status}
                 </Badge>
                 Current Plan: {currentSubscription.plan.name}
               </CardTitle>
@@ -206,14 +209,19 @@ export default function Subscription() {
               </div>
               {currentSubscription.currentPeriodEnd && (
                 <div className="flex justify-between">
-                  <span>Renews:</span>
+                  <span>{(currentSubscription as any).cancelAtPeriodEnd ? 'Active until:' : 'Renews:'}</span>
                   <span className="font-medium">
                     {new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()}
                   </span>
                 </div>
               )}
+              {(currentSubscription as any).cancelAtPeriodEnd && (
+                <div className="text-sm text-orange-600 font-medium">
+                  Your subscription will be canceled at the end of the current billing period.
+                </div>
+              )}
             </CardContent>
-            {currentSubscription.status === 'active' && (
+            {currentSubscription.status === 'active' && !(currentSubscription as any).cancelAtPeriodEnd && (
               <CardFooter>
                 <Button
                   variant="destructive"

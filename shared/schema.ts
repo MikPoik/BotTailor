@@ -169,6 +169,7 @@ export const subscriptions = pgTable("subscriptions", {
   stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
   stripeCustomerId: varchar("stripe_customer_id"),
   status: text("status").notNull().default("active"), // 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing'
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false), // Track if subscription is canceled but still active
   currentPeriodStart: timestamp("current_period_start"),
   currentPeriodEnd: timestamp("current_period_end"),
   messagesUsedThisMonth: integer("messages_used_this_month").default(0),

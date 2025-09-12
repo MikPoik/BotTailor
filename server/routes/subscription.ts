@@ -317,7 +317,7 @@ subscriptionRouter.post("/cancel", isAuthenticated, async (req: any, res) => {
 
     // Update our database
     await storage.updateSubscription(currentSubscription.id, {
-      status: "canceling", // We'll use 'canceling' to indicate it will cancel at period end
+      cancelAtPeriodEnd: true, // Track that subscription is canceled at period end
     });
 
     console.log(
@@ -512,6 +512,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       status: subscription.status,
       currentPeriodStart: newPeriodStart,
       currentPeriodEnd: newPeriodEnd,
+      cancelAtPeriodEnd: false, // Clear canceled status when subscription is updated
       ...(shouldResetMessageCount && { messagesUsedThisMonth: 0 }),
     };
 
