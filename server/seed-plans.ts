@@ -22,7 +22,7 @@ async function seedSubscriptionPlans() {
     },
     {
       name: "Basic",
-      description: "Perfect for getting started with chatbots",
+      description: "Essential features for small businesses",
       stripePriceId: process.env.PRICE_SUB_BASIC || 'price_basic', // Replace with actual Stripe price ID
       stripeProductId: process.env.PROD_SUB_BASIC || 'prod_basic', // Replace with actual Stripe product ID
       price: 999, // $9.99
@@ -35,7 +35,7 @@ async function seedSubscriptionPlans() {
     },
     {
       name: "Premium",
-      description: "Best for growing businesses",
+      description: "Advanced features for growing businesses",
       stripePriceId: "price_premium", // Replace with actual Stripe price ID
       stripeProductId: "prod_premium", // Replace with actual Stripe product ID
       price: 2999, // $29.99
@@ -48,7 +48,7 @@ async function seedSubscriptionPlans() {
     },
     {
       name: "Ultra",
-      description: "For enterprises and power users",
+      description: "Complete solution for enterprises and agencies",
       stripePriceId: "price_ultra", // Replace with actual Stripe price ID
       stripeProductId: "prod_ultra", // Replace with actual Stripe product ID
       price: 9999, // $99.99

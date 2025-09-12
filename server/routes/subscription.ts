@@ -626,7 +626,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
       },
       {
         name: "Basic",
-        description: "Perfect for getting started with chatbots",
+        description: "Essential features for small businesses",
         stripePriceId: process.env.PRICE_SUB_BASIC || "", // Replace with actual Stripe price ID
         stripeProductId: process.env.PROD_SUB_BASIC || "", // Replace with actual Stripe product ID
         price: 999, // $9.99
@@ -644,7 +644,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
       },
       {
         name: "Premium",
-        description: "Best for growing businesses",
+        description: "Advanced features for growing businesses",
         stripePriceId: process.env.PRICE_SUB_PREMIUM, // Replace with actual Stripe price ID
         stripeProductId: process.env.PROD_SUB_PREMIUM, // Replace with actual Stripe product ID
         price: 2999, // $29.99
@@ -663,7 +663,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
       },
       {
         name: "Ultra",
-        description: "For enterprises and power users",
+        description: "Complete solution for enterprises and agencies",
         stripePriceId: process.env.PRICE_SUB_ULTRA, // Replace with actual Stripe price ID
         stripeProductId: process.env.PROD_SUB_ULTRA, // Replace with actual Stripe product ID
         price: 9999, // $99.99
