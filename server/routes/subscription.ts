@@ -508,13 +508,20 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       }
     }
 
+    // Read the actual cancelAtPeriodEnd status from Stripe
+    const cancelAtPeriodEnd = Boolean((subscription as any).cancel_at_period_end);
+    
     const updateData = {
       status: subscription.status,
       currentPeriodStart: newPeriodStart,
       currentPeriodEnd: newPeriodEnd,
-      cancelAtPeriodEnd: false, // Clear canceled status when subscription is updated
+      cancelAtPeriodEnd, // Respect Stripe's cancel_at_period_end flag
       ...(shouldResetMessageCount && { messagesUsedThisMonth: 0 }),
     };
+
+    console.log(
+      `[STRIPE_WEBHOOK] Updating subscription with cancelAtPeriodEnd: ${cancelAtPeriodEnd} (from Stripe: ${(subscription as any).cancel_at_period_end})`,
+    );
 
     await storage.updateSubscriptionByStripeId(subscription.id, updateData);
     console.log(
