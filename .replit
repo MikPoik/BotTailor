@@ -41,3 +41,6 @@ waitForPort = 5000
 
 [objectStorage]
 defaultBucketID = "replit-objstore-42bfe332-3543-42c6-8322-bbddc297d322"
+
+[agent]
+expertMode = false
