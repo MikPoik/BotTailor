@@ -63,8 +63,8 @@ export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): 
   const customPrompt = chatbotConfig?.systemPrompt || defaultSystemPrompt;
 
   // Check if email configuration is properly set up for forms
-  const hasEmailConfig = chatbotConfig?.formRecipientEmail && chatbotConfig?.senderEmail;
-  console.log(`[SYSTEM_PROMPT] Email config check - formRecipientEmail: ${chatbotConfig?.formRecipientEmail}, senderEmail: ${chatbotConfig?.senderEmail}, hasEmailConfig: ${hasEmailConfig}`);
+  const hasEmailConfig = chatbotConfig?.formRecipientEmail ;
+  console.log(`[SYSTEM_PROMPT] Email config check - formRecipientEmail: ${chatbotConfig?.formRecipientEmail}, hasEmailConfig: ${hasEmailConfig}`);
 
   // Build message types list conditionally
   const messageTypes = [
