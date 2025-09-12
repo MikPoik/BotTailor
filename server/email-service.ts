@@ -118,17 +118,21 @@ This email was generated automatically from a form submission.
     data: FormSubmissionData,
     recipientEmail: string,
     recipientName?: string,
-    senderEmail: string = 'noreply@chatbot.com',
-    senderName: string = 'Chat Assistant'
+    senderEmail?: string,
+    senderName?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       const { html, text } = this.generateEmailContent(data);
       const title = data.metadata?.title || 'Form Submission';
       
+      // Use environment variables with provided parameters as fallbacks
+      const finalSenderEmail = process.env.BREVO_SENDER_EMAIL || senderEmail || 'noreply@chatbot.com';
+      const finalSenderName = process.env.BREVO_SENDER_NAME || senderName || 'Chat Assistant';
+      
       const emailRequest: BrevoEmailRequest = {
         sender: {
-          name: senderName,
-          email: senderEmail,
+          name: finalSenderName,
+          email: finalSenderEmail,
         },
         to: [{
           email: recipientEmail,
