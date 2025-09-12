@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Loader2, Crown, Zap, Rocket } from "lucide-react";
+import { Check, Loader2, Crown, Zap, Rocket, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SubscriptionPlan {
@@ -78,9 +78,73 @@ export default function Subscription() {
     },
   });
 
+  // Modify subscription mutation (upgrade/downgrade)
+  const modifySubscriptionMutation = useMutation({
+    mutationFn: async (planId: number) => {
+      const response = await apiRequest('POST', '/api/subscription/modify', { planId });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message || "Subscription updated successfully",
+      });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/current"] });
+    },
+    onError: (error) => {
+      console.error('Error modifying subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to modify subscription. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setLoadingPlanId(null);
+    },
+  });
+
+  // Cancel subscription mutation
+  const cancelSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/subscription/cancel', {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Subscription Canceled",
+        description: data.message || "Your subscription will be canceled at the end of the current billing period.",
+      });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/current"] });
+    },
+    onError: (error) => {
+      console.error('Error canceling subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel subscription. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubscribe = (planId: number) => {
     setLoadingPlanId(planId);
-    createCheckoutMutation.mutate(planId);
+    
+    // If user has an existing subscription, modify it instead of creating new checkout
+    if (currentSubscription && currentSubscription.status === 'active') {
+      modifySubscriptionMutation.mutate(planId);
+    } else {
+      // No existing subscription, create new checkout session
+      createCheckoutMutation.mutate(planId);
+    }
+  };
+
+  const handleCancelSubscription = () => {
+    if (window.confirm("Are you sure you want to cancel your subscription? It will remain active until the end of your current billing period.")) {
+      cancelSubscriptionMutation.mutate();
+    }
   };
 
   const formatPrice = (price: number, currency: string) => {
@@ -149,6 +213,22 @@ export default function Subscription() {
                 </div>
               )}
             </CardContent>
+            {currentSubscription.status === 'active' && (
+              <CardFooter>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleCancelSubscription}
+                  disabled={cancelSubscriptionMutation.isPending}
+                  className="w-full"
+                  data-testid="button-cancel-subscription"
+                >
+                  {cancelSubscriptionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel Subscription
+                </Button>
+              </CardFooter>
+            )}
           </Card>
         </div>
       )}
@@ -225,9 +305,15 @@ export default function Subscription() {
                     variant={isPremium ? "default" : "outline"}
                     onClick={() => handleSubscribe(plan.id)}
                     disabled={isCurrentPlan || isLoading}
+                    data-testid={isCurrentPlan ? "button-current-plan" : `button-${currentSubscription && currentSubscription.status === 'active' ? (plan.price > currentSubscription.plan.price ? 'upgrade' : 'downgrade') : 'subscribe'}-${plan.name.toLowerCase()}`}
                   >
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isCurrentPlan ? 'Current Plan' : 'Subscribe Now'}
+                    {isCurrentPlan 
+                      ? 'Current Plan' 
+                      : currentSubscription && currentSubscription.status === 'active'
+                        ? (plan.price > currentSubscription.plan.price ? 'Upgrade' : 'Downgrade')
+                        : 'Subscribe Now'
+                    }
                   </Button>
                 )}
               </CardFooter>

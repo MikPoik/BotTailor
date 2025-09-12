@@ -26,6 +26,10 @@ const createCheckoutSessionSchema = z.object({
   planId: z.number(),
 });
 
+const modifySubscriptionSchema = z.object({
+  planId: z.number(),
+});
+
 const webhookEventSchema = z.object({
   type: z.string(),
   data: z.object({
@@ -55,10 +59,7 @@ subscriptionRouter.get("/current", isAuthenticated, async (req: any, res) => {
 
     const subscription = await storage.getUserSubscriptionWithPlan(req.user.claims.sub);
     
-    if (!subscription) {
-      return res.status(404).json({ error: "No active subscription found" });
-    }
-
+    // Return null instead of 404 when no subscription exists
     res.json(subscription);
   } catch (error) {
     console.error("Error fetching user subscription:", error);
@@ -79,6 +80,35 @@ subscriptionRouter.post("/create-checkout-session", isAuthenticated, async (req:
     const plan = await storage.getSubscriptionPlan(planId);
     if (!plan) {
       return res.status(404).json({ error: "Subscription plan not found" });
+    }
+
+    // Handle Free plan special case - no Stripe integration needed
+    if (plan.price === 0 || plan.stripePriceId === 'price_free') {
+      // Check if user has existing subscription
+      const existingSubscription = await storage.getUserSubscription(req.user.claims.sub);
+      
+      if (existingSubscription) {
+        // Update to Free plan
+        await storage.updateSubscription(existingSubscription.id, {
+          planId: planId,
+          status: 'active',
+          stripeSubscriptionId: null,
+          stripeCustomerId: existingSubscription.stripeCustomerId, // Keep customer ID
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: null,
+          messagesUsedThisMonth: 0,
+        });
+      } else {
+        // Create new Free subscription
+        await storage.createSubscription({
+          userId: req.user.claims.sub,
+          planId: planId,
+          status: 'active',
+          messagesUsedThisMonth: 0,
+        });
+      }
+      
+      return res.json({ message: "Successfully switched to Free plan" });
     }
 
     const stripeClient = initializeStripe();
@@ -123,6 +153,158 @@ subscriptionRouter.post("/create-checkout-session", isAuthenticated, async (req:
   } catch (error) {
     console.error("Error creating checkout session:", error);
     res.status(500).json({ error: "Failed to create checkout session" });
+  }
+});
+
+// Modify existing subscription (upgrade/downgrade)
+subscriptionRouter.post("/modify", isAuthenticated, async (req: any, res) => {
+  try {
+    if (!req.user?.claims?.sub) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { planId } = modifySubscriptionSchema.parse(req.body);
+    
+    // Get current subscription
+    const currentSubscription = await storage.getUserSubscription(req.user.claims.sub);
+    if (!currentSubscription) {
+      return res.status(404).json({ error: "No active subscription found" });
+    }
+
+    // Get the new subscription plan
+    const newPlan = await storage.getSubscriptionPlan(planId);
+    if (!newPlan) {
+      return res.status(404).json({ error: "Subscription plan not found" });
+    }
+
+    // Check if it's actually a different plan
+    if (currentSubscription.planId === planId) {
+      return res.status(400).json({ error: "Already on this plan" });
+    }
+
+    // Handle downgrading to Free plan
+    if (newPlan.price === 0 || newPlan.stripePriceId === 'price_free') {
+      // If user has a paid Stripe subscription, cancel it
+      if (currentSubscription.stripeSubscriptionId) {
+        const stripeClient = initializeStripe();
+        
+        // Cancel the Stripe subscription immediately
+        await stripeClient.subscriptions.cancel(currentSubscription.stripeSubscriptionId);
+        console.log(`[SUBSCRIPTION] Canceled Stripe subscription ${currentSubscription.stripeSubscriptionId} for downgrade to Free`);
+      }
+      
+      // Update database to Free plan
+      await storage.updateSubscription(currentSubscription.id, {
+        planId: planId,
+        status: 'active',
+        stripeSubscriptionId: null,
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: null,
+        messagesUsedThisMonth: 0,
+      });
+
+      console.log(`[SUBSCRIPTION] Downgraded user ${req.user.claims.sub} to Free plan`);
+      
+      return res.json({ 
+        message: "Successfully downgraded to Free plan",
+        subscription: { planId, status: 'active' }
+      });
+    }
+
+    // Handle upgrading from Free to paid plan
+    if (!currentSubscription.stripeSubscriptionId) {
+      // User is on Free plan, redirect to checkout for paid plan
+      return res.status(400).json({ 
+        error: "Please use the checkout process to upgrade from Free plan",
+        requiresCheckout: true 
+      });
+    }
+
+    // Handle paid plan to paid plan changes
+    const stripeClient = initializeStripe();
+
+    // Retrieve the subscription from Stripe
+    const stripeSubscription = await stripeClient.subscriptions.retrieve(
+      currentSubscription.stripeSubscriptionId
+    );
+
+    // Update the subscription with the new price
+    const updatedSubscription = await stripeClient.subscriptions.update(
+      currentSubscription.stripeSubscriptionId,
+      {
+        items: [
+          {
+            id: stripeSubscription.items.data[0].id,
+            price: newPlan.stripePriceId,
+          },
+        ],
+        proration_behavior: 'create_prorations', // Safer and more widely supported
+        cancel_at_period_end: false, // Clear any scheduled cancellations
+      }
+    );
+
+    // Update our database with the new plan ID
+    await storage.updateSubscription(currentSubscription.id, {
+      planId: planId,
+      status: 'active', // Ensure status is active
+    });
+
+    console.log(`[SUBSCRIPTION] Modified subscription ${currentSubscription.stripeSubscriptionId} to plan ${planId}`);
+    
+    res.json({ 
+      message: "Subscription modified successfully",
+      subscription: updatedSubscription 
+    });
+
+  } catch (error) {
+    console.error("Error modifying subscription:", error);
+    res.status(500).json({ error: "Failed to modify subscription" });
+  }
+});
+
+// Cancel subscription
+subscriptionRouter.post("/cancel", isAuthenticated, async (req: any, res) => {
+  try {
+    if (!req.user?.claims?.sub) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Get current subscription
+    const currentSubscription = await storage.getUserSubscription(req.user.claims.sub);
+    if (!currentSubscription || !currentSubscription.stripeSubscriptionId) {
+      return res.status(404).json({ error: "No active subscription found" });
+    }
+
+    if (currentSubscription.status === 'canceled') {
+      return res.status(400).json({ error: "Subscription is already canceled" });
+    }
+
+    const stripeClient = initializeStripe();
+
+    // Cancel the subscription at the end of the current period
+    const canceledSubscription = await stripeClient.subscriptions.update(
+      currentSubscription.stripeSubscriptionId,
+      {
+        cancel_at_period_end: true,
+      }
+    );
+
+    // Update our database
+    await storage.updateSubscription(currentSubscription.id, {
+      status: 'canceling', // We'll use 'canceling' to indicate it will cancel at period end
+    });
+
+    console.log(`[SUBSCRIPTION] Canceled subscription ${currentSubscription.stripeSubscriptionId} at period end`);
+    
+    res.json({ 
+      message: "Subscription will be canceled at the end of the current billing period",
+      subscription: canceledSubscription,
+      cancels_at: canceledSubscription.cancel_at
+    });
+
+  } catch (error) {
+    console.error("Error canceling subscription:", error);
+    res.status(500).json({ error: "Failed to cancel subscription" });
   }
 });
 
