@@ -376,7 +376,7 @@ export default function Home() {
                   <a href="/api/login">Start Building Free</a>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
-                  <a href="mailto:support@example.com">Contact Sales</a>
+                  <a href="mailto:hello@bottailor.com">Contact Sales</a>
                 </Button>
               </>
             )}
