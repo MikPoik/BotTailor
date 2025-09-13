@@ -58,10 +58,6 @@ Preferred communication style: Simple, everyday language.
 
 ### Notes for agent
 
-You can use grep commands to get overview of current routes and functions with these commands when needed:
-
-Always test the api routes after changes with "curl" e.g. curl https://localhost:5000 ...
-
 For server routes, create modular structure with separation of concerns
 Use modular design for features
 UI design choices should be mobile first unless stated otherwise.
