@@ -145,6 +145,7 @@ export default function Subscription() {
         title: `Confirm ${isUpgrade ? "Upgrade" : "Downgrade"}`,
         description:
           `You are about to ${actionVerb} to ${targetPlan.name}. A prorated charge or credit may apply for the remainder of your billing period.`,
+        className: "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-md w-full mx-auto z-[200]",
       });
 
       t.update({
