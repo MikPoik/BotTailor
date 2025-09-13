@@ -61,7 +61,6 @@ Preferred communication style: Simple, everyday language.
 For server routes, create modular structure with separation of concerns
 Use modular design for features
 UI design choices should be mobile first unless stated otherwise.
-Prioritize Replit services to third-party services e.g. database, ObjectStorage, Authentication and so on.
 If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
 
 ### Cost-Efficient Workflow for Codebase Changes

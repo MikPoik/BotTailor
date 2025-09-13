@@ -64,12 +64,33 @@ export default function ChatWidget({
     }
   }, [chatbotConfig]);
 
+  // Safe localStorage access that handles sandboxed environments
+  const safeLocalStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return localStorage.getItem(key);
+      } catch (error) {
+        // In sandboxed iframe, localStorage may not be accessible
+        console.warn('localStorage not accessible, using session-based fallback');
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (error) {
+        // In sandboxed iframe, localStorage may not be accessible
+        console.warn('localStorage not accessible, skipping storage');
+      }
+    }
+  };
+
   // Show initial messages with staggered delays - only if not shown before
   useEffect(() => {
     if (initialMessages.length > 0 && !isOpen && !isEmbedded) {
-      // Check if initial messages have been shown before using localStorage
+      // Check if initial messages have been shown before using safe localStorage
       const storageKey = `chat-initial-messages-shown-${chatbotConfigId || 'default'}`;
-      const hasShownBefore = localStorage.getItem(storageKey) === 'true';
+      const hasShownBefore = safeLocalStorage.getItem(storageKey) === 'true';
       
       if (!hasShownBefore) {
         const timeouts: NodeJS.Timeout[] = [];
@@ -92,8 +113,8 @@ export default function ChatWidget({
 
         messageTimeouts.current = timeouts;
         
-        // Mark as shown in localStorage
-        localStorage.setItem(storageKey, 'true');
+        // Mark as shown in safe localStorage
+        safeLocalStorage.setItem(storageKey, 'true');
 
         return () => {
           timeouts.forEach(timeout => clearTimeout(timeout));
