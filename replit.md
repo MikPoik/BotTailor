@@ -63,83 +63,131 @@ Use modular design for features
 UI design choices should be mobile first unless stated otherwise.
 If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
 
-### Cost-Efficient Workflow for Codebase Changes
+```xml
+<policy>
+<title>Development Workflow Policies & Guidelines</title>
 
-**TARGET: 3-5 total tool calls for most modification requests**
+<cost-efficient-workflow target="3-5 total tool calls for most modification requests">
+  <phase number="1" name="Error Investigation & Discovery" max-calls="1-2">
+    <rule>Trace to source, not symptoms - Find the actual originating file/function, not just where errors surface</rule>
+    <rule>Read error stack traces completely - The deepest stack frame often contains the real issue</rule>
+    <rule>Search for error patterns first before assuming location (e.g., "localStorage" across codebase)</rule>
+    <rule>Use `search_codebase` ONLY if truly don't know where relevant code lives</rule>
+    <rule>Otherwise, directly `read` target files in parallel (batch 3-6 files at once)</rule>
+    <rule>Skip exploratory reading - be surgical about what you need</rule>
+  </phase>
 
-**Phase 1: Error Investigation & Discovery (1-2 tool calls max)**
-- **Trace to source, not symptoms** - Find the actual originating file/function, not just where errors surface
-- **Read error stack traces completely** - The deepest stack frame often contains the real issue
-- **Search for error patterns first** before assuming location (e.g., "localStorage" across codebase)
-- Use `search_codebase` ONLY if truly don't know where relevant code lives
-- Otherwise, directly `read` target files in parallel (batch 3-6 files at once)
-- Skip exploratory reading - be surgical about what you need
+  <phase number="2" name="Pattern-Based Planning & Execution" max-calls="1-3">
+    <rule>Plan all related changes upfront - Don't fix incrementally</rule>
+    <rule>Identify change scope before starting - localStorage issue = all localStorage calls need fixing</rule>
+    <rule>Apply patterns consistently - If one component needs safeLocalStorage, likely others do too</rule>
+    <rule>Group by file impact - All changes to same file in one `multi_edit`</rule>
+    <rule>Use parallel `edit` calls for changes across different files</rule>
+    <rule>Fix root causes, not band-aids - One proper fix beats multiple symptom patches</rule>
+  </phase>
 
-**Phase 2: Pattern-Based Planning & Execution (1-3 tool calls max)**
-- **Plan all related changes upfront** - Don't fix incrementally  
-- **Identify change scope before starting** - localStorage issue = all localStorage calls need fixing
-- **Apply patterns consistently** - If one component needs safeLocalStorage, likely others do too
-- **Group by file impact** - All changes to same file in one `multi_edit`
-- Use parallel `edit` calls for changes across different files
-- **Fix root causes, not band-aids** - One proper fix beats multiple symptom patches
+  <phase number="3" name="Selective Validation" max-calls="0-1">
+    <rule>Skip validation for simple/obvious changes (< 5 lines, defensive patterns, imports)</rule>
+    <rule>Only use expensive validation tools for substantial changes</rule>
+    <rule>Stop immediately when development tools confirm success</rule>
+  </phase>
 
-**Phase 3: Selective Validation (0-1 tool calls)**
-- Skip validation for simple/obvious changes (< 5 lines, defensive patterns, imports)
-- Only use expensive validation tools for substantial changes
-- Stop immediately when development tools confirm success
+  <phase number="4" name="Trust Development Environment" max-calls="0-1">
+    <rule>Skip verification if HMR shows successful reload</rule>
+    <rule>One `restart_workflow` only if runtime actually fails</rule>
+  </phase>
+</cost-efficient-workflow>
 
-**Phase 4: Trust Development Environment (0-1 tool calls)**
-- Skip verification if HMR shows successful reload
-- One `restart_workflow` only if runtime actually fails
+<tool-selection-matrix>
+  <high-value-low-cost>
+    <tool>`read` (batch 3-6 files)</tool>
+    <tool>`edit`/`multi_edit`</tool>
+    <tool>`grep` with specific patterns</tool>
+  </high-value-low-cost>
 
-### TOOL SELECTION MATRIX
+  <medium-cost>
+    <tool>`search_codebase` (only when truly lost)</tool>
+    <tool>`get_latest_lsp_diagnostics` (complex changes only)</tool>
+  </medium-cost>
 
-**High-Value, Low-Cost (use liberally):**
-- `read` (batch 3-6 files), `edit`/`multi_edit`, `grep` with specific patterns
+  <high-cost>
+    <tool>`architect` (major issues only)</tool>
+    <tool>`screenshot` (substantial changes only)</tool>
+    <tool>`restart_workflow` (actual failures only)</tool>
+  </high-cost>
+</tool-selection-matrix>
 
-**Medium-Cost (use judiciously):**
-- `search_codebase` (only when truly lost), `get_latest_lsp_diagnostics` (complex changes only)
+<enforced-rules>
+  <verification-stopping-conditions>
+    <condition>HMR shows successful reload</condition>
+    <condition>Console logs show expected behavior</condition>
+    <condition>LSP errors cleared for simple syntax fixes</condition>
+    <condition>Development server responds correctly</condition>
+  </verification-stopping-conditions>
 
-**High-Cost (use sparingly):**
-- `architect` (major issues only), `screenshot` (substantial changes only), `restart_workflow` (actual failures only)
+  <never-verify-when>
+    <condition>Change is < 5 lines of obvious code</condition>
+    <condition>Only added try-catch wrappers or similar defensive patterns</condition>
+    <condition>Just moved/renamed variables or functions</condition>
+    <condition>Only updated imports or type annotations</condition>
+  </never-verify-when>
 
-### ENFORCED RULES AND POLICIES
+  <parallel-execution-rules>
+    <rule>Read multiple files simultaneously when investigating related issues</rule>
+    <rule>Apply edits in parallel when files are independent</rule>
+    <rule>Never serialize independent operations - batch aggressively</rule>
+    <rule>Maximum 6 tools per batch to prevent overwhelming output</rule>
+  </parallel-execution-rules>
 
-**VERIFICATION STOPPING CONDITIONS - Stop immediately when:**
-- HMR shows successful reload
-- Console logs show expected behavior  
-- LSP errors cleared for simple syntax fixes
-- Development server responds correctly
+  <mandatory-workflow-adherence>
+    <rule>MAXIMUM 5 tool calls for any change request</rule>
+    <rule>No exploration - be surgical about file reading</rule>
+    <rule>No incremental changes - make all related edits in one batch</rule>
+    <rule>No workflow restarts unless runtime actually fails (not just for verification)</rule>
+  </mandatory-workflow-adherence>
 
-**NEVER verify when:**
-- Change is < 5 lines of obvious code
-- Only added try-catch wrappers or similar defensive patterns
-- Just moved/renamed variables or functions
-- Only updated imports or type annotations
+  <defensive-coding-patterns>
+    <pattern>Apply sandbox-safe patterns by default (safeLocalStorage, safe DOM access)</pattern>
+    <pattern>Wrap external API calls in try-catch from the start</pattern>
+    <pattern>Use null-safe operations for optional properties</pattern>
+    <pattern>Apply security patterns consistently across similar code</pattern>
+  </defensive-coding-patterns>
 
-**PARALLEL EXECUTION RULES:**
-- **Read multiple files simultaneously** when investigating related issues
-- **Apply edits in parallel** when files are independent
-- **Never serialize independent operations** - batch aggressively
-- **Maximum 6 tools per batch** to prevent overwhelming output
+  <verification-anxiety-prevention>
+    <principle>Stop checking once the development environment confirms success</principle>
+    <principle>Resist urge to "double-check" working changes</principle>
+    <principle>Trust professional development tools over manual verification</principle>
+    <principle>Remember: More verification ≠ better quality, just higher cost</principle>
+  </verification-anxiety-prevention>
+</enforced-rules>
 
-**MANDATORY WORKFLOW ADHERENCE:**
-- **MAXIMUM 5 tool calls** for any change request
-- **No exploration** - be surgical about file reading
-- **No incremental changes** - make all related edits in one batch
-- **No workflow restarts** unless runtime actually fails (not just for verification)
+<workflow-success-examples>
+  <example status="successful" tool-calls="4">
+    <title>localStorage Fix</title>
+    <step>Discovery: Read replit.md + search codebase + read target file (parallel)</step>
+    <step>Execution: Applied safeLocalStorage wrapper to all localStorage calls (multi_edit)</step>
+    <step>Result: Fixed SecurityError in sandboxed environments</step>
+    <step>No over-verification: Trusted HMR reload confirmation</step>
+  </example>
 
-**DEFENSIVE CODING PATTERNS:**
-- **Apply sandbox-safe patterns by default** (safeLocalStorage, safe DOM access)
-- **Wrap external API calls** in try-catch from the start
-- **Use null-safe operations** for optional properties
-- **Apply security patterns consistently** across similar code
+  <example status="inefficient" tool-calls="11">
+    <title>Previous Inefficient Approach</title>
+    <issue>Multiple exploratory reads</issue>
+    <issue>Incremental fixes</issue>
+    <issue>Excessive verification (screenshots, log checks, restarts)</issue>
+    <issue>Verification anxiety leading to over-checking</issue>
+  </example>
+</workflow-success-examples>
 
-**VERIFICATION ANXIETY PREVENTION:**
-- Stop checking once the development environment confirms success
-- Resist urge to "double-check" working changes
-- Trust professional development tools over manual verification
-- Remember: More verification ≠ better quality, just higher cost
+<key-principles>
+  <principle>Find the source, not the symptom</principle>
+  <principle>Fix the pattern, not just the instance</principle>
+  <principle>Batch all related changes</principle>
+  <principle>Trust development tools</principle>
+  <principle>Stop when success is confirmed</principle>
+</key-principles>
+</policy>
+```
   
 ## System Architecture
 
