@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Check, Loader2, Crown, Zap, Rocket, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 interface SubscriptionPlan {
   id: number;
@@ -40,7 +41,7 @@ const PLAN_COLORS = {
 };
 
 export default function Subscription() {
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
 
   // Fetch subscription plans
@@ -130,13 +131,40 @@ export default function Subscription() {
   });
 
   const handleSubscribe = (planId: number) => {
-    setLoadingPlanId(planId);
-    
-    // If user has an existing subscription, modify it instead of creating new checkout
+    // If user has an existing subscription, confirm before modifying it
     if (currentSubscription && currentSubscription.status === 'active') {
-      modifySubscriptionMutation.mutate(planId);
+      const targetPlan = (plans || []).find((p) => p.id === planId);
+      const currentPlan = currentSubscription.plan;
+
+      if (!targetPlan) return;
+
+      const isUpgrade = targetPlan.price > currentPlan.price;
+      const actionVerb = isUpgrade ? "upgrade" : "downgrade";
+
+      const t = toast({
+        title: `Confirm ${isUpgrade ? "Upgrade" : "Downgrade"}`,
+        description:
+          `You are about to ${actionVerb} to ${targetPlan.name}. A prorated charge or credit may apply for the remainder of your billing period.`,
+      });
+
+      t.update({
+        action: (
+          <ToastAction
+            altText="Confirm plan change"
+            onClick={() => {
+              // Close the toast and proceed with modification
+              dismiss(t.id);
+              setLoadingPlanId(planId);
+              modifySubscriptionMutation.mutate(planId);
+            }}
+          >
+            Confirm
+          </ToastAction>
+        ),
+      });
     } else {
       // No existing subscription, create new checkout session
+      setLoadingPlanId(planId);
       createCheckoutMutation.mutate(planId);
     }
   };
