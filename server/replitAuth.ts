@@ -159,12 +159,25 @@ export async function setupAuth(app: Express) {
       res.redirect(logoutUrl);
     });
   });
+
+  // Add session cleanup endpoint
+  app.post("/api/auth/clear-session", (req, res) => {
+    req.logout(() => {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+        }
+        res.clearCookie('connect.sid');
+        res.json({ message: "Session cleared" });
+      });
+    });
+  });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user?.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -175,7 +188,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    return res.redirect("/api/login");
+    return res.status(401).json({ message: "Session expired" });
   }
 
   try {
@@ -184,6 +197,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
-    return res.redirect("/api/login");
+    console.error("Token refresh failed:", error);
+    return res.status(401).json({ message: "Session expired" });
   }
 };
