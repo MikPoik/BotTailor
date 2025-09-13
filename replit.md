@@ -91,6 +91,36 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 - BATCH AGGRESSIVELY: `read` (3-6 files), `edit` (independent files), `multi_edit` (same file)
 - SKIP FOR SIMPLE CHANGES: Task lists for <3 steps, LSP diagnostics for obvious syntax, architect review for trivial edits
 
+### ENFORCED RULES AND POLICIES
+
+**STRICT VERIFICATION LIMITS:**
+- **NEVER over-verify trivial changes** - Once HMR shows successful update, STOP checking
+- **Trust development tools** - If logs show "hot updated" or successful reload, the change worked
+- **One verification maximum** per change - No multiple screenshots, log checks, or restarts
+
+**SCREENSHOT USAGE POLICY:**
+- **ONLY for substantial changes** (>20 lines, architectural changes, visual modifications)
+- **NEVER for simple fixes** like localStorage wrappers, single-line changes, or obvious syntax fixes
+- **NEVER when HMR shows successful reload** - trust the development environment
+- **NEVER multiple screenshots** for the same change
+
+**DEVELOPMENT TOOL TRUST:**
+- **HMR (Hot Module Replacement)** is authoritative - if it updates successfully, the change worked
+- **Express server logs** show API functionality - if routes work, backend is functional  
+- **Vite console logs** show frontend compilation - if no errors, frontend is operational
+
+**MANDATORY WORKFLOW ADHERENCE:**
+- **MAXIMUM 5 tool calls** for any change request
+- **No exploration** - be surgical about file reading
+- **No incremental changes** - make all related edits in one batch
+- **No workflow restarts** unless runtime actually fails (not just for verification)
+
+**VERIFICATION ANXIETY PREVENTION:**
+- Stop checking once the development environment confirms success
+- Resist urge to "double-check" working changes
+- Trust professional development tools over manual verification
+- Remember: More verification ≠ better quality, just higher cost
+
 ## System Architecture
 
 ### Frontend Architecture
