@@ -120,7 +120,7 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 - Resist urge to "double-check" working changes
 - Trust professional development tools over manual verification
 - Remember: More verification ≠ better quality, just higher cost
-
+  
 ## System Architecture
 
 ### Frontend Architecture

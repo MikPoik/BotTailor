@@ -13,6 +13,32 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   } | null>(null);
   const queryClient = useQueryClient();
 
+  // Safe localStorage access that handles sandboxed environments
+  const safeLocalStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return localStorage.getItem(key);
+      } catch (error) {
+        console.warn('localStorage not accessible, using session-based fallback');
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        localStorage.setItem(key, value);
+      } catch (error) {
+        console.warn('localStorage not accessible, skipping storage');
+      }
+    },
+    removeItem: (key: string): void => {
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        console.warn('localStorage not accessible, skipping removal');
+      }
+    }
+  };
+
   // Initialize session
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
@@ -49,7 +75,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   // Check for existing limit exceeded state on page load
   useEffect(() => {
     const limitKey = `chat-limit-exceeded-${sessionId}`;
-    const limitState = localStorage.getItem(limitKey);
+    const limitState = safeLocalStorage.getItem(limitKey);
     if (limitState) {
       try {
         const parsed = JSON.parse(limitState);
@@ -72,7 +98,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     if (readOnlyMode) {
       const recoveryTimer = setTimeout(() => {
         const limitKey = `chat-limit-exceeded-${sessionId}`;
-        localStorage.removeItem(limitKey);
+        safeLocalStorage.removeItem(limitKey);
         setReadOnlyMode(false);
         setLimitExceededInfo(null);
         console.log('[CHAT] Cleared read-only state for potential recovery');
@@ -166,7 +192,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
                   chatbotConfig: data.chatbotConfig
                 });
                 // Store in localStorage to persist across page loads
-                localStorage.setItem(`chat-limit-exceeded-${sessionId}`, JSON.stringify({
+                safeLocalStorage.setItem(`chat-limit-exceeded-${sessionId}`, JSON.stringify({
                   exceeded: true,
                   message: data.message,
                   showContactForm: data.showContactForm
