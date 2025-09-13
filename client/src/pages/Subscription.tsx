@@ -145,7 +145,13 @@ export default function Subscription() {
         title: `Confirm ${isUpgrade ? "Upgrade" : "Downgrade"}`,
         description:
           `You are about to ${actionVerb} to ${targetPlan.name}. A prorated charge or credit may apply for the remainder of your billing period.`,
-        className: "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md w-full mx-auto z-[200]",
+        className: "fixed top-1/2 left-1/2 max-w-md w-full mx-auto z-[200] !transform-none",
+        style: { 
+          marginTop: '-100px', 
+          marginLeft: '-200px',
+          transform: 'none !important',
+          animation: 'none !important'
+        },
       });
 
       t.update({
@@ -174,7 +180,13 @@ export default function Subscription() {
     const t = toast({
       title: "Confirm Cancellation",
       description: "Are you sure you want to cancel your subscription? It will remain active until the end of your current billing period.",
-      className: "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-md w-full mx-auto z-[200]",
+      className: "fixed top-1/2 left-1/2 max-w-md w-full mx-auto z-[200] !transform-none",
+      style: { 
+        marginTop: '-100px', 
+        marginLeft: '-200px',
+        transform: 'none !important',
+        animation: 'none !important'
+      },
     });
 
     t.update({
