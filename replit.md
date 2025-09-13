@@ -68,6 +68,34 @@ UI design choices should be mobile first unless stated otherwise.
 Prioritize Replit services to third-party services e.g. database, ObjectStorage, Authentication and so on.
 If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
 
+### Cost-Efficient Workflow for Codebase Changes
+
+**TARGET: 3-5 total tool calls for most modification requests**
+
+**Phase 1: Minimal Discovery (1-2 tool calls max)**
+- Use `search_codebase` ONLY if truly don't know where relevant code lives
+- Otherwise, directly `read` target files in parallel (batch 3-6 files at once)
+- Skip exploratory reading - be surgical about what you need
+
+**Phase 2: Batch Planning & Execution (1-3 tool calls max)**
+- Plan ALL changes upfront based on initial read
+- Use `multi_edit` for multiple changes in same file
+- Use parallel `edit` calls for changes across different files
+- Make ALL related changes in one go, not incrementally
+
+**Phase 3: Selective Validation (0-1 tool calls)**
+- Skip `get_latest_lsp_diagnostics` for simple/obvious changes
+- Skip `architect` review for minor changes (< 10 lines, simple logic)
+- Only use expensive validation tools for substantial changes
+
+**Phase 4: Single Verification (1 tool call)**
+- One `restart_workflow` if needed, or skip if changes don't affect runtime
+
+**Tool Usage Rules:**
+- HIGH-COST TOOLS (use sparingly): `architect`, `screenshot`, `search_codebase`
+- BATCH AGGRESSIVELY: `read` (3-6 files), `edit` (independent files), `multi_edit` (same file)
+- SKIP FOR SIMPLE CHANGES: Task lists for <3 steps, LSP diagnostics for obvious syntax, architect review for trivial edits
+
 ## System Architecture
 
 ### Frontend Architecture
