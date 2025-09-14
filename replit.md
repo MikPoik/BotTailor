@@ -4,53 +4,6 @@
 
 This project is a full-stack React chat widget application featuring an Express.js backend and a React frontend. Its primary purpose is to provide an embeddable customer support chat widget for any website. The widget supports rich messaging, including text, interactive cards, menus, and quick replies, aiming to offer a comprehensive and customizable communication tool for businesses. The vision is to enable seamless integration of sophisticated chat functionalities, enhancing user engagement and support capabilities across various web platforms.
 
-## Recent Changes
-
-- **September 3, 2025 - Latest**: OpenAI Service Modularization and Architecture Improvements:
-  - **MODULAR OPENAI SERVICE**: Refactored monolithic `openai-service.ts` (805 lines) into focused, maintainable modules
-  - Created `server/openai/` directory with specialized modules: `client.ts`, `context-builder.ts`, `error-handler.ts`, `response-generator.ts`, `response-parser.ts`, `schema.ts`, `streaming-handler.ts`
-  - **IMPROVED MAINTAINABILITY**: Each module handles a single responsibility for easier testing, debugging, and future enhancements
-  - **BACKWARD COMPATIBILITY**: Maintained full API compatibility through `server/openai/index.ts` export layer
-  - **ENHANCED ERROR HANDLING**: Centralized error handling with consistent fallback responses and logging
-  - **CONTEXT SEPARATION**: Website and survey context building logic isolated for better testability
-  - **STREAMING OPTIMIZATION**: Modular streaming handler with improved bubble parsing and validation
-  - All existing functionality preserved with zero breaking changes
-
-- **September 3, 2025**: Fixed Chat Session Management and UI Designer TypeScript Errors:
-  - **FIXED CHAT HISTORY PERSISTENCE**: Resolved issue where logged-in users were seeing previous chat history on page reload
-  - Updated session caching to include sessionId in query cache key instead of just chatbotConfigId
-  - Each unique sessionId now gets its own cache entry, ensuring fresh conversations for each page load
-  - **FIXED UI DESIGNER SERVICE**: Added missing `actionType` property to all default topic objects
-  - All topic objects now properly specify `actionType: "message"` as required by the TypeScript interface
-
-- **August 8, 2025**: Enhanced Survey Session Management and Restart Handling:
-  - **SMART SURVEY SESSION MANAGEMENT**: Implemented proper handling for completed and restarted surveys
-  - System now checks for existing survey sessions before creating new ones
-  - Completed surveys can be restarted by resetting the session status and responses
-  - Active surveys continue from where they left off instead of creating duplicates
-  - **SURVEY-SPECIFIC SESSION TRACKING**: Changed from generic session checking to survey-specific session management
-  - Uses `getSurveySession(surveyId, sessionId)` instead of generic session lookup
-  - Each survey maintains its own completion state per chat session
-  - **IMPROVED CONVERSATIONAL FLOW**: Added proper survey introductions and response acknowledgments
-  - Survey now includes introductory message when starting ("Let's begin the survey...")
-  - Added acknowledgment responses between questions ("Thank you for your response...")
-  - **CONTEXT-AWARE PROMPTS**: System provides different instructions based on survey progress
-  - **SIMPLIFIED AI INSTRUCTIONS**: Streamlined system prompts to reduce complexity and improve consistency
-  - **INCREASED TOKEN LIMITS**: Raised maxTokens from 1500 to 2000 to prevent truncated menu options
-  - **COMPREHENSIVE MENU LOGGING**: Enhanced streaming response validation with detailed menu bubble detection
-
-- **August 8, 2025**: Fixed Survey Context Building in OpenAI Service:
-  - Fixed syntax errors in openai-service.ts that prevented proper survey context building
-  - Enhanced survey context to include all available survey fields (name, description, title, aiInstructions)
-  - Improved completed survey context to show both questions and answers instead of just responses
-  - Added proper type casting for surveyConfig access to resolve TypeScript errors
-  - Survey context now includes database survey name/description alongside config title/description
-  - AI prompts for completed surveys now show full Q&A pairs for better context understanding
-  - Survey aiInstructions are now properly injected into AI prompts when available
-  - **FIXED ONGOING SURVEYS**: Previous responses now show both questions and answers (Q1: question text, A1: answer) instead of just raw response values
-  - AI now has complete context of what questions were asked and how they were answered during survey progression
-  - **FIXED QUESTION ID MAPPING**: Resolved mismatch between indexed question IDs (question_0, question_1) used in storage and survey config question lookup
-  - Survey context now properly handles both indexed question IDs and original question IDs for maximum compatibility
 
 ## User Preferences
 
@@ -63,131 +16,284 @@ Use modular design for features
 UI design choices should be mobile first unless stated otherwise.
 If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
 
-```xml
-<policy>
-<title>Development Workflow Policies & Guidelines</title>
+# Development Workflow Policies & Guidelines
 
-<cost-efficient-workflow target="3-5 total tool calls for most modification requests">
-  <phase number="1" name="Error Investigation & Discovery" max-calls="1-2">
-    <rule>Trace to source, not symptoms - Find the actual originating file/function, not just where errors surface</rule>
-    <rule>Read error stack traces completely - The deepest stack frame often contains the real issue</rule>
-    <rule>Search for error patterns first before assuming location (e.g., "localStorage" across codebase)</rule>
-    <rule>Use `search_codebase` ONLY if truly don't know where relevant code lives</rule>
-    <rule>Otherwise, directly `read` target files in parallel (batch 3-6 files at once)</rule>
-    <rule>Skip exploratory reading - be surgical about what you need</rule>
-  </phase>
+**Version:** 2.0  
+**Target:** 3-5 total tool calls for most modification requests
 
-  <phase number="2" name="Pattern-Based Planning & Execution" max-calls="1-3">
-    <rule>Plan all related changes upfront - Don't fix incrementally</rule>
-    <rule>Identify change scope before starting - localStorage issue = all localStorage calls need fixing</rule>
-    <rule>Apply patterns consistently - If one component needs safeLocalStorage, likely others do too</rule>
-    <rule>Group by file impact - All changes to same file in one `multi_edit`</rule>
-    <rule>Use parallel `edit` calls for changes across different files</rule>
-    <rule>Fix root causes, not band-aids - One proper fix beats multiple symptom patches</rule>
-  </phase>
+## Core Philosophy
 
-  <phase number="3" name="Selective Validation" max-calls="0-1">
-    <rule>Skip validation for simple/obvious changes (< 5 lines, defensive patterns, imports)</rule>
-    <rule>Only use expensive validation tools for substantial changes</rule>
-    <rule>Stop immediately when development tools confirm success</rule>
-  </phase>
+The following principles guide all development work:
 
-  <phase number="4" name="Trust Development Environment" max-calls="0-1">
-    <rule>Skip verification if HMR shows successful reload</rule>
-    <rule>One `restart_workflow` only if runtime actually fails</rule>
-  </phase>
-</cost-efficient-workflow>
+- **Find the source, not the symptom**
+- **Fix the pattern, not just the instance**
+- **Batch all related changes**
+- **Trust development tools**
+- **Stop when success is confirmed**
+- **Trace to source, not symptoms** - Find the actual originating file/function, not just where errors surface
 
-<tool-selection-matrix>
-  <high-value-low-cost>
-    <tool>`read` (batch 3-6 files)</tool>
-    <tool>`edit`/`multi_edit`</tool>
-    <tool>`grep` with specific patterns</tool>
-  </high-value-low-cost>
+## File Prediction & Surgical Reading ⚠️ CRITICAL
 
-  <medium-cost>
-    <tool>`search_codebase` (only when truly lost)</tool>
-    <tool>`get_latest_lsp_diagnostics` (complex changes only)</tool>
-  </medium-cost>
+### Core Principle
+Always predict BOTH analysis files AND edit targets before starting.
 
-  <high-cost>
-    <tool>`architect` (major issues only)</tool>
-    <tool>`screenshot` (substantial changes only)</tool>
-    <tool>`restart_workflow` (actual failures only)</tool>
-  </high-cost>
-</tool-selection-matrix>
+### Mandatory Workflow
+1. **Map problem** → affected system components → specific files
+2. **Predict which files** you'll need to READ (analysis) AND EDIT (changes)
+3. **Batch ALL predicted files** in initial information gathering
+4. **Execute all changes** in single multi_edit operation
 
-<enforced-rules>
-  <verification-stopping-conditions>
-    <condition>HMR shows successful reload</condition>
-    <condition>Console logs show expected behavior</condition>
-    <condition>LSP errors cleared for simple syntax fixes</condition>
-    <condition>Development server responds correctly</condition>
-  </verification-stopping-conditions>
+### File Prediction Rules
+- **For UI issues:** Read component + parent + related hooks/state
+- **For API issues:** Read routes + services + storage + schema
+- **For data issues:** Read schema + storage + related API endpoints
+- **For feature additions:** Read similar existing implementations
 
-  <never-verify-when>
-    <condition>Change is < 5 lines of obvious code</condition>
-    <condition>Only added try-catch wrappers or similar defensive patterns</condition>
-    <condition>Just moved/renamed variables or functions</condition>
-    <condition>Only updated imports or type annotations</condition>
-  </never-verify-when>
+### Cost Optimization
+- **Target:** 2 tool calls maximum: 1 read batch + 1 edit batch
+- **Anti-pattern:** read → analyze → search → read more → edit
+- **Optimal pattern:** read everything predicted → edit everything needed
 
-  <parallel-execution-rules>
-    <rule>Read multiple files simultaneously when investigating related issues</rule>
-    <rule>Apply edits in parallel when files are independent</rule>
-    <rule>Never serialize independent operations - batch aggressively</rule>
-    <rule>Maximum 6 tools per batch to prevent overwhelming output</rule>
-  </parallel-execution-rules>
+### Success Metric
+Zero search_codebase calls when project structure is known.
 
-  <mandatory-workflow-adherence>
-    <rule>MAXIMUM 5 tool calls for any change request</rule>
-    <rule>No exploration - be surgical about file reading</rule>
-    <rule>No incremental changes - make all related edits in one batch</rule>
-    <rule>No workflow restarts unless runtime actually fails (not just for verification)</rule>
-  </mandatory-workflow-adherence>
+## Super-Batching Workflow ⚠️ CRITICAL
 
-  <defensive-coding-patterns>
-    <pattern>Apply sandbox-safe patterns by default (safeLocalStorage, safe DOM access)</pattern>
-    <pattern>Wrap external API calls in try-catch from the start</pattern>
-    <pattern>Use null-safe operations for optional properties</pattern>
-    <pattern>Apply security patterns consistently across similar code</pattern>
-  </defensive-coding-patterns>
+**Target:** 3-5 tool calls maximum for any feature implementation
 
-  <verification-anxiety-prevention>
-    <principle>Stop checking once the development environment confirms success</principle>
-    <principle>Resist urge to "double-check" working changes</principle>
-    <principle>Trust professional development tools over manual verification</principle>
-    <principle>Remember: More verification ≠ better quality, just higher cost</principle>
-  </verification-anxiety-prevention>
-</enforced-rules>
+### Phase 1: Planning Before Acting (MANDATORY - 0 tool calls)
+- Map ALL information needed (files to read, searches to do) before starting
+- Map ALL changes to make (edits, database updates, new files)
+- Identify dependencies between operations
+- Target minimum possible tool calls
+- Read error stack traces completely - The deepest stack frame often contains the real issue
+- Search for error patterns first before assuming location (e.g., "localStorage" across codebase)
 
-<workflow-success-examples>
-  <example status="successful" tool-calls="4">
-    <title>localStorage Fix</title>
-    <step>Discovery: Read replit.md + search codebase + read target file (parallel)</step>
-    <step>Execution: Applied safeLocalStorage wrapper to all localStorage calls (multi_edit)</step>
-    <step>Result: Fixed SecurityError in sandboxed environments</step>
-    <step>No over-verification: Trusted HMR reload confirmation</step>
-  </example>
+### Phase 2: Information Gathering & Discovery (MAX PARALLELIZATION - 1-2 tool calls)
+- Batch ALL independent reads/searches in one function_calls block
+- **NEVER do:** read(file1) → analyze → read(file2) → analyze
+- **ALWAYS do:** read(file1) + read(file2) + read(file3) + search_codebase() + grep()
+- Only make sequential calls if later reads depend on analysis of earlier reads
+- Use `search_codebase` ONLY if truly don't know where relevant code lives
+- Otherwise, directly `read` target files in parallel (batch 3-6 files at once)
+- Skip exploratory reading - be surgical about what you need
 
-  <example status="inefficient" tool-calls="11">
-    <title>Previous Inefficient Approach</title>
-    <issue>Multiple exploratory reads</issue>
-    <issue>Incremental fixes</issue>
-    <issue>Excessive verification (screenshots, log checks, restarts)</issue>
-    <issue>Verification anxiety leading to over-checking</issue>
-  </example>
-</workflow-success-examples>
+### Phase 3: Implementation & Pattern-Based Execution (AGGRESSIVE MULTI-EDITING - 1-3 tool calls)
+- Use multi_edit for ANY file needing multiple changes
+- **NEVER** do multiple separate edit() calls to same file
+- Batch independent file changes in parallel
+- **Example:** multi_edit(schema.ts) + multi_edit(routes.ts) + multi_edit(storage.ts)
+- Plan all related changes upfront - Don't fix incrementally
+- Identify change scope before starting - localStorage issue = all localStorage calls need fixing
+- Apply patterns consistently - If one component needs safeLocalStorage, likely others do too
+- Group by file impact - All changes to same file in one `multi_edit`
+- Fix root causes, not band-aids - One proper fix beats multiple symptom patches
 
-<key-principles>
-  <principle>Find the source, not the symptom</principle>
-  <principle>Fix the pattern, not just the instance</principle>
-  <principle>Batch all related changes</principle>
-  <principle>Trust development tools</principle>
-  <principle>Stop when success is confirmed</principle>
-</key-principles>
-</policy>
-```
+### Phase 4: Operations & Selective Validation (SMART BUNDLING - 0-1 tool calls)
+- Bundle logically connected operations
+- **Example:** bash("npm run db:push") + refresh_logs() + get_diagnostics() + restart_workflow()
+- **NEVER** do sequential operations when they can be batched
+- Skip validation for simple/obvious changes (< 5 lines, defensive patterns, imports)
+- Only use expensive validation tools for substantial changes
+- Stop immediately when development tools confirm success
+- One `restart_workflow` only if runtime actually fails
+
+### Cost Targets
+- **Feature implementation:** 3-5 tool calls maximum
+- **Bug fixes:** 2-3 tool calls maximum
+- **Information gathering:** 1 tool call (parallel everything)
+- **File modifications:** 1-2 tool calls (multi_edit everything)
+
+### Decision Framework
+Ask yourself:
+- What else can I batch with this?
+- Do I have ALL the information I need before making changes?
+- Can I combine this edit with others using multi_edit?
+- What's the dependency chain - can I collapse it?
+
+**Success Metric:** Target 30-50% cost reduction compared to sequential approach.
+
+## Tool Selection Matrix
+
+### High-Value Low-Cost (use liberally)
+- `read` (batch 3-6 files)
+- `edit`/`multi_edit`
+- `grep` with specific patterns
+
+### Medium-Cost (use judiciously)
+- `search_codebase` (only when truly lost)
+- `get_latest_lsp_diagnostics` (complex changes only)
+
+### High-Cost (use sparingly)
+- `architect` (major issues only)
+- `screenshot` (substantial changes only)
+- `restart_workflow` (actual failures only)
+
+## Mandatory Workflow Adherence
+
+- **MAXIMUM 5 tool calls** for any change request
+- No exploration - be surgical about file reading
+- No incremental changes - make all related edits in one batch
+- No workflow restarts unless runtime actually fails (not just for verification)
+- Maximum 6 tools per batch to prevent overwhelming output
+
+## Parallel Execution Rules
+
+- Read multiple files simultaneously when investigating related issues
+- Apply edits in parallel when files are independent
+- Never serialize independent operations - batch aggressively
+- Maximum 6 tools per batch to prevent overwhelming output
+
+## Defensive Coding Patterns
+
+- Apply sandbox-safe patterns by default (safeLocalStorage, safe DOM access)
+- Wrap external API calls in try-catch from the start
+- Use null-safe operations for optional properties
+- Apply security patterns consistently across similar code
+
+## Verification Rules
+
+### Verification Anxiety Prevention
+- **Stop checking once the development environment confirms success**
+- Resist urge to "double-check" working changes
+- Trust professional development tools over manual verification
+- Remember: More verification ≠ better quality, just higher cost
+
+### Stop Immediately When
+- HMR shows successful reload
+- Console logs show expected behavior
+- LSP errors cleared for simple syntax fixes
+- Development server responds correctly
+
+### Never Verify When
+- Change is < 5 lines of obvious code
+- Only added try-catch wrappers or similar defensive patterns
+- Just moved/renamed variables or functions
+- Only updated imports or type annotations
+
+## Strategic Sub-agent Delegation Guidelines ⚠️ CRITICAL
+
+**Target:** Minimize overhead while maximizing execution efficiency
+
+### Core Principle
+Sub-agents are expensive tools that should be used very selectively.
+
+### Cost Reality
+
+**Overhead factors:**
+- Context transfer overhead: 1-2 extra tool calls for problem explanation and handoff
+- Cold-start reasoning: Each sub-agent rediscovers what primary agent already knows
+- Tool multiplication: Two agents often double the read/edit/validate calls
+- Coordination complexity: Merging outputs and reconciliation reviews
+
+**Optimal approach:** Single agent with parallel tools can batch discovery + edits in 3-5 calls.
+
+### Effective Delegation Scenarios
+
+#### Independent Deliverables
+- **Description:** Independent text deliverables
+- **Examples:** Documentation, test plans, release notes, README files
+- **Rationale:** Output doesn't require tight coordination with ongoing code changes
+
+#### Specialized Audits
+- **Description:** Specialized expertise audits
+- **Examples:** Security reviews, performance analysis, accessibility passes
+- **Rationale:** Requires deep specialized knowledge separate from main implementation
+
+#### Research Tasks
+- **Description:** Large, loosely coupled research tasks
+- **Examples:** Background research while primary agent codes, API exploration
+- **Rationale:** Can run in parallel without blocking main development flow
+
+### Avoid Delegation For (MANDATORY)
+
+**Anti-patterns:**
+- Code fixes and refactors (our bread and butter)
+- Pattern-based changes across files
+- Schema/route/UI modifications
+- React UI tweaks, route additions, API handler adjustments
+- Anything well-served by grep+batch+HMR approach
+
+**Rationale:** These require tight coordination and unified execution patterns.
+
+### Decision Framework
+
+1. **Is this an independent deliverable that doesn't affect ongoing code?**
+   - If yes: Consider delegation
+   - If no: Continue to next question
+
+2. **Does this require specialized expertise separate from main task?**
+   - If yes: Consider delegation
+   - If no: Execute with single agent + parallel tools
+
+### Single-Agent Focus
+
+For 80-90% of development tasks, use proven single-agent patterns:
+- **4-tool pattern:** discovery → batch execution → trust HMR
+- Parallel tool usage for maximum efficiency
+- Pattern-based fixes requiring tight coordination
+- **Efficiency target:** 3-5 tool calls maximum for most modification requests
+
+### Success Criteria
+- Sub-agent usage limited to truly independent or specialized tasks
+- No sub-agent delegation for standard CRUD, UI, or API tasks
+- Maintain 3-5 call efficiency target for main development workflows
+
+## Expert Architect Sub-Agent Usage Policy ⚠️ CRITICAL
+
+**Cost Model:** Expensive Opus 4
+
+### ⚠️ WARNING
+CRITICAL: Architect uses expensive Opus 4 model - use SPARINGLY
+
+### Self-Review First Principle
+
+Before calling architect, I must first attempt to:
+1. Self-assess code quality from architectural perspective
+2. Review my changes for obvious issues, patterns, maintainability
+3. Think through edge cases and potential improvements myself
+4. Consider user requirements and ensure solution aligns with goals
+
+### Usage Hierarchy (Ascending Expense)
+
+#### Never Use For
+- Simple code fixes (< 10 lines)
+- Obvious syntax errors or imports
+- Adding defensive patterns (try-catch, null checks)
+- Straightforward feature additions
+- When development tools (HMR, logs) confirm success
+
+#### Only Use When I Genuinely Cannot
+- **Debug complex issues** - When truly stuck after multiple approaches
+- **Design system architecture** - For major structural decisions beyond my reasoning
+- **Review substantial changes** - When changes >50 lines or affect core architecture
+- **Evaluate trade-offs** - When multiple valid approaches exist and I need expert analysis
+
+### Mandatory Self-Reflection
+
+Ask myself these questions:
+- "Have I thoroughly understood the problem scope?"
+- "Can I identify the architectural concerns myself?"
+- "Are there obvious code quality issues I can spot?"
+- "Does this change align with project patterns and goals?"
+- "Am I calling architect due to laziness or genuine complexity?"
+
+**Goal:** The goal is to develop my own architectural thinking, not outsource it.
+
+## Workflow Examples
+
+### Successful Example: localStorage Fix (4 tool calls)
+1. **Discovery:** Read replit.md + search codebase + read target file (parallel)
+2. **Execution:** Applied safeLocalStorage wrapper to all localStorage calls (multi_edit)
+3. **Result:** Fixed SecurityError in sandboxed environments
+4. **No over-verification:** Trusted HMR reload confirmation
+
+### Inefficient Example: Previous Approach (11 tool calls)
+**Problems:**
+- Multiple exploratory reads
+- Incremental fixes
+- Excessive verification (screenshots, log checks, restarts)
+- Verification anxiety leading to over-checking
   
 ## System Architecture
 
@@ -230,3 +336,439 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 - **vite**: Frontend build tool with HMR
 - **esbuild**: Backend bundling for production
 - **@replit/vite-plugin-runtime-error-modal**: Development error handling
+
+### Source tree
+
+Source Code Tree with Directory Structure:
+============================================================
+├── 📁 client/
+│   └── 📁 src/
+│       ├── 📄 App.tsx
+│       │   ⚡ AuthenticatedRouter(): Element
+│       │   ⚡ Router(): Element
+│       │   ⚡ App(): Element
+│       ├── 📁 components/
+│       │   ├── 📁 chat/
+│       │   │   ├── 📄 chat-interface.tsx
+│       │   │   │   ⚡ export ChatInterface({ sessionId, isMobile, isPreloaded = false, chatbotConfig }: ChatInterfaceProps): Element
+│       │   │   │   📋 ChatInterfaceProps
+│       │   │   ├── 📄 chat-widget.tsx
+│       │   │   │   ⚡ export ChatWidget({ 
+  sessionId, 
+  position = 'bottom-right',
+  primaryColor = '#2563eb',
+  backgroundColor = '#ffffff',
+  textColor = '#1f2937',
+  chatbotConfig
+}: ChatWidgetProps): Element
+│       │   │   │   📋 ChatWidgetProps
+│       │   │   ├── 📄 home-tab.tsx
+│       │   │   │   ⚡ export HomeTab({
+  onStartChat,
+  isMobile,
+  isPreloaded = false,
+  chatbotConfig,
+}: HomeTabProps): Element
+│       │   │   │   📋 HomeTabProps
+│       │   │   │   📋 ChatTopic
+│       │   │   ├── 📄 message-bubble.tsx
+│       │   │   │   ⚡ parseMarkdown(text: string): string
+│       │   │   │   ⚡ export MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: MessageBubbleProps): Element
+│       │   │   │   📋 MessageBubbleProps
+│       │   │   ├── 📄 prompt-assistant-chatbox.tsx
+│       │   │   │   ⚡ extractSystemPrompt(content: string): string
+│       │   │   │   ⚡ export PromptAssistantChatbox({ 
+  currentPrompt, 
+  onPromptGenerated, 
+  chatbotConfig,
+  chatbotGuid 
+}: PromptAssistantChatboxProps): Element
+│       │   │   │   📋 PromptAssistantMessage
+│       │   │   │   📋 PromptAssistantChatboxProps
+│       │   │   ├── 📄 rich-message.tsx
+│       │   │   │   ⚡ parseMarkdown(text: string): string
+│       │   │   │   ⚡ export RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: RichMessageProps): Element
+│       │   │   │   📋 RichMessageProps
+│       │   │   ├── 📄 streaming-message.tsx
+│       │   │   │   ⚡ export StreamingMessage({ 
+  message, 
+  onOptionSelect, 
+  onQuickReply,
+  chatbotConfig,
+  sessionId
+}: StreamingMessageProps): Element
+│       │   │   │   📋 MessageChunk
+│       │   │   │   📋 StreamingMessageProps
+│       │   │   ├── 📄 tabbed-chat-interface.tsx
+│       │   │   │   ⚡ resolveColors(): { primaryColor: string; backgroundColor: string; textColor: string; }
+│       │   │   │   ⚡ export TabbedChatInterface({
+  sessionId,
+  isMobile,
+  isPreloaded = false,
+  onClose,
+  isEmbedded = false,
+  chatbotConfigId,
+  chatbotConfig,
+}: TabbedChatInterfaceProps): Element
+│       │   │   │   📋 TabbedChatInterfaceProps
+│       │   │   └── 📄 typing-indicator.tsx
+│       │   │       ⚡ export TypingIndicator({ chatbotConfig }: TypingIndicatorProps): Element
+│       │   │       📋 TypingIndicatorProps
+│       │   ├── 📄 navbar.tsx
+│       │   │   ⚡ export Navbar(): Element
+│       │   ├── 📄 theme-toggle.tsx
+│       │   │   ⚡ export ThemeToggle(): Element
+│       │   └── 📁 ui-designer/
+│       │       ├── 📄 component-registry.tsx
+│       │       │   ⚡ export getIcon(iconName: string): Element
+│       │       │   ⚡ export HeaderComponent({ component, resolvedColors }: ComponentRegistryProps): Element
+│       │       │   ⚡ export CategoryTabsComponent({ component, resolvedColors }: ComponentRegistryProps): Element | null
+│       │       │   ⚡ export TopicGridComponent({ component, onTopicClick, resolvedColors }: ComponentRegistryProps): Element | null
+│       │       │   ⚡ export QuickActionsComponent({ component, onActionClick, resolvedColors }: ComponentRegistryProps): Element | null
+│       │       │   ⚡ export FooterComponent({ component, resolvedColors }: ComponentRegistryProps): Element
+│       │       │   ⚡ export renderComponent(component: HomeScreenComponent, onTopicClick?: (topic: any) => void, onActionClick?: (action: any) => void, resolvedColors?: {
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+  }): Element | null
+│       │       │   📋 ComponentRegistryProps
+│       │       └── 📄 dynamic-home-screen.tsx
+│       │           ⚡ resolveColors(config: HomeScreenConfig): { primaryColor: any; backgroundColor: any; textColor: any; }
+│       │           ⚡ export DynamicHomeScreen({ 
+  config, 
+  onTopicClick, 
+  onActionClick, 
+  className 
+}: DynamicHomeScreenProps): Element
+│       │           📋 DynamicHomeScreenProps
+│       ├── 📁 contexts/
+│       │   └── 📄 theme-context.tsx
+│       │       ⚡ export ThemeProvider({ children }: { children: React.ReactNode }): Element
+│       │       ⚡ export useTheme(): ThemeContextType
+│       │       📋 ThemeContextType
+│       ├── 📁 hooks/
+│       │   ├── 📄 use-chat.ts
+│       │   │   ⚡ export useChat(sessionId: string, chatbotConfigId?: number): { messages: Message[]; sendMessage: (content: string) => Promise<any>; sendStreamingMessage: (userDisplayText: string, onBubbleReceived?: ((message: Message) => void) | undefined, onAllComplete?: ((messages: Message[]) => void) | undefined, onError?: ((error: string) => void) | undefined, internalMessage?: string | ...
+│       │   ├── 📄 use-mobile.tsx
+│       │   │   ⚡ export useIsMobile(): boolean
+│       │   ├── 📄 use-toast.ts
+│       │   │   ⚡ genId(): string
+│       │   │   ➡️ addToRemoveQueue(toastId: string): void
+│       │   │   ➡️ export reducer(state: State, action: Action): State
+│       │   │   ⚡ dispatch(action: Action): void
+│       │   │   ⚡ toast({ ...props }: Toast): { id: string; dismiss: () => void; update: (props: any) => void; }
+│       │   │   ⚡ useToast(): { toast: ({ ...props }: Toast) => { id: string; dismiss: () => void; update: (props: any) => void; }; dismiss: (toastId?: string | undefined) => void; toasts: any[]; }
+│       │   │   📋 State
+│       │   └── 📄 useAuth.ts
+│       │       ⚡ export useAuth(): { user: unknown; isLoading: boolean; isAuthenticated: boolean; error: Error | null; }
+│       ├── 📁 lib/
+│       │   ├── 📄 authUtils.ts
+│       │   │   ⚡ export isUnauthorizedError(error: Error): boolean
+│       │   ├── 📄 queryClient.ts
+│       │   │   ⚡ async throwIfResNotOk(res: Response): Promise<void>
+│       │   │   ⚡ export async apiRequest(method: string, url: string, data?: unknown | undefined): Promise<Response>
+│       │   │   ➡️ export getQueryFn({ on401: unauthorizedBehavior }: any): ({ queryKey }: { queryKey: QueryKey; signal: AbortSignal; meta: Record<string, unknown> | undefined; pageParam?: unknown; direction?: unknown; }) => Promise<any>
+│       │   └── 📄 utils.ts
+│       │       ⚡ export cn(inputs: ClassValue[]): string
+│       ├── 📄 main.tsx
+│       └── 📁 pages/
+│           ├── 📄 Subscription.tsx
+│           │   ⚡ export Subscription(): Element
+│           │   📋 SubscriptionPlan
+│           │   📋 UserSubscription
+│           ├── 📄 add-data.tsx
+│           │   ⚡ export AddData(): Element
+│           │   📋 WebsiteSource
+│           │   📋 ChatbotConfig
+│           ├── 📄 chat-history.tsx
+│           │   ⚡ export ChatHistory(): Element
+│           │   📋 ChatSession
+│           │   📋 Message
+│           │   📋 SessionsResponse
+│           │   📋 MessagesResponse
+│           ├── 📄 chat-widget.tsx
+│           │   ⚡ export ChatWidgetPage(): Element
+│           ├── 📄 chatbot-edit.tsx
+│           │   ⚡ export ChatbotEdit(): Element
+│           ├── 📄 chatbot-embed.tsx
+│           │   ⚡ export ChatbotEmbed(): Element
+│           │   📋 ChatbotConfig
+│           ├── 📄 chatbot-form.tsx
+│           │   ⚡ export ChatbotForm(): Element
+│           ├── 📄 chatbot-test.tsx
+│           │   ⚡ export ChatbotTest(): Element
+│           │   📋 ChatbotConfig
+│           ├── 📄 dashboard.tsx
+│           │   ⚡ export Dashboard(): Element
+│           │   📋 ChatbotConfig
+│           ├── 📄 docs.tsx
+│           │   ⚡ export Docs(): Element
+│           ├── 📄 home.tsx
+│           │   ⚡ export Home(): Element
+│           │   📋 ChatbotConfig
+│           ├── 📄 not-found.tsx
+│           │   ⚡ export NotFound(): Element
+│           ├── 📄 survey-builder.tsx
+│           │   ⚡ export SurveyBuilderPage(): Element
+│           │   📋 Survey
+│           ├── 📄 ui-designer.tsx
+│           │   ⚡ export UIDesigner(): Element
+│           │   📋 ChatMessage
+│           └── 📄 widget-test.tsx
+│               ⚡ export WidgetTest(): Element
+│               📋 ChatbotConfig
+├── 📄 drizzle.config.ts
+├── 📄 postcss.config.js
+├── 📁 public/
+│   └── 📄 embed.js
+│       ⚡ autoInitialize(): void
+├── 📁 server/
+│   ├── 📄 ai-response-schema.ts
+│   │   ⚡ export buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): string
+│   │   ⚡ export buildSurveyContext(survey: any, surveySession: any): string
+│   ├── 📄 db.js
+│   ├── 📄 db.ts
+│   ├── 📄 email-service.ts
+│   │   📋 FormSubmissionData
+│   │   🏛️ BrevoEmailService
+│   │   │  🏗️ constructor(): void
+│   │   │  🔧 generateEmailContent(data: FormSubmissionData): { html: string; text: string }
+│   │   │  🔧 async sendFormSubmission(data: FormSubmissionData, recipientEmail: string, recipientName?: string, senderEmail?: string, senderName?: string): Promise<{ success: boolean; messageId?: string; error?: string }>
+│   │   │  🔧 async testConnection(): Promise<{ success: boolean; error?: string }>
+│   ├── 📄 index.ts
+│   ├── 📁 openai/
+│   │   ├── 📄 client.ts
+│   │   │   ⚡ export getOpenAIClient(): OpenAI
+│   │   │   ⚡ export isOpenAIConfigured(): boolean
+│   │   ├── 📄 context-builder.ts
+│   │   │   ⚡ export async buildWebsiteContext(chatbotConfigId: number, searchQuery: string, maxContentLength: number): Promise<string>
+│   │   │   ⚡ export async buildActiveSurveyContext(sessionId: string): Promise<{
+  context: string;
+  hasMenuRequired: boolean;
+  questionIndex: number;
+}>
+│   │   │   ⚡ export async buildCompleteSystemPrompt(chatbotConfig: any, sessionId: string, searchQuery: string): Promise<{ 
+  systemPrompt: string; 
+  surveyInfo: { hasMenuRequired: boolean; questionIndex: number } 
+}>
+│   │   ├── 📄 error-handler.ts
+│   │   │   ⚡ export generateFallbackResponse(): AIResponse
+│   │   │   ⚡ export attemptResponseSalvage(accumulatedContent: string): AIResponse | null
+│   │   │   ⚡ export handleParseError(parseError: unknown, accumulatedContent: string, context: string): AIResponse
+│   │   │   ⚡ export handleCriticalError(error: unknown, context: string): AIResponse
+│   │   ├── 📄 index.ts
+│   │   ├── 📄 response-generator.ts
+│   │   │   ⚡ export async generatePromptAssistance(action: string, userMessage: string, chatbotContext: {
+    name?: string;
+    description?: string;
+    currentPrompt?: string;
+  }): Promise<AIResponse>
+│   │   │   ⚡ export async generateMultiBubbleResponse(userMessage: string, sessionId: string, conversationHistory: ConversationMessage[], chatbotConfig?: any): Promise<AIResponse>
+│   │   │   ⚡ export async generateOptionResponse(optionId: string, payload: any, sessionId: string, conversationHistory: ConversationMessage[], chatbotConfig?: any): Promise<AIResponse>
+│   │   │   ⚡ export async generateStructuredResponse(userMessage: string, sessionId: string, conversationHistory: ConversationMessage[], chatbotConfig?: any): Promise<AIResponse>
+│   │   │   📋 ChatConfig
+│   │   │   📋 ConversationMessage
+│   │   ├── 📄 response-parser.ts
+│   │   │   ⚡ export parseOpenAIResponse(accumulatedContent: string): AIResponse
+│   │   │   ⚡ export parseStreamingContent(accumulatedContent: string): {
+  success: boolean;
+  bubbles?: any[];
+  error?: any;
+}
+│   │   │   ⚡ export isBubbleComplete(bubble: any): boolean
+│   │   │   ⚡ export async validateSurveyMenuRequirements(sessionId: string, validated: AIResponse): Promise<void>
+│   │   │   ⚡ export detectJsonBoundary(delta: string, accumulatedContent: string): boolean
+│   │   ├── 📄 schema.ts
+│   │   └── 📄 streaming-handler.ts
+│   │       ⚡ export async generateStreamingResponse(userMessage: string, sessionId: string, conversationHistory: ConversationMessage[], chatbotConfig?: any): AsyncGenerator<StreamingBubbleEvent, void, unknown>
+│   │       📋 StreamingBubbleEvent
+│   ├── 📄 replitAuth.ts
+│   │   ⚡ export getSession(): RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>
+│   │   ⚡ updateUserSession(user: any, tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers): void
+│   │   ⚡ async upsertUser(claims: any): Promise<void>
+│   │   ⚡ export async setupAuth(app: Express): Promise<void>
+│   │   ➡️ export async isAuthenticated(req: any, res: any, next: any): Promise<void | Response<any, Record<string, any>, number>>
+│   ├── 📁 routes/
+│   │   ├── 📄 auth.ts
+│   │   │   ⚡ export async setupAuthRoutes(app: Express): Promise<void>
+│   │   ├── 📄 chat.ts
+│   │   │   ⚡ export setupChatRoutes(app: Express): void
+│   │   │   ⚡ async handleStreamingResponse(userMessage: string, sessionId: string, res: any, chatbotConfigId?: string): Promise<void>
+│   │   │   ⚡ getTextualRepresentation(msg: any): string
+│   │   │   ⚡ async handleSurveySessionCreation(sessionId: string, messageContent: string, chatbotConfigId?: string, session?: any): Promise<void>
+│   │   ├── 📄 chatbots.ts
+│   │   │   ⚡ export setupChatbotRoutes(app: Express): void
+│   │   ├── 📄 index.ts
+│   │   │   ⚡ export async registerRoutes(app: Express): Promise<Server>
+│   │   ├── 📄 public.ts
+│   │   │   ⚡ findStaticFilePath(filename: string): string | null
+│   │   │   ⚡ export setupPublicRoutes(app: Express): void
+│   │   ├── 📄 subscription.ts
+│   │   │   ➡️ initializeStripe(): Stripe
+│   │   │   ⚡ async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void>
+│   │   │   ⚡ async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void>
+│   │   │   ⚡ async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void>
+│   │   │   ⚡ async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void>
+│   │   │   ⚡ async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void>
+│   │   ├── 📄 surveys.ts
+│   │   │   ⚡ export setupSurveyRoutes(app: Express): void
+│   │   ├── 📄 ui-designer.ts
+│   │   │   ⚡ export setupUIDesignerRoutes(app: Express): void
+│   │   ├── 📄 uploads.ts
+│   │   │   ⚡ export setupUploadRoutes(app: Express): void
+│   │   └── 📄 websites.ts
+│   │       ⚡ export setupWebsiteRoutes(app: Express): void
+│   ├── 📄 routes.ts
+│   │   ⚡ export async registerRoutes(app: Express): Promise<Server>
+│   ├── 📄 seed-plans.js
+│   │   ⚡ seedSubscriptionPlans(): any
+│   ├── 📄 seed-plans.ts
+│   │   ⚡ async seedSubscriptionPlans(): Promise<void>
+│   ├── 📄 storage.ts
+│   │   📋 IStorage
+│   │   │  🔧 getUser(id: string): Promise<User | undefined>
+│   │   │  🔧 upsertUser(user: UpsertUser): Promise<User>
+│   │   │  🔧 getChatSession(sessionId: string): Promise<ChatSession | undefined>
+│   │   │  🔧 getChatSessionsByChatbotGuid(chatbotGuid: string): Promise<ChatSession[]>
+│   │   │  🔧 createChatSession(session: InsertChatSession): Promise<ChatSession>
+│   │   │  🔧 updateChatSession(sessionId: string, data: Partial<ChatSession>): Promise<ChatSession | undefined>
+│   │   │  🔧 getMessages(sessionId: string): Promise<Message[]>
+│   │   │  🔧 createMessage(message: InsertMessage): Promise<Message>
+│   │   │  🔧 getRecentMessages(sessionId: string, limit?: number): Promise<Message[]>
+│   │   │  🔧 getChatbotConfigs(userId: string): Promise<ChatbotConfig[]>
+│   │   │  🔧 getChatbotConfig(id: number): Promise<ChatbotConfig | undefined>
+│   │   │  🔧 getChatbotConfigByGuid(userId: string, guid: string): Promise<ChatbotConfig | null>
+│   │   │  🔧 createChatbotConfig(config: InsertChatbotConfig): Promise<ChatbotConfig>
+│   │   │  🔧 updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined>
+│   │   │  🔧 deleteChatbotConfig(id: number): Promise<void>
+│   │   │  🔧 getWebsiteSources(chatbotConfigId: number): Promise<WebsiteSource[]>
+│   │   │  🔧 getWebsiteSource(id: number): Promise<WebsiteSource | undefined>
+│   │   │  🔧 createWebsiteSource(source: InsertWebsiteSource): Promise<WebsiteSource>
+│   │   │  🔧 updateWebsiteSource(id: number, data: Partial<WebsiteSource>): Promise<WebsiteSource | undefined>
+│   │   │  🔧 deleteWebsiteSource(id: number): Promise<void>
+│   │   │  🔧 getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]>
+│   │   │  🔧 createWebsiteContent(content: InsertWebsiteContent, embeddingArray: number[]): Promise<WebsiteContent>
+│   │   │  🔧 searchSimilarContent(chatbotConfigId: number, query: string, limit?: number): Promise<WebsiteContent[]>
+│   │   │  🔧 getSurveys(chatbotConfigId: number): Promise<Survey[]>
+│   │   │  🔧 getSurvey(id: number): Promise<Survey | undefined>
+│   │   │  🔧 createSurvey(surveyData: InsertSurvey): Promise<Survey>
+│   │   │  🔧 updateSurvey(id: number, data: Partial<Survey>): Promise<Survey | undefined>
+│   │   │  🔧 deleteSurvey(id: number): Promise<void>
+│   │   │  🔧 getSurveySession(surveyId: number, sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession>
+│   │   │  🔧 updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined>
+│   │   │  🔧 getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined>
+│   │   │  🔧 getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 deactivateAllSurveySessions(sessionId: string): Promise<void>
+│   │   │  🔧 getConversationCount(userId: string): Promise<number>
+│   │   │  🔧 getSubscriptionPlans(): Promise<SubscriptionPlan[]>
+│   │   │  🔧 getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>
+│   │   │  🔧 createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>
+│   │   │  🔧 updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined>
+│   │   │  🔧 getUserSubscription(userId: string): Promise<Subscription | undefined>
+│   │   │  🔧 getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined>
+│   │   │  🔧 createSubscription(subscription: InsertSubscription): Promise<Subscription>
+│   │   │  🔧 updateSubscription(id: number, data: Partial<Subscription>): Promise<Subscription | undefined>
+│   │   │  🔧 updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<Subscription | undefined>
+│   │   │  🔧 getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | undefined>
+│   │   │  🔧 incrementMessageUsage(userId: string): Promise<void>
+│   │   │  🔧 resetMonthlyMessageUsage(userId: string): Promise<void>
+│   │   │  🔧 checkBotLimit(userId: string): Promise<boolean>
+│   │   │  🔧 checkMessageLimit(userId: string): Promise<boolean>
+│   │   │  🔧 getOrCreateFreeSubscription(userId: string): Promise<Subscription & { plan: SubscriptionPlan }>
+│   │   🏛️ DatabaseStorage
+│   │   │  🔧 async getUser(id: string): Promise<User | undefined>
+│   │   │  🔧 async upsertUser(userData: UpsertUser): Promise<User>
+│   │   │  🔧 async getChatSession(sessionId: string): Promise<ChatSession | undefined>
+│   │   │  🔧 async getChatSessionsByChatbotGuid(chatbotGuid: string): Promise<ChatSession[]>
+│   │   │  🔧 async createChatSession(sessionData: InsertChatSession): Promise<ChatSession>
+│   │   │  🔧 async updateChatSession(sessionId: string, data: Partial<ChatSession>): Promise<ChatSession | undefined>
+│   │   │  🔧 async getMessages(sessionId: string): Promise<Message[]>
+│   │   │  🔧 async createMessage(messageData: InsertMessage): Promise<Message>
+│   │   │  🔧 async getRecentMessages(sessionId: string, limit: number): Promise<Message[]>
+│   │   │  🔧 async getChatbotConfigs(userId: string): Promise<ChatbotConfig[]>
+│   │   │  🔧 async getChatbotConfig(id: number): Promise<ChatbotConfig | undefined>
+│   │   │  🔧 async getChatbotConfigByGuidPublic(guid: string): Promise<ChatbotConfig | null>
+│   │   │  🔧 async getChatbotConfigByGuid(userId: string, guid: string): Promise<ChatbotConfig | null>
+│   │   │  🔧 async getPublicChatbotConfigByGuid(guid: string): Promise<ChatbotConfig | null>
+│   │   │  🔧 async createChatbotConfig(configData: InsertChatbotConfig): Promise<ChatbotConfig>
+│   │   │  🔧 async updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined>
+│   │   │  🔧 async deleteChatbotConfig(id: number): Promise<void>
+│   │   │  🔧 async getWebsiteSources(chatbotConfigId: number): Promise<WebsiteSource[]>
+│   │   │  🔧 async getWebsiteSource(id: number): Promise<WebsiteSource | undefined>
+│   │   │  🔧 async createWebsiteSource(sourceData: InsertWebsiteSource): Promise<WebsiteSource>
+│   │   │  🔧 async updateWebsiteSource(id: number, data: Partial<WebsiteSource>): Promise<WebsiteSource | undefined>
+│   │   │  🔧 async deleteWebsiteSource(id: number): Promise<void>
+│   │   │  🔧 async getWebsiteContents(websiteSourceId: number): Promise<WebsiteContent[]>
+│   │   │  🔧 async createWebsiteContent(contentData: InsertWebsiteContent, embeddingArray: number[]): Promise<WebsiteContent>
+│   │   │  🔧 async searchSimilarContent(chatbotConfigId: number, query: string, limit: number): Promise<WebsiteContent[]>
+│   │   │  🔧 async getSurveys(chatbotConfigId: number): Promise<Survey[]>
+│   │   │  🔧 async getSurvey(id: number): Promise<Survey | undefined>
+│   │   │  🔧 async createSurvey(surveyData: InsertSurvey): Promise<Survey>
+│   │   │  🔧 async updateSurvey(id: number, data: Partial<Survey>): Promise<Survey | undefined>
+│   │   │  🔧 async deleteSurvey(id: number): Promise<void>
+│   │   │  🔧 async getSurveySession(surveyId: number, sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 async createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession>
+│   │   │  🔧 async updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined>
+│   │   │  🔧 async getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 async setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined>
+│   │   │  🔧 async getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 async deactivateAllSurveySessions(sessionId: string): Promise<void>
+│   │   │  🔧 async getConversationCount(userId: string): Promise<number>
+│   │   │  🔧 async getSubscriptionPlans(): Promise<SubscriptionPlan[]>
+│   │   │  🔧 async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>
+│   │   │  🔧 async createSubscriptionPlan(planData: InsertSubscriptionPlan): Promise<SubscriptionPlan>
+│   │   │  🔧 async updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined>
+│   │   │  🔧 async getUserSubscription(userId: string): Promise<Subscription | undefined>
+│   │   │  🔧 async getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined>
+│   │   │  🔧 async createSubscription(subscriptionData: InsertSubscription): Promise<Subscription>
+│   │   │  🔧 async updateSubscription(id: number, data: Partial<Subscription>): Promise<Subscription | undefined>
+│   │   │  🔧 async updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<Subscription | undefined>
+│   │   │  🔧 async getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | undefined>
+│   │   │  🔧 async incrementMessageUsage(userId: string): Promise<void>
+│   │   │  🔧 async resetMonthlyMessageUsage(userId: string): Promise<void>
+│   │   │  🔧 async getOrCreateFreeSubscription(userId: string): Promise<Subscription & { plan: SubscriptionPlan }>
+│   │   │  🔧 async checkBotLimit(userId: string): Promise<boolean>
+│   │   │  🔧 async checkMessageLimit(userId: string): Promise<boolean>
+│   │   🏛️ ChatService
+│   │   │  🏗️ constructor(): void
+│   │   │  🔧 async getMessages(sessionId: string): Promise<any[]>
+│   │   │  🔧 async sendMessage(sessionId: string, message: string): Promise<any>
+│   ├── 📄 ui-designer-service.ts
+│   │   ⚡ createSystemPrompt(availableSurveys: any[]): string
+│   │   ⚡ export async generateHomeScreenConfig(userPrompt: string, chatbotId?: number): Promise<HomeScreenConfig>
+│   │   ⚡ export async modifyHomeScreenConfig(currentConfig: HomeScreenConfig, modificationPrompt: string, chatbotId?: number): Promise<HomeScreenConfig>
+│   │   ⚡ export getDefaultHomeScreenConfig(): HomeScreenConfig
+│   ├── 📄 upload-service.ts
+│   │   ⚡ async ensureClientInitialized(): Promise<boolean>
+│   │   ⚡ export async uploadBackgroundImage(file: Express.Multer.File, userId: string): Promise<UploadResult>
+│   │   ⚡ export async uploadAvatar(file: Express.Multer.File, userId: string): Promise<UploadResult>
+│   │   ⚡ export async getFileFromStorage(fileName: string): Promise<{ success: boolean; data?: Buffer; error?: string; contentType?: string }>
+│   │   ⚡ export async deleteFile(fileName: string): Promise<boolean>
+│   │   📋 UploadResult
+│   ├── 📄 vite.ts
+│   │   ⚡ export log(message: string, source: any): void
+│   │   ⚡ export async setupVite(app: Express, server: Server): Promise<void>
+│   │   ⚡ export serveStatic(app: Express): void
+│   └── 📄 website-scanner.ts
+│       ⚡ initializeOpenAI(): OpenAI
+│       📋 ScanResult
+│       🏛️ WebsiteScanner
+│       │  🔧 async scanWebsite(websiteSourceId: number): Promise<ScanResult>
+│       │  🔧 async discoverUrls(websiteSource: WebsiteSource): Promise<string[]>
+│       │  🔧 async findSitemap(baseUrl: string): Promise<string[]>
+│       │  🔧 async parseSitemap(sitemapUrl: string): Promise<string[]>
+│       │  🔧 async crawlPageLinks(url: string, baseOrigin: string): Promise<string[]>
+│       │  🔧 async extractContentSimple(url: string): Promise<{ title: string; content: string } | null>
+│       │  🔧 async processAndStore(websiteSourceId: number, url: string, content: { title: string; content: string }): Promise<void>
+│       │  🔧 splitIntoChunks(text: string, maxLength: number): string[]
+│       │  🔧 hasNoIndexDirective(robotsContent: string): boolean
+│       │  🔧 isImageSitemap(sitemapUrl: string): boolean
+│       │  🔧 isValidWebPageUrl(url: string): boolean
+│       │  🔧 async generateEmbedding(text: string): Promise<number[]>
+│       │  🔧 async processTextContent(websiteSourceId: number, title: string, textContent: string): Promise<void>
+├── 📁 shared/
+│   └── 📄 schema.ts
+├── 📄 tailwind.config.ts
+└── 📄 vite.config.ts
