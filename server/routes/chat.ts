@@ -140,6 +140,53 @@ export function setupChatRoutes(app: Express) {
     }
   });
 
+  // Delete individual chat session
+  app.delete('/api/chat/:sessionId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Verify the session exists and belongs to a chatbot owned by the user
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Chat session not found" });
+      }
+      
+      if (session.chatbotConfigId) {
+        const chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
+        if (!chatbotConfig || chatbotConfig.userId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      }
+      
+      await storage.deleteChatSession(sessionId);
+      res.json({ message: "Chat session deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting chat session:", error);
+      res.status(500).json({ message: "Failed to delete chat session" });
+    }
+  });
+
+  // Delete all chat sessions for a chatbot
+  app.delete('/api/chatbots/:guid/sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const { guid } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Verify the chatbot belongs to the authenticated user
+      const chatbotConfig = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!chatbotConfig) {
+        return res.status(404).json({ message: "Chatbot not found or access denied" });
+      }
+      
+      await storage.deleteAllChatSessions(chatbotConfig.id);
+      res.json({ message: "All chat sessions deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting all chat sessions:", error);
+      res.status(500).json({ message: "Failed to delete all chat sessions" });
+    }
+  });
+
   // Create new chat session
   app.post('/api/chat/session', async (req, res) => {
     try {

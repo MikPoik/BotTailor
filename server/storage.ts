@@ -43,6 +43,8 @@ export interface IStorage {
   getChatSessionsByChatbotGuid(chatbotGuid: string): Promise<ChatSession[]>;
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
   updateChatSession(sessionId: string, data: Partial<ChatSession>): Promise<ChatSession | undefined>;
+  deleteChatSession(sessionId: string): Promise<void>;
+  deleteAllChatSessions(chatbotConfigId: number): Promise<void>;
 
   // Message methods
   getMessages(sessionId: string): Promise<Message[]>;
@@ -170,6 +172,36 @@ export class DatabaseStorage implements IStorage {
       .where(eq(chatSessions.sessionId, sessionId))
       .returning();
     return session || undefined;
+  }
+
+  async deleteChatSession(sessionId: string): Promise<void> {
+    // First delete all messages for this session
+    await db.delete(messages).where(eq(messages.sessionId, sessionId));
+    
+    // Delete all survey sessions for this chat session
+    await db.delete(surveySessions).where(eq(surveySessions.sessionId, sessionId));
+    
+    // Finally delete the chat session
+    await db.delete(chatSessions).where(eq(chatSessions.sessionId, sessionId));
+  }
+
+  async deleteAllChatSessions(chatbotConfigId: number): Promise<void> {
+    // Get all chat sessions for this chatbot
+    const sessions = await db.select().from(chatSessions)
+      .where(eq(chatSessions.chatbotConfigId, chatbotConfigId));
+
+    // Delete all messages for these sessions
+    for (const session of sessions) {
+      await db.delete(messages).where(eq(messages.sessionId, session.sessionId));
+    }
+
+    // Delete all survey sessions for these chat sessions
+    for (const session of sessions) {
+      await db.delete(surveySessions).where(eq(surveySessions.sessionId, session.sessionId));
+    }
+
+    // Delete all chat sessions for this chatbot
+    await db.delete(chatSessions).where(eq(chatSessions.chatbotConfigId, chatbotConfigId));
   }
 
   // Message methods

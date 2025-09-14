@@ -1,12 +1,25 @@
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MessageCircle, Clock, Calendar, Download } from "lucide-react";
+import { ArrowLeft, MessageCircle, Clock, Calendar, Download, Trash2, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface ChatSession {
   id: number;
@@ -42,6 +55,7 @@ interface MessagesResponse {
 export default function ChatHistory() {
   const { guid } = useParams<{ guid: string }>();
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Fetch chat sessions for this chatbot
   const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useQuery<SessionsResponse>({
@@ -54,6 +68,61 @@ export default function ChatHistory() {
     queryKey: [`/api/chat/${selectedSession}/messages`],
     enabled: !!selectedSession,
   });
+
+  // Delete individual chat session mutation
+  const deleteSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      const response = await apiRequest(`/api/chat/${sessionId}`, 'DELETE');
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${guid}/sessions`] });
+      toast({
+        title: "Success",
+        description: "Chat session deleted successfully",
+      });
+      setSelectedSession(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete chat session",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete all chat sessions mutation
+  const deleteAllSessionsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/chatbots/${guid}/sessions`, 'DELETE');
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${guid}/sessions`] });
+      toast({
+        title: "Success",
+        description: "All chat sessions deleted successfully",
+      });
+      setSelectedSession(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete all chat sessions",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteSessionMutation.mutate(sessionId);
+  };
+
+  const handleDeleteAllSessions = () => {
+    deleteAllSessionsMutation.mutate();
+  };
 
   if (sessionsLoading) {
     return (
@@ -105,6 +174,16 @@ export default function ChatHistory() {
             Back to Sessions
           </Button>
           <h1 className="text-2xl font-bold">Conversation Details</h1>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={() => handleDeleteSession(selectedSession, {} as React.MouseEvent)}
+            disabled={deleteSessionMutation.isPending}
+            data-testid="button-delete-session"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {deleteSessionMutation.isPending ? "Deleting..." : "Delete Session"}
+          </Button>
         </div>
         
         <Card>
@@ -193,6 +272,43 @@ export default function ChatHistory() {
           </Link>
         </Button>
         <h1 className="text-2xl font-bold">Chat History</h1>
+        {sessionsData && sessionsData.sessions.length > 0 && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                disabled={deleteAllSessionsMutation.isPending}
+                data-testid="button-delete-all-sessions"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {deleteAllSessionsMutation.isPending ? "Deleting..." : "Delete All Chats"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent data-testid="dialog-delete-all-confirmation">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  Delete All Chat Sessions
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete all {sessionsData.sessions.length} chat session{sessionsData.sessions.length !== 1 ? 's' : ''}? 
+                  This action cannot be undone and will permanently remove all conversations and messages.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel data-testid="button-cancel-delete-all">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleDeleteAllSessions}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  data-testid="button-confirm-delete-all"
+                >
+                  Delete All Sessions
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       {sessionsData && (
@@ -281,9 +397,21 @@ export default function ChatHistory() {
                       </div>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">
-                    View
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" data-testid="button-view-session">
+                      View
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                      disabled={deleteSessionMutation.isPending}
+                      className="text-destructive hover:text-destructive"
+                      data-testid={`button-delete-session-${session.sessionId.slice(-8)}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
