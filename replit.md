@@ -13,7 +13,7 @@ This project is a full-stack React chat widget application featuring an Express.
 **Before Acting:** Plan ALL reads + edits mentally first
 **Information:** Batch all file reads in 1 call (predict what you need)
 **Changes:** Use multi_edit for everything, batch parallel edits
-**Verification:** Trust dev tools, stop when they confirm success
+**Verification:** Trust dev tools, stop when they confirm success. No screenshots.
 
 ## Critical Batching
 
