@@ -21,7 +21,7 @@ const OptionSchema = z.object({
 const FormFieldSchema = z.object({
   id: z.string(),
   label: z.string(),
-  type: z.enum(['text', 'email', 'textarea']),
+  type: z.enum(["text", "email", "textarea"]),
   placeholder: z.string().optional(),
   required: z.boolean().optional(),
   value: z.string().optional(),
@@ -29,21 +29,32 @@ const FormFieldSchema = z.object({
 
 // Define individual message bubble schema
 const MessageBubbleSchema = z.object({
-  messageType: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form', 'form_submission', 'system']),
+  messageType: z.enum([
+    "text",
+    "card",
+    "menu",
+    "image",
+    "quickReplies",
+    "form",
+    "form_submission",
+    "system",
+  ]),
   content: z.string(),
-  metadata: z.object({
-    title: z.string().optional(),
-    description: z.string().optional(),
-    imageUrl: z.string().optional(),
-    buttons: z.array(ButtonSchema).optional(),
-    options: z.array(OptionSchema).optional(),
-    quickReplies: z.array(z.string()).optional(),
-    formFields: z.array(FormFieldSchema).optional(),
-    submitButton: ButtonSchema.optional(),
-    isSystemMessage: z.boolean().optional(),
-    optionsContext: z.boolean().optional(),
-    isFollowUp: z.boolean().optional(),
-  }).optional(),
+  metadata: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      imageUrl: z.string().optional(),
+      buttons: z.array(ButtonSchema).optional(),
+      options: z.array(OptionSchema).optional(),
+      quickReplies: z.array(z.string()).optional(),
+      formFields: z.array(FormFieldSchema).optional(),
+      submitButton: ButtonSchema.optional(),
+      isSystemMessage: z.boolean().optional(),
+      optionsContext: z.boolean().optional(),
+      isFollowUp: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 // Define the AI response schema for multi-bubble responses
@@ -55,7 +66,10 @@ export type AIResponse = z.infer<typeof AIResponseSchema>;
 export type MessageBubble = z.infer<typeof MessageBubbleSchema>;
 
 // Function to build system prompt with chatbot config and survey context
-export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): string {
+export function buildSystemPrompt(
+  chatbotConfig?: any,
+  surveyContext?: string,
+): string {
   // Default system prompt if no chatbot config is provided
   const defaultSystemPrompt = "You are a helpful customer service chatbot.";
 
@@ -63,20 +77,24 @@ export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): 
   const customPrompt = chatbotConfig?.systemPrompt || defaultSystemPrompt;
 
   // Check if email configuration is properly set up for forms
-  const hasEmailConfig = chatbotConfig?.formRecipientEmail ;
-  console.log(`[SYSTEM_PROMPT] Email config check - formRecipientEmail: ${chatbotConfig?.formRecipientEmail}, hasEmailConfig: ${hasEmailConfig}`);
+  const hasEmailConfig = chatbotConfig?.formRecipientEmail;
+  console.log(
+    `[SYSTEM_PROMPT] Email config check - formRecipientEmail: ${chatbotConfig?.formRecipientEmail}, hasEmailConfig: ${hasEmailConfig}`,
+  );
 
   // Build message types list conditionally
   const messageTypes = [
     "1. TEXT: Simple text responses with optional quick replies. You can format text with markdown syntax",
     "2. CARD: Rich cards with title, description, image, and action buttons, use only if asked about a product.",
-    "3. MENU: Interactive menus with selectable options", 
+    "3. MENU: Interactive menus with selectable options",
     "4. IMAGE: Image responses with optional text",
-    "5. QUICKREPLIES: Text with suggested quick reply buttons"
+    "5. QUICKREPLIES: Text with suggested quick reply buttons",
   ];
-  
+
   if (hasEmailConfig) {
-    messageTypes.push("6. FORM: Interactive forms with input fields and submit button");
+    messageTypes.push(
+      "6. FORM: Interactive forms with input fields and submit button",
+    );
   }
 
   // Technical structure instructions for message formatting
@@ -85,7 +103,7 @@ export function buildSystemPrompt(chatbotConfig?: any, surveyContext?: string): 
 You respond with multiple message bubbles in a single turn to create natural, human-like conversations.
 
 Message Types Available:
-${messageTypes.join('\n')}
+${messageTypes.join("\n")}
 
 **SURVEY RULES:**
 - Always provide conversational context before questions
@@ -141,8 +159,9 @@ Example for regular greetings and options:
   ]
 }
 
-${hasEmailConfig ? 
-`**For Contact Forms:**
+${
+  hasEmailConfig
+    ? `**For Contact Forms:**
 {
   "bubbles": [
     {"messageType": "text", "content": "I'd be happy to help you get in touch with our team!"},
@@ -156,9 +175,10 @@ ${hasEmailConfig ?
       "submitButton": {"id": "submit_contact", "text": "Send Message", "action": "submit_form"}
     }}
   ]
-}` : 
-`**For Contact Requests:**
-When users ask to contact you or leave their information, explain that contact forms are not currently available and suggest alternative ways to get in touch (website, phone, email, etc.) based on the context provided.`}
+}`
+    : `**For Contact Requests:**
+When users ask to contact you or leave their information, explain that contact forms are not currently available and suggest alternative ways to get in touch (website, phone, email, etc.) based on the context provided. Format url links as markdown: [link text](url)`
+}
 
 
 **For Surveys (step-by-step questionnaires):**
@@ -231,20 +251,23 @@ Previous conversations about other surveys are irrelevant to this new survey.
   // If survey is completed
   if (currentQuestionIndex >= config.questions.length) {
     // Build complete Q&A context for completed surveys
-    const qaContext = config.questions.map((question: any, index: number) => {
-      // Try indexed ID first (question_0, question_1, etc.), then fallback to question.id
-      const indexedId = `question_${index}`;
-      const response = responses[indexedId] || responses[question.id] || 'No response';
-      return `Q${index + 1}: ${question.text}\nA${index + 1}: ${response}`;
-    }).join('\n\n');
+    const qaContext = config.questions
+      .map((question: any, index: number) => {
+        // Try indexed ID first (question_0, question_1, etc.), then fallback to question.id
+        const indexedId = `question_${index}`;
+        const response =
+          responses[indexedId] || responses[question.id] || "No response";
+        return `Q${index + 1}: ${question.text}\nA${index + 1}: ${response}`;
+      })
+      .join("\n\n");
 
     return `
 **SURVEY COMPLETED**
 Survey: "${survey.name}" (${config.title})
-${survey.description ? `Description: ${survey.description}` : ''}
-${config.description ? `Survey Details: ${config.description}` : ''}
-Completion message: "${config.completionMessage || 'Thank you for completing the survey!'}"
-${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ''}
+${survey.description ? `Description: ${survey.description}` : ""}
+${config.description ? `Survey Details: ${config.description}` : ""}
+Completion message: "${config.completionMessage || "Thank you for completing the survey!"}"
+${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ""}
 
 **COMPLETE SURVEY RESPONSES**
 ${qaContext}
@@ -260,15 +283,15 @@ Offer a contact form or a link to contact us instead.
   context += `
 **ACTIVE SURVEY CONTEXT**
 Survey: "${survey.name}" (${config.title})
-${survey.description ? `Description: ${survey.description}` : ''}
-${config.description ? `Survey Details: ${config.description}` : ''}
+${survey.description ? `Description: ${survey.description}` : ""}
+${config.description ? `Survey Details: ${config.description}` : ""}
 Progress: Question ${currentQuestionIndex + 1} of ${config.questions.length}
-${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ''}
+${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ""}
 
 **CURRENT QUESTION**
 Question ${currentQuestionIndex + 1}: ${currentQuestion.text}
 Type: ${currentQuestion.type}
-Required: ${currentQuestion.required ? 'Yes' : 'No'}
+Required: ${currentQuestion.required ? "Yes" : "No"}
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
@@ -278,12 +301,15 @@ Required: ${currentQuestion.required ? 'Yes' : 'No'}
     currentQuestion.options.forEach((option: any, index: number) => {
       context += `${index + 1}. ${option.text}\n`;
     });
-    
+
     // Generate dynamic menu format example with ALL options
-    const optionsForExample = currentQuestion.options.map((option: any, index: number) => 
-      `      {"id": "option${index + 1}", "text": "${option.text}", "action": "select"}`
-    ).join(',\n');
-    
+    const optionsForExample = currentQuestion.options
+      .map(
+        (option: any, index: number) =>
+          `      {"id": "option${index + 1}", "text": "${option.text}", "action": "select"}`,
+      )
+      .join(",\n");
+
     context += `
 **MENU FORMAT REQUIRED** (MUST INCLUDE ALL ${currentQuestion.options.length} OPTIONS):
 {
@@ -297,7 +323,7 @@ ${optionsForExample}
 }
 
 🚨 CRITICAL: You MUST include ALL ${currentQuestion.options.length} options in the menu. Never omit any options!
-The options are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(', ')}
+The options are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(", ")}
 `;
   }
 
@@ -321,7 +347,9 @@ The options are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).jo
         // Fallback: try to find question by ID
         const question = config.questions.find((q: any) => q.id === qId);
         if (question) {
-          const questionIndex = config.questions.findIndex((q: any) => q.id === qId);
+          const questionIndex = config.questions.findIndex(
+            (q: any) => q.id === qId,
+          );
           context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${answer}\n\n`;
         } else {
           context += `${qId}: ${answer}\n`;
@@ -336,13 +364,14 @@ The options are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).jo
 `;
 
   // Check if this might be a survey restart (question 1 but user just requested survey)
-  const isLikelyRestart = currentQuestionIndex === 0 && Object.keys(responses).length === 0;
-  
+  const isLikelyRestart =
+    currentQuestionIndex === 0 && Object.keys(responses).length === 0;
+
   // Different instructions based on survey progress
   if (isLikelyRestart) {
     // Starting or restarting survey - need introduction
     context += `
-1. Clear new survey introduction: "Let's start a new survey. ${config.description || 'This fresh assessment will help us understand your current needs.'}"
+1. Clear new survey introduction: "Let's start a new survey. ${config.description || "This fresh assessment will help us understand your current needs."}"
 2. Present current question: "Question 1: ${currentQuestion.text}"
 3. Menu with exact options listed above (DO NOT create different options)
 
