@@ -77,7 +77,7 @@ export function Navbar() {
         {/* Desktop User Menu */}
         {!isMobile && (
           <div className="flex items-center space-x-2">
-             <ThemeToggle />
+            <ThemeToggle />
             {!isAuthenticated ? (
               <Button asChild>
                 <a href="/api/login">Log In</a>
@@ -133,33 +133,30 @@ export function Navbar() {
           </div>
         )}
 
-        {/* Mobile Menu Button */}
+        {/* Mobile Menu Button and User Avatar/Login */}
         {isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleMenu}
-            className="ml-auto mr-2"
-          >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        )}
-
-        {/* Mobile User Avatar */}
-        {isMobile && isAuthenticated && (
-          <Avatar className="h-8 w-8 ml-auto">
-            <AvatarImage src={user?.profileImageUrl || ""} alt={user?.email || ""} />
-            <AvatarFallback>
-              {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-        )}
-
-        {/* Mobile Login Button */}
-        {isMobile && !isAuthenticated && (
-          <Button asChild className="ml-auto">
-            <a href="/api/login">Log In</a>
-          </Button>
+          <div className="flex items-center space-x-2 ml-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMenu}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            
+            {isAuthenticated ? (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.profileImageUrl || ""} alt={user?.email || ""} />
+                <AvatarFallback>
+                  {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Button asChild>
+                <a href="/api/login">Log In</a>
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
