@@ -4,18 +4,6 @@
 
 This project is a full-stack React chat widget application featuring an Express.js backend and a React frontend. Its primary purpose is to provide an embeddable customer support chat widget for any website. The widget supports rich messaging, including text, interactive cards, menus, and quick replies, aiming to offer a comprehensive and customizable communication tool for businesses. The vision is to enable seamless integration of sophisticated chat functionalities, enhancing user engagement and support capabilities across various web platforms.
 
-
-## User Preferences
-
-Preferred communication style: Simple, everyday language.
-
-### Notes for agent
-
-For server routes, create modular structure with separation of concerns
-Use modular design for features
-UI design choices should be mobile first unless stated otherwise.
-If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
-
 # Development Workflow Policies & Guidelines
 
 **Version:** 2.0  
@@ -37,22 +25,11 @@ The following principles guide all development work:
 ### Core Principle
 Always predict BOTH analysis files AND edit targets before starting.
 
-### Mandatory Workflow
-1. **Map problem** → affected system components → specific files
-2. **Predict which files** you'll need to READ (analysis) AND EDIT (changes)
-3. **Batch ALL predicted files** in initial information gathering
-4. **Execute all changes** in single multi_edit operation
-
 ### File Prediction Rules
 - **For UI issues:** Read component + parent + related hooks/state
 - **For API issues:** Read routes + services + storage + schema
 - **For data issues:** Read schema + storage + related API endpoints
 - **For feature additions:** Read similar existing implementations
-
-### Cost Optimization
-- **Target:** 2 tool calls maximum: 1 read batch + 1 edit batch
-- **Anti-pattern:** read → analyze → search → read more → edit
-- **Optimal pattern:** read everything predicted → edit everything needed
 
 ### Success Metric
 Zero search_codebase calls when project structure is known.
@@ -70,7 +47,9 @@ Zero search_codebase calls when project structure is known.
 - Search for error patterns first before assuming location (e.g., "localStorage" across codebase)
 
 ### Phase 2: Information Gathering & Discovery (MAX PARALLELIZATION - 1-2 tool calls)
-- Batch ALL independent reads/searches in one function_calls block
+- **Map problem** → affected system components → specific files
+- **Predict which files** you'll need to READ (analysis) AND EDIT (changes)
+- **Batch ALL predicted files** in initial information gathering
 - **NEVER do:** read(file1) → analyze → read(file2) → analyze
 - **ALWAYS do:** read(file1) + read(file2) + read(file3) + search_codebase() + grep()
 - Only make sequential calls if later reads depend on analysis of earlier reads
@@ -79,6 +58,7 @@ Zero search_codebase calls when project structure is known.
 - Skip exploratory reading - be surgical about what you need
 
 ### Phase 3: Implementation & Pattern-Based Execution (AGGRESSIVE MULTI-EDITING - 1-3 tool calls)
+- **Execute all changes** in single multi_edit operation
 - Use multi_edit for ANY file needing multiple changes
 - **NEVER** do multiple separate edit() calls to same file
 - Batch independent file changes in parallel
@@ -98,14 +78,16 @@ Zero search_codebase calls when project structure is known.
 - Stop immediately when development tools confirm success
 - One `restart_workflow` only if runtime actually fails
 
-### Cost Targets
+### Cost Targets & Decision Framework
 - **Feature implementation:** 3-5 tool calls maximum
 - **Bug fixes:** 2-3 tool calls maximum
 - **Information gathering:** 1 tool call (parallel everything)
 - **File modifications:** 1-2 tool calls (multi_edit everything)
+- **Target:** 2 tool calls maximum: 1 read batch + 1 edit batch
+- **Anti-pattern:** read → analyze → search → read more → edit
+- **Optimal pattern:** read everything predicted → edit everything needed
 
-### Decision Framework
-Ask yourself:
+**Ask yourself:**
 - What else can I batch with this?
 - Do I have ALL the information I need before making changes?
 - Can I combine this edit with others using multi_edit?
@@ -129,16 +111,12 @@ Ask yourself:
 - `screenshot` (substantial changes only)
 - `restart_workflow` (actual failures only)
 
-## Mandatory Workflow Adherence
+## Mandatory Workflow Adherence & Execution Rules
 
 - **MAXIMUM 5 tool calls** for any change request
 - No exploration - be surgical about file reading
 - No incremental changes - make all related edits in one batch
 - No workflow restarts unless runtime actually fails (not just for verification)
-- Maximum 6 tools per batch to prevent overwhelming output
-
-## Parallel Execution Rules
-
 - Read multiple files simultaneously when investigating related issues
 - Apply edits in parallel when files are independent
 - Never serialize independent operations - batch aggressively
@@ -266,7 +244,7 @@ Before calling architect, I must first attempt to:
 #### Only Use When I Genuinely Cannot
 - **Debug complex issues** - When truly stuck after multiple approaches
 - **Design system architecture** - For major structural decisions beyond my reasoning
-- **Review substantial changes** - When changes >50 lines or affect core architecture
+- **Review substantial changes** - When changes >500 lines or major affect in core architecture
 - **Evaluate trade-offs** - When multiple valid approaches exist and I need expert analysis
 
 ### Mandatory Self-Reflection
@@ -294,6 +272,19 @@ Ask myself these questions:
 - Incremental fixes
 - Excessive verification (screenshots, log checks, restarts)
 - Verification anxiety leading to over-checking
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+### Notes for agent
+
+For server routes, create modular structure with separation of concerns
+Use modular design for features
+UI design choices should be mobile first unless stated otherwise.
+If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
+
+
   
 ## System Architecture
 
