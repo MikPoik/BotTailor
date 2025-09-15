@@ -111,13 +111,16 @@ Zero search_codebase calls when project structure is known.
 - `screenshot` (substantial changes only)
 - `restart_workflow` (actual failures only)
 
-## BATCHED PARALLEL FUNCTION CALL EXAMPLES
+## Mandatory Workflow Adherence & Execution Rules
 
-### Example 1: Discovery Phase (Reading Multiple Files)
-```xml
-<function_calls>
-<invoke name="read">
-<parameter name="file_path">shared/schema.ts
+- **MAXIMUM 5 tool calls** for any change request
+- No exploration - be surgical about file reading
+- No incremental changes - make all related edits in one batch
+- No workflow restarts unless runtime actually fails (not just for verification)
+- Read multiple files simultaneously when investigating related issues
+- Apply edits in parallel when files are independent
+- Never serialize independent operations - batch aggressively
+- Maximum 6 tools per batch to prevent overwhelming output
 
 ## Defensive Coding Patterns
 
