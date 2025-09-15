@@ -78,6 +78,46 @@ Zero search_codebase calls when project structure is known.
 - Stop immediately when development tools confirm success
 - One `restart_workflow` only if runtime actually fails
 
+### Pseudo XML Batched Tool Call Examples
+
+**Information Gathering Pattern:**
+```
+<function_calls>
+<invoke name="read"><parameter name="file_path">shared/schema.ts</parameter></invoke>
+<invoke name="read"><parameter name="file_path">server/routes.ts</parameter></invoke>
+<invoke name="read"><parameter name="file_path">client/src/components/chat-widget.tsx</parameter></invoke>
+<invoke name="search_codebase"><parameter name="query">error handling patterns localStorage</parameter></invoke>
+</function_calls>
+```
+
+**Implementation Pattern:**
+```
+<function_calls>
+<invoke name="multi_edit">
+<parameter name="file_path">shared/schema.ts</parameter>
+<parameter name="edits">[{"old_string":"...", "new_string":"..."}]</parameter>
+</invoke>
+<invoke name="multi_edit">
+<parameter name="file_path">server/routes.ts</parameter>
+<parameter name="edits">[{"old_string":"...", "new_string":"..."}]</parameter>
+</invoke>
+<invoke name="edit">
+<parameter name="file_path">client/src/App.tsx</parameter>
+<parameter name="old_string">...</parameter>
+<parameter name="new_string">...</parameter>
+</invoke>
+</function_calls>
+```
+
+**Operations & Validation Pattern:**
+```
+<function_calls>
+<invoke name="bash"><parameter name="command">npm run db:push</parameter></invoke>
+<invoke name="get_latest_lsp_diagnostics"></invoke>
+<invoke name="restart_workflow"><parameter name="name">Start application</parameter></invoke>
+</function_calls>
+```
+
 ### Cost Targets & Decision Framework
 - **Feature implementation:** 3-5 tool calls maximum
 - **Bug fixes:** 2-3 tool calls maximum
@@ -149,114 +189,99 @@ Zero search_codebase calls when project structure is known.
 - Just moved/renamed variables or functions
 - Only updated imports or type annotations
 
-## Strategic Sub-agent Delegation Guidelines ⚠️ CRITICAL
+## Implementation Strategy ⚠️ CRITICAL
 
-**Target:** Minimize overhead while maximizing execution efficiency
+**Target:** Execute everything yourself with maximum efficiency
 
 ### Core Principle
-Sub-agents are expensive tools that should be used very selectively.
+**NEVER use sub-agents or task lists.** Create implementation plans mentally and execute directly.
 
-### Cost Reality
+### Why No Sub-Agents
 
-**Overhead factors:**
-- Context transfer overhead: 1-2 extra tool calls for problem explanation and handoff
-- Cold-start reasoning: Each sub-agent rediscovers what primary agent already knows
-- Tool multiplication: Two agents often double the read/edit/validate calls
-- Coordination complexity: Merging outputs and reconciliation reviews
+**Cost Reality:**
+- Context transfer overhead: 1-2 extra tool calls for handoff
+- Cold-start reasoning: Each sub-agent rediscovers what you already know
+- Tool multiplication: Multiple agents double the read/edit/validate calls
+- Coordination complexity: Merging outputs and reviews
 
-**Optimal approach:** Single agent with parallel tools can batch discovery + edits in 3-5 calls.
+**Optimal approach:** Single execution with parallel tools = 3-5 calls total.
 
-### Effective Delegation Scenarios
+### Implementation Plan Strategy
 
-#### Independent Deliverables
-- **Description:** Independent text deliverables
-- **Examples:** Documentation, test plans, release notes, README files
-- **Rationale:** Output doesn't require tight coordination with ongoing code changes
+**Mental Planning Process:**
+1. **Analyze request** → identify affected components → predict files
+2. **Map dependencies** → determine batch groupings → plan parallel execution
+3. **Execute directly** → batch reads → batch edits → validate once
 
-#### Specialized Audits
-- **Description:** Specialized expertise audits
-- **Examples:** Security reviews, performance analysis, accessibility passes
-- **Rationale:** Requires deep specialized knowledge separate from main implementation
+**No External Planning Tools:**
+- No `write_task_list` - plan mentally
+- No `start_subagent` - execute yourself
+- No `architect` unless genuinely stuck after multiple attempts
 
-#### Research Tasks
-- **Description:** Large, loosely coupled research tasks
-- **Examples:** Background research while primary agent codes, API exploration
-- **Rationale:** Can run in parallel without blocking main development flow
+### Direct Execution Framework
 
-### Avoid Delegation For (MANDATORY)
-
-**Anti-patterns:**
-- Code fixes and refactors (our bread and butter)
+**For ALL Development Tasks:**
+- Code fixes and refactors
 - Pattern-based changes across files
 - Schema/route/UI modifications
 - React UI tweaks, route additions, API handler adjustments
-- Anything well-served by grep+batch+HMR approach
+- Database changes and migrations
+- Feature implementations
 
-**Rationale:** These require tight coordination and unified execution patterns.
-
-### Decision Framework
-
-1. **Is this an independent deliverable that doesn't affect ongoing code?**
-   - If yes: Consider delegation
-   - If no: Continue to next question
-
-2. **Does this require specialized expertise separate from main task?**
-   - If yes: Consider delegation
-   - If no: Execute with single agent + parallel tools
-
-### Single-Agent Focus
-
-For 80-90% of development tasks, use proven single-agent patterns:
-- **4-tool pattern:** discovery → batch execution → trust HMR
-- Parallel tool usage for maximum efficiency
-- Pattern-based fixes requiring tight coordination
-- **Efficiency target:** 3-5 tool calls maximum for most modification requests
+**Implementation Pattern:**
+1. **Think** → plan approach mentally
+2. **Read** → batch all needed files in parallel
+3. **Edit** → execute all changes with multi_edit/parallel edits
+4. **Validate** → minimal verification, trust development tools
 
 ### Success Criteria
-- Sub-agent usage limited to truly independent or specialized tasks
-- No sub-agent delegation for standard CRUD, UI, or API tasks
-- Maintain 3-5 call efficiency target for main development workflows
+- Zero sub-agent usage for standard development
+- Zero task list creation - mental planning only
+- Maintain 3-5 call efficiency target
+- Direct problem-solving without delegation overhead
 
-## Expert Architect Sub-Agent Usage Policy ⚠️ CRITICAL
+## Architect Usage Policy ⚠️ CRITICAL
 
-**Cost Model:** Expensive Opus 4
+**Cost Model:** Expensive Opus 4 - AVOID UNLESS TRULY STUCK
 
-### ⚠️ WARNING
-CRITICAL: Architect uses expensive Opus 4 model - use SPARINGLY
+### ⚠️ CORE PRINCIPLE
+**DO NOT use architect for normal development.** Solve problems yourself with direct implementation.
 
-### Self-Review First Principle
+### Self-Execution First
 
-Before calling architect, I must first attempt to:
-1. Self-assess code quality from architectural perspective
-2. Review my changes for obvious issues, patterns, maintainability
-3. Think through edge cases and potential improvements myself
-4. Consider user requirements and ensure solution aligns with goals
+**Instead of calling architect:**
+1. Create implementation plan mentally
+2. Execute changes directly with batched tools
+3. Trust development environment feedback (HMR, logs, LSP)
+4. Fix issues as they appear with targeted edits
 
-### Usage Hierarchy (Ascending Expense)
+### Architect Usage - EXTREME EMERGENCY ONLY
 
-#### Never Use For
-- Simple code fixes (< 10 lines)
-- Obvious syntax errors or imports
-- Adding defensive patterns (try-catch, null checks)
-- Straightforward feature additions
-- When development tools (HMR, logs) confirm success
+**Only call architect when:**
+- **Genuinely stuck** after 3+ different implementation attempts
+- **Complex system-wide failures** that resist multiple debugging approaches
+- **Architecture decisions** affecting core system design
 
-#### Only Use When I Genuinely Cannot
-- **Debug complex issues** - When truly stuck after multiple approaches
-- **Design system architecture** - For major structural decisions beyond my reasoning
-- **Review substantial changes** - When changes >500 lines or major affect in core architecture
-- **Evaluate trade-offs** - When multiple valid approaches exist and I need expert analysis
+**NEVER call architect for:**
+- Normal code fixes, feature additions, UI changes
+- Simple debugging (use logs, LSP diagnostics, console)
+- Standard CRUD operations, API endpoints, React components
+- Database schema changes, routing updates
+- Anything solvable with grep + read + edit pattern
 
-### Mandatory Self-Reflection
+### Self-Reliance Strategy
 
-Ask myself these questions:
-- "Have I thoroughly understood the problem scope?"
-- "Can I identify the architectural concerns myself?"
-- "Are there obvious code quality issues I can spot?"
-- "Does this change align with project patterns and goals?"
-- "Am I calling architect due to laziness or genuine complexity?"
+**Problem-Solving Process:**
+1. **Read error messages completely** - often contain solution
+2. **Check logs and diagnostics** - development tools show issues
+3. **Search codebase for patterns** - find similar implementations
+4. **Apply defensive coding** - try-catch, null checks, safe patterns
+5. **Test incrementally** - small changes, immediate feedback
 
-**Goal:** The goal is to develop my own architectural thinking, not outsource it.
+**Success Metrics:**
+- Zero architect calls for normal development
+- Self-solve 95%+ of implementation challenges
+- Use development tools as primary debugging method
 
 ## Workflow Examples
 
