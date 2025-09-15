@@ -5,7 +5,7 @@ import { insertChatbotConfigSchema, HomeScreenConfigSchema } from "@shared/schem
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { isAuthenticated } from "../replitAuth";
-import { generatePromptAssistance } from "../openai";
+import { generatePromptAssistance, generateSurveyAssistance } from "../openai";
 
 // Chatbot management routes
 export function setupChatbotRoutes(app: Express) {
@@ -238,6 +238,47 @@ export function setupChatbotRoutes(app: Express) {
       console.error("Error in prompt assistant:", error);
       res.status(500).json({ 
         message: "Failed to generate prompt assistance response",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Survey assistance endpoint for AI-powered survey generation and improvement
+  app.post('/api/chatbots/:guid/survey-assistant', isAuthenticated, async (req: any, res) => {
+    try {
+      const { guid } = req.params;
+      const userId = req.user.claims.sub;
+      const { action, context, userMessage } = req.body;
+
+      // Verify ownership and get existing chatbot
+      const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
+      if (!existingChatbot) {
+        return res.status(404).json({ message: "Chatbot not found" });
+      }
+      
+      const chatbotConfig = {
+        name: context?.chatbotName || existingChatbot.name,
+        description: context?.description || existingChatbot.description
+      };
+
+      // Use the modular OpenAI service for survey assistance
+      const aiResponse = await generateSurveyAssistance(
+        action,
+        userMessage || `Please ${action} a survey for this chatbot.`,
+        chatbotConfig,
+        context?.currentSurvey || null
+      );
+
+      res.json({
+        success: true,
+        response: aiResponse,
+        action: action
+      });
+
+    } catch (error) {
+      console.error("Error in survey assistant:", error);
+      res.status(500).json({ 
+        message: "Failed to generate survey assistance response",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

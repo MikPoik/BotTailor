@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Survey as BaseSurvey, type SurveyConfig, type SurveyQuestion } from "@shared/schema";
+import SurveyAssistantChatbox from "@/components/chat/survey-assistant-chatbox";
 
 // Properly typed Survey interface
 interface Survey extends Omit<BaseSurvey, 'surveyConfig'> {
@@ -32,6 +33,7 @@ import {
   MessageSquare,
   PlusCircle,
   Settings,
+  Wand2,
 } from "lucide-react";
 
 export default function SurveyBuilderPage() {
@@ -427,10 +429,14 @@ export default function SurveyBuilderPage() {
           <div className="lg:col-span-2">
             {selectedSurvey ? (
               <Tabs defaultValue="questions" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="questions">Questions</TabsTrigger>
                   <TabsTrigger value="settings">Settings</TabsTrigger>
                   <TabsTrigger value="preview">Preview</TabsTrigger>
+                  <TabsTrigger value="ai-assistant" data-testid="tab-ai-assistant">
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    AI Assistant
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="questions" className="space-y-6">
@@ -936,6 +942,41 @@ export default function SurveyBuilderPage() {
                           </div>
                         ))}
                       </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="ai-assistant" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Wand2 className="h-5 w-5" />
+                        Survey AI Assistant
+                      </CardTitle>
+                      <p className="text-muted-foreground text-sm">
+                        Ask the AI to generate survey questions or modify your existing survey. 
+                        The AI understands your current survey and can help create professional questionnaires.
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      {chatbot && (
+                        <SurveyAssistantChatbox
+                          currentSurvey={selectedSurvey}
+                          onSurveyGenerated={(newSurveyConfig) => {
+                            if (selectedSurvey) {
+                              updateSurveyMutation.mutate({
+                                id: selectedSurvey.id,
+                                updates: { surveyConfig: newSurveyConfig },
+                              });
+                            }
+                          }}
+                          chatbotConfig={{
+                            name: chatbot.name,
+                            description: chatbot.description,
+                          }}
+                          chatbotGuid={guid || ""}
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>

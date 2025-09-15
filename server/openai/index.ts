@@ -8,7 +8,8 @@ export {
   generateMultiBubbleResponse,
   generateOptionResponse,
   generateStructuredResponse,
-  generatePromptAssistance
+  generatePromptAssistance,
+  generateSurveyAssistance
 } from "./response-generator";
 
 export { generateStreamingResponse } from "./streaming-handler";
