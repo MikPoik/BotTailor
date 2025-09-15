@@ -416,7 +416,7 @@ export function getDefaultHomeScreenConfig(): HomeScreenConfig {
         id: "header_default",
         type: "header",
         props: {
-          title: "Welcome to Support",
+          title: "Welcome to BotTailor",
           subtitle: "How can we help you today?",
         },
         order: 1,

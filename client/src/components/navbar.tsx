@@ -31,7 +31,7 @@ export function Navbar() {
             <Link href="/" className="mr-6 flex items-center space-x-2">
               <Bot className="h-6 w-6" />
               <span className="hidden font-bold sm:inline-block">
-                ChatBot Builder
+                BotTailor
               </span>
             </Link>
           </div>
@@ -51,7 +51,7 @@ export function Navbar() {
           <Link href="/" className="flex items-center space-x-2">
             <Bot className="h-6 w-6" />
             <span className="font-bold">
-              ChatBot Builder
+              BotTailor
             </span>
           </Link>
         </div>

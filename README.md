@@ -1,7 +1,7 @@
 
-# AI Chatbot Widget Platform
+# BotTailor
 
-A full-stack React application for creating and embedding intelligent AI chatbots on any website. Built with Express.js backend and React frontend, featuring customizable UI, rich messaging, and seamless integration.
+Smart AI Chatbots Made Simple - A full-stack React application for creating and embedding intelligent AI chatbots on any website. Built with Express.js backend and React frontend, featuring customizable UI, rich messaging, and seamless integration.
 
 ## Features
 
@@ -209,4 +209,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ for seamless AI-powered customer engagement.
+Built with ❤️ by BotTailor for seamless AI-powered customer engagement.
