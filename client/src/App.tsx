@@ -23,6 +23,7 @@ import ChatHistory from "@/pages/chat-history";
 import ChatbotEmbed from "@/pages/chatbot-embed";
 import Docs from "@/pages/docs";
 import Subscription from "@/pages/Subscription";
+import Contact from "@/pages/contact";
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
@@ -54,12 +55,14 @@ function AuthenticatedRouter() {
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Home} />
+          <Route path="/contact" component={Contact} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
         </>
       ) : (
         <>
           <Route path="/" component={Home} />
+          <Route path="/contact" component={Contact} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/chatbots/new" component={ChatbotForm} />
           <Route path="/chatbots/:guid/add-data" component={AddData} />

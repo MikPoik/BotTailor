@@ -8,6 +8,7 @@ import { setupPublicRoutes } from "./public";
 import { setupUploadRoutes } from "./uploads";
 import { setupWebsiteRoutes } from "./websites";
 import { setupUIDesignerRoutes } from "./ui-designer";
+import { setupContactRoutes } from "./contact";
 import { subscriptionRouter, webhookHandler } from "./subscription";
 
 // Main route registration function
@@ -21,6 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupUploadRoutes(app);
   setupWebsiteRoutes(app);
   setupUIDesignerRoutes(app);
+  setupContactRoutes(app);
   
   // Webhook route (must be at /api/webhook for Stripe)
   app.use("/api/webhook", webhookHandler);
