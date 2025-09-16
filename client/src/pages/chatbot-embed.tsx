@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useParams } from "wouter";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Copy, ExternalLink, Code, Globe, Palette } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Code, Globe, Palette, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +45,7 @@ export default function ChatbotEmbed() {
 
   const [position, setPosition] = useState<'bottom-right' | 'bottom-left'>('bottom-right');
   const [customDomain, setCustomDomain] = useState('');
+  const [widgetKey, setWidgetKey] = useState<number>(0);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -143,9 +144,97 @@ ${buildEmbedParams()}
     });
   };
 
-  const testWidget = () => {
-    window.open(`/widget-test?chatbot=${chatbot.guid}`, '_blank', 'width=500,height=700');
+  // Clean up and refresh widget for testing
+  const refreshWidget = () => {
+    setWidgetKey(prev => prev + 1);
   };
+
+  // Load and initialize chat widget for testing
+  useEffect(() => {
+    if (!chatbot || !user) return;
+
+    // Clean up any existing widgets using the reset method
+    const cleanupExistingWidget = () => {
+      if ((window as any).ChatWidget && (window as any).ChatWidget.reset) {
+        // Use the built-in reset method
+        (window as any).ChatWidget.reset();
+      } else {
+        // Fallback manual cleanup if reset method not available
+        const elementsToRemove = [
+          'chatwidget-bubble',
+          'chatwidget-container', 
+          'chatwidget-overlay',
+          'chatwidget-mobile-iframe',
+          'chatwidget-theme-vars',
+          'chatwidget-styles',
+          'chatwidget-iframe',
+          'chatwidget-widget',
+          'chatwidget-animations'
+        ];
+
+        elementsToRemove.forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.remove();
+          }
+        });
+
+        if ((window as any).ChatWidget) {
+          (window as any).ChatWidget._initialized = false;
+        }
+      }
+    };
+
+    cleanupExistingWidget();
+
+    // Small delay to ensure cleanup is complete
+    const timer = setTimeout(() => {
+      // Load embed script only if not already loaded
+      let script = document.querySelector('script[src="/embed.js"]') as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.src = '/embed.js';
+        document.head.appendChild(script);
+      }
+
+      // Initialize widget after script loads
+      const initWidget = () => {
+        if ((window as any).ChatWidget) {
+          try {
+            // Get theme colors from the chatbot configuration
+            const widgetConfig: any = {
+              apiUrl: widgetUrl,
+              position: position as 'bottom-right' | 'bottom-left',
+              _forceReinit: true // Use the force reinit flag we added
+            };
+
+            // Apply theme colors from UI Designer if available
+            if (theme) {
+              if (theme.primaryColor) widgetConfig.primaryColor = theme.primaryColor;
+              if (theme.backgroundColor) widgetConfig.backgroundColor = theme.backgroundColor;
+              if (theme.textColor) widgetConfig.textColor = theme.textColor;
+            }
+
+            (window as any).ChatWidget.init(widgetConfig);
+          } catch (error) {
+            console.log('Widget initialization error:', error);
+          }
+        } else {
+          // If ChatWidget is not available, try again in a short delay
+          setTimeout(initWidget, 50);
+        }
+      };
+
+      // Always call initWidget with a slight delay to ensure cleanup is complete
+      setTimeout(initWidget, 100);
+    }, 100);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timer);
+      cleanupExistingWidget();
+    };
+  }, [chatbot, user, position, widgetKey, theme, widgetUrl]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -272,9 +361,9 @@ ${buildEmbedParams()}
                 )}
 
                 <div className="pt-4">
-                  <Button onClick={testWidget} className="w-full" variant="outline">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Test Widget
+                  <Button onClick={refreshWidget} className="w-full" variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh Widget
                   </Button>
                 </div>
               </CardContent>
@@ -398,30 +487,61 @@ ${buildEmbedParams()}
               </TabsContent>
             </Tabs>
 
-            {/* Preview */}
+            {/* Live Widget Test */}
             <Card>
               <CardHeader>
-                <CardTitle>Preview</CardTitle>
+                <CardTitle>Live Widget Test</CardTitle>
                 <CardDescription>
-                  See how your widget will look on your website
+                  Test your chatbot widget live on this demo website. The widget should appear in the {position.replace('-', ' ')} corner.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="relative bg-gray-50 rounded-lg p-8 min-h-[300px] border-2 border-dashed border-gray-200">
-                  <div className="text-center text-gray-500 mb-4">
-                    Your website content would appear here
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-8 min-h-[400px] relative overflow-hidden">
+                  {/* Demo Website Content */}
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-neutral-800 mb-2">Demo Website</h3>
+                      <p className="text-neutral-600">
+                        This simulates your external website where the chat widget will be embedded.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <h4 className="text-lg font-semibold text-neutral-800 mb-3">About Our Service</h4>
+                      <p className="text-neutral-600 text-sm leading-relaxed mb-3">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
+                        incididunt ut labore et dolore magna aliqua.
+                      </p>
+                      <p className="text-neutral-600 text-sm leading-relaxed">
+                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore 
+                        eu fugiat nulla pariatur.
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white rounded-lg shadow-sm p-4">
+                        <h5 className="font-semibold text-neutral-800 mb-2">Features</h5>
+                        <ul className="text-sm text-neutral-600 space-y-1">
+                          <li>• Real-time chat support</li>
+                          <li>• Customizable appearance</li>
+                          <li>• Easy integration</li>
+                        </ul>
+                      </div>
+                      <div className="bg-white rounded-lg shadow-sm p-4">
+                        <h5 className="font-semibold text-neutral-800 mb-2">Test Instructions</h5>
+                        <p className="text-sm text-neutral-600">
+                          Click the chat widget in the {position.replace('-', ' ')} corner to test the chatbot.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
-                  {/* Widget Preview */}
-                  <div className={`fixed ${position === 'bottom-right' ? 'bottom-4 right-4' : 'bottom-4 left-4'}`}>
-                    <div 
-                      className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform"
-                      style={{ backgroundColor: theme?.primaryColor || '#2563eb' }}
-                    >
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                      </svg>
-                    </div>
+                  {/* Note about theme colors */}
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+                    <p className="text-blue-900 font-medium mb-1">💡 Theme Integration</p>
+                    <p className="text-blue-700">
+                      Colors from your UI Designer are automatically applied to the widget and included in embed codes.
+                    </p>
                   </div>
                 </div>
               </CardContent>

@@ -18,7 +18,6 @@ import ChatbotTest from "@/pages/chatbot-test";
 import UIDesigner from "@/pages/ui-designer";
 import AddData from "@/pages/add-data";
 import SurveyBuilder from "@/pages/survey-builder";
-import WidgetTest from "@/pages/widget-test";
 import ChatHistory from "@/pages/chat-history";
 import ChatbotEmbed from "@/pages/chatbot-embed";
 import Docs from "@/pages/docs";
@@ -74,7 +73,6 @@ function AuthenticatedRouter() {
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
-          <Route path="/widget-test" component={WidgetTest} />
           <Route path="/subscription" component={Subscription} />
           <Route path="/docs" component={Docs} />
           <Route path="/support" component={Docs} />
