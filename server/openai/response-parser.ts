@@ -65,6 +65,17 @@ export function isBubbleComplete(bubble: any): boolean {
         bubble.metadata.options.every((opt: any) => opt.id && opt.text && opt.action)
       );
       
+    case "multiselect_menu":
+      return !!(
+        bubble.metadata?.options &&
+        Array.isArray(bubble.metadata.options) &&
+        bubble.metadata.options.length > 0 &&
+        bubble.metadata.options.every((opt: any) => opt.id && opt.text && opt.action) &&
+        bubble.metadata.allowMultiple !== undefined &&
+        typeof bubble.metadata.minSelections === 'number' &&
+        typeof bubble.metadata.maxSelections === 'number'
+      );
+      
     case "form":
       return !!(
         bubble.metadata?.formFields &&
