@@ -72,7 +72,10 @@ When creating survey launchers, use:
 - Consider mobile-first responsive design
 
 ## Response Format:
-Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No additional text or explanation.
+Return a JSON object containing two keys: "config" and "explanation".
+- "config": A valid JSON object that matches the HomeScreenConfig schema.
+- "explanation": A natural language explanation of the generated UI, detailing the choices made and how it addresses the user's prompt.
+No additional text or explanation outside of these keys.
 
 **CRITICAL REQUIREMENTS:**
 - Every component MUST have an "id" field (unique string identifier)
@@ -80,26 +83,29 @@ Return ONLY a valid JSON object that matches the HomeScreenConfig schema. No add
 - Every component MUST have a "visible" field (boolean, typically true)
 - Every component MUST have a "type" field matching the available types
 - Every component MUST have a "props" field (object with component-specific properties)
-- The root object MUST have a "components" field (array of components)
-- The root object MUST have a "version" field (string, typically "1.0")
+- The root "config" object MUST have a "components" field (array of components)
+- The root "config" object MUST have a "version" field (string, typically "1.0")
 
 **EXAMPLE STRUCTURE:**
 {
-  "version": "1.0",
-  "components": [
-    {
-      "id": "header_1",
-      "type": "header",
-      "props": {
-        "title": "Welcome",
-        "subtitle": "How can we help?"
-      },
-      "order": 1,
-      "visible": true
-    }
-  ],
-  "theme": {},
-  "settings": {}
+  "config": {
+    "version": "1.0",
+    "components": [
+      {
+        "id": "header_1",
+        "type": "header",
+        "props": {
+          "title": "Welcome",
+          "subtitle": "How can we help?"
+        },
+        "order": 1,
+        "visible": true
+      }
+    ],
+    "theme": {},
+    "settings": {}
+  },
+  "explanation": "This is a simple welcome screen with a header."
 }
 
 Generate engaging home screen layouts based on the user's requirements.`;
@@ -108,7 +114,7 @@ Generate engaging home screen layouts based on the user's requirements.`;
 export async function generateHomeScreenConfig(
   userPrompt: string,
   chatbotId?: number,
-): Promise<HomeScreenConfig> {
+): Promise<{ config: HomeScreenConfig; explanation: string | null }> {
   try {
     // Fetch available surveys if chatbotId is provided
     let availableSurveys: any[] = [];
@@ -159,7 +165,11 @@ export async function generateHomeScreenConfig(
     }
 
     // Parse and validate the response
-    const parsedConfig = JSON.parse(jsonResponse);
+    const parsedResponse = JSON.parse(jsonResponse);
+
+    // Extract config and explanation from response
+    const parsedConfig = parsedResponse.config || parsedResponse;
+    const explanation = parsedResponse.explanation || null;
 
     // Ensure components array exists
     if (!parsedConfig.components || !Array.isArray(parsedConfig.components)) {
@@ -179,12 +189,12 @@ export async function generateHomeScreenConfig(
         if (typeof component.visible !== 'boolean') {
           component.visible = true;
         }
-        
+
         // Ensure props object exists
         if (!component.props) {
           component.props = {};
         }
-        
+
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {
             // Ensure description exists for actions
@@ -231,7 +241,11 @@ export async function generateHomeScreenConfig(
 
     const validatedConfig = HomeScreenConfigSchema.parse(parsedConfig);
 
-    return validatedConfig;
+    // Return both config and explanation
+    return {
+      config: validatedConfig,
+      explanation: explanation
+    } as any;
   } catch (error) {
     console.error("Error generating home screen config:", error);
     if (error instanceof Error && error.message.includes("ZodError")) {
@@ -249,7 +263,7 @@ export async function modifyHomeScreenConfig(
   currentConfig: HomeScreenConfig,
   modificationPrompt: string,
   chatbotId?: number,
-): Promise<HomeScreenConfig> {
+): Promise<{ config: HomeScreenConfig; explanation: string | null }> {
   try {
     // Fetch available surveys if chatbotId is provided
     let availableSurveys: any[] = [];
@@ -299,7 +313,7 @@ Keep the existing structure and theme unless specifically requested to modify th
 
 Modification request: ${modificationPrompt}
 
-Return the updated complete configuration.`,
+Return the updated complete configuration as a JSON object with 'config' and 'explanation' keys. The 'config' key should contain the UI JSON, and the 'explanation' key should contain a natural language description of the changes made.`,
         },
       ],
       response_format: { type: "json_object" },
@@ -312,7 +326,11 @@ Return the updated complete configuration.`,
     }
 
     // Parse and validate the response
-    const parsedConfig = JSON.parse(jsonResponse);
+    const parsedResponse = JSON.parse(jsonResponse);
+
+    // Extract config and explanation from response
+    const parsedConfig = parsedResponse.config || parsedResponse;
+    const explanation = parsedResponse.explanation || null;
 
     // Ensure components array exists
     if (!parsedConfig.components || !Array.isArray(parsedConfig.components)) {
@@ -332,12 +350,12 @@ Return the updated complete configuration.`,
         if (typeof component.visible !== 'boolean') {
           component.visible = true;
         }
-        
+
         // Ensure props object exists
         if (!component.props) {
           component.props = {};
         }
-        
+
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {
             if (!action.description) {
@@ -393,7 +411,11 @@ Return the updated complete configuration.`,
 
     const validatedConfig = HomeScreenConfigSchema.parse(parsedConfig);
 
-    return validatedConfig;
+    // Return both config and explanation
+    return {
+      config: validatedConfig,
+      explanation: explanation
+    } as any;
   } catch (error) {
     console.error("Error modifying home screen config:", error);
     if (error instanceof Error && error.message.includes("ZodError")) {

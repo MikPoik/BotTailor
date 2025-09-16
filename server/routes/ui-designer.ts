@@ -26,9 +26,18 @@ export function setupUIDesignerRoutes(app: Express) {
       
       console.log(`[UI DESIGNER] Generating new config for user: ${userId}`);
       
-      const config = await generateHomeScreenConfig(validatedData.prompt, validatedData.chatbotId);
+      const result = await generateHomeScreenConfig(validatedData.prompt, validatedData.chatbotId);
       
-      res.json({ config });
+      // Handle both old format (just config) and new format (config + explanation)
+      if (result.config) {
+        res.json({ 
+          config: result.config, 
+          explanation: result.explanation 
+        });
+      } else {
+        // Backward compatibility - treat result as config
+        res.json({ config: result });
+      }
     } catch (error) {
       console.error("Error generating home screen config:", error);
       
@@ -81,13 +90,22 @@ export function setupUIDesignerRoutes(app: Express) {
       
       console.log(`[UI DESIGNER] Modifying config for user: ${userId}`);
       
-      const config = await modifyHomeScreenConfig(
+      const result = await modifyHomeScreenConfig(
         validatedData.currentConfig,
         validatedData.prompt,
         validatedData.chatbotId
       );
       
-      res.json({ config });
+      // Handle both old format (just config) and new format (config + explanation)
+      if (result.config) {
+        res.json({ 
+          config: result.config, 
+          explanation: result.explanation 
+        });
+      } else {
+        // Backward compatibility - treat result as config
+        res.json({ config: result });
+      }
     } catch (error) {
       console.error("Error modifying home screen config:", error);
       

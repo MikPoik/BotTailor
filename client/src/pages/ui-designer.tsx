@@ -209,14 +209,18 @@ export default function UIDesigner() {
       const response = await apiRequest("POST", endpoint, payload);
       return response.json();
     },
-    onSuccess: (data: { config: HomeScreenConfig }) => {
+    onSuccess: (data: { config: HomeScreenConfig; explanation?: string }) => {
       setCurrentConfig(data.config);
       setConfigKey(prev => prev + 1); // Force re-render
+      
+      // Use AI explanation if available, otherwise use default message
+      const responseMessage = data.explanation || 'I\'ve generated your new home screen layout! You can see the preview on the right.';
+      
       setChatHistory(prev => [
         ...prev,
         {
           role: 'assistant',
-          content: 'I\'ve generated your new home screen layout! You can see the preview on the right.',
+          content: responseMessage,
           timestamp: new Date(),
           config: data.config,
         }
