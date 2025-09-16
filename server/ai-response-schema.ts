@@ -364,10 +364,10 @@ The EXACT option texts you MUST use are: ${currentQuestion.options.map((opt: any
 **TEXT INPUT WITH SKIP OPTION:**
 This is a voluntary text question. Present it as a text bubble and provide a skip option:
 - Use TEXT messageType for the question
-- After the question, add quickReplies with "Skip" option
+- After the question, add quickReplies with "Skip" option in user's language
 - User can either type their response or click skip
 
-Example format:
+Example format, remember to match the "Skip" text with user's language:
 [
   {"messageType": "text", "content": "${currentQuestion.text} (Optional)"},
   {"messageType": "quickReplies", "content": "", "metadata": {"quickReplies": ["Skip this question"]}}
