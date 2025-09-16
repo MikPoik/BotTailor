@@ -31,7 +31,7 @@ import {
   type InsertSubscription,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, sql, asc, desc } from "drizzle-orm";
+import { eq, and, or, sql, asc, desc, like } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -759,13 +759,17 @@ export class DatabaseStorage implements IStorage {
 
   async findUserByCleanId(cleanUserId: string): Promise<string | null> {
     try {
-      const result = await db
+      // Get all users and filter in JavaScript to avoid SQL parameter issues
+      const allUsers = await db
         .select({ id: users.id })
-        .from(users)
-        .where(sql`${users.id} LIKE '%|${cleanUserId}'`)
-        .limit(1);
+        .from(users);
 
-      return result.length > 0 ? result[0].id : null;
+      // Find user whose ID ends with |cleanUserId
+      const matchedUser = allUsers.find(user => 
+        user.id.includes('|') && user.id.split('|')[1] === cleanUserId
+      );
+
+      return matchedUser ? matchedUser.id : null;
     } catch (error) {
       console.error("Error finding user by clean ID:", error);
       return null;

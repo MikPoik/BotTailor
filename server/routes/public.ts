@@ -142,7 +142,18 @@ export function setupPublicRoutes(app: Express) {
   // Public API to get chatbot configuration for embed widget
   app.get("/api/public/chatbot/:userId/:chatbotGuid", async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { userId, chatbotGuid } = req.params;
+      let { userId, chatbotGuid } = req.params;
+
+      // If userId doesn't contain a pipe, it's a clean ID - find the full Auth0 ID
+      if (!userId.includes('|')) {
+        const fullUserId = await storage.findUserByCleanId(userId);
+        if (fullUserId) {
+          userId = fullUserId;
+        } else {
+          console.log(`No user found for clean ID: ${userId}`);
+          return res.status(404).json({ error: 'User not found' });
+        }
+      }
 
       console.log(`Fetching public chatbot config for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);
 
@@ -280,10 +291,11 @@ export function setupPublicRoutes(app: Express) {
       const isEmbedded = req.query.embedded === 'true';
 
       // Extract theme configuration from chatbot config or use defaults
+      const homeScreenConfig = chatbotConfig.homeScreenConfig as any;
       const theme = {
-        primaryColor: (req.query.primaryColor as string) || chatbotConfig.homeScreenConfig?.theme?.primaryColor || '#2563eb',
-        backgroundColor: (req.query.backgroundColor as string) || chatbotConfig.homeScreenConfig?.theme?.backgroundColor || '#ffffff',
-        textColor: (req.query.textColor as string) || chatbotConfig.homeScreenConfig?.theme?.textColor || '#1f2937'
+        primaryColor: (req.query.primaryColor as string) || homeScreenConfig?.theme?.primaryColor || '#2563eb',
+        backgroundColor: (req.query.backgroundColor as string) || homeScreenConfig?.theme?.backgroundColor || '#ffffff',
+        textColor: (req.query.textColor as string) || homeScreenConfig?.theme?.textColor || '#1f2937'
       };
 
       // Force HTTPS in production environments
