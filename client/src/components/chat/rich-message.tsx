@@ -114,6 +114,15 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     const menuMeta = metadata as any;
     const minSelections = menuMeta.minSelections || 1;
     const maxSelections = menuMeta.maxSelections || menuMeta.options?.length || 999;
+    
+    // Debug logging
+    console.log('[MULTISELECT_MENU] Debug:', {
+      messageType,
+      optionsCount: menuMeta.options?.length,
+      options: menuMeta.options,
+      minSelections,
+      maxSelections
+    });
 
     const handleOptionToggle = (optionId: string, optionText: string) => {
       setSelectedOptions(prev => {
@@ -143,6 +152,16 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
         <div className="space-y-2">
           {menuMeta.options.map((option: any, index: number) => {
             const isSelected = selectedOptions.includes(option.id);
+            
+            // Debug individual option
+            console.log(`[MULTISELECT_OPTION ${index}]`, {
+              id: option.id,
+              text: option.text,
+              textLength: option.text?.length,
+              action: option.action,
+              isSelected
+            });
+            
             return (
               <button
                 key={`${option.id}-${index}`}
@@ -161,7 +180,9 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
                 {option.icon && (
                   <i className={`${option.icon} ${isSelected ? 'text-primary' : ''}`}></i>
                 )}
-                <span className="rich-message-text">{option.text}</span>
+                <span className="rich-message-text" title={option.text || 'No text'}>
+                  {option.text || `[EMPTY OPTION ${index}]`}
+                </span>
               </button>
             );
           })}
