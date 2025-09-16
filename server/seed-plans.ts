@@ -1,3 +1,5 @@
+//Run with `npx tsx server/seed-plans.ts`
+
 import { db } from "./db";
 import { subscriptionPlans } from "@shared/schema";
 import { eq } from "drizzle-orm";
