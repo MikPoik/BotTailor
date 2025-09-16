@@ -487,15 +487,25 @@
           mobileIframe.classList.add('closing');
           mobileIframe.classList.remove('show');
           
+          // Send close message to iframe content for smooth internal animation
+          if (mobileIframe.contentWindow) {
+            mobileIframe.contentWindow.postMessage({ type: 'PREPARE_CLOSE' }, '*');
+          }
+          
           setTimeout(() => {
             overlay.style.display = 'none';
             mobileIframe.style.visibility = 'hidden';
             mobileIframe.classList.remove('closing');
-          }, 300); // Match animation duration
+          }, 400); // Increased duration for smoother animation
         } else {
           // Add closing animation for desktop
           iframe.classList.add('closing');
           iframe.classList.remove('show');
+          
+          // Send close message to iframe content for smooth internal animation
+          if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'PREPARE_CLOSE' }, '*');
+          }
           
           setTimeout(() => {
             bubble.style.display = 'flex';

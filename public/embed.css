@@ -252,6 +252,29 @@
   }
 }
 
+/* Additional keyframes for iframe content animations */
+@keyframes chatwidget-iframe-open {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes chatwidget-iframe-close {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+}
+
 .chatwidget-iframe.show {
   display: block !important;
   visibility: visible !important;
@@ -260,6 +283,15 @@
 
 .chatwidget-iframe.closing {
   animation: chatwidget-close 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+/* Ensure iframe content has proper animations */
+.chatwidget-iframe body {
+  animation: chatwidget-iframe-open 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.chatwidget-iframe.closing body {
+  animation: chatwidget-iframe-close 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
 }
 
 .chatwidget-mobile-iframe.show {

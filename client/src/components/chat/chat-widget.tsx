@@ -329,6 +329,42 @@ export default function ChatWidget({
         .chat-widget-container ::selection {
           background-color: ${resolvedPrimaryColor}40 !important;
         }
+
+        /* Embedded widget animations */
+        .chat-widget-embedded {
+          animation: chatWidgetEmbedOpen 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        }
+
+        .chat-widget-embedded.closing {
+          animation: chatWidgetEmbedClose 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
+        }
+
+        @keyframes chatWidgetEmbedOpen {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes chatWidgetEmbedClose {
+          from {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+          to {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+          }
+        }
+
+        /* Smooth transitions for all embedded elements */
+        .chat-widget-embedded * {
+          transition: all 0.2s ease !important;
+        }
       `;
       document.head.appendChild(style);
     };
@@ -370,6 +406,24 @@ export default function ChatWidget({
       setIsClosing(false);
     }, 400); // Match animation duration
   };
+
+  // Listen for close preparation message from parent iframe
+  useEffect(() => {
+    if (isEmbedded) {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.type === 'PREPARE_CLOSE') {
+          // Add closing class to embedded container for smooth animation
+          const embeddedContainer = document.querySelector('.chat-widget-embedded');
+          if (embeddedContainer) {
+            embeddedContainer.classList.add('closing');
+          }
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+      return () => window.removeEventListener('message', handleMessage);
+    }
+  }, [isEmbedded]);
 
   if (isMobile && isOpen) {
     return (
