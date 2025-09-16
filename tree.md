@@ -1,6 +1,6 @@
 # Directory Tree
 
-Generated on: 2025-09-16T09:53:06.078Z
+Generated on: 2025-09-16T19:07:10.070Z
 
 *Simple mode: Directory structure only*
 
@@ -60,7 +60,6 @@ Generated on: 2025-09-16T09:53:06.078Z
 │   └── 📄 embed.js
 ├── 📁 server/
 │   ├── 📄 ai-response-schema.ts
-│   ├── 📄 db.js
 │   ├── 📄 db.ts
 │   ├── 📄 email-service.ts
 │   ├── 📄 index.ts
@@ -87,7 +86,6 @@ Generated on: 2025-09-16T09:53:06.078Z
 │   │   ├── 📄 uploads.ts
 │   │   └── 📄 websites.ts
 │   ├── 📄 routes.ts
-│   ├── 📄 seed-plans.js
 │   ├── 📄 seed-plans.ts
 │   ├── 📄 storage.ts
 │   ├── 📄 ui-designer-service.ts

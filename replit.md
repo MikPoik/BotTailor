@@ -165,7 +165,6 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │   └── 📄 embed.js
 ├── 📁 server/
 │   ├── 📄 ai-response-schema.ts
-│   ├── 📄 db.js
 │   ├── 📄 db.ts
 │   ├── 📄 email-service.ts
 │   ├── 📄 index.ts
@@ -192,7 +191,6 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │   │   ├── 📄 uploads.ts
 │   │   └── 📄 websites.ts
 │   ├── 📄 routes.ts
-│   ├── 📄 seed-plans.js
 │   ├── 📄 seed-plans.ts
 │   ├── 📄 storage.ts
 │   ├── 📄 ui-designer-service.ts
@@ -203,3 +201,5 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │   └── 📄 schema.ts
 ├── 📄 tailwind.config.ts
 └── 📄 vite.config.ts
+
+```
