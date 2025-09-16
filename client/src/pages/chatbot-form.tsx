@@ -69,7 +69,7 @@ export default function ChatbotForm() {
       description: "",
       avatarUrl: "",
       systemPrompt: "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
-      model: "gpt-4o-mini",
+      model: "gpt-4.1",
       temperature: 7,
       maxTokens: 1000,
       welcomeMessage: "Hello! How can I help you today?",
@@ -266,6 +266,7 @@ export default function ChatbotForm() {
                       <SelectContent>
                         <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cost-effective)</SelectItem>
                         <SelectItem value="gpt-4o">GPT-4o (Advanced Performance)</SelectItem>
+                        <SelectItem value="gpt-4.1">GPT-4o (Advanced Performance)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>

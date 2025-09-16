@@ -46,7 +46,7 @@ export const chatbotConfigs = pgTable("chatbot_configs", {
   description: text("description"),
   avatarUrl: varchar("avatar_url"),
   systemPrompt: text("system_prompt").notNull(),
-  model: text("model").notNull().default("gpt-4o-mini"),
+  model: text("model").notNull().default("gpt-4.1"),
   temperature: integer("temperature").default(7), // 0-10 scale (will divide by 10)
   maxTokens: integer("max_tokens").default(1000),
   isActive: boolean("is_active").default(true),

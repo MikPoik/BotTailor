@@ -14,7 +14,7 @@ Export simple tree to tree.md:
 node tree.js --export --simple
 
 Ignore specific folders:
-node tree.js --ignore client/src/components/ui
+node tree.js --ignore client/src/components/ui --simple --export
 
 Multiple ignore patterns:
 node tree.js --ignore node_modules dist build

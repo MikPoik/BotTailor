@@ -122,6 +122,7 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │       │   │   ├── 📄 prompt-assistant-chatbox.tsx
 │       │   │   ├── 📄 rich-message.tsx
 │       │   │   ├── 📄 streaming-message.tsx
+│       │   │   ├── 📄 survey-assistant-chatbox.tsx
 │       │   │   ├── 📄 tabbed-chat-interface.tsx
 │       │   │   └── 📄 typing-indicator.tsx
 │       │   ├── 📄 navbar.tsx
@@ -150,6 +151,7 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │           ├── 📄 chatbot-embed.tsx
 │           ├── 📄 chatbot-form.tsx
 │           ├── 📄 chatbot-test.tsx
+│           ├── 📄 contact.tsx
 │           ├── 📄 dashboard.tsx
 │           ├── 📄 docs.tsx
 │           ├── 📄 home.tsx
@@ -181,6 +183,7 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │   │   ├── 📄 auth.ts
 │   │   ├── 📄 chat.ts
 │   │   ├── 📄 chatbots.ts
+│   │   ├── 📄 contact.ts
 │   │   ├── 📄 index.ts
 │   │   ├── 📄 public.ts
 │   │   ├── 📄 subscription.ts
@@ -200,6 +203,4 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │   └── 📄 schema.ts
 ├── 📄 tailwind.config.ts
 └── 📄 vite.config.ts
-
-```
 

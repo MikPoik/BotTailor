@@ -300,7 +300,7 @@ export async function generateMultiBubbleResponse(
     );
 
     // Extract configuration
-    const model = chatbotConfig?.model || "gpt-4o";
+    const model = chatbotConfig?.model || "gpt-4.1";
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10
       : 0.7;
