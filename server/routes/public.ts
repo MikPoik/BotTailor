@@ -142,18 +142,7 @@ export function setupPublicRoutes(app: Express) {
   // Public API to get chatbot configuration for embed widget
   app.get("/api/public/chatbot/:userId/:chatbotGuid", async (req: Request, res: Response, next: NextFunction) => {
     try {
-      let { userId, chatbotGuid } = req.params;
-
-      // If userId doesn't contain a pipe, it's a clean ID - find the full Auth0 ID
-      if (!userId.includes('|')) {
-        const fullUserId = await storage.findUserByCleanId(userId);
-        if (fullUserId) {
-          userId = fullUserId;
-        } else {
-          console.log(`No user found for clean ID: ${userId}`);
-          return res.status(404).json({ error: 'User not found' });
-        }
-      }
+      const { userId, chatbotGuid } = req.params;
 
       console.log(`Fetching public chatbot config for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);
 
@@ -261,18 +250,7 @@ export function setupPublicRoutes(app: Express) {
   // Chat widget route with user and chatbot parameters - only match specific patterns
   app.get("/widget/:userId/:chatbotGuid", async (req, res, next) => {
     try {
-      let { userId, chatbotGuid } = req.params;
-      
-      // If userId doesn't contain a pipe, it's a clean ID - find the full Auth0 ID
-      if (!userId.includes('|')) {
-        const fullUserId = await storage.findUserByCleanId(userId);
-        if (fullUserId) {
-          userId = fullUserId;
-        } else {
-          console.log(`No user found for clean ID: ${userId}`);
-          return res.status(404).send('User not found');
-        }
-      }
+      const { userId, chatbotGuid } = req.params;
       const { embedded = "true", mobile = "false" } = req.query;
 
       console.log(`Loading widget for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);

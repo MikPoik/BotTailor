@@ -110,7 +110,6 @@ export interface IStorage {
   checkBotLimit(userId: string): Promise<boolean>;
   checkMessageLimit(userId: string): Promise<boolean>;
   getOrCreateFreeSubscription(userId: string): Promise<Subscription & { plan: SubscriptionPlan }>;
-  findUserByCleanId(cleanUserId: string): Promise<string | null>;
 }
 
 export function getCleanUserId(auth0UserId: string): string {
@@ -119,10 +118,6 @@ export function getCleanUserId(auth0UserId: string): string {
   return parts.length > 1 ? parts[1] : auth0UserId;
 }
 
-export function findFullUserId(cleanUserId: string): Promise<string | null> {
-  // This will be implemented to find the full Auth0 user ID from the clean ID
-  return storage.findUserByCleanId(cleanUserId);
-}
 
 export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
@@ -757,24 +752,6 @@ export class DatabaseStorage implements IStorage {
     return messagesUsed < subscription.plan.maxMessagesPerMonth;
   }
 
-  async findUserByCleanId(cleanUserId: string): Promise<string | null> {
-    try {
-      // Get all users and filter in JavaScript to avoid SQL parameter issues
-      const allUsers = await db
-        .select({ id: users.id })
-        .from(users);
-
-      // Find user whose ID ends with |cleanUserId
-      const matchedUser = allUsers.find(user => 
-        user.id.includes('|') && user.id.split('|')[1] === cleanUserId
-      );
-
-      return matchedUser ? matchedUser.id : null;
-    } catch (error) {
-      console.error("Error finding user by clean ID:", error);
-      return null;
-    }
-  }
 }
 
 export const storage = new DatabaseStorage();
