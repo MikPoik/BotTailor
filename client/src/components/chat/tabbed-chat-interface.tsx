@@ -292,7 +292,7 @@ export default function TabbedChatInterface({
   ) => {
     if (isLoading || isStreaming || readOnlyMode) return;
 
-    console.log(`[FRONTEND] Option selected: ${optionId} - ${optionText}`);
+    
 
     try {
       // First, record the option selection in the backend (this updates survey sessions)

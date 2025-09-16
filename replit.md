@@ -4,7 +4,7 @@
 
 This project is a full-stack React chat widget application featuring an Express.js backend and a React frontend. Its primary purpose is to provide an embeddable customer support chat widget for any website. The widget supports rich messaging, including text, interactive cards, menus, and quick replies, aiming to offer a comprehensive and customizable communication tool for businesses. The vision is to enable seamless integration of sophisticated chat functionalities, enhancing user engagement and support capabilities across various web platforms.
 
-## Cost-Effective Development Workflow
+## Development Workflow
 
 **Target: 3-5 tool calls maximum**
 

@@ -108,7 +108,6 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
   const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
     if (isLoading || isStreaming) return;
 
-    console.log(`[FRONTEND] Option selected: ${optionId} - ${optionText}`);
     
     try {
       // First, record the option selection in the backend (this updates survey sessions)
