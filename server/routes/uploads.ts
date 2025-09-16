@@ -11,7 +11,8 @@ export function setupUploadRoutes(app: Express) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const result = await uploadAvatar(req.file, userId);
 
       if (!result.success) {
@@ -32,7 +33,8 @@ export function setupUploadRoutes(app: Express) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const result = await uploadBackgroundImage(req.file, userId);
 
       if (!result.success) {

@@ -134,7 +134,7 @@ If this request involves generating or modifying surveys, return a valid JSON re
 
     // Create request with JSON response format
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1",
       messages,
       response_format: { type: "json_object" },
       temperature: 0.7,

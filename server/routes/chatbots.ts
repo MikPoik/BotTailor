@@ -170,7 +170,8 @@ export function setupChatbotRoutes(app: Express) {
   app.patch('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const body = req.body;
 
       // Verify ownership and get chatbot

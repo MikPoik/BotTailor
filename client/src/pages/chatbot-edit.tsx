@@ -82,7 +82,7 @@ export default function ChatbotEdit() {
       description: "",
       avatarUrl: "",
       systemPrompt: "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
-      model: "gpt-4o-mini",
+      model: "gpt-4.1",
       temperature: 7,
       maxTokens: 1000,
       welcomeMessage: "Hello! How can I help you today?",
