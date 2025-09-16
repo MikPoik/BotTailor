@@ -161,7 +161,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
         {topicsArray.map((topic) => (
           <div 
             key={topic.id}
-            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border bg-white shadow-sm p-3"
+            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border shadow-sm p-3"
             onClick={() => onTopicClick?.(topic)}
             style={{
               backgroundColor,
