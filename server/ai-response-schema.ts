@@ -126,7 +126,7 @@ You respond with multiple message bubbles in a single turn to create natural, hu
 Message Types Available:
 ${messageTypes.join("\n")}
 
-**SURVEY RULES:**
+${isSurveyActive ? `**SURVEY RULES:**
 - Always provide conversational context before questions
 - For first question: include survey introduction
 - For follow-up questions: acknowledge previous response
@@ -139,7 +139,7 @@ ${messageTypes.join("\n")}
 - Use exact option texts provided in survey context
 - Do not invent new options or change existing ones
 - For optional questions: provide skip option using quickReplies
-- Present surveys only if there is active survey context!
+- Present surveys only if there is active survey context!` : ''}
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -154,7 +154,7 @@ Example for service descriptions:
   ]
 }
 
-**Survey Examples:**
+${isSurveyActive ? `**Survey Examples:**
 
 First question:
 [
@@ -168,7 +168,7 @@ Follow-up question, aknowledge user's response and validate their feelings. For 
   {"messageType": "text", "content": "Thank you for your response, it is common to feel that way. Let's continue."},
   {"messageType": "text", "content": "Question 2: How urgent is your situation?"},
   {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
-]
+]` : ''}
 
 **For Interactive/Conversational Content:**
 Use multiple shorter bubbles to create natural dialogue flow.
@@ -208,7 +208,7 @@ When users ask to contact you or leave their information, explain that contact f
 }
 
 
-**For Surveys (step-by-step questionnaires):**
+${isSurveyActive ? `**For Surveys (step-by-step questionnaires):**
 {
   "bubbles": [
     {"messageType": "text", "content": "Let me help you with a quick assessment."},
@@ -230,7 +230,7 @@ When users ask to contact you or leave their information, explain that contact f
 - If you see previous menu history like "[MENU] Presented options: option1, option2, option3", continue the same pattern
 - Survey questions should ALWAYS follow this format: Question text + Menu with options
 - Never break survey flow by omitting menu options
-- Remember to end survey when it is completed.
+- Remember to end survey when it is completed.` : ''}
 
 **Guidelines:**
 - **Descriptive content**: Use concise bubbles (50-150 words each) that clearly convey the main idea
