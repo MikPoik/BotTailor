@@ -65,7 +65,7 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
 
   // Check if we should use transparent background (when background image exists and transparent is enabled)
   const hasBackgroundImage = resolvedColors?.backgroundImageUrl;
-  const useTransparentBackground = hasBackgroundImage && style?.transparentBackground;
+  const useTransparentBackground = hasBackgroundImage && (style as any)?.transparentBackground;
 
   // Header colors
   const headerBgColor = useTransparentBackground ? 'transparent' : backgroundColor;
@@ -166,8 +166,50 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
 
   // Determine style variant and font sizes
   const itemStyle = style?.itemStyle || 'filled';
-  const titleFontSize = style?.titleFontSize || '16px';
-  const descriptionFontSize = style?.descriptionFontSize || '14px';
+  const titleFontSize = (style as any)?.titleFontSize || '16px';
+  const descriptionFontSize = (style as any)?.descriptionFontSize || '14px';
+
+  // Helper function to determine if a color is light or dark
+  const isLightColor = (color: string) => {
+    // Remove # if present and convert to RGB
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return brightness > 127;
+  };
+
+  // Generate theme-aware colors for background image overlay
+  const getOverlayColors = () => {
+    if (!hasBackgroundImage) {
+      return {
+        backgroundColor: itemStyle === 'filled' ? primaryColor : 'transparent',
+        textColor: itemStyle === 'filled' ? 'white' : textColor,
+        borderColor: itemStyle === 'outlined' ? primaryColor : 'transparent'
+      };
+    }
+
+    // When there's a background image, use theme colors with transparency
+    const isPrimaryLight = isLightColor(primaryColor);
+    const overlayOpacity = itemStyle === 'filled' ? '0.85' : '0.2';
+    
+    return {
+      backgroundColor: itemStyle === 'filled' 
+        ? `${primaryColor}${Math.round(255 * parseFloat(overlayOpacity)).toString(16).padStart(2, '0')}`
+        : `rgba(255,255,255,${overlayOpacity})`,
+      textColor: itemStyle === 'filled'
+        ? (isPrimaryLight ? '#000000' : '#ffffff')
+        : '#ffffff',
+      borderColor: itemStyle === 'outlined' 
+        ? `rgba(255,255,255,0.4)` 
+        : 'transparent',
+      textShadow: hasBackgroundImage ? '1px 1px 2px rgba(0,0,0,0.7)' : undefined,
+      backdropFilter: hasBackgroundImage ? 'blur(8px)' : undefined
+    };
+  };
+
+  const overlayColors = getOverlayColors();
 
   if (!topics || topics.length === 0) return null;
 
@@ -184,17 +226,11 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
                 : 'border-2 shadow-sm hover:shadow-md'
             }`}
             style={{
-              backgroundColor: hasBackgroundImage 
-                ? (itemStyle === 'filled' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.1)') 
-                : (itemStyle === 'filled' ? primaryColor : 'transparent'),
-              color: hasBackgroundImage 
-                ? 'white' 
-                : (itemStyle === 'filled' ? 'white' : textColor),
-              borderColor: hasBackgroundImage 
-                ? (itemStyle === 'outlined' ? 'rgba(255,255,255,0.3)' : 'transparent')
-                : (itemStyle === 'outlined' ? primaryColor : 'transparent'),
-              textShadow: hasBackgroundImage ? '1px 1px 2px rgba(0,0,0,0.8)' : undefined,
-              backdropFilter: hasBackgroundImage ? 'blur(8px)' : undefined,
+              backgroundColor: overlayColors.backgroundColor,
+              color: overlayColors.textColor,
+              borderColor: overlayColors.borderColor,
+              textShadow: overlayColors.textShadow,
+              backdropFilter: overlayColors.backdropFilter,
             }}
           >
             <div className="flex items-center gap-3">
@@ -208,9 +244,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
                   className="font-semibold mb-1 truncate"
                   style={{ 
                     fontSize: titleFontSize,
-                    color: hasBackgroundImage 
-                      ? 'white' 
-                      : (itemStyle === 'filled' ? 'white' : textColor)
+                    color: overlayColors.textColor
                   }}
                 >
                   {topic.title}
@@ -220,9 +254,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
                     className="opacity-90 line-clamp-2"
                     style={{
                       fontSize: descriptionFontSize,
-                      color: hasBackgroundImage 
-                        ? 'white' 
-                        : (itemStyle === 'filled' ? 'white' : textColor),
+                      color: overlayColors.textColor,
                       opacity: 0.8
                     }}
                   >
