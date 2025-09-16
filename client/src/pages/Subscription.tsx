@@ -355,12 +355,12 @@ export default function Subscription() {
                     variant={isPremium ? "default" : "outline"}
                     onClick={() => handleSubscribe(plan.id)}
                     disabled={isCurrentPlan || isLoading}
-                    data-testid={isCurrentPlan ? "button-current-plan" : `button-${currentSubscription && currentSubscription.status === 'active' ? (plan.price > currentSubscription.plan.price ? 'upgrade' : 'downgrade') : 'subscribe'}-${plan.name.toLowerCase()}`}
+                    data-testid={isCurrentPlan ? "button-current-plan" : `button-${currentSubscription && currentSubscription.status === 'active' && currentSubscription.plan.name !== 'Free' ? (plan.price > currentSubscription.plan.price ? 'upgrade' : 'downgrade') : 'subscribe'}-${plan.name.toLowerCase()}`}
                   >
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isCurrentPlan 
                       ? 'Current Plan' 
-                      : currentSubscription && currentSubscription.status === 'active'
+                      : currentSubscription && currentSubscription.status === 'active' && currentSubscription.plan.name !== 'Free'
                         ? (plan.price > currentSubscription.plan.price ? 'Upgrade' : 'Downgrade')
                         : 'Subscribe Now'
                     }
