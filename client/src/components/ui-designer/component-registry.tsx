@@ -205,7 +205,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
       borderColor: itemStyle === 'outlined' 
         ? `${primaryColor}${Math.round(255 * 0.6).toString(16).padStart(2, '0')}` // Use primary color for border
         : 'transparent',
-      textShadow: hasBackgroundImage ? '1px 1px 2px rgba(0,0,0,0.8)' : undefined,
+      textShadow: hasBackgroundImage ? '1px 1px 1px rgba(0,0,0,0.1)' : undefined,
       backdropFilter: hasBackgroundImage ? 'blur(8px)' : undefined
     };
   };
