@@ -132,7 +132,10 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
   const layout = style?.layout || 'grid';
   const columns = style?.columns || 2;
 
-  if (!topics || topics.length === 0) return null;
+  // Ensure topics is an array
+  const topicsArray = Array.isArray(topics) ? topics : [];
+  
+  if (!topicsArray || topicsArray.length === 0) return null;
 
   const gridClass = layout === 'grid' 
     ? `grid grid-cols-1 gap-3`
@@ -155,7 +158,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
     <div className="p-4 space-y-3">
 
       <div className={gridClass}>
-        {topics.map((topic) => (
+        {topicsArray.map((topic) => (
           <div 
             key={topic.id}
             className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border bg-white shadow-sm p-3"

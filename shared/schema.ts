@@ -381,7 +381,7 @@ export const HomeScreenComponentSchema = z.object({
       popular: z.boolean().optional(),
       actionType: z.enum(['message', 'survey', 'custom']).default('message'),
       surveyId: z.number().optional(), // Reference to survey ID for survey topics
-    })).optional(),
+    })).optional().default([]), // Ensure topics is always an array
     actions: z.array(z.object({
       id: z.string(),
       title: z.string(),

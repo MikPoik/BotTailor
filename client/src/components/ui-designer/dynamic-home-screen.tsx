@@ -32,11 +32,11 @@ function resolveColors(config: HomeScreenConfig) {
   return resolvedColors;
 }
 
-export default function DynamicHomeScreen({ 
-  config, 
-  onTopicClick, 
-  onActionClick, 
-  className 
+export default function DynamicHomeScreen({
+  config,
+  onTopicClick,
+  onActionClick,
+  className
 }: DynamicHomeScreenProps) {
   if (!config || !config.components) {
     return (
@@ -75,7 +75,7 @@ export default function DynamicHomeScreen({
   const colors = resolveColors(config);
 
   return (
-    <div 
+    <div
       className={`h-full overflow-y-auto ${className || ''} relative`}
       style={{
         backgroundColor: colors.backgroundColor,
@@ -94,12 +94,12 @@ export default function DynamicHomeScreen({
     >
       {/* Background overlay for better text readability when background image is present */}
       {backgroundImageUrl && !imageError && (
-        <div 
+        <div
           className="absolute inset-0 bg-black/20 pointer-events-none"
           style={{
             backgroundColor: `${colors.backgroundColor}80`, // 50% opacity background
             opacity: imageLoaded ? 1 : 0, // Apply opacity to overlay as well
-            transition: 'opacity 0.5s ease-in-out' 
+            transition: 'opacity 0.5s ease-in-out'
           }}
         />
       )}
@@ -114,7 +114,7 @@ export default function DynamicHomeScreen({
       <div className="relative z-10">
         {sortedComponents
         .filter((component) => component.visible !== false)
-        .map((component) => 
+        .map((component) =>
           renderComponent(component, onTopicClick, onActionClick, colors)
         )}
         <div className="pb-8"></div>
