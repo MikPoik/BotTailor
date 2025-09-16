@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
+import { Star, Check } from "lucide-react";
 
 // Function to parse Markdown to HTML
 function parseMarkdown(text: string): string {
@@ -95,7 +96,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             <button
               key={`${option.id}-${index}`}
               onClick={() => onOptionSelect(option.id, option.payload, option.text)}
-              className="w-full text-left py-2 px-3 border border-neutral-200 rounded-lg transition-colors flex items-center space-x-2 menu-option-button"
+              className="w-full text-left py-2 px-3 border border-neutral-200 rounded-lg transition-colors flex items-center space-x-2 menu-option-button hover:bg-neutral-50"
             >
               {option.icon && (
                 <i className={`${option.icon} text-primary`}></i>
@@ -106,6 +107,154 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
         </div>
       </div>
     );
+  }
+
+  if (messageType === 'multiselect_menu' && (metadata as any)?.options) {
+    const [selectedOptions, setSelectedOptions] = useState<string[]>((metadata as any)?.selectedOptions || []);
+    const menuMeta = metadata as any;
+    const minSelections = menuMeta.minSelections || 1;
+    const maxSelections = menuMeta.maxSelections || menuMeta.options?.length || 999;
+
+    const handleOptionToggle = (optionId: string, optionText: string) => {
+      setSelectedOptions(prev => {
+        if (prev.includes(optionId)) {
+          return prev.filter(id => id !== optionId);
+        } else if (prev.length < maxSelections) {
+          return [...prev, optionId];
+        }
+        return prev;
+      });
+    };
+
+    const handleSubmitSelection = () => {
+      if (selectedOptions.length >= minSelections) {
+        const selectedTexts = selectedOptions.map(id => {
+          const option = menuMeta.options.find((opt: any) => opt.id === id);
+          return option?.text || id;
+        });
+        onOptionSelect('multiselect_submit', { selectedOptions, selectedTexts }, selectedTexts.join(', '));
+      }
+    };
+
+    const isValid = selectedOptions.length >= minSelections && selectedOptions.length <= maxSelections;
+
+    return (
+      <div className="space-y-3">
+        <div className="space-y-2">
+          {menuMeta.options.map((option: any, index: number) => {
+            const isSelected = selectedOptions.includes(option.id);
+            return (
+              <button
+                key={`${option.id}-${index}`}
+                onClick={() => handleOptionToggle(option.id, option.text)}
+                className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 ${
+                  isSelected 
+                    ? 'bg-primary/10 border-primary text-primary' 
+                    : 'border-neutral-200 hover:bg-neutral-50'
+                }`}
+              >
+                <div className={`w-4 h-4 border rounded flex items-center justify-center ${
+                  isSelected ? 'bg-primary border-primary' : 'border-neutral-300'
+                }`}>
+                  {isSelected && <Check className="w-3 h-3 text-white" />}
+                </div>
+                {option.icon && (
+                  <i className={`${option.icon} ${isSelected ? 'text-primary' : ''}`}></i>
+                )}
+                <span className="rich-message-text">{option.text}</span>
+              </button>
+            );
+          })}
+        </div>
+        
+        <div className="flex items-center justify-between text-sm text-neutral-600">
+          <span>Selected: {selectedOptions.length} / {maxSelections} (min: {minSelections})</span>
+          <Button
+            onClick={handleSubmitSelection}
+            disabled={!isValid}
+            size="sm"
+            className="px-4"
+          >
+            Submit Selection
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (messageType === 'rating' && (metadata as any)) {
+    const ratingMeta = metadata as any;
+    const minValue = ratingMeta.minValue || 1;
+    const maxValue = ratingMeta.maxValue || 5;
+    const ratingType = ratingMeta.ratingType || 'stars';
+    const [selectedRating, setSelectedRating] = useState<number | null>(null);
+    const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+
+    const handleRatingSelect = (rating: number) => {
+      setSelectedRating(rating);
+      onOptionSelect('rating_submit', { rating }, `Rating: ${rating}/${maxValue}`);
+    };
+
+    if (ratingType === 'stars') {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center space-x-1">
+            {Array.from({ length: maxValue }, (_, i) => i + minValue).map((rating) => {
+              const isActive = hoveredRating ? rating <= hoveredRating : selectedRating ? rating <= selectedRating : false;
+              return (
+                <button
+                  key={rating}
+                  onClick={() => handleRatingSelect(rating)}
+                  onMouseEnter={() => setHoveredRating(rating)}
+                  onMouseLeave={() => setHoveredRating(null)}
+                  className="p-1 transition-colors"
+                >
+                  <Star 
+                    className={`w-6 h-6 ${
+                      isActive ? 'text-yellow-400 fill-yellow-400' : 'text-neutral-300'
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+          {selectedRating && (
+            <p className="text-sm text-neutral-600">You rated: {selectedRating} out of {maxValue} stars</p>
+          )}
+        </div>
+      );
+    } else {
+      // Number/scale rating
+      return (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: maxValue - minValue + 1 }, (_, i) => minValue + i).map((rating) => {
+              const isSelected = selectedRating === rating;
+              return (
+                <button
+                  key={rating}
+                  onClick={() => handleRatingSelect(rating)}
+                  className={`px-3 py-2 rounded-lg border transition-colors ${
+                    isSelected 
+                      ? 'bg-primary text-white border-primary' 
+                      : 'border-neutral-200 hover:bg-neutral-50'
+                  }`}
+                >
+                  {rating}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex justify-between text-xs text-neutral-500">
+            <span>{minValue}</span>
+            <span>{maxValue}</span>
+          </div>
+          {selectedRating && (
+            <p className="text-sm text-neutral-600">You rated: {selectedRating} out of {maxValue}</p>
+          )}
+        </div>
+      );
+    }
   }
 
   if (messageType === 'image' && (metadata as any)?.imageUrl) {
@@ -300,7 +449,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
 
   // Fallback to regular message
   return (
-    <div className={`chat-message-bot ${(message.messageType === 'menu' || message.messageType === 'quickReplies' || message.messageType === 'form' || message.messageType === 'table') ? 'no-background' : ''}`}>
+    <div className={`chat-message-bot ${(message.messageType === 'menu' || message.messageType === 'multiselect_menu' || message.messageType === 'rating' || message.messageType === 'quickReplies' || message.messageType === 'form' || message.messageType === 'table') ? 'no-background' : ''}`}>
       <p className="text-neutral-800">{content}</p>
     </div>
   );

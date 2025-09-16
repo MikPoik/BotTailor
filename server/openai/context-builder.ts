@@ -104,8 +104,12 @@ export async function buildCompleteSystemPrompt(
   systemPrompt: string; 
   surveyInfo: { hasMenuRequired: boolean; questionIndex: number } 
 }> {
-  // Base system prompt
-  let systemPrompt = buildSystemPrompt(chatbotConfig);
+  // Check if there's an active survey to determine which message types to show
+  const { context: surveyContext, hasMenuRequired, questionIndex } = await buildActiveSurveyContext(sessionId);
+  const isSurveyActive = !!surveyContext;
+  
+  // Base system prompt with survey context
+  let systemPrompt = buildSystemPrompt(chatbotConfig, surveyContext, isSurveyActive);
   
   // Add website context if available
   if (chatbotConfig?.id) {
@@ -113,9 +117,7 @@ export async function buildCompleteSystemPrompt(
     systemPrompt += websiteContext;
   }
   
-  // Add survey context if available
-  const { context: surveyContext, hasMenuRequired, questionIndex } = await buildActiveSurveyContext(sessionId);
-  systemPrompt += surveyContext;
+  // Survey context is already included in buildSystemPrompt above
   
   if (surveyContext) {
     console.log(`[SURVEY] Using survey context in system prompt`);

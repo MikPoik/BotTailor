@@ -33,6 +33,8 @@ const MessageBubbleSchema = z.object({
     "text",
     "card",
     "menu",
+    "multiselect_menu",
+    "rating",
     "image",
     "quickReplies",
     "form",
@@ -53,6 +55,15 @@ const MessageBubbleSchema = z.object({
       isSystemMessage: z.boolean().optional(),
       optionsContext: z.boolean().optional(),
       isFollowUp: z.boolean().optional(),
+      // Rating specific metadata
+      minValue: z.number().optional(),
+      maxValue: z.number().optional(),
+      step: z.number().optional(),
+      ratingType: z.enum(["stars", "numbers", "scale"]).optional(),
+      // Multiselect specific metadata
+      allowMultiple: z.boolean().optional(),
+      minSelections: z.number().optional(),
+      maxSelections: z.number().optional(),
     })
     .optional(),
 });
@@ -69,6 +80,7 @@ export type MessageBubble = z.infer<typeof MessageBubbleSchema>;
 export function buildSystemPrompt(
   chatbotConfig?: any,
   surveyContext?: string,
+  isSurveyActive = false,
 ): string {
   // Default system prompt if no chatbot config is provided
   const defaultSystemPrompt = "You are a helpful customer service chatbot.";
@@ -82,18 +94,27 @@ export function buildSystemPrompt(
     `[SYSTEM_PROMPT] Email config check - formRecipientEmail: ${chatbotConfig?.formRecipientEmail}, hasEmailConfig: ${hasEmailConfig}`,
   );
 
-  // Build message types list conditionally
+  // Build message types list conditionally based on survey context
   const messageTypes = [
     "1. TEXT: Simple text responses with optional quick replies. You can format text with markdown syntax",
     "2. CARD: Rich cards with title, description, image, and action buttons, use only if asked about a product.",
-    "3. MENU: Interactive menus with selectable options",
+    "3. MENU: Interactive menus with selectable options (single choice)",
     "4. IMAGE: Image responses with optional text",
     "5. QUICKREPLIES: Text with suggested quick reply buttons",
   ];
 
-  if (hasEmailConfig) {
+  // Add survey-specific message types only when in survey mode
+  if (isSurveyActive) {
     messageTypes.push(
-      "6. FORM: Interactive forms with input fields and submit button",
+      "6. MULTISELECT_MENU: Multi-selection menus for multiple choice questions (allows selecting multiple options)",
+      "7. RATING: Rating scale inputs for rating questions (1-5 stars, 1-10 scale, etc.)",
+    );
+  }
+
+  if (hasEmailConfig) {
+    const formIndex = isSurveyActive ? "8" : "6";
+    messageTypes.push(
+      `${formIndex}. FORM: Interactive forms with input fields and submit button`,
     );
   }
 
@@ -109,7 +130,11 @@ ${messageTypes.join("\n")}
 - Always provide conversational context before questions
 - For first question: include survey introduction
 - For follow-up questions: acknowledge previous response
-- Questions with options = text bubble + menu bubble  
+- Questions with options = text bubble + appropriate menu bubble based on question type:
+  * single_choice questions → MENU (single selection)
+  * multiple_choice questions → MULTISELECT_MENU (multiple selections)
+  * rating questions → RATING (rating scale)
+  * text questions → TEXT (free text input)
 - Use exact option texts provided in survey context
 - Do not invent new options or change existing ones
 - Present surveys only if there is active survey context!
@@ -292,11 +317,15 @@ ${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ""}
 Question ${currentQuestionIndex + 1}: ${currentQuestion.text}
 Type: ${currentQuestion.type}
 Required: ${currentQuestion.required ? "Yes" : "No"}
+
+**QUESTION TYPE INSTRUCTIONS:**
+${getQuestionTypeInstructions(currentQuestion)}
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
+    const menuType = getMenuTypeForQuestion(currentQuestion);
     context += `
-**OPTIONS (MUST PRESENT AS MENU)**
+**OPTIONS (MUST PRESENT AS ${menuType.toUpperCase()})**
 `;
     currentQuestion.options.forEach((option: any, index: number) => {
       context += `${index + 1}. ${option.text}\n`;
@@ -310,21 +339,17 @@ Required: ${currentQuestion.required ? "Yes" : "No"}
       )
       .join(",\n");
 
+    const menuExample = generateMenuExample(currentQuestion, optionsForExample);
+    
     context += `
-**MENU FORMAT REQUIRED** (MUST INCLUDE ALL ${currentQuestion.options.length} OPTIONS):
-{
-  "messageType": "menu",
-  "content": "Valitse sopivin vaihtoehto:",
-  "metadata": {
-    "options": [
-${optionsForExample}
-    ]
-  }
-}
+**${menuType.toUpperCase()} FORMAT REQUIRED** (MUST INCLUDE ALL ${currentQuestion.options.length} OPTIONS):
+${menuExample}
 
-🚨 CRITICAL: You MUST include ALL ${currentQuestion.options.length} options in the menu. Never omit any options!
+🚨 CRITICAL: You MUST include ALL ${currentQuestion.options.length} options in the ${menuType}. Never omit any options!
 The options are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(", ")}
 `;
+  } else if (currentQuestion.type === 'rating') {
+    context += generateRatingExample(currentQuestion);
   }
 
   if (Object.keys(responses).length > 0) {
@@ -404,4 +429,88 @@ CRITICAL: Focus only on THIS survey. Ignore any previous survey content in chat 
 `;
 
   return context;
+}
+
+// Helper function to get question type specific instructions
+function getQuestionTypeInstructions(question: any): string {
+  switch (question.type) {
+    case 'single_choice':
+      return 'This is a SINGLE CHOICE question. Use MENU messageType (allows only one selection).';
+    case 'multiple_choice':
+      return 'This is a MULTIPLE CHOICE question. Use MULTISELECT_MENU messageType (allows multiple selections).';
+    case 'text':
+      return 'This is a TEXT question. Use TEXT messageType and prompt for free-form text input.';
+    case 'rating':
+      return 'This is a RATING question. Use RATING messageType with appropriate scale (1-5 stars, 1-10 numbers, etc.).';
+    case 'conditional':
+      return 'This is a CONDITIONAL question. Use appropriate messageType based on the question structure.';
+    default:
+      return 'Use appropriate messageType based on question content.';
+  }
+}
+
+// Helper function to determine menu type for question
+function getMenuTypeForQuestion(question: any): string {
+  switch (question.type) {
+    case 'single_choice':
+      return 'menu';
+    case 'multiple_choice':
+      return 'multiselect_menu';
+    case 'conditional':
+      return 'menu'; // Default to single choice for conditional
+    default:
+      return 'menu';
+  }
+}
+
+// Helper function to generate menu example based on question type
+function generateMenuExample(question: any, optionsForExample: string): string {
+  const menuType = getMenuTypeForQuestion(question);
+  
+  if (menuType === 'multiselect_menu') {
+    return `{
+  "messageType": "multiselect_menu",
+  "content": "Select all that apply:",
+  "metadata": {
+    "allowMultiple": true,
+    "minSelections": 1,
+    "maxSelections": ${question.options?.length || 999},
+    "options": [
+${optionsForExample}
+    ]
+  }
+}`;
+  } else {
+    return `{
+  "messageType": "menu",
+  "content": "Please select one option:",
+  "metadata": {
+    "options": [
+${optionsForExample}
+    ]
+  }
+}`;
+  }
+}
+
+// Helper function to generate rating example
+function generateRatingExample(question: any): string {
+  const metadata = question.metadata || {};
+  const minValue = metadata.minValue || 1;
+  const maxValue = metadata.maxValue || 5;
+  const ratingType = metadata.ratingType || 'stars';
+  
+  return `
+**RATING FORMAT REQUIRED**:
+{
+  "messageType": "rating",
+  "content": "Please provide your rating:",
+  "metadata": {
+    "minValue": ${minValue},
+    "maxValue": ${maxValue},
+    "ratingType": "${ratingType}",
+    "step": 1
+  }
+}
+`;
 }

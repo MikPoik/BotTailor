@@ -222,7 +222,7 @@ export const insertMessageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   sender: z.enum(["user", "bot", "assistant"]),
-  messageType: z.enum(["text", "image", "audio", "video", "file", "card", "menu", "quickReplies", "form", "form_submission", "system"]).default("text"),
+  messageType: z.enum(["text", "image", "audio", "video", "file", "card", "menu", "multiselect_menu", "rating", "quickReplies", "form", "form_submission", "system"]).default("text"),
   metadata: z.record(z.any()).default({}),
 });
 
@@ -324,7 +324,7 @@ export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 
 // Rich message types
 export const RichMessageSchema = z.object({
-  type: z.enum(['text', 'card', 'menu', 'image', 'quickReplies', 'form']),
+  type: z.enum(['text', 'card', 'menu', 'multiselect_menu', 'rating', 'image', 'quickReplies', 'form']),
   content: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -358,6 +358,15 @@ export const RichMessageSchema = z.object({
       action: z.string(),
       payload: z.any().optional(),
     }).optional(),
+    // Rating specific metadata
+    minValue: z.number().optional(),
+    maxValue: z.number().optional(),
+    step: z.number().optional(),
+    ratingType: z.enum(['stars', 'numbers', 'scale']).optional(),
+    // Multiselect specific metadata
+    allowMultiple: z.boolean().optional(),
+    minSelections: z.number().optional(),
+    maxSelections: z.number().optional(),
   }).optional(),
 });
 
@@ -468,7 +477,7 @@ export const messageSchema = z.object({
   sessionId: z.string(),
   content: z.string(),
   sender: z.enum(["user", "bot"]),
-  messageType: z.enum(["text", "card", "menu", "image", "quickReplies", "form", "form_submission"]).default("text"),
+  messageType: z.enum(["text", "card", "menu", "multiselect_menu", "rating", "image", "quickReplies", "form", "form_submission"]).default("text"),
   createdAt: z.string(),
   metadata: z.object({
     title: z.string().optional(),
@@ -491,6 +500,16 @@ export const messageSchema = z.object({
       action: z.string(),
       payload: z.any().optional(),
     }).optional(),
+    // Rating specific metadata
+    minValue: z.number().optional(),
+    maxValue: z.number().optional(),
+    step: z.number().optional(),
+    ratingType: z.enum(['stars', 'numbers', 'scale']).optional(),
+    // Multiselect specific metadata
+    allowMultiple: z.boolean().optional(),
+    minSelections: z.number().optional(),
+    maxSelections: z.number().optional(),
+    selectedOptions: z.array(z.string()).optional(),
     // Streaming support
     isStreaming: z.boolean().optional(),
     chunks: z.array(z.object({
