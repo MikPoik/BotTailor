@@ -1,14 +1,9 @@
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
 import RichMessage from "./rich-message";
+import { isStreamingMetadata, MessageChunk, StreamingMetadata } from "@/types/message-metadata";
 
-interface MessageChunk {
-  content: string;
-  messageType: string;
-  metadata?: any;
-  delay?: number;
-}
 
 interface StreamingMessageProps {
   message: Message;
@@ -18,7 +13,7 @@ interface StreamingMessageProps {
   sessionId?: string;
 }
 
-export default function StreamingMessage({ 
+const StreamingMessage = memo(function StreamingMessage({ 
   message, 
   onOptionSelect, 
   onQuickReply,
@@ -28,10 +23,11 @@ export default function StreamingMessage({
   const [visibleChunks, setVisibleChunks] = useState<MessageChunk[]>([]);
   const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
 
-  // Parse chunks from message metadata
-  const chunks: MessageChunk[] = (message.metadata as any)?.chunks || [];
-  const isStreaming = (message.metadata as any)?.isStreaming || false;
-  const streamingComplete = (message.metadata as any)?.streamingComplete || false;
+  // Parse chunks from message metadata with type safety
+  const streamingMeta = message.metadata as StreamingMetadata;
+  const chunks: MessageChunk[] = streamingMeta?.chunks || [];
+  const isStreaming = streamingMeta?.isStreaming || false;
+  const streamingComplete = streamingMeta?.streamingComplete || false;
 
   useEffect(() => {
     if ((!isStreaming && !streamingComplete) || chunks.length === 0) {
@@ -72,7 +68,7 @@ export default function StreamingMessage({
     showNextChunk(0);
   }, [message.id, chunks.length, isStreaming]); // Use message.id instead of full message object
 
-  if (!isStreaming && !streamingComplete) {
+  if (!isStreamingMetadata(message.metadata)) {
     // Render as normal message - avatar will be handled by MessageBubble
     return (
       <RichMessage
@@ -84,14 +80,6 @@ export default function StreamingMessage({
       />
     );
   }
-
-  const [displayedChunks, setDisplayedChunks] = useState<any[]>([]);
-
-  useEffect(() => {
-    if ((message.metadata as any)?.chunks) {
-      setDisplayedChunks((message.metadata as any).chunks);
-    }
-  }, [(message.metadata as any)?.chunks]);
 
   return (
     <div className="space-y-2">
@@ -132,4 +120,6 @@ export default function StreamingMessage({
         )}
     </div>
   );
-}
+});
+
+export default StreamingMessage;

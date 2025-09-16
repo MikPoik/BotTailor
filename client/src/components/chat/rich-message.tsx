@@ -1,32 +1,24 @@
-import { useState } from "react";
+import { memo } from "react";
 import { Message } from "@shared/schema";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
-import { apiRequest } from "@/lib/queryClient";
-import { useQueryClient } from "@tanstack/react-query";
-import { Star, Check, Send } from "lucide-react";
-
-// Function to parse Markdown to HTML
-function parseMarkdown(text: string): string {
-  let html = text;
-
-  // Bold text
-  html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-
-  // Italic text
-  html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
-
-  // Markdown links: [text](url)
-  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80">$1</a>');
-
-  // Auto-detect URLs (http/https)
-  html = html.replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80">$1</a>');
-
-  // Line breaks
-  html = html.replace(/\n/g, '<br />');
-
-  return html;
-}
+import { parseMarkdown } from "@/lib/markdown-utils";
+import { CardMessage } from "./message-types/card-message";
+import { MenuMessage } from "./message-types/menu-message";
+import { MultiselectMessage } from "./message-types/multiselect-message";
+import { RatingMessage } from "./message-types/rating-message";
+import { FormMessage } from "./message-types/form-message";
+import { 
+  isCardMetadata, 
+  isMenuMetadata, 
+  isFormMetadata,
+  MessageMetadata,
+  CardMetadata,
+  MenuMetadata,
+  MultiselectMenuMetadata,
+  RatingMetadata,
+  FormMetadata,
+  ImageMetadata,
+  QuickRepliesMetadata
+} from "@/types/message-metadata";
 
 interface RichMessageProps {
   message: Message;
@@ -36,274 +28,49 @@ interface RichMessageProps {
   sessionId?: string;
 }
 
-export default function RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: RichMessageProps) {
+const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: RichMessageProps) {
   const { messageType, content, metadata } = message;
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const queryClient = useQueryClient();
+  const typedMetadata = metadata as MessageMetadata;
 
-  if (messageType === 'card' && metadata) {
-    const cardMeta = metadata as any;
+  if (messageType === 'card' && isCardMetadata(typedMetadata)) {
     return (
-      <div className="bg-white rounded-lg rounded-tl-none shadow-sm overflow-hidden border">
-        {cardMeta.imageUrl && (
-          <img 
-            src={cardMeta.imageUrl} 
-            alt={cardMeta.title || "Card image"} 
-            className="w-full h-32 object-cover"
-          />
-        )}
-
-        <div className="p-3">
-          {cardMeta.title && (
-            <h4 className="font-semibold text-neutral-800 mb-2">{cardMeta.title}</h4>
-          )}
-
-          {cardMeta.description && (
-            <p className="text-sm text-neutral-600 mb-3">{cardMeta.description}</p>
-          )}
-
-          {content && content !== cardMeta.title && (
-            <p className="text-neutral-800 mb-3">{content}</p>
-          )}
-
-          {cardMeta.buttons && (
-            <div className="space-y-2">
-              {cardMeta.buttons.map((button: any, index: number) => (
-                <Button
-                  key={`${button.id}-${index}`}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onOptionSelect(button.id, button.payload, button.text)}
-                  className="w-full justify-start text-left"
-                >
-                  {button.text}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <CardMessage 
+        content={content}
+        metadata={typedMetadata as CardMetadata}
+        onOptionSelect={onOptionSelect}
+      />
     );
   }
 
-  if (messageType === 'menu' && (metadata as any)?.options) {
-    const menuMeta = metadata as any;
+  if (messageType === 'menu' && isMenuMetadata(typedMetadata)) {
     return (
-      <div className="space-y-2">
-        <div className="space-y-2">
-          {menuMeta.options.map((option: any, index: number) => (
-            <button
-              key={`${option.id}-${index}`}
-              onClick={() => onOptionSelect(option.id, option.payload, option.text)}
-              className="w-full text-left py-2 px-3 border border-neutral-200 rounded-lg transition-colors flex items-center space-x-2 menu-option-button hover:bg-neutral-50"
-            >
-              {option.icon && (
-                <i className={`${option.icon} text-primary`}></i>
-              )}
-              <span className="rich-message-text">{option.text}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <MenuMessage 
+        metadata={typedMetadata as MenuMetadata}
+        onOptionSelect={onOptionSelect}
+      />
     );
   }
 
-  if (messageType === 'multiselect_menu' && (metadata as any)?.options) {
-    const [selectedOptions, setSelectedOptions] = useState<string[]>((metadata as any)?.selectedOptions || []);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const menuMeta = metadata as any;
-    const minSelections = menuMeta.minSelections || 1;
-    const maxSelections = menuMeta.maxSelections || menuMeta.options?.length || 999;
-
-    // Debug logging (remove after fix)
-    // console.log('[MULTISELECT_MENU] Debug:', {
-    //   messageType,
-    //   optionsCount: menuMeta.options?.length,
-    //   options: menuMeta.options,
-    //   minSelections,
-    //   maxSelections
-    // });
-
-    const handleOptionToggle = (optionId: string, optionText: string) => {
-      setSelectedOptions(prev => {
-        if (prev.includes(optionId)) {
-          return prev.filter(id => id !== optionId);
-        } else if (prev.length < maxSelections) {
-          return [...prev, optionId];
-        }
-        return prev;
-      });
-    };
-
-    const handleMultiselectSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (selectedOptions.length === 0 || isSubmitting || isSubmitted) return;
-
-      setIsSubmitting(true);
-
-      try {
-        // Send the selected options as a single payload
-        const payload = {
-          selected_options: selectedOptions,
-          selection_count: selectedOptions.length
-        };
-
-        await onOptionSelect?.(
-          'multiselect_submit',
-          payload,
-          `Selected: ${selectedOptions.join(', ')}`
-        );
-
-        setIsSubmitted(true);
-      } catch (error) {
-        console.error('Error submitting multiselect:', error);
-        setIsSubmitting(false);
-      }
-    };
-
-    const isValid = selectedOptions.length >= minSelections && selectedOptions.length <= maxSelections;
-
+  if (messageType === 'multiselect_menu' && isMenuMetadata(typedMetadata)) {
     return (
-      <div className="space-y-3">
-        <div className="space-y-2">
-          {menuMeta.options.map((option: any, index: number) => {
-            const isSelected = selectedOptions.includes(option.id);
-
-            // Debug individual option (remove after fix)
-            // console.log(`[MULTISELECT_OPTION ${index}]`, {
-            //   id: option.id,
-            //   text: option.text,
-            //   textLength: option.text?.length,
-            //   action: option.action,
-            //   isSelected
-            // });
-
-            return (
-              <button
-                key={`${option.id}-${index}`}
-                onClick={() => handleOptionToggle(option.id, option.text)}
-                className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 ${
-                  isSelected 
-                    ? 'bg-primary/10 border-primary text-primary' 
-                    : 'border-neutral-200 hover:bg-neutral-50'
-                }`}
-              >
-                <div className={`w-4 h-4 border rounded flex items-center justify-center ${
-                  isSelected ? 'bg-primary border-primary' : 'border-neutral-300'
-                }`}>
-                  {isSelected && <Check className="w-3 h-3 text-white" />}
-                </div>
-                {option.icon && (
-                  <i className={`${option.icon} ${isSelected ? 'text-primary' : ''}`}></i>
-                )}
-                <span className="rich-message-text" title={option.text || 'No text'}>
-                  {option.text || `[EMPTY OPTION ${index}]`}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-neutral-600">
-          <span>Selected: {selectedOptions.length} / {maxSelections} (min: {minSelections})</span>
-          <Button
-              type="submit"
-              onClick={handleMultiselectSubmit}
-              disabled={selectedOptions.length === 0 || isSubmitting || isSubmitted}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                </div>
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-        </div>
-      </div>
+      <MultiselectMessage 
+        metadata={typedMetadata as MultiselectMenuMetadata}
+        onOptionSelect={onOptionSelect}
+      />
     );
   }
 
-  if (messageType === 'rating' && (metadata as any)) {
-    const ratingMeta = metadata as any;
-    const minValue = ratingMeta.minValue || 1;
-    const maxValue = ratingMeta.maxValue || 5;
-    const ratingType = ratingMeta.ratingType || 'stars';
-    const [selectedRating, setSelectedRating] = useState<number | null>(null);
-    const [hoveredRating, setHoveredRating] = useState<number | null>(null);
-
-    const handleRatingSelect = (rating: number) => {
-      setSelectedRating(rating);
-      onOptionSelect('rating_submit', { rating }, `Rating: ${rating}/${maxValue}`);
-    };
-
-    if (ratingType === 'stars') {
-      return (
-        <div className="space-y-3">
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: maxValue }, (_, i) => i + minValue).map((rating) => {
-              const isActive = hoveredRating ? rating <= hoveredRating : selectedRating ? rating <= selectedRating : false;
-              return (
-                <button
-                  key={rating}
-                  onClick={() => handleRatingSelect(rating)}
-                  onMouseEnter={() => setHoveredRating(rating)}
-                  onMouseLeave={() => setHoveredRating(null)}
-                  className="p-1 transition-colors"
-                >
-                  <Star 
-                    className={`w-6 h-6 ${
-                      isActive ? 'text-yellow-400 fill-yellow-400' : 'text-neutral-300'
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-          {selectedRating && (
-            <p className="text-sm text-neutral-600">You rated: {selectedRating} out of {maxValue} stars</p>
-          )}
-        </div>
-      );
-    } else {
-      // Number/scale rating
-      return (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {Array.from({ length: maxValue - minValue + 1 }, (_, i) => minValue + i).map((rating) => {
-              const isSelected = selectedRating === rating;
-              return (
-                <button
-                  key={rating}
-                  onClick={() => handleRatingSelect(rating)}
-                  className={`px-3 py-2 rounded-lg border transition-colors ${
-                    isSelected 
-                      ? 'bg-primary text-white border-primary' 
-                      : 'border-neutral-200 hover:bg-neutral-50'
-                  }`}
-                >
-                  {rating}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex justify-between text-xs text-neutral-500">
-            <span>{minValue}</span>
-            <span>{maxValue}</span>
-          </div>
-          {selectedRating && (
-            <p className="text-sm text-neutral-600">You rated: {selectedRating} out of {maxValue}</p>
-          )}
-        </div>
-      );
-    }
+  if (messageType === 'rating' && typedMetadata) {
+    return (
+      <RatingMessage 
+        metadata={typedMetadata as RatingMetadata}
+        onOptionSelect={onOptionSelect}
+      />
+    );
   }
 
-  if (messageType === 'image' && (metadata as any)?.imageUrl) {
-    const imageMeta = metadata as any;
+  if (messageType === 'image' && (typedMetadata as ImageMetadata)?.imageUrl) {
+    const imageMeta = typedMetadata as ImageMetadata;
     return (
       <div className="bg-white rounded-lg rounded-tl-none shadow-sm overflow-hidden border">
         <img 
@@ -320,8 +87,8 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     );
   }
 
-  if (messageType === 'quickReplies' && (metadata as any)?.quickReplies) {
-    const quickMeta = metadata as any;
+  if (messageType === 'quickReplies' && (typedMetadata as QuickRepliesMetadata)?.quickReplies) {
+    const quickMeta = typedMetadata as QuickRepliesMetadata;
     return (
       <div className="flex flex-wrap gap-2">
         {quickMeta.quickReplies.map((reply: string, index: number) => {
@@ -344,158 +111,15 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     );
   }
 
-  if (messageType === 'form' && (metadata as any)?.formFields) {
-    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-
-      try {
-        const currentSessionId = sessionId || message.sessionId;
-
-        if (!currentSessionId) {
-          console.error('No session ID available for form submission');
-          return;
-        }
-
-        // Collect form data
-        const formData = (metadata as any)?.formFields?.map((field: any) => ({
-          id: field.id,
-          label: field.label,
-          type: field.type,
-          value: formValues[field.id] || ''
-        })) || [];
-
-        const formTitle = (metadata as any)?.title || 'Contact Form Submission';
-
-        console.log('Submitting form:', { sessionId: currentSessionId, formData });
-
-        const response = await fetch(`/api/chat/${currentSessionId}/submit-form`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            formData,
-            formTitle
-          })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          console.log('Form submitted successfully:', result);
-
-          // Add confirmation message directly to the chat
-          const confirmationText = chatbotConfig?.formConfirmationMessage || 
-                                 'Thank you! Your message has been sent successfully. We will contact you soon.';
-
-          const confirmationMessage = {
-            id: Date.now().toString(),
-            sessionId: currentSessionId,
-            content: confirmationText,
-            sender: 'bot' as const,
-            messageType: 'text' as const,
-            metadata: { emailSent: true, messageId: result.messageId },
-            createdAt: new Date().toISOString(),
-          };
-
-          // Update the query cache with the new message
-          queryClient.setQueryData(['/api/chat', currentSessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [confirmationMessage] };
-            return { messages: [...old.messages, confirmationMessage] };
-          });
-
-          setFormValues({}); // Clear form
-        } else {
-          console.error('Form submission failed:', result);
-        }
-      } catch (error) {
-        console.error('Error submitting form:', error);
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-
-    const handleInputChange = (fieldId: string, value: string) => {
-      setFormValues(prev => ({ ...prev, [fieldId]: value }));
-    };
-
-    // Check if form is valid based on required fields
-    const isFormValid = (metadata as any)?.formFields?.every((field: any) => 
-      !field.required || (formValues[field.id] && formValues[field.id].trim() !== '')
-    ) || false;
-
-
+  if (messageType === 'form' && isFormMetadata(typedMetadata)) {
     return (
-      <div className="bg-white rounded-lg rounded-tl-none shadow-sm border overflow-hidden">
-        <div className="p-4">
-          {(metadata as any)?.title && (
-            <h4 className="font-semibold text-neutral-800 mb-3">{(metadata as any).title}</h4>
-          )}
-
-          {content && (
-            <p 
-              className="text-neutral-600 mb-4" 
-              dangerouslySetInnerHTML={{ __html: parseMarkdown(content) }}
-            />
-          )}
-
-          <form className="space-y-4" onSubmit={handleFormSubmit}>
-            {(metadata as any)?.formFields?.map((field: any, index: number) => (
-              <div key={`${field.id}-${index}`} className="space-y-2">
-                <label 
-                  htmlFor={field.id} 
-                  className="block text-sm font-medium text-neutral-700"
-                >
-                  {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-
-                {field.type === 'textarea' ? (
-                  <textarea
-                    id={field.id}
-                    name={field.id}
-                    placeholder={field.placeholder}
-                    required={field.required}
-                    value={formValues[field.id] || ''}
-                    onChange={(e) => handleInputChange(field.id, e.target.value)}
-                    rows={3}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
-                  />
-                ) : (
-                  <input
-                    id={field.id}
-                    name={field.id}
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    required={field.required}
-                    value={formValues[field.id] || ''}
-                    onChange={(e) => handleInputChange(field.id, e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                  />
-                )}
-              </div>
-            ))}
-
-            <Button
-              type="submit"
-              disabled={isSubmitting || !isFormValid}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Sending...
-                </div>
-              ) : (
-                (metadata as any)?.submitButton?.text || 'Send Message'
-              )}
-            </Button>
-          </form>
-        </div>
-      </div>
+      <FormMessage 
+        content={content}
+        metadata={typedMetadata as FormMetadata}
+        sessionId={sessionId || message.sessionId}
+        messageId={message.id}
+        chatbotConfig={chatbotConfig}
+      />
     );
   }
 
@@ -505,4 +129,6 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
       <p className="text-neutral-800">{content}</p>
     </div>
   );
-}
+});
+
+export default RichMessage;
