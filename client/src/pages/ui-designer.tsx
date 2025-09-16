@@ -23,10 +23,57 @@ import {
   Wand2, 
   Download,
   RefreshCw,
-  Palette
+  Palette,
+  RotateCcw
 } from "lucide-react";
 import { BackgroundImageUpload } from "@/components/ui/background-image-upload";
 import type { HomeScreenConfig, ChatbotConfig } from "@shared/schema";
+
+// Default configuration fallback
+const getDefaultConfig = (): HomeScreenConfig => ({
+  version: "1.0",
+  components: [
+    {
+      id: "header_default",
+      type: "header",
+      props: {
+        title: "Welcome",
+        subtitle: "How can we help you today?",
+      },
+      order: 1,
+      visible: true,
+    },
+    {
+      id: "topics_default",
+      type: "topic_grid",
+      props: {
+        topics: [
+          {
+            id: "help",
+            title: "Get Help",
+            description: "Ask a question or get support",
+            icon: "MessageCircle",
+            actionType: "message",
+            message: "Hi! How can I help you today?",
+            category: "general",
+          },
+        ],
+      },
+      order: 2,
+      visible: true,
+    },
+  ],
+  theme: {
+    primaryColor: "#2563eb",
+    backgroundColor: "#ffffff",
+    textColor: "#1f2937",
+  },
+  settings: {
+    enableSearch: false,
+    enableCategories: false,
+    defaultCategory: "all",
+  },
+});
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -321,6 +368,23 @@ Please consider these colors when generating the UI design to ensure visual cons
     }
   };
 
+  const handleResetConfig = () => {
+    const defaultConfig = getDefaultConfig();
+    setCurrentConfig(defaultConfig);
+    setConfigKey(prev => prev + 1); // Force re-render
+    
+    // Reset theme colors to default
+    setPrimaryColor(defaultConfig.theme?.primaryColor || "#2563eb");
+    setBackgroundColor(defaultConfig.theme?.backgroundColor || "#ffffff");
+    setTextColor(defaultConfig.theme?.textColor || "#1f2937");
+    setBackgroundImageUrl("");
+    
+    toast({
+      title: "Configuration Reset",
+      description: "Home screen has been reset to default configuration.",
+    });
+  };
+
   const handleTopicClick = (topic: any) => {
     toast({
       title: "Topic Selected",
@@ -375,14 +439,24 @@ Please consider these colors when generating the UI design to ensure visual cons
             )}
           </div>
           {currentConfig && (
-            <Button 
-              onClick={handleSaveConfig}
-              disabled={saveConfigMutation.isPending}
-              size="sm"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Save Design
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleResetConfig}
+                variant="outline"
+                size="sm"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset to Default
+              </Button>
+              <Button 
+                onClick={handleSaveConfig}
+                disabled={saveConfigMutation.isPending}
+                size="sm"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Save Design
+              </Button>
+            </div>
           )}
         </div>
         <p className="text-muted-foreground">
@@ -640,6 +714,14 @@ Please consider these colors when generating the UI design to ensure visual cons
                         <Button variant="outline" size="sm" onClick={handleCopyConfig}>
                           <Copy className="h-4 w-4 mr-2" />
                           Copy
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleResetConfig}
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Reset
                         </Button>
                         <Button 
                           variant="outline" 
