@@ -148,12 +148,7 @@ export async function* generateStreamingResponse(
               } else if (bubble.messageType === "menu") {
                 // Log incomplete menu for debugging
                 console.warn(
-                  `[SURVEY MENU WARNING] Menu bubble ${i + 1} has incomplete options, waiting for complete response...`,
-                  bubble.metadata?.options?.map((opt: any) => ({
-                    id: opt?.id || 'MISSING',
-                    text: opt?.text || 'MISSING',
-                    action: opt?.action || 'MISSING'
-                  }))
+                  `[SURVEY MENU WARNING] Menu bubble ${i + 1} has incomplete options, waiting for complete response...`
                 );
               }
             }
