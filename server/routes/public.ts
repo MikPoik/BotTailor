@@ -91,20 +91,16 @@ export function setupPublicRoutes(app: Express) {
       const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
 
       if (!defaultGuid || !defaultUserId) {
-        return res.status(404).json({
-          message: "Default chatbot not configured",
-          hint: "Set DEFAULT_SITE_CHATBOT_GUID and DEFAULT_SITE_ADMIN_USER_ID environment variables"
-        });
+        console.log(`[DEFAULT CHATBOT] Environment variables not configured - returning empty response`);
+        return res.json(null); // Return null instead of 404 to prevent retry loops
       }
 
       console.log(`[DEFAULT CHATBOT] Serving default chatbot: ${defaultGuid} for admin user: ${defaultUserId}`);
 
       const chatbotConfig = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
       if (!chatbotConfig) {
-        return res.status(404).json({
-          message: "Default chatbot configuration not found",
-          hint: `No chatbot found with GUID ${defaultGuid} for user ${defaultUserId}`
-        });
+        console.log(`[DEFAULT CHATBOT] No chatbot found - returning empty response`);
+        return res.json(null); // Return null instead of 404 to prevent retry loops
       }
 
       console.log(`[DEFAULT CHATBOT] Serving default chatbot: ${chatbotConfig.name} (GUID: ${chatbotConfig.guid}) for admin user: ${defaultUserId}`);
@@ -112,7 +108,7 @@ export function setupPublicRoutes(app: Express) {
       res.json(chatbotConfig);
     } catch (error) {
       console.error("Error fetching default chatbot:", error);
-      res.status(500).json({ message: "Failed to fetch default chatbot configuration" });
+      res.json(null); // Return null instead of 500 to prevent retry loops
     }
   });
 
