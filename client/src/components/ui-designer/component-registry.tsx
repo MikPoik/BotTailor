@@ -168,7 +168,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
               backgroundColor: itemStyle === 'filled' ? primaryColor : backgroundColor,
               color: itemStyle === 'filled' ? 'white' : textColor,
               borderLeftColor: primaryColor,
-              borderWidth: itemStyle === 'outlined' ? '1px' : undefined,
+              borderWidth: itemStyle === 'outlined' ? '2px' : undefined,
               borderColor: itemStyle === 'outlined' ? primaryColor : undefined,
             }}
           >
