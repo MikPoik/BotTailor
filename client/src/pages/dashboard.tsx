@@ -356,20 +356,6 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Test Embedded Widget</CardTitle>
-              <CardDescription>
-                Test how your widget appears on external websites
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" asChild>
-                <Link href="/widget-test">Test Widget</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle>Documentation</CardTitle>
               <CardDescription>
                 Learn how to integrate and customize your chatbots
