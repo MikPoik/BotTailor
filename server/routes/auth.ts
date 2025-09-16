@@ -11,11 +11,33 @@ export async function setupAuthRoutes(app: Express) {
   // Get current user
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const fullUserId = req.user.claims.sub;
+      // Extract clean ID (remove provider prefix if present)
+      const cleanUserId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      
+      // Try to get existing user
+      let user = await storage.getUser(cleanUserId);
+      
+      // If user doesn't exist, create them with clean ID format
+      if (!user) {
+        const provider = fullUserId.includes('|') ? fullUserId.split('|')[0] : 'unknown';
+        const userProfile = req.user.claims;
+        
+        user = await storage.upsertUser({
+          id: cleanUserId,
+          provider: provider,
+          firstName: userProfile.given_name || userProfile.name || userProfile.nickname || 'Unknown',
+          lastName: userProfile.family_name || '',
+          email: userProfile.email || '',
+          profileImageUrl: userProfile.picture || ''
+        });
+        
+        console.log(`[AUTH] Created new user: ${cleanUserId} (provider: ${provider})`);
+      }
+      
       res.json(user);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error("Error fetching/creating user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
