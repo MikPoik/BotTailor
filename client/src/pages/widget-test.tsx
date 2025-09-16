@@ -48,14 +48,7 @@ export default function WidgetTest() {
     }
   }, [chatbots, selectedChatbot]);
 
-  // Helper function to extract clean user ID
-  const getCleanUserId = (fullUserId?: string): string => {
-    if (!fullUserId) return "";
-    const parts = fullUserId.split('|');
-    return parts.length > 1 ? parts[1] : fullUserId;
-  };
-
-  const cleanUserId = getCleanUserId((user as any)?.id);
+  const cleanUserId = user?.id || "";
 
   // Load and initialize chat widget
   useEffect(() => {

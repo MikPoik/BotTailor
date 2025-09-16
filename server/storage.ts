@@ -112,12 +112,6 @@ export interface IStorage {
   getOrCreateFreeSubscription(userId: string): Promise<Subscription & { plan: SubscriptionPlan }>;
 }
 
-export function getCleanUserId(auth0UserId: string): string {
-  // Extract the part after the pipe character, or return the original if no pipe
-  const parts = auth0UserId.split('|');
-  return parts.length > 1 ? parts[1] : auth0UserId;
-}
-
 
 export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
