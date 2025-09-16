@@ -547,31 +547,7 @@ ${buildEmbedParams()}
               </CardContent>
             </Card>
 
-            {/* Direct Link */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Direct Link</CardTitle>
-                <CardDescription>
-                  Share this direct link to your chatbot
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Input value={widgetUrl} readOnly className="font-mono text-sm" />
-                  <Button 
-                    variant="outline"
-                    onClick={() => copyToClipboard(widgetUrl, 'Link')}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <a href={widgetUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            
           </div>
         </div>
       </div>
