@@ -28,7 +28,8 @@ export const sessions = pgTable(
 
 // User storage table for Replit Auth (required)
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
+  id: varchar("id").primaryKey().notNull(), // Clean ID without provider prefix
+  provider: varchar("provider"), // Auth provider (google-oauth2, auth0, etc.)
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -180,6 +181,7 @@ export const subscriptions = pgTable("subscriptions", {
 // Replit Auth user upsert schema
 export const upsertUserSchema = createInsertSchema(users).pick({
   id: true,
+  provider: true,
   email: true,
   firstName: true,
   lastName: true,

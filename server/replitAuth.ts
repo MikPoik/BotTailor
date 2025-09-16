@@ -68,11 +68,28 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
+function parseAuth0UserId(auth0UserId: string): { cleanId: string; provider: string | null } {
+  const parts = auth0UserId.split('|');
+  if (parts.length > 1) {
+    return {
+      cleanId: parts[1],
+      provider: parts[0]
+    };
+  }
+  return {
+    cleanId: auth0UserId,
+    provider: null
+  };
+}
+
 async function upsertUser(
   claims: any,
 ) {
+  const { cleanId, provider } = parseAuth0UserId(claims["sub"]);
+  
   await storage.upsertUser({
-    id: claims["sub"],
+    id: cleanId,
+    provider: provider,
     email: claims["email"],
     firstName: claims["given_name"],
     lastName: claims["family_name"],
