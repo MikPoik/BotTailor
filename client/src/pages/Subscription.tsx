@@ -278,7 +278,7 @@ export default function Subscription() {
                 </div>
               )}
             </CardContent>
-            {currentSubscription.status === 'active' && !(currentSubscription as any).cancelAtPeriodEnd && (
+            {currentSubscription.status === 'active' && !(currentSubscription as any).cancelAtPeriodEnd && currentSubscription.plan.name !== 'Free' && (
               <CardFooter>
                 <Button
                   variant="destructive"
