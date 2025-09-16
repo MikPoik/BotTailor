@@ -112,7 +112,9 @@ export default function DynamicHomeScreen({
       )}
 
       <div className="relative z-10">
-        {sortedComponents.map((component) => 
+        {sortedComponents
+        .filter((component) => component.visible !== false)
+        .map((component) => 
           renderComponent(component, onTopicClick, onActionClick, colors)
         )}
         <div className="pb-8"></div>
