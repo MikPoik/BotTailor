@@ -64,7 +64,7 @@ UI design choices should be mobile first unless stated otherwise.
 If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
 
 
-  
+
 ## System Architecture
 
 ### Frontend Architecture
@@ -203,4 +203,3 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │   └── 📄 schema.ts
 ├── 📄 tailwind.config.ts
 └── 📄 vite.config.ts
-

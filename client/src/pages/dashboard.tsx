@@ -85,6 +85,13 @@ export default function Dashboard() {
     retry: false,
   });
 
+  // Fetch current user subscription for usage display
+  const { data: currentSubscription } = useQuery<any>({
+    queryKey: ["/api/subscription/current"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
   // Get chatbot GUID from URL parameters or environment
   const urlParams = new URLSearchParams(window.location.search);
   const urlChatbotGuid = urlParams.get('chatbot');
@@ -166,17 +173,72 @@ export default function Dashboard() {
         
       </div>
 
+      {/* Subscription Limit Warning */}
+      {currentSubscription && currentSubscription.plan?.maxBots !== -1 && (
+        <div className="mb-8">
+          {(chatbots?.length || 0) >= currentSubscription.plan?.maxBots ? (
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-destructive" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-destructive">Chatbot Limit Reached</h3>
+                    <p className="text-sm text-muted-foreground">
+                      You've reached your {currentSubscription.plan.name} plan limit of {currentSubscription.plan.maxBots} chatbot{currentSubscription.plan.maxBots !== 1 ? 's' : ''}. 
+                      <Link href="/subscription" className="text-primary hover:underline ml-1">
+                        Upgrade your plan
+                      </Link> to create more chatbots.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (chatbots?.length || 0) >= (currentSubscription.plan?.maxBots * 0.8) ? (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-orange-800">Approaching Chatbot Limit</h3>
+                    <p className="text-sm text-orange-700">
+                      You're using {chatbots?.length || 0} of {currentSubscription.plan.maxBots} chatbots on your {currentSubscription.plan.name} plan.
+                      <Link href="/subscription" className="text-primary hover:underline ml-1">
+                        Consider upgrading
+                      </Link> for more capacity.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      )}
+
       {/* Chatbots Section */}
-      <div className="mb-8">
+      <div className="mb-8"></div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Your Chatbots</h2>
-          <Button onClick={() => {
-            console.log("Create Chatbot clicked");
-            setLocation("/chatbots/new");
-          }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Chatbot
-          </Button>
+          <div className="flex items-center gap-4">
+            {currentSubscription && (
+              <div className="text-sm text-muted-foreground">
+                {chatbots?.length || 0}/{currentSubscription.plan?.maxBots === -1 ? '∞' : currentSubscription.plan?.maxBots || 0} chatbots
+              </div>
+            )}
+            <Button 
+              onClick={() => {
+                console.log("Create Chatbot clicked");
+                setLocation("/chatbots/new");
+              }}
+              disabled={currentSubscription && currentSubscription.plan?.maxBots !== -1 && (chatbots?.length || 0) >= currentSubscription.plan?.maxBots}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Chatbot
+            </Button>
+          </div>
         </div>
 
         {chatbotsLoading ? (

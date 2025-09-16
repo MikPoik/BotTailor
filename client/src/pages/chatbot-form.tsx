@@ -127,6 +127,32 @@ export default function ChatbotForm() {
         }, 500);
         return;
       }
+      
+      // Handle subscription limit errors
+      if (error.message.includes("HTTP 403")) {
+        try {
+          const errorText = error.message.split("HTTP 403: ")[1];
+          const errorData = JSON.parse(errorText);
+          
+          if (errorData.details?.upgradeRequired) {
+            toast({
+              title: "Subscription Limit Reached",
+              description: errorData.message,
+              variant: "destructive",
+              action: (
+                <div className="text-xs space-y-1">
+                  <p>Current: {errorData.details.currentBots}/{errorData.details.maxBots === -1 ? 'unlimited' : errorData.details.maxBots}</p>
+                  <p>Plan: {errorData.details.planName}</p>
+                </div>
+              ),
+            });
+            return;
+          }
+        } catch (parseError) {
+          // Fall through to generic error if parsing fails
+        }
+      }
+      
       toast({
         title: "Error",
         description: "Failed to create chatbot configuration. Please try again.",
