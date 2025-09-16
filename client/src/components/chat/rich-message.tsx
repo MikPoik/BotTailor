@@ -279,15 +279,22 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
     const quickMeta = metadata as any;
     return (
       <div className="flex flex-wrap gap-2">
-        {quickMeta.quickReplies.map((reply: string, index: number) => (
-          <button
-            key={`quickreply-${reply}-${index}`}
-            onClick={() => onQuickReply(reply)}
-            className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
-          >
-            {reply}
-          </button>
-        ))}
+        {quickMeta.quickReplies.map((reply: string, index: number) => {
+          const isSkipOption = reply.toLowerCase().includes('skip');
+          return (
+            <button
+              key={`quickreply-${reply}-${index}`}
+              onClick={() => onQuickReply(reply)}
+              className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                isSkipOption 
+                  ? 'bg-neutral-200 text-neutral-600 border border-neutral-300 hover:bg-neutral-300' 
+                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+              }`}
+            >
+              {reply}
+            </button>
+          );
+        })}
       </div>
     );
   }

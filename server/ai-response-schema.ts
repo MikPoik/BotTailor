@@ -132,11 +132,13 @@ ${messageTypes.join("\n")}
 - For follow-up questions: acknowledge previous response
 - Questions with options = text bubble + appropriate menu bubble based on question type:
   * single_choice questions → MENU (single selection)
-  * multiple_choice questions → MULTISELECT_MENU (multiple selections)
+  * multiple_choice questions → MULTISELECT_MENU (multiple selections) ⚠️ CRITICAL: Use EXACT option texts
   * rating questions → RATING (rating scale)
-  * text questions → TEXT (free text input)
+  * text questions → TEXT (free text input) + optional quickReplies for skip
+- 🚨 MULTISELECT_MENU CRITICAL RULE: NEVER use "Option 1", "Option 2" - use the EXACT survey option texts provided
 - Use exact option texts provided in survey context
 - Do not invent new options or change existing ones
+- For optional questions: provide skip option using quickReplies
 - Present surveys only if there is active survey context!
 
 For natural conversations, adapt your bubble strategy based on the content type:
@@ -345,11 +347,38 @@ ${getQuestionTypeInstructions(currentQuestion)}
 **${menuType.toUpperCase()} FORMAT REQUIRED** (MUST INCLUDE ALL ${currentQuestion.options.length} OPTIONS):
 ${menuExample}
 
-🚨 CRITICAL: You MUST include ALL ${currentQuestion.options.length} options in the ${menuType}. Never omit any options!
-The options are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(", ")}
+🚨 CRITICAL REQUIREMENTS:
+1. You MUST include ALL ${currentQuestion.options.length} options in the ${menuType}
+2. Use EXACT option texts - DO NOT change to "Option 1", "Option 2"
+3. Never omit any options!
+4. Copy the JSON format exactly as shown above
+
+The EXACT option texts you MUST use are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(", ")}
 `;
   } else if (currentQuestion.type === 'rating') {
     context += generateRatingExample(currentQuestion);
+  } else if (currentQuestion.type === 'text') {
+    // Add skip option for non-required text questions
+    if (!currentQuestion.required) {
+      context += `
+**TEXT INPUT WITH SKIP OPTION:**
+This is a voluntary text question. Present it as a text bubble and provide a skip option:
+- Use TEXT messageType for the question
+- After the question, add quickReplies with "Skip" option
+- User can either type their response or click skip
+
+Example format:
+[
+  {"messageType": "text", "content": "${currentQuestion.text} (Optional)"},
+  {"messageType": "quickReplies", "content": "", "metadata": {"quickReplies": ["Skip this question"]}}
+]
+`;
+    } else {
+      context += `
+**REQUIRED TEXT INPUT:**
+This is a required text question. Present it as a text bubble and wait for user input.
+`;
+    }
   }
 
   if (Object.keys(responses).length > 0) {
@@ -433,17 +462,19 @@ CRITICAL: Focus only on THIS survey. Ignore any previous survey content in chat 
 
 // Helper function to get question type specific instructions
 function getQuestionTypeInstructions(question: any): string {
+  const requiredText = question.required ? 'REQUIRED' : 'OPTIONAL';
   switch (question.type) {
     case 'single_choice':
-      return 'This is a SINGLE CHOICE question. Use MENU messageType (allows only one selection).';
+      return `This is a ${requiredText} SINGLE CHOICE question. Use MENU messageType (allows only one selection).`;
     case 'multiple_choice':
-      return 'This is a MULTIPLE CHOICE question. Use MULTISELECT_MENU messageType (allows multiple selections).';
+      return `This is a ${requiredText} MULTIPLE CHOICE question. Use MULTISELECT_MENU messageType (allows multiple selections). 🚨 CRITICAL: Use EXACT option texts from survey - DO NOT use "Option 1", "Option 2"!`;
     case 'text':
-      return 'This is a TEXT question. Use TEXT messageType and prompt for free-form text input.';
+      const skipText = question.required ? '' : ' If optional, provide a skip option using quickReplies.';
+      return `This is a ${requiredText} TEXT question. Use TEXT messageType and prompt for free-form text input.${skipText}`;
     case 'rating':
-      return 'This is a RATING question. Use RATING messageType with appropriate scale (1-5 stars, 1-10 numbers, etc.).';
+      return `This is a ${requiredText} RATING question. Use RATING messageType with appropriate scale (1-5 stars, 1-10 numbers, etc.).`;
     case 'conditional':
-      return 'This is a CONDITIONAL question. Use appropriate messageType based on the question structure.';
+      return `This is a ${requiredText} CONDITIONAL question. Use appropriate messageType based on the question structure.`;
     default:
       return 'Use appropriate messageType based on question content.';
   }
@@ -468,7 +499,8 @@ function generateMenuExample(question: any, optionsForExample: string): string {
   const menuType = getMenuTypeForQuestion(question);
   
   if (menuType === 'multiselect_menu') {
-    return `{
+    return `🚨 CRITICAL MULTISELECT FORMAT - COPY EXACTLY:
+{
   "messageType": "multiselect_menu",
   "content": "Select all that apply:",
   "metadata": {
@@ -479,7 +511,9 @@ function generateMenuExample(question: any, optionsForExample: string): string {
 ${optionsForExample}
     ]
   }
-}`;
+}
+
+⚠️ WARNING: You MUST use the EXACT option texts provided above. DO NOT change them to "Option 1", "Option 2". Use the actual text from the survey options!`;
   } else {
     return `{
   "messageType": "menu",
