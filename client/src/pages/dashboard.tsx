@@ -178,7 +178,7 @@ export default function Dashboard() {
         <div className="mb-8">
           {(chatbots?.length || 0) >= currentSubscription.plan?.maxBots ? (
             <Card className="border-destructive/50 bg-destructive/5">
-              <CardContent className="pt-6">
+              <CardContent className="pt-3 pb-3">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
                     <Bot className="h-4 w-4 text-destructive" />
@@ -219,7 +219,7 @@ export default function Dashboard() {
       )}
 
       {/* Chatbots Section */}
-      <div className="mb-8"></div>
+      <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold tracking-tight">Your Chatbots</h2>
           <div className="flex items-center gap-4">
