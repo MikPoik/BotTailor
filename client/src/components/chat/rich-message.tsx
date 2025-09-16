@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { Star, Check } from "lucide-react";
+import { Star, Check, Send } from "lucide-react";
 
 // Function to parse Markdown to HTML
 function parseMarkdown(text: string): string {
@@ -111,10 +111,12 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
 
   if (messageType === 'multiselect_menu' && (metadata as any)?.options) {
     const [selectedOptions, setSelectedOptions] = useState<string[]>((metadata as any)?.selectedOptions || []);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const menuMeta = metadata as any;
     const minSelections = menuMeta.minSelections || 1;
     const maxSelections = menuMeta.maxSelections || menuMeta.options?.length || 999;
-    
+
     // Debug logging (remove after fix)
     // console.log('[MULTISELECT_MENU] Debug:', {
     //   messageType,
@@ -135,13 +137,29 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
       });
     };
 
-    const handleSubmitSelection = () => {
-      if (selectedOptions.length >= minSelections) {
-        const selectedTexts = selectedOptions.map(id => {
-          const option = menuMeta.options.find((opt: any) => opt.id === id);
-          return option?.text || id;
-        });
-        onOptionSelect('multiselect_submit', { selectedOptions, selectedTexts }, selectedTexts.join(', '));
+    const handleMultiselectSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (selectedOptions.length === 0 || isSubmitting || isSubmitted) return;
+
+      setIsSubmitting(true);
+
+      try {
+        // Send the selected options as a single payload
+        const payload = {
+          selected_options: selectedOptions,
+          selection_count: selectedOptions.length
+        };
+
+        await onOptionSelect?.(
+          'multiselect_submit',
+          payload,
+          `Selected: ${selectedOptions.join(', ')}`
+        );
+
+        setIsSubmitted(true);
+      } catch (error) {
+        console.error('Error submitting multiselect:', error);
+        setIsSubmitting(false);
       }
     };
 
@@ -152,7 +170,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
         <div className="space-y-2">
           {menuMeta.options.map((option: any, index: number) => {
             const isSelected = selectedOptions.includes(option.id);
-            
+
             // Debug individual option (remove after fix)
             // console.log(`[MULTISELECT_OPTION ${index}]`, {
             //   id: option.id,
@@ -161,7 +179,7 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             //   action: option.action,
             //   isSelected
             // });
-            
+
             return (
               <button
                 key={`${option.id}-${index}`}
@@ -187,17 +205,23 @@ export default function RichMessage({ message, onOptionSelect, onQuickReply, cha
             );
           })}
         </div>
-        
+
         <div className="flex items-center justify-between text-sm text-neutral-600">
           <span>Selected: {selectedOptions.length} / {maxSelections} (min: {minSelections})</span>
           <Button
-            onClick={handleSubmitSelection}
-            disabled={!isValid}
-            size="sm"
-            className="px-4"
-          >
-            Submit Selection
-          </Button>
+              type="submit"
+              onClick={handleMultiselectSubmit}
+              disabled={selectedOptions.length === 0 || isSubmitting || isSubmitted}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                </div>
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
         </div>
       </div>
     );
