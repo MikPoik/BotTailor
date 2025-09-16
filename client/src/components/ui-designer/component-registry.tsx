@@ -178,7 +178,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
           <button
             key={topic.id}
             onClick={() => onTopicClick?.(topic)}
-            className={`w-full p-4 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] ${
+            className={`w-full p-2 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] ${
               itemStyle === 'filled' 
                 ? 'shadow-md hover:shadow-lg' 
                 : 'border-2 shadow-sm hover:shadow-md'
@@ -206,7 +206,12 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
               <div className="flex-1 min-w-0">
                 <h3 
                   className="font-semibold mb-1 truncate"
-                  style={{ fontSize: titleFontSize }}
+                  style={{ 
+                    fontSize: titleFontSize,
+                    color: hasBackgroundImage 
+                      ? 'white' 
+                      : (itemStyle === 'filled' ? 'white' : textColor)
+                  }}
                 >
                   {topic.title}
                 </h3>
