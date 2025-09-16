@@ -95,7 +95,9 @@ export default function ChatbotEmbed() {
   }
 
   const baseUrl = window.location.origin;
-  const widgetUrl = `${baseUrl}/widget/${user?.id}/${chatbot.guid}`;
+  // Extract clean user ID (part after pipe character)
+  const cleanUserId = user?.id?.split('|').pop() || user?.id;
+  const widgetUrl = `${baseUrl}/widget/${cleanUserId}/${chatbot.guid}`;
   
   // Get theme colors from UI Designer configuration
   const theme = chatbot.homeScreenConfig?.theme;

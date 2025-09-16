@@ -250,7 +250,18 @@ export function setupPublicRoutes(app: Express) {
   // Chat widget route with user and chatbot parameters - only match specific patterns
   app.get("/widget/:userId/:chatbotGuid", async (req, res, next) => {
     try {
-      const { userId, chatbotGuid } = req.params;
+      let { userId, chatbotGuid } = req.params;
+      
+      // If userId doesn't contain a pipe, it's a clean ID - find the full Auth0 ID
+      if (!userId.includes('|')) {
+        const fullUserId = await storage.findUserByCleanId(userId);
+        if (fullUserId) {
+          userId = fullUserId;
+        } else {
+          console.log(`No user found for clean ID: ${userId}`);
+          return res.status(404).send('User not found');
+        }
+      }
       const { embedded = "true", mobile = "false" } = req.query;
 
       console.log(`Loading widget for userId: ${userId}, chatbotGuid: ${chatbotGuid}`);

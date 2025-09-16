@@ -110,6 +110,18 @@ export interface IStorage {
   checkBotLimit(userId: string): Promise<boolean>;
   checkMessageLimit(userId: string): Promise<boolean>;
   getOrCreateFreeSubscription(userId: string): Promise<Subscription & { plan: SubscriptionPlan }>;
+  findUserByCleanId(cleanUserId: string): Promise<string | null>;
+}
+
+export function getCleanUserId(auth0UserId: string): string {
+  // Extract the part after the pipe character, or return the original if no pipe
+  const parts = auth0UserId.split('|');
+  return parts.length > 1 ? parts[1] : auth0UserId;
+}
+
+export function findFullUserId(cleanUserId: string): Promise<string | null> {
+  // This will be implemented to find the full Auth0 user ID from the clean ID
+  return storage.findUserByCleanId(cleanUserId);
 }
 
 export class DatabaseStorage implements IStorage {
@@ -177,10 +189,10 @@ export class DatabaseStorage implements IStorage {
   async deleteChatSession(sessionId: string): Promise<void> {
     // First delete all messages for this session
     await db.delete(messages).where(eq(messages.sessionId, sessionId));
-    
+
     // Delete all survey sessions for this chat session
     await db.delete(surveySessions).where(eq(surveySessions.sessionId, sessionId));
-    
+
     // Finally delete the chat session
     await db.delete(chatSessions).where(eq(chatSessions.sessionId, sessionId));
   }
@@ -688,7 +700,7 @@ export class DatabaseStorage implements IStorage {
     const freePlan = await db.select().from(subscriptionPlans)
       .where(eq(subscriptionPlans.name, 'Free'))
       .limit(1);
-    
+
     if (!freePlan || freePlan.length === 0) {
       throw new Error('Free subscription plan not found');
     }
@@ -743,6 +755,21 @@ export class DatabaseStorage implements IStorage {
 
     const messagesUsed = subscription.messagesUsedThisMonth || 0;
     return messagesUsed < subscription.plan.maxMessagesPerMonth;
+  }
+
+  async findUserByCleanId(cleanUserId: string): Promise<string | null> {
+    try {
+      const result = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(sql`${users.id} LIKE '%|${cleanUserId}'`)
+        .limit(1);
+
+      return result.length > 0 ? result[0].id : null;
+    } catch (error) {
+      console.error("Error finding user by clean ID:", error);
+      return null;
+    }
   }
 }
 

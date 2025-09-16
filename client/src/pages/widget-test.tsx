@@ -48,6 +48,15 @@ export default function WidgetTest() {
     }
   }, [chatbots, selectedChatbot]);
 
+  // Helper function to extract clean user ID
+  const getCleanUserId = (fullUserId?: string): string => {
+    if (!fullUserId) return "";
+    const parts = fullUserId.split('|');
+    return parts.length > 1 ? parts[1] : fullUserId;
+  };
+
+  const cleanUserId = getCleanUserId((user as any)?.id);
+
   // Load and initialize chat widget
   useEffect(() => {
     if (!selectedChatbot || !user) return;
@@ -103,7 +112,7 @@ export default function WidgetTest() {
             // Get theme colors from the chatbot configuration
             const theme = selectedChatbotConfig?.homeScreenConfig?.theme;
             const widgetConfig: any = {
-              apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
+              apiUrl: `${window.location.origin}/widget/${cleanUserId}/${selectedChatbot}`,
               position: position as 'bottom-right' | 'bottom-left',
               _forceReinit: true // Use the force reinit flag we added
             };
@@ -134,7 +143,7 @@ export default function WidgetTest() {
       clearTimeout(timer);
       cleanupExistingWidget();
     };
-  }, [selectedChatbot, user, position, widgetKey, selectedChatbotConfig]);
+  }, [selectedChatbot, user, position, widgetKey, selectedChatbotConfig, cleanUserId]);
 
   const refreshWidget = () => {
     setWidgetKey(prev => prev + 1);
@@ -145,10 +154,10 @@ export default function WidgetTest() {
 
     // Get theme colors from the chatbot configuration
     const theme = selectedChatbotConfig?.homeScreenConfig?.theme;
-    
+
     // Build the configuration object
     const config = {
-      apiUrl: `${window.location.origin}/widget/${(user as any)?.id}/${selectedChatbot}`,
+      apiUrl: `${window.location.origin}/widget/${cleanUserId}/${selectedChatbot}`,
       position: position
     };
 
