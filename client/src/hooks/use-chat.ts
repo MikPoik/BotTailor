@@ -127,7 +127,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         sender: 'user',
         messageType: 'text',
         metadata: {},
-        createdAt: new Date().toISOString(), // Use ISO string for consistency with backend
+        createdAt: new Date(), // Use Date object for schema consistency
       };
 
       queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {

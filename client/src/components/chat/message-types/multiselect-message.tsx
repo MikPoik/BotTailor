@@ -1,0 +1,109 @@
+import { memo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Check, Send } from "lucide-react";
+import { MultiselectMenuMetadata } from "@/types/message-metadata";
+
+interface MultiselectMessageProps {
+  metadata: MultiselectMenuMetadata;
+  onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
+}
+
+export const MultiselectMessage = memo(function MultiselectMessage({ 
+  metadata, 
+  onOptionSelect 
+}: MultiselectMessageProps) {
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(metadata.selectedOptions || []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  const minSelections = metadata.minSelections || 1;
+  const maxSelections = metadata.maxSelections || metadata.options?.length || 999;
+
+  const handleOptionToggle = (optionId: string, optionText: string) => {
+    setSelectedOptions(prev => {
+      if (prev.includes(optionId)) {
+        return prev.filter(id => id !== optionId);
+      } else if (prev.length < maxSelections) {
+        return [...prev, optionId];
+      }
+      return prev;
+    });
+  };
+
+  const handleMultiselectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedOptions.length === 0 || isSubmitting || isSubmitted) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        selected_options: selectedOptions,
+        selection_count: selectedOptions.length
+      };
+
+      await onOptionSelect(
+        'multiselect_submit',
+        payload,
+        `Selected: ${selectedOptions.join(', ')}`
+      );
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting multiselect:', error);
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        {metadata.options.map((option, index) => {
+          const isSelected = selectedOptions.includes(option.id);
+
+          return (
+            <button
+              key={`${option.id}-${index}`}
+              onClick={() => handleOptionToggle(option.id, option.text)}
+              className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 ${
+                isSelected 
+                  ? 'bg-primary/10 border-primary text-primary' 
+                  : 'border-neutral-200 hover:bg-neutral-50'
+              }`}
+            >
+              <div className={`w-4 h-4 border rounded flex items-center justify-center ${
+                isSelected ? 'bg-primary border-primary' : 'border-neutral-300'
+              }`}>
+                {isSelected && <Check className="w-3 h-3 text-white" />}
+              </div>
+              {option.icon && (
+                <i className={`${option.icon} ${isSelected ? 'text-primary' : ''}`}></i>
+              )}
+              <span className="rich-message-text" title={option.text || 'No text'}>
+                {option.text || `[EMPTY OPTION ${index}]`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-neutral-600">
+        <span>Selected: {selectedOptions.length} / {maxSelections} (min: {minSelections})</span>
+        <Button
+          type="submit"
+          onClick={handleMultiselectSubmit}
+          disabled={selectedOptions.length === 0 || isSubmitting || isSubmitted}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+            </div>
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+});
