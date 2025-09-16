@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -101,6 +102,7 @@ export default function UIDesigner() {
   const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
   const [textColor, setTextColor] = useState<string>("#1f2937");
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>("");
+  const [itemStyle, setItemStyle] = useState<'filled' | 'outlined'>('filled');
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -122,6 +124,12 @@ export default function UIDesigner() {
         if (config.theme.backgroundColor) setBackgroundColor(config.theme.backgroundColor);
         if (config.theme.textColor) setTextColor(config.theme.textColor);
         if (config.theme.backgroundImageUrl) setBackgroundImageUrl(config.theme.backgroundImageUrl);
+      }
+      
+      // Initialize itemStyle from topic_grid component if it exists
+      const topicGridComponent = config.components?.find(c => c.type === 'topic_grid');
+      if (topicGridComponent?.props?.style?.itemStyle) {
+        setItemStyle(topicGridComponent.props.style.itemStyle);
       }
     }
   }, [chatbot]);
@@ -299,6 +307,15 @@ Please consider these colors when generating the UI design to ensure visual cons
           textColor: textColor,
           backgroundImageUrl: backgroundImageUrl
         };
+        
+        // Update itemStyle in topic_grid component
+        const topicGridComponent = configToSave.components?.find((c: any) => c.type === 'topic_grid');
+        if (topicGridComponent) {
+          topicGridComponent.props.style = {
+            ...topicGridComponent.props.style,
+            itemStyle: itemStyle
+          };
+        }
 
         saveConfigMutation.mutate(configToSave);
       } catch (error) {
@@ -354,6 +371,15 @@ Please consider these colors when generating the UI design to ensure visual cons
         textColor: textColor,
         backgroundImageUrl: backgroundImageUrl
       };
+      
+      // Update itemStyle in topic_grid component
+      const topicGridComponent = parsedConfig.components?.find((c: any) => c.type === 'topic_grid');
+      if (topicGridComponent) {
+        topicGridComponent.props.style = {
+          ...topicGridComponent.props.style,
+          itemStyle: itemStyle
+        };
+      }
 
       setCurrentConfig(parsedConfig);
       setHasUnsavedChanges(false);
@@ -378,6 +404,7 @@ Please consider these colors when generating the UI design to ensure visual cons
     setBackgroundColor(defaultConfig.theme?.backgroundColor || "#ffffff");
     setTextColor(defaultConfig.theme?.textColor || "#1f2937");
     setBackgroundImageUrl("");
+    setItemStyle('filled');
     
     toast({
       title: "Configuration Reset",
@@ -639,6 +666,24 @@ Please consider these colors when generating the UI design to ensure visual cons
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Primary text color throughout the widget
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="item-style">Menu Item Style</Label>
+                      <div className="mt-2">
+                        <Select value={itemStyle} onValueChange={(value: 'filled' | 'outlined') => setItemStyle(value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select menu item style" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="filled">Filled - Items filled with primary color</SelectItem>
+                            <SelectItem value="outlined">Outlined - Items with primary color border</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Choose how menu items in the topic grid should be styled
                       </p>
                     </div>
                   </div>
