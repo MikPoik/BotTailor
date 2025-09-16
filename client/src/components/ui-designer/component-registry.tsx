@@ -60,31 +60,40 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
   
   // Use resolved colors with fallback to component style
   const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
+  const primaryColor = resolvedColors?.primaryColor || style?.primaryColor || 'var(--primary)';
+  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
+  
+  // Determine if we should use primary color for header background
+  const useHeaderBackground = style?.useHeaderBackground !== false; // Default to true
+  const headerBgColor = useHeaderBackground ? primaryColor : backgroundColor;
+  const headerTextColor = useHeaderBackground ? 'white' : textColor;
 
   return (
     <div 
       className="border-b border-neutral-200 p-6 relative"
       style={{
-        backgroundColor: 'transparent',
-        color: textColor,
+        backgroundColor: headerBgColor,
+        color: headerTextColor,
       }}
     >
       {/* Optional overlay for better text readability when background image is present */}
-      <div 
-        className="absolute inset-0 bg-black/10 pointer-events-none"
-        style={{
-          backgroundColor: `${resolvedColors?.backgroundColor || 'white'}20`, // 12.5% opacity background
-        }}
-      />
+      {!useHeaderBackground && (
+        <div 
+          className="absolute inset-0 bg-black/10 pointer-events-none"
+          style={{
+            backgroundColor: `${backgroundColor}20`, // 12.5% opacity background
+          }}
+        />
+      )}
       
       <div className="text-center relative z-10">
         {title && (
-          <h2 className="text-2xl font-bold mb-2 drop-shadow-sm" style={{ color: textColor }}>
+          <h2 className="text-2xl font-bold mb-2 drop-shadow-sm" style={{ color: headerTextColor }}>
             {title}
           </h2>
         )}
         {subtitle && (
-          <p className="drop-shadow-sm" style={{ color: textColor, opacity: 0.9 }}>
+          <p className="drop-shadow-sm" style={{ color: headerTextColor, opacity: useHeaderBackground ? 0.9 : 0.8 }}>
             {subtitle}
           </p>
         )}
