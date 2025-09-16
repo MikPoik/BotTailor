@@ -25,6 +25,7 @@ interface UserSubscription {
   status: string;
   currentPeriodEnd: string;
   messagesUsedThisMonth: number;
+  cancelAtPeriodEnd?: boolean;
   plan: SubscriptionPlan;
 }
 
@@ -131,8 +132,8 @@ export default function Subscription() {
   });
 
   const handleSubscribe = (planId: number) => {
-    // If user has an existing subscription, confirm before modifying it
-    if (currentSubscription && currentSubscription.status === 'active') {
+    // If user has an existing subscription (but not Free), confirm before modifying it
+    if (currentSubscription && currentSubscription.status === 'active' && currentSubscription.plan.name !== 'Free') {
       const targetPlan = (plans || []).find((p) => p.id === planId);
       const currentPlan = currentSubscription.plan;
 
@@ -155,6 +156,7 @@ export default function Subscription() {
       });
 
       t.update({
+        ...t,
         action: (
           <ToastAction
             altText="Confirm plan change"
@@ -190,6 +192,7 @@ export default function Subscription() {
     });
 
     t.update({
+      ...t,
       action: (
         <ToastAction
           altText="Confirm cancellation"
