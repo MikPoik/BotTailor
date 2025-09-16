@@ -51,22 +51,25 @@ interface ComponentRegistryProps {
     primaryColor: string;
     backgroundColor: string;
     textColor: string;
+    backgroundImageUrl?: string; // Added for background image check
   };
 }
 
 // Header Component
 export function HeaderComponent({ component, resolvedColors }: ComponentRegistryProps) {
   const { title, subtitle, style } = component.props;
-  
-  // Use resolved colors with fallback to component style
-  const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
-  const primaryColor = resolvedColors?.primaryColor || style?.primaryColor || 'var(--primary)';
-  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
-  
-  // Determine if we should use primary color for header background
-  const useHeaderBackground = style?.useHeaderBackground !== false; // Default to true
-  const headerBgColor = useHeaderBackground ? primaryColor : backgroundColor;
-  const headerTextColor = useHeaderBackground ? 'white' : textColor;
+
+  // Use resolved colors
+  const backgroundColor = resolvedColors?.backgroundColor || 'var(--background)';
+  const textColor = resolvedColors?.textColor || 'var(--foreground)';
+
+  // Check if we should use transparent background (when background image exists and transparent is enabled)
+  const hasBackgroundImage = resolvedColors?.backgroundImageUrl;
+  const useTransparentBackground = hasBackgroundImage && style?.transparentBackground;
+
+  // Header colors
+  const headerBgColor = useTransparentBackground ? 'transparent' : backgroundColor;
+  const headerTextColor = textColor;
 
   return (
     <div 
@@ -74,10 +77,11 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
       style={{
         backgroundColor: headerBgColor,
         color: headerTextColor,
+        borderBottomColor: useTransparentBackground ? 'rgba(255,255,255,0.2)' : undefined,
       }}
     >
-      {/* Optional overlay for better text readability when background image is present */}
-      {!useHeaderBackground && (
+      {/* Optional overlay for better text readability when background image is present and not transparent */}
+      {hasBackgroundImage && !useTransparentBackground && (
         <div 
           className="absolute inset-0 bg-black/10 pointer-events-none"
           style={{
@@ -85,15 +89,28 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
           }}
         />
       )}
-      
+
       <div className="text-center relative z-10">
         {title && (
-          <h2 className="text-2xl font-bold mb-2 drop-shadow-sm" style={{ color: headerTextColor }}>
+          <h2 
+            className="text-2xl font-bold mb-2 drop-shadow-sm" 
+            style={{ 
+              color: headerTextColor,
+              textShadow: useTransparentBackground ? '1px 1px 2px rgba(0,0,0,0.7)' : undefined
+            }}
+          >
             {title}
           </h2>
         )}
         {subtitle && (
-          <p className="drop-shadow-sm" style={{ color: headerTextColor, opacity: useHeaderBackground ? 0.9 : 0.8 }}>
+          <p 
+            className="drop-shadow-sm" 
+            style={{ 
+              color: headerTextColor, 
+              opacity: useTransparentBackground ? 1 : 0.9,
+              textShadow: useTransparentBackground ? '1px 1px 2px rgba(0,0,0,0.7)' : undefined
+            }}
+          >
             {subtitle}
           </p>
         )}
@@ -108,7 +125,7 @@ export function CategoryTabsComponent({ component, resolvedColors }: ComponentRe
   const [selectedCategory, setSelectedCategory] = React.useState(categories?.[0] || 'all');
 
   if (!categories || categories.length === 0) return null;
-  
+
   // Use resolved colors
   const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
   const textColor = resolvedColors?.textColor || 'inherit';
@@ -138,69 +155,65 @@ export function CategoryTabsComponent({ component, resolvedColors }: ComponentRe
 // Topic Grid Component
 export function TopicGridComponent({ component, onTopicClick, resolvedColors }: ComponentRegistryProps) {
   const { topics, style } = component.props;
-  const layout = style?.layout || 'grid';
-  const columns = style?.columns || 2;
 
-  // Ensure topics is an array
-  const topicsArray = Array.isArray(topics) ? topics : [];
-  
-  if (!topicsArray || topicsArray.length === 0) return null;
-
-  const gridClass = layout === 'grid' 
-    ? `grid grid-cols-1 gap-3`
-    : 'space-y-3';
-    
-  // Use resolved colors with fallback to component style
-  const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
-  const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
+  // Use resolved colors
   const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
-  const itemStyle = style?.itemStyle || 'filled';
+  const backgroundColor = resolvedColors?.backgroundColor || 'var(--background)';
+  const textColor = resolvedColors?.textColor || 'var(--foreground)';
 
-  // Category colors similar to original design
-  const categoryColors = {
-    support: 'bg-blue-50 text-blue-700 border-blue-200',
-    sales: 'bg-green-50 text-green-700 border-green-200', 
-    billing: 'bg-purple-50 text-purple-700 border-purple-200',
-    general: 'bg-gray-50 text-gray-700 border-gray-200'
-  };
+  // Determine style variant and font sizes
+  const itemStyle = style?.itemStyle || 'filled';
+  const titleFontSize = style?.titleFontSize || '16px';
+  const descriptionFontSize = style?.descriptionFontSize || '14px';
+
+  if (!topics || topics.length === 0) return null;
 
   return (
-    <div className="p-4 space-y-3">
-
-      <div className={gridClass}>
-        {topicsArray.map((topic) => (
-          <div 
+    <div className="p-6 space-y-4" style={{ backgroundColor, color: textColor }}>
+      <div className="grid gap-3">
+        {topics.map((topic: any) => (
+          <button
             key={topic.id}
-            className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border shadow-sm p-3"
             onClick={() => onTopicClick?.(topic)}
+            className={`w-full p-4 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] ${
+              itemStyle === 'filled' 
+                ? 'text-white shadow-md hover:shadow-lg' 
+                : 'border-2 shadow-sm hover:shadow-md'
+            }`}
             style={{
-              backgroundColor: itemStyle === 'filled' ? primaryColor : backgroundColor,
+              backgroundColor: itemStyle === 'filled' ? primaryColor : 'transparent',
               color: itemStyle === 'filled' ? 'white' : textColor,
-              borderLeftColor: primaryColor,
-              borderWidth: itemStyle === 'outlined' ? '2px' : undefined,
-              borderColor: itemStyle === 'outlined' ? primaryColor : undefined,
+              borderColor: itemStyle === 'outlined' ? primaryColor : 'transparent',
             }}
           >
-            <div className="flex items-start gap-3">
-              <div className="mt-1" style={{ color: itemStyle === 'filled' ? 'white' : primaryColor }}>
-                {getIcon(topic.icon)}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium" style={{ color: itemStyle === 'filled' ? 'white' : textColor }}>{topic.title}</h4>
-                  {topic.category && (
-                    <span className={`text-xs px-2 py-1 rounded-full border ${categoryColors[topic.category as keyof typeof categoryColors] || categoryColors.general}`}>
-                      {topic.category}
-                    </span>
-                  )}
-                  {topic.popular && (
-                    <Badge variant="secondary" className="text-xs">Popular</Badge>
-                  )}
+            <div className="flex items-center gap-3">
+              {topic.icon && (
+                <div className="flex-shrink-0">
+                  {getIcon(topic.icon)}
                 </div>
-                <p className="text-sm" style={{ color: itemStyle === 'filled' ? 'white' : textColor, opacity: itemStyle === 'filled' ? 0.9 : 0.8 }}>{topic.description}</p>
+              )}
+              <div className="flex-1 min-w-0">
+                <h3 
+                  className="font-semibold mb-1 truncate"
+                  style={{ fontSize: titleFontSize }}
+                >
+                  {topic.title}
+                </h3>
+                {topic.description && (
+                  <p 
+                    className="opacity-90 line-clamp-2"
+                    style={{
+                      fontSize: descriptionFontSize,
+                      color: itemStyle === 'filled' ? 'white' : textColor,
+                      opacity: 0.8
+                    }}
+                  >
+                    {topic.description}
+                  </p>
+                )}
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
@@ -212,7 +225,7 @@ export function QuickActionsComponent({ component, onActionClick, resolvedColors
   const { actions, style } = component.props;
 
   if (!actions || actions.length === 0) return null;
-  
+
   // Use resolved colors with fallback to component style
   const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
   const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
@@ -253,7 +266,7 @@ export function QuickActionsComponent({ component, onActionClick, resolvedColors
 // Footer Component
 export function FooterComponent({ component, resolvedColors }: ComponentRegistryProps) {
   const { title, style } = component.props;
-  
+
   // Use resolved colors with fallback to component style
   const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor;
   const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
@@ -292,6 +305,7 @@ export function renderComponent(
     primaryColor: string;
     backgroundColor: string;
     textColor: string;
+    backgroundImageUrl?: string;
   }
 ) {
   const ComponentToRender = ComponentRegistry[component.type];

@@ -103,6 +103,9 @@ export default function UIDesigner() {
   const [textColor, setTextColor] = useState<string>("#1f2937");
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>("");
   const [itemStyle, setItemStyle] = useState<'filled' | 'outlined'>('filled');
+  const [headerTransparent, setHeaderTransparent] = useState<boolean>(false);
+  const [titleFontSize, setTitleFontSize] = useState<string>("16px");
+  const [descriptionFontSize, setDescriptionFontSize] = useState<string>("14px");
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -126,10 +129,18 @@ export default function UIDesigner() {
         if (config.theme.backgroundImageUrl) setBackgroundImageUrl(config.theme.backgroundImageUrl);
       }
       
-      // Initialize itemStyle from topic_grid component if it exists
+      // Initialize style settings from components
       const topicGridComponent = config.components?.find(c => c.type === 'topic_grid');
-      if (topicGridComponent?.props?.style?.itemStyle) {
-        setItemStyle(topicGridComponent.props.style.itemStyle);
+      if (topicGridComponent?.props?.style) {
+        const style = topicGridComponent.props.style;
+        if (style.itemStyle) setItemStyle(style.itemStyle);
+        if (style.titleFontSize) setTitleFontSize(style.titleFontSize);
+        if (style.descriptionFontSize) setDescriptionFontSize(style.descriptionFontSize);
+      }
+      
+      const headerComponent = config.components?.find(c => c.type === 'header');
+      if (headerComponent?.props?.style?.transparentBackground) {
+        setHeaderTransparent(headerComponent.props.style.transparentBackground);
       }
     }
   }, [chatbot]);
@@ -312,12 +323,22 @@ Please consider these colors when generating the UI design to ensure visual cons
           backgroundImageUrl: backgroundImageUrl
         };
         
-        // Update itemStyle in topic_grid component
+        // Update style settings in components
         const topicGridComponent = configToSave.components?.find((c: any) => c.type === 'topic_grid');
         if (topicGridComponent) {
           topicGridComponent.props.style = {
             ...topicGridComponent.props.style,
-            itemStyle: itemStyle
+            itemStyle: itemStyle,
+            titleFontSize: titleFontSize,
+            descriptionFontSize: descriptionFontSize
+          };
+        }
+        
+        const headerComponent = configToSave.components?.find((c: any) => c.type === 'header');
+        if (headerComponent) {
+          headerComponent.props.style = {
+            ...headerComponent.props.style,
+            transparentBackground: headerTransparent
           };
         }
 
@@ -376,12 +397,22 @@ Please consider these colors when generating the UI design to ensure visual cons
         backgroundImageUrl: backgroundImageUrl
       };
       
-      // Update itemStyle in topic_grid component
+      // Update style settings in components
       const topicGridComponent = parsedConfig.components?.find((c: any) => c.type === 'topic_grid');
       if (topicGridComponent) {
         topicGridComponent.props.style = {
           ...topicGridComponent.props.style,
-          itemStyle: itemStyle
+          itemStyle: itemStyle,
+          titleFontSize: titleFontSize,
+          descriptionFontSize: descriptionFontSize
+        };
+      }
+      
+      const headerComponent = parsedConfig.components?.find((c: any) => c.type === 'header');
+      if (headerComponent) {
+        headerComponent.props.style = {
+          ...headerComponent.props.style,
+          transparentBackground: headerTransparent
         };
       }
 
@@ -403,12 +434,15 @@ Please consider these colors when generating the UI design to ensure visual cons
     setCurrentConfig(defaultConfig);
     setConfigKey(prev => prev + 1); // Force re-render
     
-    // Reset theme colors to default
+    // Reset theme colors and style settings to default
     setPrimaryColor(defaultConfig.theme?.primaryColor || "#2563eb");
     setBackgroundColor(defaultConfig.theme?.backgroundColor || "#ffffff");
     setTextColor(defaultConfig.theme?.textColor || "#1f2937");
     setBackgroundImageUrl("");
     setItemStyle('filled');
+    setHeaderTransparent(false);
+    setTitleFontSize("16px");
+    setDescriptionFontSize("14px");
     
     toast({
       title: "Configuration Reset",
@@ -690,6 +724,49 @@ Please consider these colors when generating the UI design to ensure visual cons
                         Choose how menu items in the topic grid should be styled
                       </p>
                     </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="title-font-size">Title Font Size</Label>
+                        <div className="mt-2">
+                          <Select value={titleFontSize} onValueChange={setTitleFontSize}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select title font size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="12px">12px - Extra Small</SelectItem>
+                              <SelectItem value="14px">14px - Small</SelectItem>
+                              <SelectItem value="16px">16px - Medium</SelectItem>
+                              <SelectItem value="18px">18px - Large</SelectItem>
+                              <SelectItem value="20px">20px - Extra Large</SelectItem>
+                              <SelectItem value="24px">24px - XXL</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="description-font-size">Description Font Size</Label>
+                        <div className="mt-2">
+                          <Select value={descriptionFontSize} onValueChange={setDescriptionFontSize}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select description font size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10px">10px - Extra Small</SelectItem>
+                              <SelectItem value="12px">12px - Small</SelectItem>
+                              <SelectItem value="14px">14px - Medium</SelectItem>
+                              <SelectItem value="16px">16px - Large</SelectItem>
+                              <SelectItem value="18px">18px - Extra Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      Adjust the font sizes for topic titles and descriptions in the menu grid
+                    </p>
                   </div>
 
                   <Separator />
@@ -708,6 +785,24 @@ Please consider these colors when generating the UI design to ensure visual cons
                         Optional background image for the home screen. Will be applied behind the content.
                       </p>
                     </div>
+                    
+                    {backgroundImageUrl && (
+                      <div className="space-y-3">
+                        <Label htmlFor="header-transparent" className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            id="header-transparent"
+                            type="checkbox"
+                            checked={headerTransparent}
+                            onChange={(e) => setHeaderTransparent(e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <span>Transparent Header Background</span>
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Make the header background transparent to show the background image behind it
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <Separator />

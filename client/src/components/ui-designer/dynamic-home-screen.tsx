@@ -26,7 +26,8 @@ function resolveColors(config: HomeScreenConfig) {
   const resolvedColors = {
     primaryColor: (isValidColor(embedPrimaryColor) ? embedPrimaryColor : config.theme?.primaryColor) || 'var(--primary)',
     backgroundColor: (isValidColor(embedBackgroundColor) ? embedBackgroundColor : config.theme?.backgroundColor) || 'var(--background)',
-    textColor: (isValidColor(embedTextColor) ? embedTextColor : config.theme?.textColor) || 'var(--foreground)'
+    textColor: (isValidColor(embedTextColor) ? embedTextColor : config.theme?.textColor) || 'var(--foreground)',
+    backgroundImageUrl: config.theme?.backgroundImageUrl
   };
 
   return resolvedColors;
