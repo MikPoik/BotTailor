@@ -37,7 +37,7 @@ export async function generateSurveyAssistance(
 
   try {
     const openai = getOpenAIClient();
-    
+
     // Build system prompt for the survey assistant
     let assistantPrompt = `You are an expert survey designer specializing in creating effective, engaging, and professional surveys. Your role is to help users create well-structured surveys that collect meaningful data while providing a good user experience.
 
@@ -56,7 +56,7 @@ Guidelines for creating effective surveys:
 
 Available Question Types:
 - single_choice: Radio buttons for single selection
-- multiple_choice: Checkboxes for multiple selections  
+- multiple_choice: Checkboxes for multiple selections
 - text: Open text input
 - rating: Numeric rating scale (1-5 or 1-10)
 
@@ -96,26 +96,34 @@ Be helpful, create professional surveys, and ensure all generated JSON is valid 
       case 'generate_customer_satisfaction':
         assistantPrompt += `\n\nUser Request: Generate a customer satisfaction survey for this chatbot. Create 5-8 questions that measure user satisfaction, service quality, and improvement suggestions.
 
-IMPORTANT: Return a valid JSON response with a "surveyConfig" field containing the complete survey structure and a "content" field with a brief explanation.`;
+IMPORTANT: Return a valid JSON response with:
+1. "surveyConfig" field containing the complete survey structure
+2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
       case 'generate_feedback':
         assistantPrompt += `\n\nUser Request: Generate a product feedback survey for this chatbot. Create 5-8 questions that gather feedback about products, features, and user experience.
 
-IMPORTANT: Return a valid JSON response with a "surveyConfig" field containing the complete survey structure and a "content" field with a brief explanation.`;
+IMPORTANT: Return a valid JSON response with:
+1. "surveyConfig" field containing the complete survey structure
+2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
       case 'improve_questions':
         assistantPrompt += `\n\nUser Request: Analyze and improve the current survey questions. Make them clearer, more engaging, and more effective at gathering useful data.
-        
+
 Current Survey Context: ${JSON.stringify(currentSurvey?.surveyConfig || {}, null, 2)}
 
-IMPORTANT: Return a valid JSON response with a "surveyConfig" field containing the improved survey structure and a "content" field explaining the improvements made.`;
+IMPORTANT: Return a valid JSON response with:
+1. "surveyConfig" field containing the improved survey structure
+2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
       case 'add_questions':
         assistantPrompt += `\n\nUser Request: Add 2-4 relevant questions to the current survey to gather additional valuable insights.
-        
+
 Current Survey Context: ${JSON.stringify(currentSurvey?.surveyConfig || {}, null, 2)}
 
-IMPORTANT: Return a valid JSON response with a "surveyConfig" field containing the enhanced survey structure and a "content" field explaining the new questions added.`;
+IMPORTANT: Return a valid JSON response with:
+1. "surveyConfig" field containing the enhanced survey structure
+2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
       case 'custom':
         assistantPrompt += `\n\nUser Request: ${userMessage}
@@ -189,7 +197,7 @@ export async function generatePromptAssistance(
 
   try {
     const openai = getOpenAIClient();
-    
+
     // Build system prompt for the prompt assistant
     let assistantPrompt = `You are an expert AI prompt engineer specializing in creating and improving system prompts for chatbots. Your role is to help users create effective, clear, and well-structured system prompts that will make their chatbots perform better.
 
@@ -291,11 +299,11 @@ export async function generateMultiBubbleResponse(
 
   try {
     const openai = getOpenAIClient();
-    
+
     // Build complete system prompt with all contexts
     const { systemPrompt } = await buildCompleteSystemPrompt(
-      chatbotConfig, 
-      sessionId, 
+      chatbotConfig,
+      sessionId,
       userMessage
     );
 
@@ -359,7 +367,7 @@ export async function generateOptionResponse(
   const contextMessage = `User selected option "${optionId}"` +
     (payload !== undefined && payload !== null ? ` with payload: ${JSON.stringify(payload)}` : '') +
     ". Provide a helpful response.";
-  
+
   return generateMultiBubbleResponse(
     contextMessage,
     sessionId,
