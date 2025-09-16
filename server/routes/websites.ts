@@ -13,7 +13,8 @@ export function setupWebsiteRoutes(app: Express) {
   app.get('/api/chatbots/:chatbotId/website-sources', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -33,7 +34,8 @@ export function setupWebsiteRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/website-sources', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const { sourceType = 'website', url, title, description, textContent, fileName, maxPages } = req.body;
 
       // Verify chatbot ownership
@@ -93,7 +95,8 @@ export function setupWebsiteRoutes(app: Express) {
   app.delete('/api/chatbots/:chatbotId/website-sources/:sourceId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, sourceId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -119,7 +122,8 @@ export function setupWebsiteRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/website-sources/:sourceId/rescan', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, sourceId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -170,7 +174,8 @@ export function setupWebsiteRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/upload-text-file', isAuthenticated, uploadTextFile.single('file'), async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const file = req.file;
       const { title, description } = req.body;
 

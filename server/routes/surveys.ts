@@ -11,7 +11,8 @@ export function setupSurveyRoutes(app: Express) {
   app.get('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -31,7 +32,8 @@ export function setupSurveyRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const body = req.body;
 
       // Verify chatbot ownership
@@ -61,7 +63,8 @@ export function setupSurveyRoutes(app: Express) {
   app.put('/api/chatbots/:chatbotId/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, surveyId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const body = req.body;
 
       // Verify chatbot ownership
@@ -94,7 +97,8 @@ export function setupSurveyRoutes(app: Express) {
   app.patch('/api/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { surveyId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const body = req.body;
 
       // Get the existing survey first
@@ -127,7 +131,8 @@ export function setupSurveyRoutes(app: Express) {
   app.delete('/api/chatbots/:chatbotId/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, surveyId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));

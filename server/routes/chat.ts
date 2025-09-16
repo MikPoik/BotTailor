@@ -94,7 +94,8 @@ export function setupChatRoutes(app: Express) {
   // Get conversation count for user's chatbots
   app.get('/api/chat/conversations/count', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const conversationCount = await storage.getConversationCount(userId);
       res.json(conversationCount);
     } catch (error) {
@@ -107,7 +108,8 @@ export function setupChatRoutes(app: Express) {
   app.get('/api/chatbots/:guid/sessions', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       
       // Verify the chatbot belongs to the authenticated user
       const chatbotConfig = await storage.getChatbotConfigByGuid(userId, guid);
@@ -144,7 +146,8 @@ export function setupChatRoutes(app: Express) {
   app.delete('/api/chat/:sessionId', isAuthenticated, async (req: any, res) => {
     try {
       const { sessionId } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       
       // Verify the session exists and belongs to a chatbot owned by the user
       const session = await storage.getChatSession(sessionId);
@@ -171,7 +174,8 @@ export function setupChatRoutes(app: Express) {
   app.delete('/api/chatbots/:guid/sessions', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       
       // Verify the chatbot belongs to the authenticated user
       const chatbotConfig = await storage.getChatbotConfigByGuid(userId, guid);

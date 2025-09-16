@@ -119,7 +119,8 @@ export function setupChatbotRoutes(app: Express) {
   app.delete('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
 
       // Verify ownership and get chatbot
       const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
@@ -139,7 +140,8 @@ export function setupChatbotRoutes(app: Express) {
   app.put('/api/chatbots/:guid/home-screen', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const { homeScreenConfig } = req.body;
 
       // Verify ownership and get chatbot
@@ -199,7 +201,8 @@ export function setupChatbotRoutes(app: Express) {
   app.post('/api/chatbots/:guid/prompt-assistant', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const { action, context, userMessage } = req.body;
 
       let chatbotConfig;
@@ -252,7 +255,8 @@ export function setupChatbotRoutes(app: Express) {
   app.post('/api/chatbots/:guid/survey-assistant', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const { action, context, userMessage } = req.body;
 
       // Verify ownership and get existing chatbot
