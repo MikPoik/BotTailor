@@ -161,6 +161,9 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
   const backgroundColor = resolvedColors?.backgroundColor || 'var(--background)';
   const textColor = resolvedColors?.textColor || 'var(--foreground)';
 
+  // Check if there's a background image
+  const hasBackgroundImage = resolvedColors?.backgroundImageUrl;
+
   // Determine style variant and font sizes
   const itemStyle = style?.itemStyle || 'filled';
   const titleFontSize = style?.titleFontSize || '16px';
@@ -169,7 +172,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
   if (!topics || topics.length === 0) return null;
 
   return (
-    <div className="p-6 space-y-4" style={{ backgroundColor, color: textColor }}>
+    <div className="p-6 space-y-4" style={{ backgroundColor: hasBackgroundImage ? 'transparent' : backgroundColor, color: textColor }}>
       <div className="grid gap-3">
         {topics.map((topic: any) => (
           <button
@@ -177,13 +180,21 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
             onClick={() => onTopicClick?.(topic)}
             className={`w-full p-4 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] ${
               itemStyle === 'filled' 
-                ? 'text-white shadow-md hover:shadow-lg' 
+                ? 'shadow-md hover:shadow-lg' 
                 : 'border-2 shadow-sm hover:shadow-md'
             }`}
             style={{
-              backgroundColor: itemStyle === 'filled' ? primaryColor : 'transparent',
-              color: itemStyle === 'filled' ? 'white' : textColor,
-              borderColor: itemStyle === 'outlined' ? primaryColor : 'transparent',
+              backgroundColor: hasBackgroundImage 
+                ? (itemStyle === 'filled' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.1)') 
+                : (itemStyle === 'filled' ? primaryColor : 'transparent'),
+              color: hasBackgroundImage 
+                ? 'white' 
+                : (itemStyle === 'filled' ? 'white' : textColor),
+              borderColor: hasBackgroundImage 
+                ? (itemStyle === 'outlined' ? 'rgba(255,255,255,0.3)' : 'transparent')
+                : (itemStyle === 'outlined' ? primaryColor : 'transparent'),
+              textShadow: hasBackgroundImage ? '1px 1px 2px rgba(0,0,0,0.8)' : undefined,
+              backdropFilter: hasBackgroundImage ? 'blur(8px)' : undefined,
             }}
           >
             <div className="flex items-center gap-3">
@@ -204,7 +215,9 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
                     className="opacity-90 line-clamp-2"
                     style={{
                       fontSize: descriptionFontSize,
-                      color: itemStyle === 'filled' ? 'white' : textColor,
+                      color: hasBackgroundImage 
+                        ? 'white' 
+                        : (itemStyle === 'filled' ? 'white' : textColor),
                       opacity: 0.8
                     }}
                   >
