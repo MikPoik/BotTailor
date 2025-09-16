@@ -87,11 +87,18 @@ async function seedSubscriptionPlans() {
         .limit(1);
 
       if (existingPlan.length > 0) {
-        console.log(`Plan "${planData.name}" already exists, skipping...`);
+        // Update the existing plan
+        const [updatedPlan] = await db
+          .update(subscriptionPlans)
+          .set({ ...planData, updatedAt: new Date() })
+          .where(eq(subscriptionPlans.name, planData.name))
+          .returning();
+
+        console.log(`Updated plan: ${updatedPlan.name} (ID: ${updatedPlan.id})`);
         continue;
       }
 
-      // Create the plan
+      // Create the plan if it doesn't exist
       const [createdPlan] = await db
         .insert(subscriptionPlans)
         .values(planData)
