@@ -60,9 +60,9 @@ subscriptionRouter.get("/current", isAuthenticated, async (req: any, res) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const subscription = await storage.getUserSubscriptionWithPlan(
-      req.user.claims.sub,
-    );
+    const fullUserId = req.user.claims.sub;
+    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+    const subscription = await storage.getUserSubscriptionWithPlan(userId);
 
 
     // Return null instead of 404 when no subscription exists

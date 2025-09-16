@@ -12,7 +12,8 @@ export function setupChatbotRoutes(app: Express) {
   // Get all chatbots for authenticated user
   app.get('/api/chatbots', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const chatbots = await storage.getChatbotConfigs(userId);
       res.json(chatbots);
     } catch (error) {
@@ -25,7 +26,8 @@ export function setupChatbotRoutes(app: Express) {
   app.get('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       
       const chatbot = await storage.getChatbotConfigByGuid(userId, guid);
       
@@ -43,7 +45,8 @@ export function setupChatbotRoutes(app: Express) {
   // Create new chatbot
   app.post('/api/chatbots', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const body = req.body;
       
       // Check bot limit before creating
@@ -88,7 +91,8 @@ export function setupChatbotRoutes(app: Express) {
   app.put('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const body = req.body;
 
       // Verify ownership and get chatbot

@@ -20,7 +20,8 @@ export function setupUIDesignerRoutes(app: Express) {
   // POST /api/ui-designer/generate - Generate new home screen config
   app.post('/api/ui-designer/generate', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const validatedData = GenerateRequestSchema.parse(req.body);
       
       console.log(`[UI DESIGNER] Generating new config for user: ${userId}`);
@@ -45,7 +46,8 @@ export function setupUIDesignerRoutes(app: Express) {
   // POST /api/ui-designer/modify - Modify existing home screen config
   app.post('/api/ui-designer/modify', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const validatedData = ModifyRequestSchema.parse(req.body);
       
       console.log(`[UI DESIGNER] Modifying config for user: ${userId}`);
