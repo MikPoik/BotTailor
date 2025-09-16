@@ -299,7 +299,7 @@ export default function Subscription() {
       )}
 
       {/* Subscription Plans */}
-      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
         {plans.map((plan) => {
           const Icon = PLAN_ICONS[plan.name as keyof typeof PLAN_ICONS] || Crown;
           const isPremium = plan.name === 'Premium';
@@ -339,21 +339,6 @@ export default function Subscription() {
 
               <CardContent className="space-y-3">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">
-                      {plan.maxBots === -1 ? 'Unlimited' : plan.maxBots} chatbots
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">
-                      {plan.maxMessagesPerMonth === -1 
-                        ? 'Unlimited messages' 
-                        : `${plan.maxMessagesPerMonth.toLocaleString()} messages/month`
-                      }
-                    </span>
-                  </div>
                   {plan.features?.map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-green-500" />

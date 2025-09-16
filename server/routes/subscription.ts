@@ -621,7 +621,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
         billingInterval: "month",
         maxBots: 1,
         maxMessagesPerMonth: 100,
-        features: ["1 Chatbot", "100 messages/month", "Community support"],
+        features: ["1 chatbot", "100 messages/month", "Community support"],
         isActive: true,
       },
       {
@@ -635,7 +635,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
         maxBots: 1,
         maxMessagesPerMonth: 1000,
         features: [
-          "1 Chatbot",
+          "1 chatbot",
           "1,000 messages/month",
           "Basic support",
           "Email integration",
@@ -653,7 +653,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
         maxBots: 3,
         maxMessagesPerMonth: 10000,
         features: [
-          "3 Chatbots",
+          "3 chatbots",
           "10,000 messages/month",
           "Priority support",
           "Advanced analytics",
@@ -672,7 +672,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
         maxBots: 5,
         maxMessagesPerMonth: 100000,
         features: [
-          "5 Chatbots",
+          "5 chatbots",
           "100,000 messages/month",
           "24/7 support",
           "White-label solution",
