@@ -395,6 +395,7 @@ export const HomeScreenComponentSchema = z.object({
       textColor: z.string().optional(),
       layout: z.enum(['grid', 'list', 'carousel']).optional(),
       columns: z.number().optional(),
+      itemStyle: z.enum(['filled', 'outlined']).optional().default('filled'),
     }).optional(),
   }),
   order: z.number(),

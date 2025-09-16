@@ -145,6 +145,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
   const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
   const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
   const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
+  const itemStyle = style?.itemStyle || 'filled';
 
   // Category colors similar to original design
   const categoryColors = {
@@ -164,18 +165,20 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
             className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border shadow-sm p-3"
             onClick={() => onTopicClick?.(topic)}
             style={{
-              backgroundColor: primaryColor,
-              color: 'white',
+              backgroundColor: itemStyle === 'filled' ? primaryColor : backgroundColor,
+              color: itemStyle === 'filled' ? 'white' : textColor,
               borderLeftColor: primaryColor,
+              borderWidth: itemStyle === 'outlined' ? '1px' : undefined,
+              borderColor: itemStyle === 'outlined' ? primaryColor : undefined,
             }}
           >
             <div className="flex items-start gap-3">
-              <div className="mt-1" style={{ color: 'white' }}>
+              <div className="mt-1" style={{ color: itemStyle === 'filled' ? 'white' : primaryColor }}>
                 {getIcon(topic.icon)}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium" style={{ color: 'white' }}>{topic.title}</h4>
+                  <h4 className="font-medium" style={{ color: itemStyle === 'filled' ? 'white' : textColor }}>{topic.title}</h4>
                   {topic.category && (
                     <span className={`text-xs px-2 py-1 rounded-full border ${categoryColors[topic.category as keyof typeof categoryColors] || categoryColors.general}`}>
                       {topic.category}
@@ -185,7 +188,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
                     <Badge variant="secondary" className="text-xs">Popular</Badge>
                   )}
                 </div>
-                <p className="text-sm" style={{ color: 'white', opacity: 0.9 }}>{topic.description}</p>
+                <p className="text-sm" style={{ color: itemStyle === 'filled' ? 'white' : textColor, opacity: itemStyle === 'filled' ? 0.9 : 0.8 }}>{topic.description}</p>
               </div>
             </div>
           </div>
