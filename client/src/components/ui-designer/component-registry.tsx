@@ -192,19 +192,20 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
 
     // When there's a background image, use theme colors with transparency
     const isPrimaryLight = isLightColor(primaryColor);
-    const overlayOpacity = itemStyle === 'filled' ? '0.85' : '0.2';
+    const isTextLight = isLightColor(textColor);
+    const overlayOpacity = itemStyle === 'filled' ? '0.85' : '0.3';
     
     return {
       backgroundColor: itemStyle === 'filled' 
         ? `${primaryColor}${Math.round(255 * parseFloat(overlayOpacity)).toString(16).padStart(2, '0')}`
-        : `rgba(255,255,255,${overlayOpacity})`,
+        : `${primaryColor}${Math.round(255 * 0.15).toString(16).padStart(2, '0')}`, // Use primary color with low opacity for outlined
       textColor: itemStyle === 'filled'
         ? (isPrimaryLight ? '#000000' : '#ffffff')
-        : '#ffffff',
+        : textColor, // Use theme text color for outlined items
       borderColor: itemStyle === 'outlined' 
-        ? `rgba(255,255,255,0.4)` 
+        ? `${primaryColor}${Math.round(255 * 0.6).toString(16).padStart(2, '0')}` // Use primary color for border
         : 'transparent',
-      textShadow: hasBackgroundImage ? '1px 1px 2px rgba(0,0,0,0.7)' : undefined,
+      textShadow: hasBackgroundImage ? '1px 1px 2px rgba(0,0,0,0.8)' : undefined,
       backdropFilter: hasBackgroundImage ? 'blur(8px)' : undefined
     };
   };
