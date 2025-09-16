@@ -164,18 +164,18 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
             className="cursor-pointer hover:shadow-md transition-shadow border-l-4 rounded-lg border shadow-sm p-3"
             onClick={() => onTopicClick?.(topic)}
             style={{
-              backgroundColor,
-              color: textColor,
+              backgroundColor: primaryColor,
+              color: 'white',
               borderLeftColor: primaryColor,
             }}
           >
             <div className="flex items-start gap-3">
-              <div className="mt-1" style={{ color: primaryColor }}>
+              <div className="mt-1" style={{ color: 'white' }}>
                 {getIcon(topic.icon)}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium" style={{ color: textColor }}>{topic.title}</h4>
+                  <h4 className="font-medium" style={{ color: 'white' }}>{topic.title}</h4>
                   {topic.category && (
                     <span className={`text-xs px-2 py-1 rounded-full border ${categoryColors[topic.category as keyof typeof categoryColors] || categoryColors.general}`}>
                       {topic.category}
@@ -185,7 +185,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
                     <Badge variant="secondary" className="text-xs">Popular</Badge>
                   )}
                 </div>
-                <p className="text-sm" style={{ color: textColor, opacity: 0.8 }}>{topic.description}</p>
+                <p className="text-sm" style={{ color: 'white', opacity: 0.9 }}>{topic.description}</p>
               </div>
             </div>
           </div>
