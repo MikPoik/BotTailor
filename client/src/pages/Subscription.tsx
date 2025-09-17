@@ -214,6 +214,10 @@ export default function Subscription() {
     }).format(price / 100);
   };
 
+  const formatPlanName = (name: string) => {
+    return name === 'Free' ? 'Trial' : name;
+  };
+
   const formatUsage = (used: number, total: number) => {
     if (total === -1) return "Unlimited";
     return `${used.toLocaleString()} / ${total.toLocaleString()}`;
@@ -250,7 +254,7 @@ export default function Subscription() {
                 >
                   {currentSubscription.cancelAtPeriodEnd ? 'Canceled' : currentSubscription.status}
                 </Badge>
-                Current Plan: {currentSubscription.plan.name}
+                Current Plan: {formatPlanName(currentSubscription.plan.name)}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -328,7 +332,7 @@ export default function Subscription() {
                     <Icon className="h-6 w-6" />
                   </div>
                 </div>
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <CardTitle className="text-xl">{formatPlanName(plan.name)}</CardTitle>
                 <CardDescription className="text-sm">
                   {plan.description}
                 </CardDescription>
@@ -336,7 +340,9 @@ export default function Subscription() {
                   <span className="text-3xl font-bold">
                     {formatPrice(plan.price, plan.currency)}
                   </span>
-                  <span className="text-muted-foreground">/month</span>
+                  {plan.name !== 'Free' && (
+                    <span className="text-muted-foreground">/month</span>
+                  )}
                 </div>
               </CardHeader>
 
