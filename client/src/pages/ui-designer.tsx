@@ -59,6 +59,8 @@ const getDefaultConfig = (): HomeScreenConfig => ({
             category: "general",
           },
         ],
+        titleFontSize: "16px",
+        descriptionFontSize: "14px",
       },
       order: 2,
       visible: true,
@@ -128,7 +130,7 @@ export default function UIDesigner() {
         if (config.theme.textColor) setTextColor(config.theme.textColor);
         if (config.theme.backgroundImageUrl) setBackgroundImageUrl(config.theme.backgroundImageUrl);
       }
-      
+
       // Initialize style settings from components
       const topicGridComponent = config.components?.find(c => c.type === 'topic_grid');
       if (topicGridComponent?.props?.style) {
@@ -137,7 +139,7 @@ export default function UIDesigner() {
         if (style.titleFontSize) setTitleFontSize(style.titleFontSize);
         if (style.descriptionFontSize) setDescriptionFontSize(style.descriptionFontSize);
       }
-      
+
       const headerComponent = config.components?.find(c => c.type === 'header');
       if (headerComponent?.props?.style?.transparentBackground) {
         setHeaderTransparent(headerComponent.props.style.transparentBackground);
@@ -223,10 +225,10 @@ export default function UIDesigner() {
     onSuccess: (data: { config: HomeScreenConfig; explanation?: string }) => {
       setCurrentConfig(data.config);
       setConfigKey(prev => prev + 1); // Force re-render
-      
+
       // Use AI explanation if available, otherwise use default message
       const responseMessage = data.explanation || 'I\'ve generated your new home screen layout! You can see the preview on the right.';
-      
+
       setChatHistory(prev => [
         ...prev,
         {
@@ -322,7 +324,7 @@ Please consider these colors when generating the UI design to ensure visual cons
           textColor: textColor,
           backgroundImageUrl: backgroundImageUrl
         };
-        
+
         // Update style settings in components
         const topicGridComponent = configToSave.components?.find((c: any) => c.type === 'topic_grid');
         if (topicGridComponent) {
@@ -333,7 +335,7 @@ Please consider these colors when generating the UI design to ensure visual cons
             descriptionFontSize: descriptionFontSize
           };
         }
-        
+
         const headerComponent = configToSave.components?.find((c: any) => c.type === 'header');
         if (headerComponent) {
           headerComponent.props.style = {
@@ -396,7 +398,7 @@ Please consider these colors when generating the UI design to ensure visual cons
         textColor: textColor,
         backgroundImageUrl: backgroundImageUrl
       };
-      
+
       // Update style settings in components
       const topicGridComponent = parsedConfig.components?.find((c: any) => c.type === 'topic_grid');
       if (topicGridComponent) {
@@ -407,7 +409,7 @@ Please consider these colors when generating the UI design to ensure visual cons
           descriptionFontSize: descriptionFontSize
         };
       }
-      
+
       const headerComponent = parsedConfig.components?.find((c: any) => c.type === 'header');
       if (headerComponent) {
         headerComponent.props.style = {
@@ -433,7 +435,7 @@ Please consider these colors when generating the UI design to ensure visual cons
     const defaultConfig = getDefaultConfig();
     setCurrentConfig(defaultConfig);
     setConfigKey(prev => prev + 1); // Force re-render
-    
+
     // Reset theme colors and style settings to default
     setPrimaryColor(defaultConfig.theme?.primaryColor || "#2563eb");
     setBackgroundColor(defaultConfig.theme?.backgroundColor || "#ffffff");
@@ -443,7 +445,7 @@ Please consider these colors when generating the UI design to ensure visual cons
     setHeaderTransparent(false);
     setTitleFontSize("16px");
     setDescriptionFontSize("14px");
-    
+
     toast({
       title: "Configuration Reset",
       description: "Home screen has been reset to default configuration.",
@@ -706,7 +708,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                         Primary text color throughout the widget
                       </p>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="item-style">Menu Item Style</Label>
                       <div className="mt-2">
@@ -724,7 +726,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                         Choose how menu items in the topic grid should be styled
                       </p>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="title-font-size">Title Font Size</Label>
@@ -744,7 +746,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                           </Select>
                         </div>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor="description-font-size">Description Font Size</Label>
                         <div className="mt-2">
@@ -763,7 +765,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                         </div>
                       </div>
                     </div>
-                    
+
                     <p className="text-xs text-muted-foreground">
                       Adjust the font sizes for topic titles and descriptions in the menu grid
                     </p>
@@ -785,7 +787,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                         Optional background image for the home screen. Will be applied behind the content.
                       </p>
                     </div>
-                    
+
                     {backgroundImageUrl && (
                       <div className="space-y-3">
                         <Label htmlFor="header-transparent" className="flex items-center space-x-2 cursor-pointer">

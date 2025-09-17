@@ -15,10 +15,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { type Survey as BaseSurvey, type SurveyConfig, type SurveyQuestion } from "@shared/schema";
 import SurveyAssistantChatbox from "@/components/chat/survey-assistant-chatbox";
 
-// Properly typed Survey interface
-interface Survey extends Omit<BaseSurvey, 'surveyConfig'> {
-  surveyConfig: SurveyConfig;
-}
+// Use BaseSurvey type directly to ensure compatibility
+type Survey = BaseSurvey;
 import {
   ArrowLeft,
   Plus,

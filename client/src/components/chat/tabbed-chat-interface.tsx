@@ -16,20 +16,20 @@ function resolveColors() {
   const embedPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary-color').trim();
   const embedBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-background').trim();
   const embedTextColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-text').trim();
-  
+
   // Helper function to check if a color value is valid (not empty and not just fallback CSS var)
   const isValidColor = (color: string) => {
     return color && color !== '' && !color.startsWith('var(--') && color !== 'var(--primary)' && color !== 'var(--background)' && color !== 'var(--foreground)';
   };
-  
-  
+
+
   // Resolve final colors with embed parameters taking priority
   const resolvedColors = {
     primaryColor: isValidColor(embedPrimaryColor) ? embedPrimaryColor : 'var(--primary)',
     backgroundColor: isValidColor(embedBackgroundColor) ? embedBackgroundColor : 'var(--background)',
     textColor: isValidColor(embedTextColor) ? embedTextColor : 'var(--foreground)'
   };
-  
+
   return resolvedColors;
 }
 
@@ -95,7 +95,7 @@ export default function TabbedChatInterface({
   const isUserNearBottom = () => {
     const container = messagesContainerRef.current;
     if (!container) return true;
-    
+
     const threshold = 200; // pixels from bottom - more generous
     const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
     return isNearBottom;
@@ -104,7 +104,7 @@ export default function TabbedChatInterface({
   useEffect(() => {
     const currentMessageCount = messages?.length || 0;
     const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
-    
+
     if (hasNewMessages) {
       // Always scroll if:
       // 1. This is the first message
@@ -114,13 +114,13 @@ export default function TabbedChatInterface({
         prevMessageCountRef.current === 0 || 
         isStreaming || 
         isUserNearBottom();
-      
+
       if (shouldScroll) {
         // Longer delay to ensure DOM is fully updated
         setTimeout(scrollToBottom, 150);
       }
     }
-    
+
     prevMessageCountRef.current = currentMessageCount;
   }, [messages, isStreaming]);
 
@@ -140,7 +140,7 @@ export default function TabbedChatInterface({
 
     // Switch to chat tab when sending a message
     setActiveTab("chat");
-    
+
     // Force scroll to bottom when user sends a message
     setTimeout(scrollToBottom, 50);
 
@@ -154,7 +154,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...(message.metadata || {}),
+              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -246,7 +246,7 @@ export default function TabbedChatInterface({
 
   const handleContactFormSubmit = async () => {
     setContactError("");
-    
+
     if (!validateContactForm()) {
       return;
     }
@@ -292,7 +292,7 @@ export default function TabbedChatInterface({
   ) => {
     if (isLoading || isStreaming || readOnlyMode) return;
 
-    
+
 
     try {
       // First, record the option selection in the backend (this updates survey sessions)
@@ -319,7 +319,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...(message.metadata || {}),
+              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -375,7 +375,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...(message.metadata || {}),
+              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -443,7 +443,7 @@ export default function TabbedChatInterface({
             const bubbleWithFlag = {
               ...receivedMessage,
               metadata: {
-                ...receivedMessage.metadata,
+                ...(receivedMessage.metadata && typeof receivedMessage.metadata === 'object' ? receivedMessage.metadata : {}),
                 isFollowUp,
                 isStreaming: false, // Mark as permanent message
               },
@@ -505,7 +505,7 @@ export default function TabbedChatInterface({
             const bubbleWithFlag = {
               ...receivedMessage,
               metadata: {
-                ...receivedMessage.metadata,
+                ...(receivedMessage.metadata && typeof receivedMessage.metadata === 'object' ? receivedMessage.metadata : {}),
                 isFollowUp,
                 isStreaming: false, // Mark as permanent message
               },
@@ -558,7 +558,7 @@ export default function TabbedChatInterface({
           const bubbleWithFlag = {
             ...receivedMessage,
             metadata: {
-              ...receivedMessage.metadata,
+              ...(receivedMessage.metadata && typeof receivedMessage.metadata === 'object' ? receivedMessage.metadata : {}),
               isFollowUp,
               isStreaming: false, // Mark as permanent message
             },
@@ -735,7 +735,7 @@ export default function TabbedChatInterface({
                               <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.name}</p>
                             )}
                           </div>
-                          
+
                           <div>
                             <input
                               type="email"
@@ -754,7 +754,7 @@ export default function TabbedChatInterface({
                               <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.email}</p>
                             )}
                           </div>
-                          
+
                           <div>
                             <textarea
                               placeholder="Your message (10-1000 characters)"
@@ -782,7 +782,7 @@ export default function TabbedChatInterface({
                               <p className="text-xs text-red-800 dark:text-red-200">{contactError}</p>
                             </div>
                           )}
-                          
+
                           <button 
                             className="w-full px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md transition-colors flex items-center justify-center"
                             onClick={handleContactFormSubmit}
@@ -808,7 +808,7 @@ export default function TabbedChatInterface({
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -829,7 +829,7 @@ export default function TabbedChatInterface({
                 onMouseEnter={(e) => e.currentTarget.style.color = colors.textColor}
                 onMouseLeave={(e) => e.currentTarget.style.color = colors.textColor + '80'}
               >
-                
+
               </button>
 
               <div className="flex-1 relative">

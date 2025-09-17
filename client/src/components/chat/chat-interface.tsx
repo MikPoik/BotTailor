@@ -64,18 +64,18 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...message.metadata,
+              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
               isFollowUp,
               isStreaming: false // Mark as permanent message
             }
           };
-          
+
           // Add bubble directly to main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
             if (!old) return { messages: [bubbleWithFlag] };
             return { messages: [...old.messages, bubbleWithFlag] };
           });
-          
+
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
@@ -108,11 +108,11 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
   const handleOptionSelect = async (optionId: string, payload?: any, optionText?: string) => {
     if (isLoading || isStreaming) return;
 
-    
+
     try {
       // First, record the option selection in the backend (this updates survey sessions)
       await selectOption(optionId, payload, optionText);
-      
+
       // Then trigger streaming response with the updated survey context
       const displayText = optionText || optionId;
       const contextMessage = `User selected option "${optionId}"` +
@@ -131,18 +131,18 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...message.metadata,
+              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
               isFollowUp,
               isStreaming: false // Mark as permanent message
             }
           };
-          
+
           // Add bubble directly to main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
             if (!old) return { messages: [bubbleWithFlag] };
             return { messages: [...old.messages, bubbleWithFlag] };
           });
-          
+
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
@@ -182,18 +182,18 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           const bubbleWithFlag = {
             ...message,
             metadata: {
-              ...message.metadata,
+              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
               isFollowUp,
               isStreaming: false // Mark as permanent message
             }
           };
-          
+
           // Add bubble directly to main messages query cache
           queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
             if (!old) return { messages: [bubbleWithFlag] };
             return { messages: [...old.messages, bubbleWithFlag] };
           });
-          
+
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
@@ -278,7 +278,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           </div>
         </div>
 
-        
+
       </div>
     </>
   );
