@@ -168,16 +168,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChatSessionsWithMultipleMessagesByChatbotGuid(chatbotGuid: string, offset?: number, limit?: number): Promise<ChatSession[]> {
-    // Subquery to get sessions with more than 1 message
-    const sessionsWithMultipleMessages = db
-      .select({
-        sessionId: messages.sessionId,
-        messageCount: sql<number>`count(*)`
-      })
-      .from(messages)
-      .groupBy(messages.sessionId)
-      .having(sql`count(*) > 1`);
-
     const baseQuery = db
       .select({
         id: chatSessions.id,
@@ -190,8 +180,17 @@ export class DatabaseStorage implements IStorage {
       })
       .from(chatSessions)
       .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
-      .innerJoin(sessionsWithMultipleMessages, eq(chatSessions.sessionId, sessionsWithMultipleMessages.sessionId))
-      .where(eq(chatbotConfigs.guid, chatbotGuid))
+      .where(
+        and(
+          eq(chatbotConfigs.guid, chatbotGuid),
+          sql`EXISTS (
+            SELECT 1 FROM messages m 
+            WHERE m.session_id = ${chatSessions.sessionId} 
+            GROUP BY m.session_id 
+            HAVING COUNT(*) > 1
+          )`
+        )
+      )
       .orderBy(desc(chatSessions.createdAt));
 
     if (offset !== undefined && limit !== undefined) {
@@ -241,22 +240,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChatSessionsWithMultipleMessagesCountByChatbotGuid(chatbotGuid: string): Promise<number> {
-    // Subquery to get sessions with more than 1 message
-    const sessionsWithMultipleMessages = db
-      .select({
-        sessionId: messages.sessionId,
-        messageCount: sql<number>`count(*)`
-      })
-      .from(messages)
-      .groupBy(messages.sessionId)
-      .having(sql`count(*) > 1`);
-
     const result = await db
       .select({ count: sql<number>`count(*)` })
       .from(chatSessions)
       .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
-      .innerJoin(sessionsWithMultipleMessages, eq(chatSessions.sessionId, sessionsWithMultipleMessages.sessionId))
-      .where(eq(chatbotConfigs.guid, chatbotGuid));
+      .where(
+        and(
+          eq(chatbotConfigs.guid, chatbotGuid),
+          sql`EXISTS (
+            SELECT 1 FROM messages m 
+            WHERE m.session_id = ${chatSessions.sessionId} 
+            GROUP BY m.session_id 
+            HAVING COUNT(*) > 1
+          )`
+        )
+      );
     return result[0]?.count || 0;
   }
 
