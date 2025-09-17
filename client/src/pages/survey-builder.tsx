@@ -698,7 +698,7 @@ export default function SurveyBuilderPage() {
                                         updates.options = updatedOptions;
 
                                         // Clear all option text changes for this question
-                                        question.options.forEach((_: any, optionIndex: number) => {
+                                        question.options?.forEach((_: any, optionIndex: number) => {
                                           const optionKey = `${index}-${optionIndex}`;
                                           setLocalOptionTexts(prev => {
                                             const newState = { ...prev };
@@ -911,10 +911,10 @@ export default function SurveyBuilderPage() {
                     <CardContent>
                       <div className="space-y-4">
                         <div className="p-4 bg-accent rounded-lg">
-                          <h3 className="font-semibold">{selectedSurvey.surveyConfig.title}</h3>
-                          {selectedSurvey.surveyConfig.description && (
+                          <h3 className="font-semibold">{(selectedSurvey.surveyConfig as SurveyConfig)?.title}</h3>
+                          {(selectedSurvey.surveyConfig as SurveyConfig)?.description && (
                             <p className="text-sm text-muted-foreground mt-1">
-                              {selectedSurvey.surveyConfig.description}
+                              {(selectedSurvey.surveyConfig as SurveyConfig).description}
                             </p>
                           )}
                         </div>

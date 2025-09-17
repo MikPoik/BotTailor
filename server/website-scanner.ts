@@ -151,10 +151,10 @@ export class WebsiteScanner {
     }
 
     // If no sitemap found or few URLs, try crawling the main page for links
-    if (urls.size < 5) {
+    if (urls.size < 5 && websiteSource.url) {
       try {
         const crawledUrls = await this.crawlPageLinks(
-          websiteSource.url!,
+          websiteSource.url,
           baseUrl.origin,
         );
         crawledUrls.forEach((url) => urls.add(url));

@@ -689,7 +689,9 @@ export default function TabbedChatInterface({
                     ...message,
                     id: typeof message.id === 'string' ? parseInt(message.id.replace('initial-', ''), 10) || 0 : message.id,
                     createdAt: typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt,
-                    metadata: message.metadata || {}
+                    metadata: message.metadata || {},
+                    sender: message.sender as 'user' | 'assistant' | 'bot',
+                    messageType: message.messageType as 'text' | 'card' | 'menu' | 'form' | 'quickReplies' | 'image' | 'multiselect_menu' | 'rating' | 'form_submission' | 'system'
                   }}
                   onOptionSelect={handleOptionSelect}
                   onQuickReply={handleQuickReply}

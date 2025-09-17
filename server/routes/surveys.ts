@@ -13,7 +13,7 @@ export function setupSurveyRoutes(app: Express) {
       const { chatbotId } = req.params;
       const fullUserId = req.user.claims.sub;
       const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
-      
+
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
       if (!chatbot || chatbot.userId !== userId) {
@@ -81,7 +81,7 @@ export function setupSurveyRoutes(app: Express) {
 
       const updateData = insertSurveySchema.partial().parse(body);
       const survey = await storage.updateSurvey(parseInt(surveyId), updateData);
-      
+
       res.json(survey);
     } catch (error) {
       console.error("Error updating survey:", error);
@@ -115,7 +115,7 @@ export function setupSurveyRoutes(app: Express) {
 
       const updateData = insertSurveySchema.partial().parse(body);
       const survey = await storage.updateSurvey(parseInt(surveyId), updateData);
-      
+
       res.json(survey);
     } catch (error) {
       console.error("Error updating survey:", error);
@@ -164,7 +164,7 @@ export function setupSurveyRoutes(app: Express) {
 
       // Check if there's already a survey session for this specific survey
       const existingSurveySession = await storage.getSurveySession(surveyId, sessionId);
-      
+
       let surveySession;
       if (existingSurveySession) {
         // If survey exists and is completed, reset it for restart
@@ -217,7 +217,7 @@ export function setupSurveyRoutes(app: Express) {
 
       const currentResponses = surveySession.responses && typeof surveySession.responses === 'object' ? surveySession.responses as any : {};
       const updatedResponses = { ...currentResponses, [questionId]: response };
-      
+
       const updatedSession = await storage.updateSurveySession(surveySession.id, {
         responses: updatedResponses,
         currentQuestionIndex: (surveySession.currentQuestionIndex || 0) + 1
@@ -234,7 +234,7 @@ export function setupSurveyRoutes(app: Express) {
   app.get('/api/survey-sessions/:sessionId/status', async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
+
       const surveySession = await storage.getActiveSurveySession(sessionId);
       if (!surveySession) {
         return res.json({ hasSurvey: false });

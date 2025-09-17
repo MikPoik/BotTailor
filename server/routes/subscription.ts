@@ -354,10 +354,10 @@ subscriptionRouter.post("/resume", isAuthenticated, async (req: any, res) => {
 
     const fullUserId = req.user.claims.sub;
     const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
-    
+
     // Get current subscription
     const currentSubscription = await storage.getUserSubscription(userId);
-    
+
     if (!currentSubscription || !currentSubscription.stripeSubscriptionId) {
       return res.status(404).json({ error: "No active subscription found" });
     }
@@ -569,7 +569,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
     // Read the actual cancelAtPeriodEnd status from Stripe
     const cancelAtPeriodEnd = Boolean((subscription as any).cancel_at_period_end);
-    
+
     const updateData = {
       status: subscription.status,
       currentPeriodStart: newPeriodStart,
@@ -741,11 +741,7 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
     ];
 
     for (const planData of plans) {
-      if (planData.stripePriceId && planData.stripeProductId) {
-        if (planData.stripePriceId && planData.stripeProductId) {
-          await storage.createSubscriptionPlan(planData);
-        }
-      }
+        await storage.createSubscriptionPlan(planData);
     }
 
     res.json({ message: "Subscription plans seeded successfully" });

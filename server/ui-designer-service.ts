@@ -199,7 +199,7 @@ export async function generateHomeScreenConfig(
           component.props = {
             title: component.props?.title || component.title || 'Welcome',
             subtitle: component.props?.subtitle || component.subtitle || 'How can I help you today?',
-            topics: []
+            topics: [],
           };
         }
 
@@ -376,7 +376,7 @@ Return the updated complete configuration as a JSON object with 'config' and 'ex
           component.props = {
             title: component.props?.title || component.title || 'Welcome',
             subtitle: component.props?.subtitle || component.subtitle || 'How can I help you today?',
-            topics: []
+            topics: [],
           };
         }
 
@@ -471,6 +471,7 @@ export function getDefaultHomeScreenConfig(): HomeScreenConfig {
         props: {
           title: "Welcome to BotTailor",
           subtitle: "How can we help you today?",
+          topics: [],
         },
         order: 1,
         visible: true,
@@ -479,6 +480,7 @@ export function getDefaultHomeScreenConfig(): HomeScreenConfig {
         id: "categories_default",
         type: "category_tabs",
         props: {
+          topics: [],
           categories: ["support", "sales", "billing"],
         },
         order: 2,
