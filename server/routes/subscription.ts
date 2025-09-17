@@ -345,6 +345,56 @@ subscriptionRouter.post("/cancel", isAuthenticated, async (req: any, res) => {
   }
 });
 
+// Resume subscription
+subscriptionRouter.post("/resume", isAuthenticated, async (req: any, res) => {
+  try {
+    if (!req.user?.claims?.sub) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const fullUserId = req.user.claims.sub;
+    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+    
+    // Get current subscription
+    const currentSubscription = await storage.getUserSubscription(userId);
+    
+    if (!currentSubscription || !currentSubscription.stripeSubscriptionId) {
+      return res.status(404).json({ error: "No active subscription found" });
+    }
+
+    if (!currentSubscription.cancelAtPeriodEnd) {
+      return res.status(400).json({ error: "Subscription is not scheduled for cancellation" });
+    }
+
+    const stripeClient = initializeStripe();
+
+    // Resume the subscription by removing cancel_at_period_end
+    const resumedSubscription = await stripeClient.subscriptions.update(
+      currentSubscription.stripeSubscriptionId,
+      {
+        cancel_at_period_end: false,
+      },
+    );
+
+    // Update our database
+    await storage.updateSubscription(currentSubscription.id, {
+      cancelAtPeriodEnd: false,
+    });
+
+    console.log(
+      `[SUBSCRIPTION] Resumed subscription ${currentSubscription.stripeSubscriptionId} for user ${userId}`,
+    );
+
+    res.json({
+      message: "Subscription resumed successfully",
+      subscription: resumedSubscription,
+    });
+  } catch (error) {
+    console.error("Error resuming subscription:", error);
+    res.status(500).json({ error: "Failed to resume subscription" });
+  }
+});
+
 // Stripe webhook handler (exported for direct mounting at /api/webhook)
 export const webhookHandler = express.Router();
 webhookHandler.post("/", async (req, res) => {

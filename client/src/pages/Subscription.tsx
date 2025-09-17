@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Loader2, Crown, Zap, Rocket, X } from "lucide-react";
+import { Check, Loader2, Crown, Zap, Rocket, X, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
@@ -104,6 +104,30 @@ export default function Subscription() {
     },
     onSettled: () => {
       setLoadingPlanId(null);
+    },
+  });
+
+  // Resume subscription mutation
+  const resumeSubscriptionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/subscription/resume', {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Subscription Resumed",
+        description: data.message || "Your subscription has been resumed successfully.",
+      });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/current"] });
+    },
+    onError: (error) => {
+      console.error('Error resuming subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resume subscription. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -285,20 +309,35 @@ export default function Subscription() {
                 </div>
               )}
             </CardContent>
-            {currentSubscription.status === 'active' && !(currentSubscription as any).cancelAtPeriodEnd && currentSubscription.plan.name !== 'Free' && (
-              <CardFooter>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleCancelSubscription}
-                  disabled={cancelSubscriptionMutation.isPending}
-                  className="w-full"
-                  data-testid="button-cancel-subscription"
-                >
-                  {cancelSubscriptionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel Subscription
-                </Button>
+            {currentSubscription.status === 'active' && currentSubscription.plan.name !== 'Free' && (
+              <CardFooter className="flex gap-2">
+                {!(currentSubscription as any).cancelAtPeriodEnd ? (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleCancelSubscription}
+                    disabled={cancelSubscriptionMutation.isPending}
+                    className="w-full"
+                    data-testid="button-cancel-subscription"
+                  >
+                    {cancelSubscriptionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel Subscription
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => resumeSubscriptionMutation.mutate()}
+                    disabled={resumeSubscriptionMutation.isPending}
+                    className="w-full"
+                    data-testid="button-resume-subscription"
+                  >
+                    {resumeSubscriptionMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Resume Subscription
+                  </Button>
+                )}
               </CardFooter>
             )}
           </Card>
