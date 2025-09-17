@@ -25,8 +25,9 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
     if (isNaN(date.getTime())) return '';
     return formatDistanceToNow(date, { addSuffix: true });
   };
-  const timeAgo = getTimeAgo(typeof message.createdAt === 'string' ? message.createdAt : message.createdAt?.toISOString?.());
-
+  const timeAgo = getTimeAgo(
+    (typeof message.createdAt === 'string' ? message.createdAt : message.createdAt?.toISOString?.())
+  ).replace(' ago', '').replace('minutes', 'min');
   if (isUser) {
     return (
       <div className="flex justify-end animate-fadeIn">

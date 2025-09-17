@@ -11,8 +11,11 @@ export function parseOpenAIResponse(accumulatedContent: string): AIResponse {
     const parsedResponse = JSON.parse(accumulatedContent);
     console.log(`[OpenAI] Raw response: ${accumulatedContent}`);
 
+    // Normalize messageType variants before validation
+    const normalized = normalizeAIResponse(parsedResponse);
+
     // Validate against schema
-    const validated = AIResponseSchema.parse(parsedResponse);
+    const validated = AIResponseSchema.parse(normalized);
     console.log(
       `[OpenAI] Successfully generated ${validated.bubbles.length} message bubbles`,
     );
@@ -35,9 +38,11 @@ export function parseStreamingContent(accumulatedContent: string): {
     const parseResult = parse(accumulatedContent);
     
     if (parseResult.bubbles && Array.isArray(parseResult.bubbles)) {
+      // Normalize early so streaming logic can reason on canonical types
+      const bubbles = normalizeBubbles(parseResult.bubbles);
       return {
         success: true,
-        bubbles: parseResult.bubbles
+        bubbles
       };
     }
     
@@ -116,9 +121,11 @@ export async function validateSurveyMenuRequirements(
         const currentQuestion = questions?.[currentQuestionIndex];
         
         if (currentQuestion?.options?.length > 0) {
-          const hasMenuBubble = validated.bubbles.some(bubble => bubble.messageType === "menu");
+          const hasMenuBubble = validated.bubbles.some(
+            (bubble) => bubble.messageType === "menu" || bubble.messageType === "multiselect_menu"
+          );
           if (!hasMenuBubble) {
-            console.error(`[SURVEY MENU ERROR] Survey Q${currentQuestionIndex + 1} has ${currentQuestion.options.length} options but NO menu bubble generated!`);
+            console.error(`[SURVEY MENU ERROR] Survey Q${currentQuestionIndex + 1} has ${currentQuestion.options.length} options but NO choice bubble (menu/multiselect_menu) generated!`);
             console.error(`[SURVEY MENU ERROR] Generated ${validated.bubbles.length} bubbles:`, 
               validated.bubbles.map(b => `${b.messageType}: "${b.content?.substring(0, 50)}..."`));
           } else {
@@ -156,4 +163,46 @@ export function detectJsonBoundary(delta: string, accumulatedContent: string): b
   }
   
   return false;
+}
+
+// --- Helpers: normalize messageType variants from model ---
+function normalizeType(type: any): string {
+  if (!type || typeof type !== 'string') return type;
+  const t = type.trim();
+  // Common variants → canonical
+  const map: Record<string, string> = {
+    multiSelect_menu: 'multiselect_menu',
+    multiselectMenu: 'multiselect_menu',
+    multi_select_menu: 'multiselect_menu',
+    MultiSelect_Menu: 'multiselect_menu',
+    quickreplies: 'quickReplies',
+    quick_replies: 'quickReplies',
+    QuickReplies: 'quickReplies',
+    formSubmission: 'form_submission',
+    formsubmission: 'form_submission',
+    form_submission: 'form_submission', // already canonical
+  };
+  if (map[t] ) return map[t];
+  // Lowercased fallbacks
+  const lower = t.toLowerCase();
+  if (lower === 'multiselect_menu' || lower === 'multiselectmenu') return 'multiselect_menu';
+  if (lower === 'quickreplies' || lower === 'quick_replies') return 'quickReplies';
+  if (lower === 'formsubmission' || lower === 'form-submission') return 'form_submission';
+  return t;
+}
+
+function normalizeBubble(b: any): any {
+  if (!b || typeof b !== 'object') return b;
+  const messageType = normalizeType(b.messageType);
+  return { ...b, messageType };
+}
+
+function normalizeBubbles(bubbles: any[]): any[] {
+  return bubbles.map(normalizeBubble);
+}
+
+function normalizeAIResponse(resp: any): any {
+  if (!resp || typeof resp !== 'object') return resp;
+  if (!Array.isArray(resp.bubbles)) return resp;
+  return { ...resp, bubbles: normalizeBubbles(resp.bubbles) };
 }

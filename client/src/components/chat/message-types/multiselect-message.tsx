@@ -96,12 +96,12 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       </div>
 
       <div className="flex items-center justify-between text-sm text-neutral-600">
-        <span>{selectedOptions.length} / {maxSelections} (min: {minSelections})</span>
+        <span>{selectedOptions.length} / {maxSelections} </span>
         <Button
           type="submit"
           onClick={handleMultiselectSubmit}
           disabled={selectedOptions.length === 0 || isSubmitting || isSubmitted}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          className="w-40 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center">

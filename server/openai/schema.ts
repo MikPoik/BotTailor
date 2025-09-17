@@ -18,9 +18,13 @@ export const MULTI_BUBBLE_RESPONSE_SCHEMA = {
                 "text",
                 "card",
                 "menu",
+                "multiselect_menu",
+                "rating",
                 "image",
                 "quickReplies",
                 "form",
+                "form_submission",
+                "system",
               ],
             },
             content: {
