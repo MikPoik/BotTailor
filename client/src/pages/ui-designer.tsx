@@ -139,8 +139,6 @@ export default function UIDesigner() {
       const topicGridComponent = config.components?.find(c => c.type === 'topic_grid');
       if (topicGridComponent?.props?.style && typeof topicGridComponent.props.style === 'object') {
         const style = topicGridComponent.props.style as any;
-        if (style.titleFontSize) setTitleFontSize(style.titleFontSize);
-        if (style.descriptionFontSize) setDescriptionFontSize(style.descriptionFontSize);
         if (style.itemStyle) setItemStyle(style.itemStyle);
       }
 

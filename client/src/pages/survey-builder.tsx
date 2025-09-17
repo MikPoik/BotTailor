@@ -34,6 +34,42 @@ import {
   Wand2,
 } from "lucide-react";
 
+// Helper function to safely get surveyConfig
+const getSurveyConfig = (survey: Survey | null): SurveyConfig => {
+  if (!survey || !survey.surveyConfig) {
+    return {
+      id: `survey_${Date.now()}`,
+      title: "New Survey",
+      description: "A new survey",
+      questions: [],
+      conditionalFlow: false,
+      completionMessage: "Thank you for completing the survey!",
+      aiInstructions: "Conduct this survey with a friendly and professional tone.",
+      settings: {
+        allowBackNavigation: true,
+        showProgress: true,
+        savePartialResponses: true,
+      },
+    };
+  }
+  // Ensure all properties of SurveyConfig are present, even if undefined in the original data
+  return {
+    ...survey.surveyConfig,
+    title: survey.surveyConfig.title || "Untitled Survey",
+    description: survey.surveyConfig.description || "No description",
+    questions: survey.surveyConfig.questions || [],
+    conditionalFlow: survey.surveyConfig.conditionalFlow ?? false,
+    completionMessage: survey.surveyConfig.completionMessage || "Thank you!",
+    aiInstructions: survey.surveyConfig.aiInstructions || "Respond professionally.",
+    settings: {
+      allowBackNavigation: survey.surveyConfig.settings?.allowBackNavigation ?? true,
+      showProgress: survey.surveyConfig.settings?.showProgress ?? true,
+      savePartialResponses: survey.surveyConfig.settings?.savePartialResponses ?? true,
+    },
+  };
+};
+
+
 export default function SurveyBuilderPage() {
   const { guid } = useParams();
   const { user, isAuthenticated } = useAuth();
@@ -71,7 +107,7 @@ export default function SurveyBuilderPage() {
   }, [localSurveyName, localSurveyDescription, selectedSurvey]);
 
   // Fetch chatbot details
-  const { data: chatbot } = useQuery<{ name: string; id: number }>({
+  const { data: chatbot } = useQuery<{ name: string; id: number; description?: string }>({
     queryKey: [`/api/chatbots/${guid}`],
     enabled: !!guid && isAuthenticated,
   });
@@ -195,8 +231,8 @@ export default function SurveyBuilderPage() {
     };
 
     const updatedConfig = {
-      ...selectedSurvey.surveyConfig,
-      questions: [...selectedSurvey.surveyConfig.questions, newQuestionData],
+      ...getSurveyConfig(selectedSurvey),
+      questions: [...getSurveyConfig(selectedSurvey).questions, newQuestionData],
     };
 
     updateSurveyMutation.mutate({
@@ -211,8 +247,8 @@ export default function SurveyBuilderPage() {
     if (!selectedSurvey) return;
 
     const updatedConfig = {
-      ...selectedSurvey.surveyConfig,
-      questions: selectedSurvey.surveyConfig.questions.filter((_: SurveyQuestion, index: number) => index !== questionIndex),
+      ...getSurveyConfig(selectedSurvey),
+      questions: getSurveyConfig(selectedSurvey).questions.filter((_: SurveyQuestion, index: number) => index !== questionIndex),
     };
 
     updateSurveyMutation.mutate({
@@ -254,12 +290,12 @@ export default function SurveyBuilderPage() {
 
     console.log(`Updating question ${questionIndex} with:`, updates);
 
-    const updatedQuestions = selectedSurvey.surveyConfig.questions.map((q: SurveyQuestion, index: number) =>
+    const updatedQuestions = getSurveyConfig(selectedSurvey).questions.map((q: SurveyQuestion, index: number) =>
       index === questionIndex ? { ...q, ...updates } : q
     );
 
     const updatedConfig = {
-      ...selectedSurvey.surveyConfig,
+      ...getSurveyConfig(selectedSurvey),
       questions: updatedQuestions,
     };
 
@@ -303,7 +339,7 @@ export default function SurveyBuilderPage() {
     const key = `${questionIndex}-${optionIndex}`;
     const text = localOptionTexts[key];
     if (text !== undefined && selectedSurvey) {
-      const question = selectedSurvey.surveyConfig.questions[questionIndex];
+      const question = getSurveyConfig(selectedSurvey).questions[questionIndex];
       if (question.options) {
         const updatedOptions = [...question.options];
         updatedOptions[optionIndex] = { ...updatedOptions[optionIndex], text };
@@ -410,7 +446,7 @@ export default function SurveyBuilderPage() {
                                 {survey.status}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
-                                {survey.surveyConfig.questions.length} questions
+                                {getSurveyConfig(survey).questions.length} questions
                               </span>
                             </div>
                           </div>
@@ -535,7 +571,7 @@ export default function SurveyBuilderPage() {
                       {/* Questions list */}
                       <div className="space-y-4">
                         <Label>Questions</Label>
-                        {((selectedSurvey.surveyConfig as SurveyConfig)?.questions || []).map((question: SurveyQuestion, index: number) => (
+                        {getSurveyConfig(selectedSurvey).questions.map((question: SurveyQuestion, index: number) => (
                           <Card key={question.id} className="p-4">
                             {editingQuestion === index ? (
                               // Editing mode
@@ -863,15 +899,17 @@ export default function SurveyBuilderPage() {
                         <Label htmlFor="completion-message">Completion Message</Label>
                         <Textarea
                           id="completion-message"
-                          value={selectedSurvey.surveyConfig.completionMessage || ""}
+                          value={getSurveyConfig(selectedSurvey).completionMessage || ""}
                           onChange={(e) => {
-                            const updatedConfig = {
-                              ...selectedSurvey.surveyConfig,
-                              completionMessage: e.target.value,
-                            };
+                            const currentConfig = getSurveyConfig(selectedSurvey);
                             updateSurveyMutation.mutate({
                               id: selectedSurvey.id,
-                              updates: { surveyConfig: updatedConfig },
+                              updates: { 
+                                surveyConfig: {
+                                  ...currentConfig,
+                                  completionMessage: e.target.value
+                                }
+                              }
                             });
                           }}
                           placeholder="Thank you for completing the survey!"
@@ -882,15 +920,17 @@ export default function SurveyBuilderPage() {
                         <Label htmlFor="ai-instructions">AI Instructions</Label>
                         <Textarea
                           id="ai-instructions"
-                          value={selectedSurvey.surveyConfig.aiInstructions || ""}
+                          value={getSurveyConfig(selectedSurvey).aiInstructions || ""}
                           onChange={(e) => {
-                            const updatedConfig = {
-                              ...selectedSurvey.surveyConfig,
-                              aiInstructions: e.target.value,
-                            };
+                            const currentConfig = getSurveyConfig(selectedSurvey);
                             updateSurveyMutation.mutate({
                               id: selectedSurvey.id,
-                              updates: { surveyConfig: updatedConfig },
+                              updates: { 
+                                surveyConfig: {
+                                  ...currentConfig,
+                                  aiInstructions: e.target.value
+                                }
+                              }
                             });
                           }}
                           placeholder="Instructions for how the AI should conduct this survey..."
@@ -911,14 +951,14 @@ export default function SurveyBuilderPage() {
                     <CardContent>
                       <div className="space-y-4">
                         <div className="p-4 bg-accent rounded-lg">
-                          <h3 className="font-semibold">{(selectedSurvey.surveyConfig as SurveyConfig)?.title}</h3>
-                          {(selectedSurvey.surveyConfig as SurveyConfig)?.description && (
+                          <h3 className="font-semibold">{getSurveyConfig(selectedSurvey).title}</h3>
+                          {getSurveyConfig(selectedSurvey).description && (
                             <p className="text-sm text-muted-foreground mt-1">
-                              {(selectedSurvey.surveyConfig as SurveyConfig).description}
+                              {getSurveyConfig(selectedSurvey).description}
                             </p>
                           )}
                         </div>
-                        {((selectedSurvey.surveyConfig as SurveyConfig)?.questions || []).map((question: SurveyQuestion, index: number) => (
+                        {getSurveyConfig(selectedSurvey).questions.map((question: SurveyQuestion, index: number) => (
                           <div key={question.id} className="p-4 border rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">Q{index + 1}</Badge>

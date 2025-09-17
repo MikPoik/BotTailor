@@ -38,9 +38,10 @@ export function setupChatRoutes(app: Express) {
         if (surveySession && surveySession.status === "active") {
           // Get the survey to find the current question
           const survey = await storage.getSurvey(surveySession.surveyId);
-          if (survey && survey.surveyConfig?.questions) {
+          const surveyConfig = survey?.surveyConfig as any;
+          if (survey && surveyConfig?.questions) {
             const currentQuestion =
-              survey.surveyConfig.questions[surveySession.currentQuestionIndex];
+              surveyConfig.questions[surveySession.currentQuestionIndex];
 
             if (currentQuestion) {
               console.log(
@@ -54,8 +55,11 @@ export function setupChatRoutes(app: Express) {
               const questionId = `question_${surveySession.currentQuestionIndex}`;
               const response = optionText || optionId;
 
+              const currentResponses = surveySession.responses && typeof surveySession.responses === 'object' 
+                ? surveySession.responses as Record<string, any> 
+                : {};
               const updatedResponses = {
-                ...surveySession.responses,
+                ...currentResponses,
                 [`q${surveySession.currentQuestionIndex || 0}`]: payload || optionId
               };
 
@@ -64,7 +68,6 @@ export function setupChatRoutes(app: Express) {
                 {
                   responses: updatedResponses,
                   currentQuestionIndex: (surveySession.currentQuestionIndex || 0) + 1,
-                  lastResponseAt: new Date(),
                 }
               );
 
@@ -662,7 +665,7 @@ async function handleStreamingResponse(
       .map((msg) => ({
         role: msg.sender === "user" ? "user" : "assistant",
         content:
-          msg.sender === "bot" && msg.metadata?.originalContent
+          msg.sender === "bot" && msg.metadata && typeof msg.metadata === 'object' && 'originalContent' in msg.metadata
             ? getTextualRepresentation(msg)
             : msg.content,
       })) as Array<{ role: "user" | "assistant"; content: string }>;
@@ -860,7 +863,7 @@ async function handleSurveySessionCreation(
           } else {
             // No existing session, create a new one
             console.log(
-              `[SURVEY] Creating new survey session for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name || "Unknown Survey"}`,
+              `[SURVEY] Creating new survey session for survey: ${(targetSurvey.surveyConfig as any)?.title || targetSurvey.name || "Unknown Survey"}`,
             );
 
             try {

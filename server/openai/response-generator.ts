@@ -167,9 +167,9 @@ If this request involves generating or modifying surveys, return a valid JSON re
         bubbles: [{
           messageType: "text",
           content: parsedResponse.content || "I've generated a survey for you!",
-          metadata: {
-            generatedSurveyConfig: parsedResponse.surveyConfig
-          }
+          metadata: parsedResponse.surveyConfig ? {
+            surveyConfig: parsedResponse.surveyConfig
+          } : {}
         }]
       };
 
