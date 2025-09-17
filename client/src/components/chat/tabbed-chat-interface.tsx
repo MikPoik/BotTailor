@@ -679,7 +679,7 @@ export default function TabbedChatInterface({
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
                   <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
-                  <p className="text-sm">Start typing to begin the conversation</p>
+                  <p className="text-sm">{chatbotConfig?.welcomeMessage || "Start typing to begin the conversation"}</p>
                 </div>
               </div>
             ) : (
