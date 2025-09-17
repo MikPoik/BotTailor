@@ -537,7 +537,7 @@ Please consider these colors when generating the UI design to ensure visual cons
       </div>
 
       {/* Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(80vh-200px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[calc(80vh-200px)]">
 
         {/* Left Panel - Chat & Code */}
         <div className="flex flex-col">
