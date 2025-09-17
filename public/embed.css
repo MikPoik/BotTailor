@@ -278,7 +278,11 @@
 .chatwidget-iframe.show {
   display: block !important;
   visibility: visible !important;
-  /* Removed conflicting animation - let JS handle smooth transitions */
+  animation: chatwidget-open 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.chatwidget-iframe.closing {
+  animation: chatwidget-close 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
 /* Removed conflicting iframe body animations that break on reopening */

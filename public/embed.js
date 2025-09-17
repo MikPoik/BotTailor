@@ -490,21 +490,30 @@
             mobileIframe.contentWindow.postMessage({ type: 'CLOSE_CHAT' }, '*');
           }
           
-          // Simple immediate close without conflicting animations
-          overlay.style.display = 'none';
-          mobileIframe.style.visibility = 'hidden';
+          // Trigger smooth closing animation
+          mobileIframe.classList.add('closing');
           mobileIframe.classList.remove('show');
+          setTimeout(() => {
+            overlay.style.display = 'none';
+            mobileIframe.style.visibility = 'hidden';
+            mobileIframe.classList.remove('closing');
+          }, 300); // Match animation duration
         } else {
           // Send close message to iframe for internal animation handling
           if (iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'CLOSE_CHAT' }, '*');
           }
           
-          // Simple immediate close without conflicting animations
-          bubble.style.display = 'flex';
-          iframe.style.visibility = 'hidden';
+          // Trigger smooth closing animation
+          iframe.classList.add('closing');
           iframe.classList.remove('show');
+          setTimeout(() => {
+            iframe.style.visibility = 'hidden';
+            iframe.classList.remove('closing');
+          }, 800); // Match animation duration
         }
+        
+        bubble.style.display = 'flex';
       };
 
       // Close message bubble function
