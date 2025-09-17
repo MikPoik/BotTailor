@@ -418,61 +418,59 @@
         ChatWidget.hideAllInitialMessages();
 
         if (isMobile()) {
-          // Lazy load mobile iframe if not already loaded
-          if (!mobileIframe.src) {
-            try {
-              // Build URL with sessionId if provided, otherwise let server generate it
-              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
+          // Always reload mobile iframe to ensure fresh content
+          try {
+            // Build URL with sessionId if provided, otherwise let server generate it
+            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+            const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
-              // Check if apiUrl already contains a specific widget path
-              let widgetUrl;
-              if (this.config.apiUrl.includes('/widget/')) {
-                // Specific widget URL - use as-is with query parameters
-                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=true&embedded=true`;
-              } else {
-                // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=true&embedded=true`;
-              }
-
-              // Force HTTPS for iframe URL
-              mobileIframe.src = this.forceHttps(widgetUrl);
-            } catch (error) {
-              // Fallback URL construction
-              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=true&embedded=true`);
+            // Check if apiUrl already contains a specific widget path
+            let widgetUrl;
+            if (this.config.apiUrl.includes('/widget/')) {
+              // Specific widget URL - use as-is with query parameters
+              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+              widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=true&embedded=true`;
+            } else {
+              // Base URL - append /chat-widget path
+              widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=true&embedded=true`;
             }
+
+            // Force HTTPS for iframe URL
+            mobileIframe.src = this.forceHttps(widgetUrl);
+          } catch (error) {
+            // Fallback URL construction
+            mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=true&embedded=true`);
           }
+          
           bubble.style.display = 'none';
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
           mobileIframe.classList.add('show');
         } else {
-          // Lazy load desktop iframe if not already loaded
-          if (!iframe.src) {
-            try {
-              // Build URL with sessionId if provided, otherwise let server generate it
-              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
+          // Always reload desktop iframe to ensure fresh content
+          try {
+            // Build URL with sessionId if provided, otherwise let server generate it
+            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+            const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
-              // Check if apiUrl already contains a specific widget path
-              let widgetUrl;
-              if (this.config.apiUrl.includes('/widget/')) {
-                // Specific widget URL - use as-is with query parameters
-                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=false&embedded=true`;
-              } else {
-                // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=false&embedded=true`;
-              }
-
-              // Force HTTPS for iframe URL
-              iframe.src = this.forceHttps(widgetUrl);
-            } catch (error) {
-              // Fallback URL construction
-              iframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=false&embedded=true`);
+            // Check if apiUrl already contains a specific widget path
+            let widgetUrl;
+            if (this.config.apiUrl.includes('/widget/')) {
+              // Specific widget URL - use as-is with query parameters
+              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+              widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=false&embedded=true`;
+            } else {
+              // Base URL - append /chat-widget path
+              widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=false&embedded=true`;
             }
+
+            // Force HTTPS for iframe URL
+            iframe.src = this.forceHttps(widgetUrl);
+          } catch (error) {
+            // Fallback URL construction
+            iframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=false&embedded=true`);
           }
+          
           bubble.style.display = 'none';
           iframe.style.visibility = 'visible';
           iframe.classList.add('show');
@@ -496,6 +494,8 @@
             overlay.style.display = 'none';
             mobileIframe.style.visibility = 'hidden';
             mobileIframe.classList.remove('closing');
+            // Clear src to force reload on next open
+            mobileIframe.src = '';
           }, 400); // Increased duration for smoother animation
         } else {
           // Add closing animation for desktop
@@ -511,6 +511,8 @@
             bubble.style.display = 'flex';
             iframe.style.visibility = 'hidden';
             iframe.classList.remove('closing');
+            // Clear src to force reload on next open
+            iframe.src = '';
           }, 400); // Match animation duration
         }
       };
