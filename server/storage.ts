@@ -167,6 +167,42 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getChatSessionsWithMultipleMessagesByChatbotGuid(chatbotGuid: string, offset?: number, limit?: number): Promise<ChatSession[]> {
+    // Subquery to get sessions with more than 1 message
+    const sessionsWithMultipleMessages = db
+      .select({
+        sessionId: messages.sessionId,
+        messageCount: sql<number>`count(*)`
+      })
+      .from(messages)
+      .groupBy(messages.sessionId)
+      .having(sql`count(*) > 1`);
+
+    const baseQuery = db
+      .select({
+        id: chatSessions.id,
+        sessionId: chatSessions.sessionId,
+        userId: chatSessions.userId,
+        chatbotConfigId: chatSessions.chatbotConfigId,
+        activeSurveyId: chatSessions.activeSurveyId,
+        createdAt: chatSessions.createdAt,
+        updatedAt: chatSessions.updatedAt,
+      })
+      .from(chatSessions)
+      .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
+      .innerJoin(sessionsWithMultipleMessages, eq(chatSessions.sessionId, sessionsWithMultipleMessages.sessionId))
+      .where(eq(chatbotConfigs.guid, chatbotGuid))
+      .orderBy(desc(chatSessions.createdAt));
+
+    if (offset !== undefined && limit !== undefined) {
+      return await baseQuery.offset(offset).limit(limit);
+    } else if (limit !== undefined) {
+      return await baseQuery.limit(limit);
+    } else {
+      return await baseQuery;
+    }
+  }
+
   async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {
     const [session] = await db
       .insert(chatSessions)
@@ -200,6 +236,26 @@ export class DatabaseStorage implements IStorage {
       .select({ count: sql<number>`count(*)` })
       .from(chatSessions)
       .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
+      .where(eq(chatbotConfigs.guid, chatbotGuid));
+    return result[0]?.count || 0;
+  }
+
+  async getChatSessionsWithMultipleMessagesCountByChatbotGuid(chatbotGuid: string): Promise<number> {
+    // Subquery to get sessions with more than 1 message
+    const sessionsWithMultipleMessages = db
+      .select({
+        sessionId: messages.sessionId,
+        messageCount: sql<number>`count(*)`
+      })
+      .from(messages)
+      .groupBy(messages.sessionId)
+      .having(sql`count(*) > 1`);
+
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(chatSessions)
+      .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
+      .innerJoin(sessionsWithMultipleMessages, eq(chatSessions.sessionId, sessionsWithMultipleMessages.sessionId))
       .where(eq(chatbotConfigs.guid, chatbotGuid));
     return result[0]?.count || 0;
   }

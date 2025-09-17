@@ -1,6 +1,6 @@
 # Directory Tree
 
-Generated on: 2025-09-16T20:47:47.780Z
+Generated on: 2025-09-17T14:04:47.975Z
 
 *Simple mode: Directory structure only*
 
@@ -26,6 +26,7 @@ Generated on: 2025-09-16T20:47:47.780Z
 │       │   │   ├── 📄 survey-assistant-chatbox.tsx
 │       │   │   ├── 📄 tabbed-chat-interface.tsx
 │       │   │   └── 📄 typing-indicator.tsx
+│       │   ├── 📄 footer.tsx
 │       │   ├── 📄 navbar.tsx
 │       │   ├── 📄 theme-toggle.tsx
 │       │   └── 📁 ui-designer/
@@ -58,7 +59,9 @@ Generated on: 2025-09-16T20:47:47.780Z
 │       │   ├── 📄 docs.tsx
 │       │   ├── 📄 home.tsx
 │       │   ├── 📄 not-found.tsx
+│       │   ├── 📄 privacy.tsx
 │       │   ├── 📄 survey-builder.tsx
+│       │   ├── 📄 terms.tsx
 │       │   └── 📄 ui-designer.tsx
 │       └── 📁 types/
 │           └── 📄 message-metadata.ts

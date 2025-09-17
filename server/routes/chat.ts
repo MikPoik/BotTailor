@@ -202,14 +202,14 @@ export function setupChatRoutes(app: Express) {
             .json({ message: "Chatbot not found or access denied" });
         }
 
-        // Get paginated chat sessions, total count, and all sessions for aggregated stats
+        // Get paginated chat sessions with multiple messages, total count, and all sessions for aggregated stats
         const [sessions, totalCount, allSessions] = await Promise.all([
-          storage.getChatSessionsByChatbotGuid(guid, offset, limitNum),
-          storage.getChatSessionsCountByChatbotGuid(guid),
-          storage.getChatSessionsByChatbotGuid(guid) // Get all sessions for stats
+          storage.getChatSessionsWithMultipleMessagesByChatbotGuid(guid, offset, limitNum),
+          storage.getChatSessionsWithMultipleMessagesCountByChatbotGuid(guid),
+          storage.getChatSessionsWithMultipleMessagesByChatbotGuid(guid) // Get all sessions for stats
         ]);
 
-        // Get message counts for each session and filter out sessions with only one message
+        // Add message counts for paginated sessions (already filtered at DB level)
         const sessionsWithCounts = await Promise.all(
           sessions.map(async (session) => {
             const messages = await storage.getMessages(session.sessionId);
@@ -224,10 +224,7 @@ export function setupChatRoutes(app: Express) {
           })
         );
 
-        // Filter out sessions with only one message (initial welcome message)
-        const filteredSessions = sessionsWithCounts.filter(session => session.messageCount > 1);
-
-        // Get message counts for all sessions (for statistics) and filter them too
+        // Add message counts for all sessions (already filtered at DB level)
         const allSessionsWithCounts = await Promise.all(
           allSessions.map(async (session) => {
             const messages = await storage.getMessages(session.sessionId);
@@ -242,21 +239,18 @@ export function setupChatRoutes(app: Express) {
           })
         );
 
-        // Filter all sessions for statistics calculation
-        const filteredAllSessions = allSessionsWithCounts.filter(session => session.messageCount > 1);
-
         const totalPages = Math.ceil(totalCount / limitNum);
 
         // Calculate aggregated statistics
-        const totalMessages = filteredAllSessions.reduce((total, session) => total + session.messageCount, 0);
-        const avgMessagesPerChat = filteredAllSessions.length > 0 ? Math.round(totalMessages / filteredAllSessions.length) : 0;
-        const longestChat = filteredAllSessions.length > 0 ? Math.max(...filteredAllSessions.map(s => s.messageCount)) : 0;
-        const latestActivity = filteredAllSessions.length > 0
-          ? new Date(Math.max(...filteredAllSessions.map(s => new Date(s.lastMessageAt).getTime())))
+        const totalMessages = allSessionsWithCounts.reduce((total, session) => total + session.messageCount, 0);
+        const avgMessagesPerChat = allSessionsWithCounts.length > 0 ? Math.round(totalMessages / allSessionsWithCounts.length) : 0;
+        const longestChat = allSessionsWithCounts.length > 0 ? Math.max(...allSessionsWithCounts.map(s => s.messageCount)) : 0;
+        const latestActivity = allSessionsWithCounts.length > 0
+          ? new Date(Math.max(...allSessionsWithCounts.map(s => new Date(s.lastMessageAt).getTime())))
           : new Date();
 
         res.json({
-          sessions: filteredSessions,
+          sessions: sessionsWithCounts,
           chatbotName: chatbotConfig.name,
           pagination: {
             currentPage: pageNum,
