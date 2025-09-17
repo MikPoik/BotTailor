@@ -5,7 +5,7 @@ import { Bot } from "lucide-react";
 export function Footer() {
   return (
     <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-auto">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-0 mb-0">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-3">
@@ -75,7 +75,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <div className="border-t mt-2 pt-3 pb-2 mb-2 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} BotTailor. All rights reserved.
           </p>

@@ -120,7 +120,6 @@ export default function Privacy() {
               </p>
               <ul className="space-y-2 text-muted-foreground">
                 <li>• Account information: Until you delete your account or request deletion</li>
-                <li>• Conversation logs: 30 days for free accounts, 1 year for paid accounts</li>
                 <li>• Usage analytics: Aggregated data may be retained indefinitely</li>
                 <li>• Legal compliance: As required by applicable laws</li>
               </ul>
@@ -219,8 +218,7 @@ export default function Privacy() {
                 If you have any questions about this Privacy Policy or our privacy practices, please contact us at:
               </p>
               <div className="space-y-1 text-muted-foreground">
-                <p>Email: privacy@bottailor.com</p>
-                <p>Address: [Your Company Address]</p>
+                <p>Email: support@bottailor.com</p>
               </div>
             </CardContent>
           </Card>

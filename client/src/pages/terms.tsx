@@ -254,8 +254,7 @@ export default function Terms() {
                 If you have questions about these Terms of Service, please contact us at:
               </p>
               <div className="space-y-1 text-muted-foreground">
-                <p>Email: legal@bottailor.com</p>
-                <p>Address: [Your Company Address]</p>
+                <p>Email: support@bottailor.com</p>
               </div>
             </CardContent>
           </Card>
