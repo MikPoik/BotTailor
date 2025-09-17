@@ -52,19 +52,22 @@ const getSurveyConfig = (survey: Survey | null): SurveyConfig => {
       },
     };
   }
-  // Ensure all properties of SurveyConfig are present, even if undefined in the original data
+  
+  // Type-safe handling of unknown surveyConfig
+  const config = survey.surveyConfig as any;
+  
   return {
-    ...survey.surveyConfig,
-    title: survey.surveyConfig.title || "Untitled Survey",
-    description: survey.surveyConfig.description || "No description",
-    questions: survey.surveyConfig.questions || [],
-    conditionalFlow: survey.surveyConfig.conditionalFlow ?? false,
-    completionMessage: survey.surveyConfig.completionMessage || "Thank you!",
-    aiInstructions: survey.surveyConfig.aiInstructions || "Respond professionally.",
+    id: config?.id || `survey_${Date.now()}`,
+    title: config?.title || "Untitled Survey",
+    description: config?.description || "No description",
+    questions: config?.questions || [],
+    conditionalFlow: config?.conditionalFlow ?? false,
+    completionMessage: config?.completionMessage || "Thank you!",
+    aiInstructions: config?.aiInstructions || "Respond professionally.",
     settings: {
-      allowBackNavigation: survey.surveyConfig.settings?.allowBackNavigation ?? true,
-      showProgress: survey.surveyConfig.settings?.showProgress ?? true,
-      savePartialResponses: survey.surveyConfig.settings?.savePartialResponses ?? true,
+      allowBackNavigation: config?.settings?.allowBackNavigation ?? true,
+      showProgress: config?.settings?.showProgress ?? true,
+      savePartialResponses: config?.settings?.savePartialResponses ?? true,
     },
   };
 };
@@ -1004,7 +1007,8 @@ export default function SurveyBuilderPage() {
                         <SurveyAssistantChatbox
                           currentSurvey={selectedSurvey ? {
                             ...selectedSurvey,
-                            description: selectedSurvey.description || undefined
+                            description: selectedSurvey.description || undefined,
+                            surveyConfig: getSurveyConfig(selectedSurvey)
                           } : null}
                           onSurveyGenerated={(newSurveyConfig) => {
                             if (selectedSurvey) {

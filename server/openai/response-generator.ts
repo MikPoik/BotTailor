@@ -168,7 +168,8 @@ If this request involves generating or modifying surveys, return a valid JSON re
             messageType: "text",
             content: parsedResponse.content || "I've generated a survey for you!",
             metadata: parsedResponse.surveyConfig ? {
-              surveyConfig: parsedResponse.surveyConfig
+              surveyGenerated: true,
+              surveyData: parsedResponse.surveyConfig
             } : {}
           }]
         };

@@ -40,8 +40,8 @@ export function setupChatRoutes(app: Express) {
           const survey = await storage.getSurvey(surveySession.surveyId);
           const surveyConfig = survey?.surveyConfig as any;
           if (survey && surveyConfig?.questions) {
-            const currentQuestion =
-              surveyConfig.questions[surveySession.currentQuestionIndex];
+            const questionIndex = surveySession.currentQuestionIndex || 0;
+            const currentQuestion = surveyConfig.questions[questionIndex];
 
             if (currentQuestion) {
               console.log(

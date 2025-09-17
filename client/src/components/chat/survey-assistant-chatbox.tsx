@@ -22,8 +22,11 @@ interface Survey {
   id: number;
   name: string;
   description?: string;
-  surveyConfig: SurveyConfig;
+  surveyConfig: SurveyConfig | unknown;
   status: string;
+  chatbotConfigId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface SurveyAssistantChatboxProps {

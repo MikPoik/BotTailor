@@ -741,7 +741,9 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
     ];
 
     for (const planData of plans) {
-      if (planData.stripePriceId && planData.stripeProductId) {
+      // Only create plans that have valid Stripe IDs (not undefined)
+      if (planData.stripePriceId && planData.stripeProductId && 
+          planData.stripePriceId !== "" && planData.stripeProductId !== "") {
         await storage.createSubscriptionPlan(planData);
       }
     }
