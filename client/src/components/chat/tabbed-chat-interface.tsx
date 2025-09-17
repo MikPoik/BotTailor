@@ -685,7 +685,12 @@ export default function TabbedChatInterface({
               return displayMessages.map((message, index) => (
                 <MessageBubble
                   key={`message-${message.id}-${index}`}
-                  message={message}
+                  message={{
+                    ...message,
+                    id: typeof message.id === 'string' ? parseInt(message.id.replace('initial-', ''), 10) || 0 : message.id,
+                    createdAt: typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt,
+                    metadata: message.metadata || {}
+                  }}
                   onOptionSelect={handleOptionSelect}
                   onQuickReply={handleQuickReply}
                   chatbotConfig={chatbotConfig}
@@ -849,7 +854,7 @@ export default function TabbedChatInterface({
                   disabled={isLoading || readOnlyMode}
                 />
                 <Button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage(inputMessage)}
                   disabled={!inputMessage.trim() || isLoading || readOnlyMode}
                   size="sm"
                   className="send-button absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"

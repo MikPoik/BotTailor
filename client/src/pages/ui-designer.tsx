@@ -133,16 +133,18 @@ export default function UIDesigner() {
 
       // Initialize style settings from components
       const topicGridComponent = config.components?.find(c => c.type === 'topic_grid');
-      if (topicGridComponent?.props?.style) {
-        const style = topicGridComponent.props.style;
-        if (style.itemStyle) setItemStyle(style.itemStyle);
+      if (topicGridComponent?.props?.style && typeof topicGridComponent.props.style === 'object') {
+        const style = topicGridComponent.props.style as any;
         if (style.titleFontSize) setTitleFontSize(style.titleFontSize);
         if (style.descriptionFontSize) setDescriptionFontSize(style.descriptionFontSize);
       }
 
       const headerComponent = config.components?.find(c => c.type === 'header');
-      if (headerComponent?.props?.style?.transparentBackground) {
-        setHeaderTransparent(headerComponent.props.style.transparentBackground);
+      if (headerComponent?.props?.style && typeof headerComponent.props.style === 'object') {
+        const headerStyle = headerComponent.props.style as any;
+        if (headerStyle.transparentBackground) {
+          setHeaderTransparent(headerStyle.transparentBackground);
+        }
       }
     }
   }, [chatbot]);

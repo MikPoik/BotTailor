@@ -108,13 +108,13 @@ export default function SurveyBuilderPage() {
     onSuccess: (data, variables) => {
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/surveys`] });
-      
+
       // Update the selected survey if it's the one being updated
       if (selectedSurvey && selectedSurvey.id === variables.id) {
         // Update the local state with the new data
         const updatedSurvey = { ...selectedSurvey, ...variables.updates };
         setSelectedSurvey(updatedSurvey);
-        
+
         // Update local form state
         if (variables.updates.name) {
           setLocalSurveyName(variables.updates.name);
@@ -122,11 +122,11 @@ export default function SurveyBuilderPage() {
         if (variables.updates.description !== undefined) {
           setLocalSurveyDescription(variables.updates.description || "");
         }
-        
+
         // Clear unsaved changes flag
         setHasUnsavedChanges(false);
       }
-      
+
       toast({ title: "Survey updated successfully!" });
     },
     onError: (error: any) => {
@@ -224,7 +224,7 @@ export default function SurveyBuilderPage() {
   // Save survey details function
   const handleSaveSurveyDetails = () => {
     if (!selectedSurvey) return;
-    
+
     updateSurveyMutation.mutate({
       id: selectedSurvey.id,
       updates: { 
@@ -237,14 +237,14 @@ export default function SurveyBuilderPage() {
   // Local state for editing questions to prevent constant updates
   const [localQuestionText, setLocalQuestionText] = useState<{ [key: number]: string }>({});
   const [localOptionTexts, setLocalOptionTexts] = useState<{ [key: string]: string }>({});
-  
+
   // Auto-save debouncing for survey details
   useEffect(() => {
     if (hasUnsavedChanges && selectedSurvey) {
       const timer = setTimeout(() => {
         handleSaveSurveyDetails();
       }, 2000); // Auto-save after 2 seconds of inactivity
-      
+
       return () => clearTimeout(timer);
     }
   }, [hasUnsavedChanges, localSurveyName, localSurveyDescription, selectedSurvey, handleSaveSurveyDetails]);
@@ -535,7 +535,7 @@ export default function SurveyBuilderPage() {
                       {/* Questions list */}
                       <div className="space-y-4">
                         <Label>Questions</Label>
-                        {selectedSurvey.surveyConfig.questions.map((question: SurveyQuestion, index: number) => (
+                        {((selectedSurvey.surveyConfig && typeof selectedSurvey.surveyConfig === 'object') ? (selectedSurvey.surveyConfig as SurveyConfig).questions || [] : []).map((question: SurveyQuestion, index: number) => (
                           <Card key={question.id} className="p-4">
                             {editingQuestion === index ? (
                               // Editing mode
@@ -545,7 +545,7 @@ export default function SurveyBuilderPage() {
                                   <Badge variant="secondary">{question.type}</Badge>
                                   {question.required && <Badge variant="outline">Required</Badge>}
                                 </div>
-                                
+
                                 <div>
                                   <Label>Question Text</Label>
                                   <Input
@@ -584,7 +584,7 @@ export default function SurveyBuilderPage() {
                                       </SelectContent>
                                     </Select>
                                   </div>
-                                  
+
                                   <div>
                                     <Label>Required</Label>
                                     <Select
@@ -620,10 +620,10 @@ export default function SurveyBuilderPage() {
                                             onClick={async () => {
                                               if (question.options && question.options.length > 2) {
                                                 console.log(`Deleting option ${optionIndex} from question ${index}. Current options:`, question.options);
-                                                
+
                                                 const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
                                                 console.log('Updated options after deletion:', updatedOptions);
-                                                
+
                                                 // Clear local state for deleted option and adjust indices
                                                 setLocalOptionTexts(prev => {
                                                   const newState = { ...prev };
@@ -639,7 +639,7 @@ export default function SurveyBuilderPage() {
                                                   }
                                                   return newState;
                                                 });
-                                                
+
                                                 // Update the question immediately
                                                 handleUpdateQuestion(selectedSurvey.id, index, { options: updatedOptions });
                                               }
@@ -672,7 +672,7 @@ export default function SurveyBuilderPage() {
                                     onClick={() => {
                                       // Prepare all updates for this question
                                       const updates: Partial<SurveyQuestion> = {};
-                                      
+
                                       // Save question text if changed
                                       if (localQuestionText[index] !== undefined) {
                                         updates.text = localQuestionText[index];
@@ -682,13 +682,13 @@ export default function SurveyBuilderPage() {
                                           return newState;
                                         });
                                       }
-                                      
+
                                       // Save all option texts if changed
                                       const hasOptionChanges = question.options?.some((_: any, optionIndex: number) => {
                                         const optionKey = `${index}-${optionIndex}`;
                                         return localOptionTexts[optionKey] !== undefined;
                                       });
-                                      
+
                                       if (hasOptionChanges && question.options) {
                                         const updatedOptions = question.options.map((option: any, optionIndex: number) => {
                                           const optionKey = `${index}-${optionIndex}`;
@@ -696,7 +696,7 @@ export default function SurveyBuilderPage() {
                                           return newText !== undefined ? { ...option, text: newText } : option;
                                         });
                                         updates.options = updatedOptions;
-                                        
+
                                         // Clear all option text changes for this question
                                         question.options.forEach((_: any, optionIndex: number) => {
                                           const optionKey = `${index}-${optionIndex}`;
@@ -707,12 +707,12 @@ export default function SurveyBuilderPage() {
                                           });
                                         });
                                       }
-                                      
+
                                       // Apply all updates at once
                                       if (Object.keys(updates).length > 0) {
                                         handleUpdateQuestion(selectedSurvey.id, index, updates);
                                       }
-                                      
+
                                       setEditingQuestion(null);
                                     }}
                                     variant="default"
@@ -731,7 +731,7 @@ export default function SurveyBuilderPage() {
                                         delete newState[index];
                                         return newState;
                                       });
-                                      
+
                                       // Clear option text changes
                                       question.options?.forEach((_: any, optionIndex: number) => {
                                         const optionKey = `${index}-${optionIndex}`;
@@ -741,7 +741,7 @@ export default function SurveyBuilderPage() {
                                           return newState;
                                         });
                                       });
-                                      
+
                                       setEditingQuestion(null);
                                     }}
                                   >
@@ -918,7 +918,7 @@ export default function SurveyBuilderPage() {
                             </p>
                           )}
                         </div>
-                        {selectedSurvey.surveyConfig.questions.map((question: SurveyQuestion, index: number) => (
+                        {((selectedSurvey.surveyConfig && typeof selectedSurvey.surveyConfig === 'object') ? (selectedSurvey.surveyConfig as SurveyConfig).questions || [] : []).map((question: SurveyQuestion, index: number) => (
                           <div key={question.id} className="p-4 border rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">Q{index + 1}</Badge>

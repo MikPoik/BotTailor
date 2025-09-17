@@ -215,11 +215,13 @@ export function setupSurveyRoutes(app: Express) {
         return res.status(404).json({ message: "Active survey session not found" });
       }
 
-      const updatedResponses = { ...surveySession.responses, [questionId]: response };
+      const updatedResponses = surveySession.responses && typeof surveySession.responses === 'object' 
+        ? { ...surveySession.responses as any, [questionId]: response }
+        : { [questionId]: response };
       
       const updatedSession = await storage.updateSurveySession(surveySession.id, {
         responses: updatedResponses,
-        currentQuestionIndex: surveySession.currentQuestionIndex + 1
+        currentQuestionIndex: (surveySession.currentQuestionIndex || 0) + 1
       });
 
       res.json(updatedSession);

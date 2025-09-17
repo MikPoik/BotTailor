@@ -213,7 +213,7 @@ export function setupChatbotRoutes(app: Express) {
         chatbotConfig = {
           name: context?.chatbotName || context?.name || 'New Chatbot',
           description: context?.description || 'A new chatbot being created',
-          systemPrompt: context?.currentPrompt || ''
+          currentPrompt: context?.currentPrompt || ''
         };
       } else {
         // Verify ownership and get existing chatbot

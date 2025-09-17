@@ -56,19 +56,21 @@ export function setupChatRoutes(app: Express) {
 
               const updatedResponses = {
                 ...surveySession.responses,
-                [questionId]: response,
+                [`q${surveySession.currentQuestionIndex || 0}`]: optionPayload || optionId
               };
 
               const updatedSession = await storage.updateSurveySession(
                 surveySession.id,
                 {
                   responses: updatedResponses,
-                  currentQuestionIndex: surveySession.currentQuestionIndex + 1,
-                },
+                  currentQuestionIndex: (surveySession.currentQuestionIndex || 0) + 1,
+                  lastResponseAt: new Date(),
+                }
               );
 
               console.log(
-                `[SURVEY RESPONSE] Successfully recorded survey response and advanced to question ${updatedSession.currentQuestionIndex + 1}`,
+                `[SURVEY RESPONSE] Successfully recorded survey response and advanced to question ${(updatedSession?.currentQuestionIndex || 0) + 1}`,
+                { optionId, optionPayload, surveyId }
               );
               surveyResponseRecorded = true;
             }

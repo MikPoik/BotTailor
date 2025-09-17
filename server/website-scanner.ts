@@ -54,10 +54,10 @@ export class WebsiteScanner {
       // For now, use simpler content extraction without Playwright
       for (let i = 0; i < maxPagesToScan; i++) {
         const url = urls[i];
-        
+
         let retryCount = 0;
         let success = false;
-        
+
         while (retryCount < this.maxRetries && !success) {
           try {
             const content = await this.extractContentSimple(url);
@@ -84,7 +84,7 @@ export class WebsiteScanner {
           } catch (error) {
             retryCount++;
             console.error(`Error scanning ${url} (attempt ${retryCount}/${this.maxRetries}):`, error);
-            
+
             if (retryCount < this.maxRetries) {
               await new Promise((resolve) => setTimeout(resolve, this.delay * retryCount));
             } else {
@@ -126,9 +126,13 @@ export class WebsiteScanner {
 
   private async discoverUrls(websiteSource: WebsiteSource): Promise<string[]> {
     const urls = new Set<string>();
+    if (!websiteSource.url) {
+      throw new Error('Website URL is required');
+    }
+
     const baseUrl = new URL(websiteSource.url);
 
-    // Start with the provided URL
+    // Add the main URL to the set
     urls.add(websiteSource.url);
 
     try {
@@ -215,7 +219,7 @@ export class WebsiteScanner {
       if (!response.ok) return [];
 
       const xmlContent = await response.text();
-      
+
       // Check if this is an image sitemap by content
       if (xmlContent.includes('<image:') || xmlContent.includes('xmlns:image=')) {
         return [];
@@ -300,14 +304,14 @@ export class WebsiteScanner {
       const fetch = (await import("node-fetch")).default;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
+
       const response = await fetch(url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (compatible; ChatbotScanner/1.0)",
         },
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
 
       if (!response.ok) {
@@ -434,9 +438,9 @@ export class WebsiteScanner {
 
   private isImageSitemap(sitemapUrl: string): boolean {
     const lowerUrl = sitemapUrl.toLowerCase();
-    return lowerUrl.includes('image') || 
-           lowerUrl.includes('img') || 
-           lowerUrl.includes('photo') || 
+    return lowerUrl.includes('image') ||
+           lowerUrl.includes('img') ||
+           lowerUrl.includes('photo') ||
            lowerUrl.includes('picture');
   }
 
@@ -444,25 +448,25 @@ export class WebsiteScanner {
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname.toLowerCase();
-      
+
       // Skip common image file extensions
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico', '.bmp', '.tiff'];
       if (imageExtensions.some(ext => pathname.endsWith(ext))) {
         return false;
       }
-      
+
       // Skip other non-content file types
       const skipExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.mp4', '.mp3', '.avi', '.mov'];
       if (skipExtensions.some(ext => pathname.endsWith(ext))) {
         return false;
       }
-      
+
       // Skip URLs that are clearly image-related
       const imageKeywords = ['/wp-content/uploads/', '/images/', '/img/', '/photos/', '/gallery/', '/media/'];
       if (imageKeywords.some(keyword => pathname.includes(keyword))) {
         return false;
       }
-      
+
       return true;
     } catch (error) {
       // Invalid URL, skip it
@@ -536,13 +540,13 @@ export class WebsiteScanner {
       console.log(`Successfully processed ${processedChunks} text chunks for source ${websiteSourceId}`);
     } catch (error) {
       console.error(`Error processing text content for source ${websiteSourceId}:`, error);
-      
+
       // Update status to error
       await storage.updateWebsiteSource(websiteSourceId, {
         status: "error",
         errorMessage: error instanceof Error ? error.message : "Failed to process text content",
       });
-      
+
       throw error;
     }
   }

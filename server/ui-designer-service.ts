@@ -195,6 +195,22 @@ export async function generateHomeScreenConfig(
           component.props = {};
         }
 
+        if (component.type === 'header') {
+          component.props = {
+            title: component.title || 'Welcome',
+            subtitle: component.subtitle || 'How can I help you today?',
+            topics: []
+          };
+        }
+
+        if (component.type === 'category_tabs') {
+          component.props = {
+            topics: [],
+            categories: component.categories || []
+          };
+        }
+
+
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {
             // Ensure description exists for actions
@@ -356,6 +372,22 @@ Return the updated complete configuration as a JSON object with 'config' and 'ex
           component.props = {};
         }
 
+        if (component.type === 'header') {
+          component.props = {
+            title: component.title || 'Welcome',
+            subtitle: component.subtitle || 'How can I help you today?',
+            topics: []
+          };
+        }
+
+        if (component.type === 'category_tabs') {
+          component.props = {
+            topics: [],
+            categories: component.categories || []
+          };
+        }
+
+
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {
             if (!action.description) {
@@ -498,8 +530,9 @@ export function getDefaultHomeScreenConfig(): HomeScreenConfig {
             },
           ],
           style: {
-            layout: "grid",
-            columns: 2,
+            itemStyle: 'filled',
+            layout: 'grid',
+            columns: 2
           },
         },
         order: 3,
