@@ -418,62 +418,60 @@
         ChatWidget.hideAllInitialMessages();
 
         if (isMobile()) {
-          // Always refresh mobile iframe content to prevent white screen issues
-          try {
-            // Build URL with sessionId if provided, otherwise let server generate it
-            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-            const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
-            // Add cache-busting parameter to force fresh content
-            const cacheBuster = `_t=${Date.now()}&`;
+          // Only load iframe once to preserve chat session
+          if (!mobileIframe.src) {
+            try {
+              // Build URL with sessionId if provided, otherwise let server generate it
+              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
-            // Check if apiUrl already contains a specific widget path
-            let widgetUrl;
-            if (this.config.apiUrl.includes('/widget/')) {
-              // Specific widget URL - use as-is with query parameters
-              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-              widgetUrl = `${this.config.apiUrl}${separator}${cacheBuster}${sessionParam}${themeParams}mobile=true&embedded=true`;
-            } else {
-              // Base URL - append /chat-widget path
-              widgetUrl = `${this.config.apiUrl}/chat-widget?${cacheBuster}${sessionParam}${themeParams}mobile=true&embedded=true`;
+              // Check if apiUrl already contains a specific widget path
+              let widgetUrl;
+              if (this.config.apiUrl.includes('/widget/')) {
+                // Specific widget URL - use as-is with query parameters
+                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=true&embedded=true`;
+              } else {
+                // Base URL - append /chat-widget path
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=true&embedded=true`;
+              }
+
+              // Force HTTPS for iframe URL
+              mobileIframe.src = this.forceHttps(widgetUrl);
+            } catch (error) {
+              // Fallback URL construction
+              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=true&embedded=true`);
             }
-
-            // Force HTTPS for iframe URL and always refresh
-            mobileIframe.src = this.forceHttps(widgetUrl);
-          } catch (error) {
-            // Fallback URL construction with cache buster
-            const cacheBuster = `_t=${Date.now()}&`;
-            mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${cacheBuster}${themeParams}mobile=true&embedded=true`);
           }
           bubble.style.display = 'none';
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
           mobileIframe.classList.add('show');
         } else {
-          // Always refresh iframe content to prevent white screen issues
-          try {
-            // Build URL with sessionId if provided, otherwise let server generate it
-            const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
-            const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
-            // Add cache-busting parameter to force fresh content
-            const cacheBuster = `_t=${Date.now()}&`;
+          // Only load iframe once to preserve chat session
+          if (!iframe.src) {
+            try {
+              // Build URL with sessionId if provided, otherwise let server generate it
+              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
-            // Check if apiUrl already contains a specific widget path
-            let widgetUrl;
-            if (this.config.apiUrl.includes('/widget/')) {
-              // Specific widget URL - use as-is with query parameters
-              const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-              widgetUrl = `${this.config.apiUrl}${separator}${cacheBuster}${sessionParam}${themeParams}mobile=false&embedded=true`;
-            } else {
-              // Base URL - append /chat-widget path
-              widgetUrl = `${this.config.apiUrl}/chat-widget?${cacheBuster}${sessionParam}${themeParams}mobile=false&embedded=true`;
+              // Check if apiUrl already contains a specific widget path
+              let widgetUrl;
+              if (this.config.apiUrl.includes('/widget/')) {
+                // Specific widget URL - use as-is with query parameters
+                const separator = this.config.apiUrl.includes('?') ? '&' : '?';
+                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=false&embedded=true`;
+              } else {
+                // Base URL - append /chat-widget path
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=false&embedded=true`;
+              }
+
+              // Force HTTPS for iframe URL
+              iframe.src = this.forceHttps(widgetUrl);
+            } catch (error) {
+              // Fallback URL construction
+              iframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=false&embedded=true`);
             }
-
-            // Force HTTPS for iframe URL and always refresh
-            iframe.src = this.forceHttps(widgetUrl);
-          } catch (error) {
-            // Fallback URL construction with cache buster
-            const cacheBuster = `_t=${Date.now()}&`;
-            iframe.src = this.forceHttps(`${this.config.apiUrl}?${cacheBuster}${themeParams}mobile=false&embedded=true`);
           }
           bubble.style.display = 'none';
           iframe.style.visibility = 'visible';
