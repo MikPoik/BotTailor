@@ -675,37 +675,20 @@ export default function TabbedChatInterface({
               color: colors.textColor,
             }}
           >
-            {(() => {
-              // Create initial message as assistant message if chat is empty
-              const displayMessages = messages.length === 0 && chatbotConfig?.initialMessages && chatbotConfig.initialMessages.length > 0
-                ? [{
-                    id: `initial-0`,
-                    sessionId,
-                    content: chatbotConfig.initialMessages[0],
-                    sender: 'assistant' as const,
-                    messageType: 'text' as const,
-                    metadata: { isInitial: true },
-                    createdAt: new Date().toISOString(),
-                  }]
-                : messages;
-
-              if (displayMessages.length === 0) {
-                return (
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
-                      <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
-                      <p className="text-sm">Start typing to begin the conversation</p>
-                    </div>
-                  </div>
-                );
-              }
-
-              return displayMessages.map((message, index) => (
+            {messages.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
+                  <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
+                  <p className="text-sm">Start typing to begin the conversation</p>
+                </div>
+              </div>
+            ) : (
+              messages.map((message, index) => (
                 <MessageBubble
                   key={`message-${message.id}-${index}`}
                   message={{
                     ...message,
-                    id: typeof message.id === 'string' ? parseInt(message.id.replace('initial-', ''), 10) || 0 : message.id,
+                    id: typeof message.id === 'string' ? parseInt((message.id as string).replace('initial-', ''), 10) || 0 : message.id,
                     createdAt: typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt,
                     metadata: message.metadata || {},
                     sender: message.sender as 'user' | 'assistant' | 'bot',
@@ -716,8 +699,8 @@ export default function TabbedChatInterface({
                   chatbotConfig={chatbotConfig}
                   sessionId={sessionId}
                 />
-              ));
-            })()}
+              ))
+            )}
 
             {(chatIsTyping || isStreaming) && (
               <TypingIndicator chatbotConfig={chatbotConfig} />
