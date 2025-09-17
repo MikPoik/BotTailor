@@ -392,7 +392,6 @@ export default function ChatWidget({
       setHasNewMessage(false);
       // Initialize session and messages when chat opens for first time
       initializeSession();
-      queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
     }
   };
 
@@ -482,7 +481,7 @@ export default function ChatWidget({
     // Initialize session for embedded chat since it's immediately visible
     useEffect(() => {
       initializeSession();
-    }, []);
+    }, [initializeSession]);
 
     return (
       <div className="chat-widget-embedded">

@@ -303,12 +303,26 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   };
 
   // Function to manually initialize session when chat is opened
-  const initializeSession = () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/chat/session', sessionId, chatbotConfigId] });
-    // Also ensure messages are fetched to preserve welcome message
-    setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
-    }, 100);
+  const initializeSession = async () => {
+    // Enable and execute session creation immediately
+    queryClient.setQueryDefaults(['/api/chat/session', sessionId, chatbotConfigId], { enabled: true });
+    const sessionResult = await queryClient.fetchQuery({
+      queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
+      queryFn: async () => {
+        const response = await apiRequest('POST', '/api/chat/session', { 
+          sessionId,
+          chatbotConfigId: chatbotConfigId || null
+        });
+        return response.json();
+      },
+    });
+    
+    // Wait a bit for welcome message to be created on server
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Then fetch messages to get the welcome message
+    queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+    return sessionResult;
   };
 
   return {
