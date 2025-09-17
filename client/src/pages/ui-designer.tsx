@@ -333,10 +333,11 @@ Please consider these colors when generating the UI design to ensure visual cons
         if (topicGridComponent) {
           topicGridComponent.props.style = {
             ...topicGridComponent.props.style,
-            itemStyle: itemStyle,
-            titleFontSize: titleFontSize,
-            descriptionFontSize: descriptionFontSize
+            itemStyle: itemStyle
           };
+          // Store font sizes in custom props
+          topicGridComponent.props.titleFontSize = titleFontSize;
+          topicGridComponent.props.descriptionFontSize = descriptionFontSize;
         }
 
         const headerComponent = configToSave.components?.find((c: any) => c.type === 'header');
@@ -407,10 +408,11 @@ Please consider these colors when generating the UI design to ensure visual cons
       if (topicGridComponent) {
         topicGridComponent.props.style = {
           ...topicGridComponent.props.style,
-          itemStyle: itemStyle,
-          titleFontSize: titleFontSize,
-          descriptionFontSize: descriptionFontSize
+          itemStyle: itemStyle
         };
+        // Store font sizes in custom props
+        topicGridComponent.props.titleFontSize = titleFontSize;
+        topicGridComponent.props.descriptionFontSize = descriptionFontSize;
       }
 
       const headerComponent = parsedConfig.components?.find((c: any) => c.type === 'header');

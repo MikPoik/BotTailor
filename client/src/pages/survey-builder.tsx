@@ -1002,7 +1002,10 @@ export default function SurveyBuilderPage() {
                     <CardContent>
                       {chatbot && (
                         <SurveyAssistantChatbox
-                          currentSurvey={selectedSurvey}
+                          currentSurvey={selectedSurvey ? {
+                            ...selectedSurvey,
+                            description: selectedSurvey.description || undefined
+                          } : null}
                           onSurveyGenerated={(newSurveyConfig) => {
                             if (selectedSurvey) {
                               updateSurveyMutation.mutate({
@@ -1013,7 +1016,7 @@ export default function SurveyBuilderPage() {
                           }}
                           chatbotConfig={{
                             name: chatbot.name,
-                            description: chatbot.description,
+                            description: chatbot.description || undefined,
                           }}
                           chatbotGuid={guid || ""}
                         />
