@@ -336,7 +336,7 @@ export default function Subscription() {
                 <CardDescription className="text-sm">
                   {plan.description}
                 </CardDescription>
-                <div className="mt-4">
+                <div className="mt-4 p-2">
                   <span className="text-3xl font-bold">
                     {plan.name === 'Free' ? 'Free' : formatPrice(plan.price, plan.currency)}
                   </span>
@@ -383,7 +383,6 @@ export default function Subscription() {
 
       {/* Additional Information */}
       <div className="text-center mt-12 text-sm text-muted-foreground">
-        <p>All plans include 24/7 support and a 14-day free trial.</p>
         <p>Cancel anytime. No hidden fees.</p>
       </div>
     </div>
