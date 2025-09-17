@@ -55,6 +55,12 @@ interface SessionsResponse {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
   };
+  statistics?: {
+    totalMessages: number;
+    avgMessagesPerChat: number;
+    longestChat: number;
+    latestActivity: string;
+  };
 }
 
 interface MessagesResponse {
@@ -340,7 +346,10 @@ export default function ChatHistory() {
                 {sessionsData.chatbotName}
               </CardTitle>
               <CardDescription>
-                {sessionsData.sessions.length} conversation{sessionsData.sessions.length !== 1 ? 's' : ''}
+                {sessionsData.pagination ? 
+                  `${sessionsData.pagination.totalCount} conversation${sessionsData.pagination.totalCount !== 1 ? 's' : ''} (Page ${sessionsData.pagination.currentPage} of ${sessionsData.pagination.totalPages})` :
+                  `${sessionsData.sessions.length} conversation${sessionsData.sessions.length !== 1 ? 's' : ''}`
+                }
               </CardDescription>
             </CardHeader>
             {sessionsData.sessions.length > 0 && (
@@ -348,25 +357,28 @@ export default function ChatHistory() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {sessionsData.sessions.reduce((total, session) => total + session.messageCount, 0)}
+                      {sessionsData.statistics?.totalMessages || sessionsData.sessions.reduce((total, session) => total + session.messageCount, 0)}
                     </div>
                     <div className="text-sm text-muted-foreground">Total Messages</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {Math.round(sessionsData.sessions.reduce((total, session) => total + session.messageCount, 0) / sessionsData.sessions.length)}
+                      {sessionsData.statistics?.avgMessagesPerChat || Math.round(sessionsData.sessions.reduce((total, session) => total + session.messageCount, 0) / sessionsData.sessions.length)}
                     </div>
                     <div className="text-sm text-muted-foreground">Avg Messages/Chat</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {Math.max(...sessionsData.sessions.map(s => s.messageCount))}
+                      {sessionsData.statistics?.longestChat || Math.max(...sessionsData.sessions.map(s => s.messageCount))}
                     </div>
                     <div className="text-sm text-muted-foreground">Longest Chat</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {format(new Date(Math.max(...sessionsData.sessions.map(s => new Date(s.lastMessageAt).getTime()))), 'MMM d')}
+                      {sessionsData.statistics?.latestActivity ? 
+                        format(new Date(sessionsData.statistics.latestActivity), 'MMM d') :
+                        format(new Date(Math.max(...sessionsData.sessions.map(s => new Date(s.lastMessageAt).getTime()))), 'MMM d')
+                      }
                     </div>
                     <div className="text-sm text-muted-foreground">Latest Activity</div>
                   </div>

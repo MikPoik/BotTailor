@@ -202,13 +202,14 @@ export function setupChatRoutes(app: Express) {
             .json({ message: "Chatbot not found or access denied" });
         }
 
-        // Get paginated chat sessions and total count
-        const [sessions, totalCount] = await Promise.all([
+        // Get paginated chat sessions, total count, and all sessions for aggregated stats
+        const [sessions, totalCount, allSessions] = await Promise.all([
           storage.getChatSessionsByChatbotGuid(guid, offset, limitNum),
-          storage.getChatSessionsCountByChatbotGuid(guid)
+          storage.getChatSessionsCountByChatbotGuid(guid),
+          storage.getChatSessionsByChatbotGuid(guid) // Get all sessions for stats
         ]);
 
-        // Add message count for each session
+        // Add message count for current page sessions
         const sessionsWithCounts = await Promise.all(
           sessions.map(async (session) => {
             const messages = await storage.getMessages(session.sessionId);
@@ -223,7 +224,30 @@ export function setupChatRoutes(app: Express) {
           }),
         );
 
+        // Calculate aggregated statistics from all sessions
+        const allSessionsWithCounts = await Promise.all(
+          allSessions.map(async (session) => {
+            const messages = await storage.getMessages(session.sessionId);
+            return {
+              ...session,
+              messageCount: messages.length,
+              lastMessageAt:
+                messages.length > 0
+                  ? messages[messages.length - 1].createdAt
+                  : session.createdAt,
+            };
+          }),
+        );
+
         const totalPages = Math.ceil(totalCount / limitNum);
+        
+        // Calculate aggregated statistics
+        const totalMessages = allSessionsWithCounts.reduce((total, session) => total + session.messageCount, 0);
+        const avgMessagesPerChat = allSessionsWithCounts.length > 0 ? Math.round(totalMessages / allSessionsWithCounts.length) : 0;
+        const longestChat = allSessionsWithCounts.length > 0 ? Math.max(...allSessionsWithCounts.map(s => s.messageCount)) : 0;
+        const latestActivity = allSessionsWithCounts.length > 0 
+          ? new Date(Math.max(...allSessionsWithCounts.map(s => new Date(s.lastMessageAt).getTime())))
+          : new Date();
 
         res.json({
           sessions: sessionsWithCounts,
@@ -235,6 +259,12 @@ export function setupChatRoutes(app: Express) {
             limit: limitNum,
             hasNextPage: pageNum < totalPages,
             hasPreviousPage: pageNum > 1
+          },
+          statistics: {
+            totalMessages,
+            avgMessagesPerChat,
+            longestChat,
+            latestActivity: latestActivity.toISOString()
           }
         });
       } catch (error) {
