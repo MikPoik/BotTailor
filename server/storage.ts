@@ -709,6 +709,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkBotLimit(userId: string): Promise<boolean> {
+    // Admin user exclusion - bypass all bot limits
+    const adminUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
+    if (adminUserId && userId === adminUserId) {
+      return true; // Unlimited bots for admin user
+    }
+
     // Get user's current subscription with plan, or create free subscription
     let subscription = await this.getUserSubscriptionWithPlan(userId);
 
@@ -729,6 +735,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkMessageLimit(userId: string): Promise<boolean> {
+    // Admin user exclusion - bypass all message limits
+    const adminUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
+    if (adminUserId && userId === adminUserId) {
+      return true; // Unlimited messages for admin user
+    }
+
     // Get user's current subscription with plan, or create free subscription
     let subscription = await this.getUserSubscriptionWithPlan(userId);
 
