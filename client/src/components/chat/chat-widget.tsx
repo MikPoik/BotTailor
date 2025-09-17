@@ -566,7 +566,7 @@ export default function ChatWidget({
             }}
           >
             <div 
-              className="bg-white rounded-2xl shadow-xl border border-gray-200 px-3 py-2 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
+              className="bg-white rounded-2xl shadow-xl border border-gray-300 px-3 py-2 m-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
               onClick={() => {
                 setIsOpen(true);
                 setHasNewMessage(false);
