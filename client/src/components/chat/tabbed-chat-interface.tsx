@@ -74,6 +74,7 @@ export default function TabbedChatInterface({
     initializeSession,
     isLoading,
     isTyping: chatIsTyping,
+    isSessionLoading,
     readOnlyMode,
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
