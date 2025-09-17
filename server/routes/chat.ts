@@ -1,11 +1,47 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { insertMessageSchema } from "@shared/schema";
+import { insertMessageSchema, type ChatSession } from "@shared/schema";
 import { z } from "zod";
 import { generateStreamingResponse } from "../openai";
 import { buildSurveyContext } from "../ai-response-schema";
 import { brevoEmailService, FormSubmissionData } from "../email-service";
 import { isAuthenticated } from "../replitAuth";
+
+// Helper function to create welcome message for new sessions
+async function createWelcomeMessageIfNeeded(session: ChatSession): Promise<void> {
+  try {
+    // Only create welcome message for sessions with chatbot config
+    if (!session.chatbotConfigId) {
+      return;
+    }
+
+    // Check if session already has messages (to prevent duplicates)
+    const existingMessages = await storage.getMessages(session.sessionId);
+    if (existingMessages.length > 0) {
+      return; // Session already has messages, don't add welcome message
+    }
+
+    // Get chatbot configuration
+    const chatbotConfig = await storage.getChatbotConfig(session.chatbotConfigId);
+    if (!chatbotConfig || !chatbotConfig.welcomeMessage) {
+      return; // No welcome message configured
+    }
+
+    // Create welcome message as first message in the session
+    await storage.createMessage({
+      sessionId: session.sessionId,
+      content: chatbotConfig.welcomeMessage,
+      sender: "bot",
+      messageType: "text",
+      metadata: { isWelcomeMessage: true },
+    });
+
+    console.log(`[WELCOME] Created welcome message for session: ${session.sessionId}`);
+  } catch (error) {
+    console.error(`[WELCOME] Error creating welcome message:`, error);
+    // Don't throw - welcome message creation failure shouldn't break session creation
+  }
+}
 
 // Chat-related routes
 export function setupChatRoutes(app: Express) {
@@ -262,11 +298,16 @@ export function setupChatRoutes(app: Express) {
 
       // Ensure session exists
       let session = await storage.getChatSession(sessionId);
+      const isNewSession = !session;
+      
       if (!session) {
         session = await storage.createChatSession({
           sessionId,
           chatbotConfigId: chatbotConfigId || null,
         });
+        
+        // Create welcome message for new sessions
+        await createWelcomeMessageIfNeeded(session);
       }
 
       res.json({ session });
@@ -299,11 +340,16 @@ export function setupChatRoutes(app: Express) {
 
       // Ensure session exists and handle default chatbot resolution
       let session = await storage.getChatSession(sessionId);
+      const isNewSession = !session;
+      
       if (!session) {
         session = await storage.createChatSession({
           sessionId,
           chatbotConfigId: chatbotConfigId || null,
         });
+        
+        // Create welcome message for new sessions
+        await createWelcomeMessageIfNeeded(session);
       } else if (
         chatbotConfigId &&
         session.chatbotConfigId !== chatbotConfigId
