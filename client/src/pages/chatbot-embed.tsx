@@ -68,6 +68,99 @@ export default function ChatbotEmbed() {
     retry: false,
   });
 
+  // Load and initialize chat widget for testing - moved before early returns
+  useEffect(() => {
+    if (!chatbot || !user || isLoading || !isAuthenticated || chatbotLoading) return;
+
+    // Clean up any existing widgets using the reset method
+    const cleanupExistingWidget = () => {
+      if ((window as any).ChatWidget && (window as any).ChatWidget.reset) {
+        // Use the built-in reset method
+        (window as any).ChatWidget.reset();
+      } else {
+        // Fallback manual cleanup if reset method not available
+        const elementsToRemove = [
+          'chatwidget-bubble',
+          'chatwidget-container', 
+          'chatwidget-overlay',
+          'chatwidget-mobile-iframe',
+          'chatwidget-theme-vars',
+          'chatwidget-styles',
+          'chatwidget-iframe',
+          'chatwidget-widget',
+          'chatwidget-animations'
+        ];
+
+        elementsToRemove.forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.remove();
+          }
+        });
+
+        if ((window as any).ChatWidget) {
+          (window as any).ChatWidget._initialized = false;
+        }
+      }
+    };
+
+    cleanupExistingWidget();
+
+    // Get theme colors and build widget URL
+    const baseUrl = window.location.origin;
+    const cleanUserId = user?.id?.split('|').pop() || user?.id;
+    const widgetUrl = `${baseUrl}/widget/${cleanUserId}/${chatbot.guid}`;
+    const theme = chatbot.homeScreenConfig?.theme;
+
+    // Small delay to ensure cleanup is complete
+    const timer = setTimeout(() => {
+      // Load embed script only if not already loaded
+      let script = document.querySelector('script[src="/embed.js"]') as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.src = '/embed.js';
+        document.head.appendChild(script);
+      }
+
+      // Initialize widget after script loads
+      const initWidget = () => {
+        if ((window as any).ChatWidget) {
+          try {
+            // Get theme colors from the chatbot configuration
+            const widgetConfig: any = {
+              apiUrl: widgetUrl,
+              position: position as 'bottom-right' | 'bottom-left',
+              _forceReinit: true // Use the force reinit flag we added
+            };
+
+            // Apply theme colors from UI Designer if available
+            if (theme) {
+              if (theme.primaryColor) widgetConfig.primaryColor = theme.primaryColor;
+              if (theme.backgroundColor) widgetConfig.backgroundColor = theme.backgroundColor;
+              if (theme.textColor) widgetConfig.textColor = theme.textColor;
+            }
+
+            (window as any).ChatWidget.init(widgetConfig);
+          } catch (error) {
+            console.log('Widget initialization error:', error);
+          }
+        } else {
+          // If ChatWidget is not available, try again in a short delay
+          setTimeout(initWidget, 50);
+        }
+      };
+
+      // Always call initWidget with a slight delay to ensure cleanup is complete
+      setTimeout(initWidget, 100);
+    }, 100);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timer);
+      cleanupExistingWidget();
+    };
+  }, [chatbot, user, position, widgetKey, isLoading, isAuthenticated, chatbotLoading]);
+
   if (isLoading || !isAuthenticated || chatbotLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -148,93 +241,6 @@ ${buildEmbedParams()}
   const refreshWidget = () => {
     setWidgetKey(prev => prev + 1);
   };
-
-  // Load and initialize chat widget for testing
-  useEffect(() => {
-    if (!chatbot || !user) return;
-
-    // Clean up any existing widgets using the reset method
-    const cleanupExistingWidget = () => {
-      if ((window as any).ChatWidget && (window as any).ChatWidget.reset) {
-        // Use the built-in reset method
-        (window as any).ChatWidget.reset();
-      } else {
-        // Fallback manual cleanup if reset method not available
-        const elementsToRemove = [
-          'chatwidget-bubble',
-          'chatwidget-container', 
-          'chatwidget-overlay',
-          'chatwidget-mobile-iframe',
-          'chatwidget-theme-vars',
-          'chatwidget-styles',
-          'chatwidget-iframe',
-          'chatwidget-widget',
-          'chatwidget-animations'
-        ];
-
-        elementsToRemove.forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.remove();
-          }
-        });
-
-        if ((window as any).ChatWidget) {
-          (window as any).ChatWidget._initialized = false;
-        }
-      }
-    };
-
-    cleanupExistingWidget();
-
-    // Small delay to ensure cleanup is complete
-    const timer = setTimeout(() => {
-      // Load embed script only if not already loaded
-      let script = document.querySelector('script[src="/embed.js"]') as HTMLScriptElement;
-      if (!script) {
-        script = document.createElement('script');
-        script.src = '/embed.js';
-        document.head.appendChild(script);
-      }
-
-      // Initialize widget after script loads
-      const initWidget = () => {
-        if ((window as any).ChatWidget) {
-          try {
-            // Get theme colors from the chatbot configuration
-            const widgetConfig: any = {
-              apiUrl: widgetUrl,
-              position: position as 'bottom-right' | 'bottom-left',
-              _forceReinit: true // Use the force reinit flag we added
-            };
-
-            // Apply theme colors from UI Designer if available
-            if (theme) {
-              if (theme.primaryColor) widgetConfig.primaryColor = theme.primaryColor;
-              if (theme.backgroundColor) widgetConfig.backgroundColor = theme.backgroundColor;
-              if (theme.textColor) widgetConfig.textColor = theme.textColor;
-            }
-
-            (window as any).ChatWidget.init(widgetConfig);
-          } catch (error) {
-            console.log('Widget initialization error:', error);
-          }
-        } else {
-          // If ChatWidget is not available, try again in a short delay
-          setTimeout(initWidget, 50);
-        }
-      };
-
-      // Always call initWidget with a slight delay to ensure cleanup is complete
-      setTimeout(initWidget, 100);
-    }, 100);
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timer);
-      cleanupExistingWidget();
-    };
-  }, [chatbot, user, position, widgetKey, theme, widgetUrl]);
 
   return (
     <div className="min-h-screen bg-background">
