@@ -91,7 +91,7 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
         <div 
           className="absolute inset-0 bg-black/10 pointer-events-none"
           style={{
-            backgroundColor: `${backgroundColor}20`, // 12.5% opacity background
+            backgroundColor: `${backgroundColor}30`, // 12.5% opacity background
           }}
         />
       )}
@@ -199,7 +199,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
     // When there's a background image, use theme colors with transparency
     const isPrimaryLight = isLightColor(primaryColor);
     const isTextLight = isLightColor(textColor);
-    const overlayOpacity = itemStyle === 'filled' ? '0.85' : '0.3';
+    const overlayOpacity = itemStyle === 'filled' ? '0.85' : '0.5';
     
     return {
       backgroundColor: itemStyle === 'filled' 
