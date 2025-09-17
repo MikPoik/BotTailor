@@ -260,7 +260,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
               className="rounded-full pr-12 border-neutral-300 focus:ring-2 focus:border-transparent send-input"
               style={{
                 '--tw-ring-color': 'var(--chat-primary-color, var(--primary))',
-                fontSize: '12px'
+                fontSize: '14px'
               } as React.CSSProperties}
               disabled={isLoading}
             />

@@ -851,7 +851,8 @@ export default function TabbedChatInterface({
                     backgroundColor: 'white',
                     color: colors.textColor,
                     borderColor: colors.textColor + '40',
-                    '--tw-ring-color': colors.primaryColor
+                    '--tw-ring-color': colors.primaryColor,
+                    fontSize: '14px'
                   } as React.CSSProperties}
                   disabled={isLoading || readOnlyMode}
                 />
