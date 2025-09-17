@@ -9,6 +9,14 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -39,6 +47,14 @@ interface ChatSession {
 interface SessionsResponse {
   sessions: ChatSession[];
   chatbotName: string;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 interface MessagesResponse {
@@ -49,11 +65,18 @@ interface MessagesResponse {
 export default function ChatHistory() {
   const { guid } = useParams<{ guid: string }>();
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
   const { toast } = useToast();
 
   // Fetch chat sessions for this chatbot
   const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useQuery<SessionsResponse>({
-    queryKey: [`/api/chatbots/${guid}/sessions`],
+    queryKey: [`/api/chatbots/${guid}/sessions`, currentPage, pageSize],
+    queryFn: async () => {
+      const response = await fetch(`/api/chatbots/${guid}/sessions?page=${currentPage}&limit=${pageSize}`);
+      if (!response.ok) throw new Error('Failed to fetch sessions');
+      return response.json();
+    },
     enabled: !!guid,
   });
 
@@ -413,6 +436,48 @@ export default function ChatHistory() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+      
+      {/* Pagination Controls */}
+      {sessionsData?.pagination && sessionsData.pagination.totalPages > 1 && (
+        <div className="mt-6">
+          <Pagination>
+            <PaginationContent>
+              {sessionsData.pagination.hasPreviousPage && (
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    className="cursor-pointer"
+                  />
+                </PaginationItem>
+              )}
+              
+              {Array.from({ length: Math.min(5, sessionsData.pagination.totalPages) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={page === currentPage}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              
+              {sessionsData.pagination.hasNextPage && (
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    className="cursor-pointer"
+                  />
+                </PaginationItem>
+              )}
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>

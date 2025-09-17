@@ -181,6 +181,11 @@ export function setupChatRoutes(app: Express) {
     async (req: any, res) => {
       try {
         const { guid } = req.params;
+        const { page = '1', limit = '10' } = req.query;
+        const pageNum = parseInt(page as string) || 1;
+        const limitNum = parseInt(limit as string) || 10;
+        const offset = (pageNum - 1) * limitNum;
+        
         const fullUserId = req.user.claims.sub;
         const userId = fullUserId.includes("|")
           ? fullUserId.split("|")[1]
@@ -197,8 +202,11 @@ export function setupChatRoutes(app: Express) {
             .json({ message: "Chatbot not found or access denied" });
         }
 
-        // Get all chat sessions for this chatbot
-        const sessions = await storage.getChatSessionsByChatbotGuid(guid);
+        // Get paginated chat sessions and total count
+        const [sessions, totalCount] = await Promise.all([
+          storage.getChatSessionsByChatbotGuid(guid, offset, limitNum),
+          storage.getChatSessionsCountByChatbotGuid(guid)
+        ]);
 
         // Add message count for each session
         const sessionsWithCounts = await Promise.all(
@@ -215,9 +223,19 @@ export function setupChatRoutes(app: Express) {
           }),
         );
 
+        const totalPages = Math.ceil(totalCount / limitNum);
+
         res.json({
           sessions: sessionsWithCounts,
           chatbotName: chatbotConfig.name,
+          pagination: {
+            currentPage: pageNum,
+            totalPages,
+            totalCount,
+            limit: limitNum,
+            hasNextPage: pageNum < totalPages,
+            hasPreviousPage: pageNum > 1
+          }
         });
       } catch (error) {
         console.error("Error fetching chatbot sessions:", error);

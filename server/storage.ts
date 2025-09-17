@@ -40,7 +40,8 @@ export interface IStorage {
 
   // Chat session methods
   getChatSession(sessionId: string): Promise<ChatSession | undefined>;
-  getChatSessionsByChatbotGuid(chatbotGuid: string): Promise<ChatSession[]>;
+  getChatSessionsByChatbotGuid(chatbotGuid: string, offset?: number, limit?: number): Promise<ChatSession[]>;
+  getChatSessionsCountByChatbotGuid(chatbotGuid: string): Promise<number>;
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
   updateChatSession(sessionId: string, data: Partial<ChatSession>): Promise<ChatSession | undefined>;
   deleteChatSession(sessionId: string): Promise<void>;
@@ -141,8 +142,8 @@ export class DatabaseStorage implements IStorage {
     return session || undefined;
   }
 
-  async getChatSessionsByChatbotGuid(chatbotGuid: string): Promise<ChatSession[]> {
-    return await db
+  async getChatSessionsByChatbotGuid(chatbotGuid: string, offset?: number, limit?: number): Promise<ChatSession[]> {
+    const baseQuery = db
       .select({
         id: chatSessions.id,
         sessionId: chatSessions.sessionId,
@@ -156,6 +157,14 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
       .where(eq(chatbotConfigs.guid, chatbotGuid))
       .orderBy(desc(chatSessions.createdAt));
+
+    if (offset !== undefined && limit !== undefined) {
+      return await baseQuery.offset(offset).limit(limit);
+    } else if (limit !== undefined) {
+      return await baseQuery.limit(limit);
+    } else {
+      return await baseQuery;
+    }
   }
 
   async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {
@@ -184,6 +193,15 @@ export class DatabaseStorage implements IStorage {
 
     // Finally delete the chat session
     await db.delete(chatSessions).where(eq(chatSessions.sessionId, sessionId));
+  }
+
+  async getChatSessionsCountByChatbotGuid(chatbotGuid: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(chatSessions)
+      .innerJoin(chatbotConfigs, eq(chatSessions.chatbotConfigId, chatbotConfigs.id))
+      .where(eq(chatbotConfigs.guid, chatbotGuid));
+    return result[0]?.count || 0;
   }
 
   async deleteAllChatSessions(chatbotConfigId: number): Promise<void> {
