@@ -140,6 +140,13 @@ export default function UIDesigner() {
         if (style.itemStyle) setItemStyle(style.itemStyle);
       }
 
+      // Initialize font sizes from topic grid component props
+      if (topicGridComponent?.props) {
+        const props = topicGridComponent.props as any;
+        if (props.titleFontSize) setTitleFontSize(props.titleFontSize);
+        if (props.descriptionFontSize) setDescriptionFontSize(props.descriptionFontSize);
+      }
+
       const headerComponent = config.components?.find(c => c.type === 'header');
       if (headerComponent?.props?.style && typeof headerComponent.props.style === 'object') {
         const headerStyle = headerComponent.props.style as any;
@@ -173,12 +180,34 @@ export default function UIDesigner() {
           ...currentConfig.theme,
           primaryColor: primaryColor,
           backgroundColor: backgroundColor,
-          textColor: textColor
+          textColor: textColor,
+          backgroundImageUrl: backgroundImageUrl
         }
       };
+
+      // Update font sizes in topic grid component
+      const topicGridComponent = updatedConfig.components?.find((c: any) => c.type === 'topic_grid');
+      if (topicGridComponent) {
+        topicGridComponent.props.titleFontSize = titleFontSize;
+        topicGridComponent.props.descriptionFontSize = descriptionFontSize;
+        topicGridComponent.props.style = {
+          ...topicGridComponent.props.style,
+          itemStyle: itemStyle
+        };
+      }
+
+      // Update header transparency
+      const headerComponent = updatedConfig.components?.find((c: any) => c.type === 'header');
+      if (headerComponent) {
+        headerComponent.props.style = {
+          ...headerComponent.props.style,
+          transparentBackground: headerTransparent
+        };
+      }
+
       setEditableConfig(JSON.stringify(updatedConfig, null, 2));
     }
-  }, [primaryColor, backgroundColor, textColor, currentConfig]);
+  }, [primaryColor, backgroundColor, textColor, backgroundImageUrl, titleFontSize, descriptionFontSize, itemStyle, headerTransparent, currentConfig]);
 
   // Track unsaved changes
   useEffect(() => {
@@ -347,6 +376,11 @@ Please consider these colors when generating the UI design to ensure visual cons
             transparentBackground: headerTransparent
           };
         }
+
+        // Update currentConfig and editableConfig to reflect the changes
+        setCurrentConfig(configToSave);
+        setEditableConfig(JSON.stringify(configToSave, null, 2));
+        setConfigKey(prev => prev + 1); // Force re-render
 
         saveConfigMutation.mutate(configToSave);
       } catch (error) {
