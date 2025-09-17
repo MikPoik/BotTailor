@@ -102,7 +102,7 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
             className="text-2xl font-bold mb-2 drop-shadow-sm" 
             style={{ 
               color: headerTextColor,
-              textShadow: useTransparentBackground ? '1px 1px 1px rgba(0,0,0,0.7)' : undefined
+              textShadow: useTransparentBackground ? '1px 1px 1px rgba(0,0,0,0.2)' : undefined
             }}
           >
             {title}
@@ -114,7 +114,7 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
             style={{ 
               color: headerTextColor, 
               opacity: useTransparentBackground ? 1 : 0.9,
-              textShadow: useTransparentBackground ? '1px 1px 2px rgba(0,0,0,0.5)' : undefined
+              textShadow: useTransparentBackground ? '1px 1px 1px rgba(0,0,0,0.2)' : undefined
             }}
           >
             {subtitle}

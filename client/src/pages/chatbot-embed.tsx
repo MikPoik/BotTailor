@@ -493,65 +493,7 @@ ${buildEmbedParams()}
               </TabsContent>
             </Tabs>
 
-            {/* Live Widget Test */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Live Widget Test</CardTitle>
-                <CardDescription>
-                  Test your chatbot widget live on this demo website. The widget should appear in the {position.replace('-', ' ')} corner.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-8 min-h-[400px] relative overflow-hidden">
-                  {/* Demo Website Content */}
-                  <div className="space-y-6">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-neutral-800 mb-2">Demo Website</h3>
-                      <p className="text-neutral-600">
-                        This simulates your external website where the chat widget will be embedded.
-                      </p>
-                    </div>
-                    
-                    <div className="bg-white rounded-lg shadow-sm p-6">
-                      <h4 className="text-lg font-semibold text-neutral-800 mb-3">About Our Service</h4>
-                      <p className="text-neutral-600 text-sm leading-relaxed mb-3">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-                        incididunt ut labore et dolore magna aliqua.
-                      </p>
-                      <p className="text-neutral-600 text-sm leading-relaxed">
-                        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore 
-                        eu fugiat nulla pariatur.
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white rounded-lg shadow-sm p-4">
-                        <h5 className="font-semibold text-neutral-800 mb-2">Features</h5>
-                        <ul className="text-sm text-neutral-600 space-y-1">
-                          <li>• Real-time chat support</li>
-                          <li>• Customizable appearance</li>
-                          <li>• Easy integration</li>
-                        </ul>
-                      </div>
-                      <div className="bg-white rounded-lg shadow-sm p-4">
-                        <h5 className="font-semibold text-neutral-800 mb-2">Test Instructions</h5>
-                        <p className="text-sm text-neutral-600">
-                          Click the chat widget in the {position.replace('-', ' ')} corner to test the chatbot.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Note about theme colors */}
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
-                    <p className="text-blue-900 font-medium mb-1">💡 Theme Integration</p>
-                    <p className="text-blue-700">
-                      Colors from your UI Designer are automatically applied to the widget and included in embed codes.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+           
 
             
           </div>
