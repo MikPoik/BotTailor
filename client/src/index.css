@@ -73,7 +73,7 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-background text-foreground min-h-screen;
     font-size: 16px !important;
     line-height: 1.5 !important;
     -webkit-text-size-adjust: 100% !important;

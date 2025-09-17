@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
 import { Suspense } from "react";
@@ -23,6 +24,8 @@ import ChatbotEmbed from "@/pages/chatbot-embed";
 import Docs from "@/pages/docs";
 import Subscription from "@/pages/Subscription";
 import Contact from "@/pages/contact";
+import Privacy from "@/pages/privacy";
+import Terms from "@/pages/terms";
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
@@ -55,6 +58,8 @@ function AuthenticatedRouter() {
         <>
           <Route path="/" component={Home} />
           <Route path="/contact" component={Contact} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/terms" component={Terms} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
         </>
@@ -62,6 +67,8 @@ function AuthenticatedRouter() {
         <>
           <Route path="/" component={Home} />
           <Route path="/contact" component={Contact} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/terms" component={Terms} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/chatbots/new" component={ChatbotForm} />
           <Route path="/chatbots/:guid/add-data" component={AddData} />
@@ -102,14 +109,19 @@ function Router() {
   }
 
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    }>
-      <Navbar />
-      <AuthenticatedRouter />
-    </Suspense>
+    <div className="flex flex-col min-h-screen">
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }>
+        <Navbar />
+        <main className="flex-1">
+          <AuthenticatedRouter />
+        </main>
+        <Footer />
+      </Suspense>
+    </div>
   );
 }
 
