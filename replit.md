@@ -7,18 +7,11 @@ This project is a full-stack React chat widget application featuring an Express.
 ## Development Workflow
 
 **CORE**: Fix root causes, work bottom-up, try the simplest fix, switch layers when stuck, batch changes, trust dev tools, stop on success.
-
-MULTI-PERSPECTIVE: For each phase, consider USER (experience), SYSTEM (architecture), and CODE (implementation) viewpoints simultaneously.
-
 4-PHASE WORKFLOW:
 1. PLAN (0 calls): Map all files/changes. Read error stacks fully - deepest frame = real issue.
-   • Multi-perspective: What user sees vs system state vs code location
-2. DISCOVER (1-2 calls): Batch ALL reads (3-6 files). Never read→analyze→read.
-   • Multi-perspective: Surface symptoms vs underlying patterns vs edge cases
+2. DISCOVER (1-2 calls): Batch ALL reads/grep/rg (3-6 files). Never read→analyze→read.
 3. EXECUTE (1-3 calls): Use multi_edit for multiple changes per file. Batch parallel edits. Fix patterns not instances.
-   • Multi-perspective: Immediate fix vs system impact vs future maintainability
 4. VALIDATE (0-1 calls): Stop when HMR/console/LSP confirms success. No screenshots.
-   • Multi-perspective: Feature works vs no regressions vs performance intact
 RULES: Max 6 tools per batch. Read multiple files simultaneously. No sub_agent calls. No task lists. No architect, unless requested. 
 COMMUNICATION: Explain each phase while working - Show me how you follow plan
 
