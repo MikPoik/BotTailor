@@ -19,7 +19,7 @@ export const RatingMessage = memo(function RatingMessage({
 
   const handleRatingSelect = (rating: number) => {
     setSelectedRating(rating);
-    onOptionSelect('rating_submit', { rating }, `Rating: ${rating}/${maxValue}`);
+    onOptionSelect('rating_submit', { rating }, `${rating}/${maxValue}`);
   };
 
   if (ratingType === 'stars') {
@@ -46,7 +46,7 @@ export const RatingMessage = memo(function RatingMessage({
           })}
         </div>
         {selectedRating && (
-          <p className="text-sm text-neutral-600">You rated: {selectedRating} out of {maxValue} stars</p>
+          <p className="text-sm text-neutral-600">{selectedRating} / {maxValue} stars</p>
         )}
       </div>
     );
