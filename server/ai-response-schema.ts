@@ -64,6 +64,8 @@ const MessageBubbleSchema = z.object({
       allowMultiple: z.boolean().optional(),
       minSelections: z.number().optional(),
       maxSelections: z.number().optional(),
+      // Survey specific metadata
+      surveyConfig: z.any().optional(),
     })
     .optional(),
 });
@@ -159,7 +161,7 @@ ${isSurveyActive ? `**Survey Examples:**
 First question:
 [
   {"messageType": "text", "content": "Let's begin the survey. This will help us understand your needs."},
-  {"messageType": "text", "content": "Question 1: How would you describe your situation?"},
+  {"messageType": "text", "content": "Question 1: How would you describe your current situation?"},
   {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
 ]
 
@@ -342,7 +344,7 @@ ${getQuestionTypeInstructions(currentQuestion)}
       .join(",\n");
 
     const menuExample = generateMenuExample(currentQuestion, optionsForExample);
-    
+
     context += `
 **${menuType.toUpperCase()} FORMAT REQUIRED** (MUST INCLUDE ALL ${currentQuestion.options.length} OPTIONS):
 ${menuExample}
@@ -497,7 +499,7 @@ function getMenuTypeForQuestion(question: any): string {
 // Helper function to generate menu example based on question type
 function generateMenuExample(question: any, optionsForExample: string): string {
   const menuType = getMenuTypeForQuestion(question);
-  
+
   if (menuType === 'multiselect_menu') {
     return `🚨 CRITICAL MULTISELECT FORMAT - COPY EXACTLY:
 {
@@ -533,7 +535,7 @@ function generateRatingExample(question: any): string {
   const minValue = metadata.minValue || 1;
   const maxValue = metadata.maxValue || 5;
   const ratingType = metadata.ratingType || 'stars';
-  
+
   return `
 **RATING FORMAT REQUIRED**:
 {
