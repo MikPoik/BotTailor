@@ -145,11 +145,34 @@ export async function* generateStreamingResponse(
                 await applyBubbleDelay();
                 yield { type: "bubble", bubble };
                 processedBubbles = i + 1;
-              } else if (bubble.messageType === "menu") {
-                // Log incomplete menu for debugging
-                console.warn(
-                  `[SURVEY MENU WARNING] Menu bubble ${i + 1} has incomplete options, waiting for complete response...`
-                );
+              } else if (bubble.messageType === "menu" || bubble.messageType === "multiselect_menu") {
+                // For menu bubbles, be more lenient during streaming
+                // Check if we have the basic structure, even if not all fields are complete
+                const hasBasicMenuStructure = bubble.metadata?.options && 
+                  Array.isArray(bubble.metadata.options) && 
+                  bubble.metadata.options.length > 0;
+                
+                if (hasBasicMenuStructure) {
+                  // Check if at least some options have required fields
+                  const hasValidOptions = bubble.metadata.options.some((opt: any) => 
+                    opt && opt.id && opt.text
+                  );
+                  
+                  if (hasValidOptions) {
+                    console.log(`[OpenAI] Streaming menu bubble ${i + 1} with ${bubble.metadata.options.length} options`);
+                    await applyBubbleDelay();
+                    yield { type: "bubble", bubble };
+                    processedBubbles = i + 1;
+                  } else {
+                    console.warn(
+                      `[SURVEY MENU WARNING] Menu bubble ${i + 1} has incomplete options, waiting for complete response...`
+                    );
+                  }
+                } else {
+                  console.warn(
+                    `[SURVEY MENU WARNING] Menu bubble ${i + 1} lacks basic menu structure, waiting for complete response...`
+                  );
+                }
               }
             }
           }
