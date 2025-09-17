@@ -185,7 +185,7 @@ export function setupChatRoutes(app: Express) {
         const pageNum = parseInt(page as string) || 1;
         const limitNum = parseInt(limit as string) || 10;
         const offset = (pageNum - 1) * limitNum;
-        
+
         const fullUserId = req.user.claims.sub;
         const userId = fullUserId.includes("|")
           ? fullUserId.split("|")[1]
@@ -209,48 +209,54 @@ export function setupChatRoutes(app: Express) {
           storage.getChatSessionsByChatbotGuid(guid) // Get all sessions for stats
         ]);
 
-        // Add message count for current page sessions
+        // Get message counts for each session and filter out sessions with only one message
         const sessionsWithCounts = await Promise.all(
           sessions.map(async (session) => {
             const messages = await storage.getMessages(session.sessionId);
+            const messageCount = messages.length;
+            const lastMessage = messages[messages.length - 1];
+
             return {
               ...session,
-              messageCount: messages.length,
-              lastMessageAt:
-                messages.length > 0
-                  ? messages[messages.length - 1].createdAt
-                  : session.createdAt,
+              messageCount,
+              lastMessageAt: lastMessage ? lastMessage.createdAt : session.createdAt
             };
-          }),
+          })
         );
 
-        // Calculate aggregated statistics from all sessions
+        // Filter out sessions with only one message (initial welcome message)
+        const filteredSessions = sessionsWithCounts.filter(session => session.messageCount > 1);
+
+        // Get message counts for all sessions (for statistics) and filter them too
         const allSessionsWithCounts = await Promise.all(
           allSessions.map(async (session) => {
             const messages = await storage.getMessages(session.sessionId);
+            const messageCount = messages.length;
+            const lastMessage = messages[messages.length - 1];
+
             return {
               ...session,
-              messageCount: messages.length,
-              lastMessageAt:
-                messages.length > 0
-                  ? messages[messages.length - 1].createdAt
-                  : session.createdAt,
+              messageCount,
+              lastMessageAt: lastMessage ? lastMessage.createdAt : session.createdAt
             };
-          }),
+          })
         );
 
+        // Filter all sessions for statistics calculation
+        const filteredAllSessions = allSessionsWithCounts.filter(session => session.messageCount > 1);
+
         const totalPages = Math.ceil(totalCount / limitNum);
-        
+
         // Calculate aggregated statistics
-        const totalMessages = allSessionsWithCounts.reduce((total, session) => total + session.messageCount, 0);
-        const avgMessagesPerChat = allSessionsWithCounts.length > 0 ? Math.round(totalMessages / allSessionsWithCounts.length) : 0;
-        const longestChat = allSessionsWithCounts.length > 0 ? Math.max(...allSessionsWithCounts.map(s => s.messageCount)) : 0;
-        const latestActivity = allSessionsWithCounts.length > 0 
-          ? new Date(Math.max(...allSessionsWithCounts.map(s => new Date(s.lastMessageAt).getTime())))
+        const totalMessages = filteredAllSessions.reduce((total, session) => total + session.messageCount, 0);
+        const avgMessagesPerChat = filteredAllSessions.length > 0 ? Math.round(totalMessages / filteredAllSessions.length) : 0;
+        const longestChat = filteredAllSessions.length > 0 ? Math.max(...filteredAllSessions.map(s => s.messageCount)) : 0;
+        const latestActivity = filteredAllSessions.length > 0
+          ? new Date(Math.max(...filteredAllSessions.map(s => new Date(s.lastMessageAt).getTime())))
           : new Date();
 
         res.json({
-          sessions: sessionsWithCounts,
+          sessions: filteredSessions,
           chatbotName: chatbotConfig.name,
           pagination: {
             currentPage: pageNum,
@@ -347,13 +353,13 @@ export function setupChatRoutes(app: Express) {
       // Ensure session exists
       let session = await storage.getChatSession(sessionId);
       const isNewSession = !session;
-      
+
       if (!session) {
         session = await storage.createChatSession({
           sessionId,
           chatbotConfigId: chatbotConfigId || null,
         });
-        
+
         // Create welcome message for new sessions
         await createWelcomeMessageIfNeeded(session);
       }
@@ -389,13 +395,13 @@ export function setupChatRoutes(app: Express) {
       // Ensure session exists and handle default chatbot resolution
       let session = await storage.getChatSession(sessionId);
       const isNewSession = !session;
-      
+
       if (!session) {
         session = await storage.createChatSession({
           sessionId,
           chatbotConfigId: chatbotConfigId || null,
         });
-        
+
         // Create welcome message for new sessions
         await createWelcomeMessageIfNeeded(session);
       } else if (
