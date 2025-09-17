@@ -192,8 +192,6 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
               const data = JSON.parse(jsonData);
 
               if (data.type === 'bubble' && data.message) {
-                console.log('[STREAMING DEBUG] Received bubble:', data.message.messageType, 
-                  data.message.metadata?.options ? `with ${data.message.metadata.options.length} options` : '');
                 // A complete bubble has arrived - show it immediately
                 onBubbleReceived?.(data.message);
               } else if (data.type === 'complete') {
