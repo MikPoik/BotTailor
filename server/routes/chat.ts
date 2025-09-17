@@ -55,8 +55,8 @@ export function setupChatRoutes(app: Express) {
               const questionId = `question_${surveySession.currentQuestionIndex}`;
               const response = optionText || optionId;
 
-              const currentResponses = surveySession.responses && typeof surveySession.responses === 'object' 
-                ? surveySession.responses as Record<string, any> 
+              const currentResponses = surveySession.responses && typeof surveySession.responses === 'object'
+                ? surveySession.responses as Record<string, any>
                 : {};
               const updatedResponses = {
                 ...currentResponses,

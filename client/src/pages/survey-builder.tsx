@@ -230,10 +230,11 @@ export default function SurveyBuilderPage() {
       required: newQuestion.required ?? true,
     };
 
-    const updatedConfig = {
-      ...getSurveyConfig(selectedSurvey),
-      questions: [...getSurveyConfig(selectedSurvey).questions, newQuestionData],
-    };
+    const currentConfig = getSurveyConfig(selectedSurvey);
+      const updatedConfig = {
+        ...currentConfig,
+        questions: [...currentConfig.questions, newQuestionData],
+      };
 
     updateSurveyMutation.mutate({
       id: surveyId,
@@ -246,10 +247,11 @@ export default function SurveyBuilderPage() {
   const handleDeleteQuestion = (surveyId: number, questionIndex: number) => {
     if (!selectedSurvey) return;
 
-    const updatedConfig = {
-      ...getSurveyConfig(selectedSurvey),
-      questions: getSurveyConfig(selectedSurvey).questions.filter((_: SurveyQuestion, index: number) => index !== questionIndex),
-    };
+    const currentConfig = getSurveyConfig(selectedSurvey);
+      const updatedConfig = {
+        ...currentConfig,
+        questions: currentConfig.questions.filter((_: SurveyQuestion, index: number) => index !== questionIndex),
+      };
 
     updateSurveyMutation.mutate({
       id: surveyId,
@@ -290,12 +292,13 @@ export default function SurveyBuilderPage() {
 
     console.log(`Updating question ${questionIndex} with:`, updates);
 
-    const updatedQuestions = getSurveyConfig(selectedSurvey).questions.map((q: SurveyQuestion, index: number) =>
+    const currentConfig = getSurveyConfig(selectedSurvey);
+    const updatedQuestions = currentConfig.questions.map((q: SurveyQuestion, index: number) =>
       index === questionIndex ? { ...q, ...updates } : q
     );
 
     const updatedConfig = {
-      ...getSurveyConfig(selectedSurvey),
+      ...currentConfig,
       questions: updatedQuestions,
     };
 

@@ -62,8 +62,6 @@ const getDefaultConfig = (): HomeScreenConfig => ({
         ],
         style: {
           itemStyle: "filled",
-          titleFontSize: "16px",
-          descriptionFontSize: "14px",
         },
       },
       order: 2,
