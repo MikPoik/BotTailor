@@ -407,23 +407,6 @@ export default function ChatWidget({
     }, 400); // Match animation duration
   };
 
-  // Listen for close preparation message from parent iframe
-  useEffect(() => {
-    if (isEmbedded) {
-      const handleMessage = (event: MessageEvent) => {
-        if (event.data.type === 'PREPARE_CLOSE') {
-          // Add closing class to embedded container for smooth animation
-          const embeddedContainer = document.querySelector('.chat-widget-embedded');
-          if (embeddedContainer) {
-            embeddedContainer.classList.add('closing');
-          }
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      return () => window.removeEventListener('message', handleMessage);
-    }
-  }, [isEmbedded]);
 
   if (isMobile && isOpen) {
     return (

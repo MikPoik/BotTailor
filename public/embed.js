@@ -485,35 +485,25 @@
         isOpen = false;
 
         if (isMobile()) {
-          // Add closing animation for mobile
-          mobileIframe.classList.add('closing');
-          mobileIframe.classList.remove('show');
-          
-          // Send close message to iframe content for smooth internal animation
+          // Send close message to iframe for internal animation handling
           if (mobileIframe.contentWindow) {
-            mobileIframe.contentWindow.postMessage({ type: 'PREPARE_CLOSE' }, '*');
+            mobileIframe.contentWindow.postMessage({ type: 'CLOSE_CHAT' }, '*');
           }
           
-          setTimeout(() => {
-            overlay.style.display = 'none';
-            mobileIframe.style.visibility = 'hidden';
-            mobileIframe.classList.remove('closing');
-          }, 400); // Increased duration for smoother animation
+          // Simple immediate close without conflicting animations
+          overlay.style.display = 'none';
+          mobileIframe.style.visibility = 'hidden';
+          mobileIframe.classList.remove('show');
         } else {
-          // Add closing animation for desktop
-          iframe.classList.add('closing');
-          iframe.classList.remove('show');
-          
-          // Send close message to iframe content for smooth internal animation
+          // Send close message to iframe for internal animation handling
           if (iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'PREPARE_CLOSE' }, '*');
+            iframe.contentWindow.postMessage({ type: 'CLOSE_CHAT' }, '*');
           }
           
-          setTimeout(() => {
-            bubble.style.display = 'flex';
-            iframe.style.visibility = 'hidden';
-            iframe.classList.remove('closing');
-          }, 400); // Match animation duration
+          // Simple immediate close without conflicting animations
+          bubble.style.display = 'flex';
+          iframe.style.visibility = 'hidden';
+          iframe.classList.remove('show');
         }
       };
 
