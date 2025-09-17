@@ -848,7 +848,7 @@ export default function TabbedChatInterface({
                   onKeyPress={handleKeyPress}
                   className="send-input rounded-full pr-12 focus:ring-2 focus:border-transparent"
                   style={{
-                    backgroundColor: colors.backgroundColor === 'var(--background)' ? 'white' : colors.backgroundColor,
+                    backgroundColor: 'white',
                     color: colors.textColor,
                     borderColor: colors.textColor + '40',
                     '--tw-ring-color': colors.primaryColor
