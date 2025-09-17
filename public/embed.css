@@ -224,10 +224,12 @@
   from {
     opacity: 1;
     transform: scale(1) translateY(0);
+    visibility: visible;
   }
   to {
     opacity: 0;
     transform: scale(0.9) translateY(30px);
+    visibility: hidden;
   }
 }
 
@@ -237,18 +239,13 @@
 }
 
 @keyframes chatwidget-slideDown {
-  from { transform: translateY(0); }
-  to { transform: translateY(100%); }
-}
-
-@keyframes chatwidget-close {
-  from {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+  from { 
+    transform: translateY(0);
+    visibility: visible;
   }
-  to {
-    opacity: 0;
-    transform: scale(0.9) translateY(30px);
+  to { 
+    transform: translateY(100%);
+    visibility: hidden;
   }
 }
 
