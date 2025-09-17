@@ -20,6 +20,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import RichMessage from "@/components/chat/rich-message";
+import { Message as SharedMessage } from "@shared/schema";
 
 interface ChatSession {
   id: number;
@@ -32,15 +34,7 @@ interface ChatSession {
   lastMessageAt: string;
 }
 
-interface Message {
-  id: number;
-  sessionId: string;
-  content: string;
-  sender: 'user' | 'bot';
-  messageType: string;
-  metadata?: any;
-  createdAt: string;
-}
+// Using shared Message interface instead of local duplicate
 
 interface SessionsResponse {
   sessions: ChatSession[];
@@ -48,7 +42,7 @@ interface SessionsResponse {
 }
 
 interface MessagesResponse {
-  messages: Message[];
+  messages: SharedMessage[];
   sessionId: string;
 }
 
@@ -209,41 +203,44 @@ export default function ChatHistory() {
             ) : (
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {messagesData?.messages.map((message) => {
-                  // Function to display rich message content appropriately
-                  const getDisplayContent = (msg: Message) => {
-                    switch (msg.messageType) {
-                      case 'form':
-                        return '[Form shown]';
-                      case 'menu':
-                        const menuOptions = msg.metadata?.options?.map((opt: any) => opt.text).join(', ') || '';
-                        return menuOptions ? `Menu: ${menuOptions}` : msg.content;
-                      case 'quickReplies':
-                        const quickReplies = msg.metadata?.quickReplies?.join(', ') || '';
-                        return quickReplies ? `Quick replies: ${quickReplies}` : msg.content;
-                      case 'card':
-                        const title = msg.metadata?.title;
-                        const description = msg.metadata?.description;
-                        return title ? `Card: ${title}${description ? ` - ${description}` : ''}` : msg.content;
-                      default:
-                        return msg.content;
-                    }
-                  };
+                  // No-op handlers for analytics view (messages are read-only)
+                  const handleOptionSelect = () => {};
+                  const handleQuickReply = () => {};
 
                   return (
                     <div
                       key={message.id}
                       className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          message.sender === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        <div className="text-sm">{getDisplayContent(message)}</div>
-                        <div className="text-xs opacity-70 mt-1">
+                      <div className={`max-w-xs lg:max-w-md space-y-2`}>
+                        {/* Message content with proper rich message rendering */}
+                        <div
+                          className={`px-4 py-2 rounded-lg ${
+                            message.sender === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {message.sender === 'bot' && message.messageType !== 'text' ? (
+                            <div className="analytics-rich-message">
+                              <RichMessage 
+                                message={message}
+                                onOptionSelect={handleOptionSelect}
+                                onQuickReply={handleQuickReply}
+                                sessionId={selectedSession}
+                              />
+                            </div>
+                          ) : (
+                            <div className="text-sm">{message.content}</div>
+                          )}
+                        </div>
+                        <div className="text-xs opacity-70 px-1">
                           {format(new Date(message.createdAt), 'MMM d, HH:mm')}
+                          {message.messageType !== 'text' && (
+                            <span className="ml-2 text-xs bg-black/10 px-1 rounded">
+                              {message.messageType}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
