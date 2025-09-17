@@ -56,6 +56,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       );
 
       setIsSubmitted(true);
+      setIsSubmitting(false);
     } catch (error) {
       console.error('Error submitting multiselect:', error);
       setIsSubmitting(false);
