@@ -386,11 +386,6 @@ export default function ChatWidget({
       setTimeout(() => {
         setIsOpen(false);
         setIsClosing(false);
-        // Clear iframe src when closing to force reload on reopen
-        const iframe = document.getElementById('chatwidget-iframe') as HTMLIFrameElement;
-        const mobileIframe = document.getElementById('chatwidget-mobile-iframe') as HTMLIFrameElement;
-        if (iframe) iframe.src = '';
-        if (mobileIframe) mobileIframe.src = '';
       }, 400); // Match animation duration
     } else {
       setIsOpen(true);
