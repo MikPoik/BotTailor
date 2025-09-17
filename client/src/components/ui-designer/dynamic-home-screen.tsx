@@ -132,11 +132,19 @@ export default function DynamicHomeScreen({
       )}
 
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto">
+          {sortedComponents
+          .filter((component) => component.visible !== false && component.type !== 'footer')
+          .map((component) =>
+            renderComponent(component, onTopicClick, onActionClick, colors)
+          )}
+        </div>
+        {/* Render footer separately to ensure proper positioning */}
         {sortedComponents
-        .filter((component) => component.visible !== false)
-        .map((component) =>
-          renderComponent(component, onTopicClick, onActionClick, colors)
-        )}
+          .filter((component) => component.visible !== false && component.type === 'footer')
+          .map((component) =>
+            renderComponent(component, onTopicClick, onActionClick, colors)
+          )}
       </div>
     </div>
   );

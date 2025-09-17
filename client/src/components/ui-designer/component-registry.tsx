@@ -330,7 +330,7 @@ export function FooterComponent({ component, resolvedColors }: ComponentRegistry
 
   return (
     <div 
-      className="text-center py-4 px-4 border-t mt-auto"
+      className="text-center py-4 px-4 border-t mt-auto sticky bottom-0 z-20"
       style={{
         backgroundColor,
         color: textColor,
