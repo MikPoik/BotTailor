@@ -59,10 +59,13 @@ export const MultiselectMessage = memo(function MultiselectMessage({
         selection_count: selectedOptions.length
       };
 
+      // Create display text from selected option texts
+      const selectedTexts = selectedOptionsWithText.map(option => option.text);
+      
       await onOptionSelect(
         'multiselect_submit',
         payload,
-        `Selected: ${selectedOptions.join(', ')}`
+        selectedTexts.join(', ')
       );
 
       setIsSubmitted(true);
