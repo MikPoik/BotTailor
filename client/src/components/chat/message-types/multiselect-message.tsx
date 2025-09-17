@@ -12,12 +12,19 @@ export const MultiselectMessage = memo(function MultiselectMessage({
   metadata, 
   onOptionSelect 
 }: MultiselectMessageProps) {
+  // Normalize options defensively
+  const rawOptions: any = (metadata && (metadata as any).options) || [];
+  const options = Array.isArray(rawOptions)
+    ? rawOptions
+    : (rawOptions && typeof rawOptions === 'object')
+      ? Object.values(rawOptions)
+      : [];
   const [selectedOptions, setSelectedOptions] = useState<string[]>(metadata.selectedOptions || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   
   const minSelections = metadata.minSelections || 1;
-  const maxSelections = metadata.maxSelections || metadata.options?.length || 999;
+  const maxSelections = metadata.maxSelections || options.length || 999;
 
   const handleOptionToggle = (optionId: string, optionText: string) => {
     setSelectedOptions(prev => {
@@ -58,7 +65,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        {metadata.options.map((option, index) => {
+        {options.map((option: any, index: number) => {
           const isSelected = selectedOptions.includes(option.id);
 
           return (
@@ -88,7 +95,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       </div>
 
       <div className="flex items-center justify-between text-sm text-neutral-600">
-        <span>Selected: {selectedOptions.length} / {maxSelections} (min: {minSelections})</span>
+        <span>{selectedOptions.length} / {maxSelections} (min: {minSelections})</span>
         <Button
           type="submit"
           onClick={handleMultiselectSubmit}

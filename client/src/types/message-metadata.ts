@@ -99,7 +99,10 @@ export const isCardMetadata = (metadata: any): metadata is CardMetadata => {
 };
 
 export const isMenuMetadata = (metadata: any): metadata is MenuMetadata => {
-  return metadata && Array.isArray(metadata.options);
+  // Accept both arrays and object-like option collections
+  if (!metadata) return false;
+  const opts = (metadata as any).options;
+  return Array.isArray(opts) || (opts && typeof opts === 'object' && Object.keys(opts).length > 0);
 };
 
 export const isFormMetadata = (metadata: any): metadata is FormMetadata => {

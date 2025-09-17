@@ -10,10 +10,18 @@ export const MenuMessage = memo(function MenuMessage({
   metadata, 
   onOptionSelect 
 }: MenuMessageProps) {
+  // Normalize options to an array defensively (handles object-shaped payloads)
+  const rawOptions: any = (metadata && (metadata as any).options) || [];
+  const options = Array.isArray(rawOptions)
+    ? rawOptions
+    : (rawOptions && typeof rawOptions === 'object')
+      ? Object.values(rawOptions)
+      : [];
+
   return (
     <div className="space-y-2">
       <div className="space-y-2">
-        {metadata.options.map((option, index) => (
+        {options.map((option: any, index: number) => (
           <button
             key={`${option.id}-${index}`}
             onClick={() => onOptionSelect(option.id, option.payload, option.text)}
