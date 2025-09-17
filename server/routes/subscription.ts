@@ -94,8 +94,10 @@ subscriptionRouter.post(
       // Handle Free plan special case - no Stripe integration needed
       if (plan.price === 0 || plan.stripePriceId === "price_free") {
         // Check if user has existing subscription
+        const fullUserId = req.user.claims.sub;
+        const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
         const existingSubscription = await storage.getUserSubscription(
-          req.user.claims.sub,
+          userId,
         );
 
         if (existingSubscription) {
@@ -112,7 +114,7 @@ subscriptionRouter.post(
         } else {
           // Create new Free subscription
           await storage.createSubscription({
-            userId: req.user.claims.sub,
+            userId: userId,
             planId: planId,
             status: "active",
             messagesUsedThisMonth: 0,
@@ -126,8 +128,10 @@ subscriptionRouter.post(
 
       // Check if user already has a Stripe customer ID
       let customerId: string | undefined;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
       const existingSubscription = await storage.getUserSubscription(
-        req.user.claims.sub,
+        userId,
       );
 
       if (existingSubscription?.stripeCustomerId) {
@@ -137,7 +141,7 @@ subscriptionRouter.post(
         const customer = await stripeClient.customers.create({
           email: req.user.claims?.email || undefined,
           metadata: {
-            userId: req.user.claims.sub,
+            userId: userId,
           },
         });
         customerId = customer.id;
@@ -157,7 +161,7 @@ subscriptionRouter.post(
         success_url: `${req.headers.origin}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.headers.origin}/subscription?canceled=true`,
         metadata: {
-          userId: req.user.claims.sub,
+          userId: userId,
           planId: planId.toString(),
         },
       });
@@ -180,8 +184,10 @@ subscriptionRouter.post("/modify", isAuthenticated, async (req: any, res) => {
     const { planId } = modifySubscriptionSchema.parse(req.body);
 
     // Get current subscription
+    const fullUserId = req.user.claims.sub;
+    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
     const currentSubscription = await storage.getUserSubscription(
-      req.user.claims.sub,
+      userId,
     );
     if (!currentSubscription) {
       return res.status(404).json({ error: "No active subscription found" });
@@ -224,7 +230,7 @@ subscriptionRouter.post("/modify", isAuthenticated, async (req: any, res) => {
       });
 
       console.log(
-        `[SUBSCRIPTION] Downgraded user ${req.user.claims.sub} to Free plan`,
+        `[SUBSCRIPTION] Downgraded user ${userId} to Free plan`,
       );
 
       return res.json({
@@ -293,8 +299,10 @@ subscriptionRouter.post("/cancel", isAuthenticated, async (req: any, res) => {
     }
 
     // Get current subscription
+    const fullUserId = req.user.claims.sub;
+    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
     const currentSubscription = await storage.getUserSubscription(
-      req.user.claims.sub,
+      userId,
     );
     if (!currentSubscription || !currentSubscription.stripeSubscriptionId) {
       return res.status(404).json({ error: "No active subscription found" });
