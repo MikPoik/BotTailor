@@ -73,7 +73,7 @@ export default function TabbedChatInterface({
     selectOption,
     initializeSession,
     isLoading,
-    isTyping,
+    isTyping: chatIsTyping,
     readOnlyMode,
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
@@ -718,7 +718,7 @@ export default function TabbedChatInterface({
               ));
             })()}
 
-            {(isTyping || isStreaming) && (
+            {(chatIsTyping || isStreaming) && (
               <TypingIndicator chatbotConfig={chatbotConfig} />
             )}
 
