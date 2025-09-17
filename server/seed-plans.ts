@@ -18,7 +18,13 @@ async function seedSubscriptionPlans() {
       billingInterval: "month",
       maxBots: 1,
       maxMessagesPerMonth: 100,
-      features: ["1 chatbot", "100 messages/month", "Community support"],
+      features: [
+        "1 chatbot",
+        "100 messages",
+        "Community support",
+        "Email integration",
+        "Analytics",
+        "Custom Branding"],
       isActive: true,
     },
     {
@@ -34,8 +40,9 @@ async function seedSubscriptionPlans() {
       features: [
         "1 chatbot",
         "1,000 messages/month",
-        "Basic support",
         "Email integration",
+        "Analytics",
+        "Custom Branding"
       ],
       isActive: true,
     },
@@ -52,8 +59,8 @@ async function seedSubscriptionPlans() {
       features: [
         "3 chatbots",
         "10,000 messages/month",
-        "Priority support",
-        "Advanced analytics",
+        "Email integration",
+        "Analytics",
         "Custom branding",
       ],
       isActive: true,
@@ -71,9 +78,9 @@ async function seedSubscriptionPlans() {
       features: [
         "5 chatbots",
         "100,000 messages/month",
-        "24/7 support",
-        "White-label solution",
-        "API access",
+        "Email integration",
+        "Analytics",
+        "Custom Branding",
       ],
       isActive: true,
     },

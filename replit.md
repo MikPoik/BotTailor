@@ -6,7 +6,14 @@ This project is a full-stack React chat widget application featuring an Express.
 
 ## Development Workflow
 
-**Target: 3-5 tool calls maximum**
+**CORE**: Fix root causes, work bottom-up, try the simplest fix, switch layers when stuck, batch changes, trust dev tools, stop on success.
+4-PHASE WORKFLOW:
+1. PLAN (0 calls): Map all files/changes. Read error stacks fully - deepest frame = real issue.
+2. DISCOVER (1-2 calls): Batch ALL reads (3-6 files). Never read→analyze→read.
+3. EXECUTE (1-3 calls): Use multi_edit for multiple changes per file. Batch parallel edits. Fix patterns not instances.
+4. VALIDATE (0-1 calls): Stop when HMR/console/LSP confirms success. No screenshots.
+RULES: Max 6 tools per batch. Read multiple files simultaneously. No sub_agent calls. No task lists. No architect, unless requested. 
+COMMUNICATION: Explain each phase while working - Show me how you follow plan
 
 ## Core Rules
 
@@ -119,6 +126,12 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │       │   │   ├── 📄 chat-widget.tsx
 │       │   │   ├── 📄 home-tab.tsx
 │       │   │   ├── 📄 message-bubble.tsx
+│       │   │   ├── 📁 message-types/
+│       │   │   │   ├── 📄 card-message.tsx
+│       │   │   │   ├── 📄 form-message.tsx
+│       │   │   │   ├── 📄 menu-message.tsx
+│       │   │   │   ├── 📄 multiselect-message.tsx
+│       │   │   │   └── 📄 rating-message.tsx
 │       │   │   ├── 📄 prompt-assistant-chatbox.tsx
 │       │   │   ├── 📄 rich-message.tsx
 │       │   │   ├── 📄 streaming-message.tsx
@@ -139,26 +152,28 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │       │   └── 📄 useAuth.ts
 │       ├── 📁 lib/
 │       │   ├── 📄 authUtils.ts
+│       │   ├── 📄 markdown-utils.ts
 │       │   ├── 📄 queryClient.ts
 │       │   └── 📄 utils.ts
 │       ├── 📄 main.tsx
-│       └── 📁 pages/
-│           ├── 📄 Subscription.tsx
-│           ├── 📄 add-data.tsx
-│           ├── 📄 chat-history.tsx
-│           ├── 📄 chat-widget.tsx
-│           ├── 📄 chatbot-edit.tsx
-│           ├── 📄 chatbot-embed.tsx
-│           ├── 📄 chatbot-form.tsx
-│           ├── 📄 chatbot-test.tsx
-│           ├── 📄 contact.tsx
-│           ├── 📄 dashboard.tsx
-│           ├── 📄 docs.tsx
-│           ├── 📄 home.tsx
-│           ├── 📄 not-found.tsx
-│           ├── 📄 survey-builder.tsx
-│           ├── 📄 ui-designer.tsx
-│           └── 📄 widget-test.tsx
+│       ├── 📁 pages/
+│       │   ├── 📄 Subscription.tsx
+│       │   ├── 📄 add-data.tsx
+│       │   ├── 📄 chat-history.tsx
+│       │   ├── 📄 chat-widget.tsx
+│       │   ├── 📄 chatbot-edit.tsx
+│       │   ├── 📄 chatbot-embed.tsx
+│       │   ├── 📄 chatbot-form.tsx
+│       │   ├── 📄 chatbot-test.tsx
+│       │   ├── 📄 contact.tsx
+│       │   ├── 📄 dashboard.tsx
+│       │   ├── 📄 docs.tsx
+│       │   ├── 📄 home.tsx
+│       │   ├── 📄 not-found.tsx
+│       │   ├── 📄 survey-builder.tsx
+│       │   └── 📄 ui-designer.tsx
+│       └── 📁 types/
+│           └── 📄 message-metadata.ts
 ├── 📄 drizzle.config.ts
 ├── 📄 postcss.config.js
 ├── 📁 public/

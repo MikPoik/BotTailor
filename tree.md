@@ -1,6 +1,6 @@
 # Directory Tree
 
-Generated on: 2025-09-16T19:07:10.070Z
+Generated on: 2025-09-16T20:47:47.780Z
 
 *Simple mode: Directory structure only*
 
@@ -14,6 +14,12 @@ Generated on: 2025-09-16T19:07:10.070Z
 │       │   │   ├── 📄 chat-widget.tsx
 │       │   │   ├── 📄 home-tab.tsx
 │       │   │   ├── 📄 message-bubble.tsx
+│       │   │   ├── 📁 message-types/
+│       │   │   │   ├── 📄 card-message.tsx
+│       │   │   │   ├── 📄 form-message.tsx
+│       │   │   │   ├── 📄 menu-message.tsx
+│       │   │   │   ├── 📄 multiselect-message.tsx
+│       │   │   │   └── 📄 rating-message.tsx
 │       │   │   ├── 📄 prompt-assistant-chatbox.tsx
 │       │   │   ├── 📄 rich-message.tsx
 │       │   │   ├── 📄 streaming-message.tsx
@@ -34,26 +40,28 @@ Generated on: 2025-09-16T19:07:10.070Z
 │       │   └── 📄 useAuth.ts
 │       ├── 📁 lib/
 │       │   ├── 📄 authUtils.ts
+│       │   ├── 📄 markdown-utils.ts
 │       │   ├── 📄 queryClient.ts
 │       │   └── 📄 utils.ts
 │       ├── 📄 main.tsx
-│       └── 📁 pages/
-│           ├── 📄 Subscription.tsx
-│           ├── 📄 add-data.tsx
-│           ├── 📄 chat-history.tsx
-│           ├── 📄 chat-widget.tsx
-│           ├── 📄 chatbot-edit.tsx
-│           ├── 📄 chatbot-embed.tsx
-│           ├── 📄 chatbot-form.tsx
-│           ├── 📄 chatbot-test.tsx
-│           ├── 📄 contact.tsx
-│           ├── 📄 dashboard.tsx
-│           ├── 📄 docs.tsx
-│           ├── 📄 home.tsx
-│           ├── 📄 not-found.tsx
-│           ├── 📄 survey-builder.tsx
-│           ├── 📄 ui-designer.tsx
-│           └── 📄 widget-test.tsx
+│       ├── 📁 pages/
+│       │   ├── 📄 Subscription.tsx
+│       │   ├── 📄 add-data.tsx
+│       │   ├── 📄 chat-history.tsx
+│       │   ├── 📄 chat-widget.tsx
+│       │   ├── 📄 chatbot-edit.tsx
+│       │   ├── 📄 chatbot-embed.tsx
+│       │   ├── 📄 chatbot-form.tsx
+│       │   ├── 📄 chatbot-test.tsx
+│       │   ├── 📄 contact.tsx
+│       │   ├── 📄 dashboard.tsx
+│       │   ├── 📄 docs.tsx
+│       │   ├── 📄 home.tsx
+│       │   ├── 📄 not-found.tsx
+│       │   ├── 📄 survey-builder.tsx
+│       │   └── 📄 ui-designer.tsx
+│       └── 📁 types/
+│           └── 📄 message-metadata.ts
 ├── 📄 drizzle.config.ts
 ├── 📄 postcss.config.js
 ├── 📁 public/
