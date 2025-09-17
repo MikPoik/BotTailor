@@ -165,19 +165,35 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         throw new Error('No reader available');
       }
 
+      let buffer = ''; // Buffer for incomplete lines
+      
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
+        buffer += chunk;
+        
+        // Process complete lines from buffer
+        const lines = buffer.split('\n');
+        
+        // Keep the last line in buffer if it doesn't end with newline
+        // (it might be incomplete)
+        buffer = lines.pop() || '';
+        
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
-              const data = JSON.parse(line.slice(6));
+              const jsonData = line.slice(6).trim();
+              
+              // Skip empty data lines
+              if (!jsonData) continue;
+              
+              const data = JSON.parse(jsonData);
 
               if (data.type === 'bubble' && data.message) {
+                console.log('[STREAMING DEBUG] Received bubble:', data.message.messageType, 
+                  data.message.metadata?.options ? `with ${data.message.metadata.options.length} options` : '');
                 // A complete bubble has arrived - show it immediately
                 onBubbleReceived?.(data.message);
               } else if (data.type === 'complete') {
@@ -206,7 +222,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
                 break;
               }
             } catch (parseError) {
-              console.warn('Failed to parse streaming data:', parseError);
+              console.warn('Failed to parse streaming data:', parseError, 'Line:', line);
             }
           }
         }

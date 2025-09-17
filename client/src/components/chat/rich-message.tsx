@@ -43,8 +43,6 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
   }
 
   if (messageType === 'menu' && isMenuMetadata(typedMetadata)) {
-    console.log('[RICH MESSAGE] Menu message detected, full metadata:', typedMetadata);
-    console.log('[RICH MESSAGE] Options in metadata:', typedMetadata.options);
     return (
       <MenuMessage 
         metadata={typedMetadata as MenuMetadata}
