@@ -222,8 +222,8 @@ export default function ChatbotTest() {
 
           {/* Right Side - Chat Interface */}
           <div className="lg:col-span-2">
-            <Card className="h-[600px]">
-              <CardHeader>
+            <Card className="h-[700px] flex flex-col">
+              <CardHeader className="flex-shrink-0">
                 <CardTitle className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5" />
                   Live Test Chat
@@ -232,9 +232,9 @@ export default function ChatbotTest() {
                   Interact with your chatbot to test its responses and behavior
                 </CardDescription>
               </CardHeader>
-              <CardContent className="h-full pb-6">
+              <CardContent className="flex-1 flex flex-col pb-6 min-h-0">
                 {testSessionId && (
-                  <div className="h-full">
+                  <div className="flex-1 flex flex-col min-h-0">
                     <TabbedChatInterface
                       sessionId={testSessionId}
                       isMobile={false}
