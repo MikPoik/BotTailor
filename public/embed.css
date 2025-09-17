@@ -278,21 +278,10 @@
 .chatwidget-iframe.show {
   display: block !important;
   visibility: visible !important;
-  animation: chatwidget-open 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* Removed conflicting animation - let JS handle smooth transitions */
 }
 
-.chatwidget-iframe.closing {
-  animation: chatwidget-close 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-}
-
-/* Ensure iframe content has proper animations */
-.chatwidget-iframe body {
-  animation: chatwidget-iframe-open 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-}
-
-.chatwidget-iframe.closing body {
-  animation: chatwidget-iframe-close 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
-}
+/* Removed conflicting iframe body animations that break on reopening */
 
 .chatwidget-mobile-iframe.show {
   display: block !important;

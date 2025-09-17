@@ -446,6 +446,7 @@
           bubble.style.display = 'none';
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
+          mobileIframe.style.display = 'block';
           mobileIframe.classList.add('show');
         } else {
           // Only load iframe once to preserve chat session
@@ -475,6 +476,7 @@
           }
           bubble.style.display = 'none';
           iframe.style.visibility = 'visible';
+          iframe.style.display = 'block';
           iframe.classList.add('show');
         }
       };
