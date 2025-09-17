@@ -190,7 +190,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
   const getOverlayColors = () => {
     if (!hasBackgroundImage) {
       return {
-        backgroundColor: itemStyle === 'filled' ? primaryColor : 'transparent',
+        backgroundColor: itemStyle === 'filled' ? primaryColor : backgroundColor,
         textColor: itemStyle === 'filled' ? 'white' : textColor,
         borderColor: itemStyle === 'outlined' ? primaryColor : 'transparent'
       };
@@ -204,7 +204,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
     return {
       backgroundColor: itemStyle === 'filled' 
         ? `${primaryColor}${Math.round(255 * parseFloat(overlayOpacity)).toString(16).padStart(2, '0')}`
-        : `${primaryColor}${Math.round(255 * 0.15).toString(16).padStart(2, '0')}`, // Use primary color with low opacity for outlined
+        : `${backgroundColor}${Math.round(255 * parseFloat(overlayOpacity)).toString(16).padStart(2, '0')}`, // Use background color for outlined
       textColor: itemStyle === 'filled'
         ? (isPrimaryLight ? '#000000' : '#ffffff')
         : textColor, // Use theme text color for outlined items
