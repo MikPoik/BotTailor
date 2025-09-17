@@ -42,11 +42,13 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
 
   // Fetch admin status from a server-side endpoint
-  const { data: isAdmin } = useQuery<boolean>({
-    queryKey: ["/api/auth/isAdmin"],
+  const { data: adminStatusResponse } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/auth/admin-status"],
     enabled: isAuthenticated,
     retry: false,
   });
+
+  const isAdmin = adminStatusResponse?.isAdmin || false;
 
   // Generate session ID for chat widget
   useEffect(() => {

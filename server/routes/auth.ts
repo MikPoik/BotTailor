@@ -71,8 +71,6 @@ export async function setupAuthRoutes(app: Express) {
   app.get('/api/auth/failure', (req, res) => {
     res.status(401).json({ message: "Authentication failed" });
   });
-}
-
 
   // Check if current user is admin
   app.get('/api/auth/admin-status', isAuthenticated, async (req: any, res) => {
@@ -89,3 +87,4 @@ export async function setupAuthRoutes(app: Express) {
       res.status(500).json({ message: "Failed to check admin status" });
     }
   });
+}
