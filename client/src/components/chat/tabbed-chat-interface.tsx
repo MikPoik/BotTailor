@@ -41,6 +41,8 @@ interface TabbedChatInterfaceProps {
   isEmbedded?: boolean;
   chatbotConfigId?: number;
   chatbotConfig?: any;
+  onSessionInitialize?: () => void; // Callback for session initialization
+  forceInitialize?: boolean; // Force session initialization
 }
 
 export default function TabbedChatInterface({
@@ -51,6 +53,8 @@ export default function TabbedChatInterface({
   isEmbedded = false,
   chatbotConfigId,
   chatbotConfig,
+  onSessionInitialize,
+  forceInitialize = false
 }: TabbedChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -67,11 +71,24 @@ export default function TabbedChatInterface({
     sendMessage,
     sendStreamingMessage,
     selectOption,
+    initializeSession,
     isLoading,
-    isSessionLoading,
+    isTyping,
     readOnlyMode,
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
+
+  // Initialize session when component mounts if needed
+  useEffect(() => {
+    if (forceInitialize || (isEmbedded && !onSessionInitialize)) {
+      // For test pages or embedded widgets, initialize immediately
+      initializeSession();
+    } else if (onSessionInitialize) {
+      // For mobile chat, call the provided initialization function
+      onSessionInitialize();
+    }
+  }, [forceInitialize, isEmbedded, onSessionInitialize, initializeSession]);
+
 
   // Contact form state
   const [contactForm, setContactForm] = useState({

@@ -39,8 +39,8 @@ export default function ChatWidget({
   // Get chatbot config ID from injected config or props
   const chatbotConfigId = injectedConfig?.chatbotConfig?.id || chatbotConfig?.id;
 
-  // Preload chat data in background when widget mounts
-  const { isSessionLoading, isMessagesLoading } = useChat(sessionId, chatbotConfigId);
+  // Initialize chat data only when needed
+  const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(sessionId, chatbotConfigId);
 
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
@@ -390,7 +390,8 @@ export default function ChatWidget({
     } else {
       setIsOpen(true);
       setHasNewMessage(false);
-      // Refetch messages when opening chat to sync with any new messages
+      // Initialize session and messages when chat opens for first time
+      initializeSession();
       queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
     }
   };
@@ -461,6 +462,7 @@ export default function ChatWidget({
               isPreloaded={!isSessionLoading && !isMessagesLoading}
               chatbotConfigId={chatbotConfigId}
               chatbotConfig={chatbotConfig}
+              onSessionInitialize={initializeSession}
             />
           </div>
         </div>
@@ -476,6 +478,11 @@ export default function ChatWidget({
         window.parent.postMessage({ type: 'CLOSE_CHAT' }, '*');
       }
     };
+
+    // Initialize session for embedded chat since it's immediately visible
+    useEffect(() => {
+      initializeSession();
+    }, []);
 
     return (
       <div className="chat-widget-embedded">

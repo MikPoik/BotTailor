@@ -39,7 +39,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     }
   };
 
-  // Initialize session
+  // Initialize session - only create when explicitly requested
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
     queryFn: async () => {
@@ -49,7 +49,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       });
       return response.json();
     },
-    enabled: !!sessionId,
+    enabled: false, // Don't auto-create session on widget load
   });
 
   // Get messages
@@ -293,11 +293,17 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     return selectOptionMutation.mutateAsync({ optionId, payload, optionText });
   };
 
+  // Function to manually initialize session when chat is opened
+  const initializeSession = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/chat/session', sessionId, chatbotConfigId] });
+  };
+
   return {
     messages,
     sendMessage,
     sendStreamingMessage,
     selectOption,
+    initializeSession,
     isLoading: sendMessageMutation.isPending || selectOptionMutation.isPending,
     isTyping,
     isSessionLoading,

@@ -243,6 +243,7 @@ export default function ChatbotTest() {
                       isEmbedded={true}
                       chatbotConfigId={chatbot.id}
                       chatbotConfig={chatbot}
+                      forceInitialize={true}
                     />
                   </div>
                 )}
