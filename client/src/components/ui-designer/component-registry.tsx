@@ -16,7 +16,9 @@ import {
   Search,
   Grid,
   List,
-  Home
+  Home,
+  BarChart,
+  PieChart
 } from "lucide-react";
 import type { HomeScreenComponent } from "@shared/schema";
 
@@ -35,7 +37,9 @@ const iconMap = {
   Search,
   Grid,
   List,
-  Home
+  Home,
+  BarChart,
+  PieChart
 };
 
 export function getIcon(iconName: string) {
