@@ -233,7 +233,7 @@
       bubble.style.justifyContent = 'center';
       bubble.style.cursor = 'pointer';
       bubble.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12)';
-      bubble.style.border = '1px solid white';
+      bubble.style.border = '2px solid white';
       bubble.style.transition = 'all 0.3s ease';
 
       bubble.innerHTML = `
