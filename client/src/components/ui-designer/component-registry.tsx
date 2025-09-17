@@ -56,6 +56,8 @@ interface ComponentRegistryProps {
     backgroundColor: string;
     textColor: string;
     backgroundImageUrl?: string; // Added for background image check
+    titleFontSize?: string;
+    descriptionFontSize?: string;
   };
 }
 
@@ -170,8 +172,8 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
 
   // Determine style variant and font sizes
   const itemStyle = style?.itemStyle || 'filled';
-  const titleFontSize = (style as any)?.titleFontSize || '16px';
-  const descriptionFontSize = (style as any)?.descriptionFontSize || '14px';
+  const titleFontSize = resolvedColors?.titleFontSize || (style as any)?.titleFontSize || '16px';
+  const descriptionFontSize = resolvedColors?.descriptionFontSize || (style as any)?.descriptionFontSize || '14px';
 
   // Helper function to determine if a color is light or dark
   const isLightColor = (color: string) => {
@@ -361,6 +363,8 @@ export function renderComponent(
     backgroundColor: string;
     textColor: string;
     backgroundImageUrl?: string;
+    titleFontSize?: string;
+    descriptionFontSize?: string;
   }
 ) {
   const ComponentToRender = ComponentRegistry[component.type];

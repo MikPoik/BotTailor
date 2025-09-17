@@ -8,10 +8,11 @@ interface DynamicHomeScreenProps {
   onTopicClick?: (topic: any) => void;
   onActionClick?: (action: any) => void;
   className?: string;
+  previewFontSizes?: { titleFontSize?: string; descriptionFontSize?: string };
 }
 
-// Color resolution function that prioritizes embed parameters over UI Designer theme
-function resolveColors(config: HomeScreenConfig) {
+// Color and style resolution function that prioritizes embed parameters over UI Designer theme
+function resolveColors(config: HomeScreenConfig, previewFontSizes?: { titleFontSize?: string; descriptionFontSize?: string }) {
   // Get CSS variables from the embed parameters (these take priority)
   const embedPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary-color').trim();
   const embedBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-background').trim();
@@ -22,12 +23,29 @@ function resolveColors(config: HomeScreenConfig) {
     return color && color !== '' && !color.startsWith('var(--') && color !== 'var(--primary)' && color !== 'var(--background)' && color !== 'var(--foreground)';
   };
 
+  // Extract font sizes from topic grid component or use preview values
+  const topicGridComponent = config.components?.find(c => c.type === 'topic_grid');
+  let titleFontSize = '16px';
+  let descriptionFontSize = '14px';
+
+  if (previewFontSizes) {
+    // Use preview font sizes (from Theme tab)
+    titleFontSize = previewFontSizes.titleFontSize || '16px';
+    descriptionFontSize = previewFontSizes.descriptionFontSize || '14px';
+  } else if (topicGridComponent?.props) {
+    // Use saved font sizes from component props
+    titleFontSize = (topicGridComponent.props as any).titleFontSize || '16px';
+    descriptionFontSize = (topicGridComponent.props as any).descriptionFontSize || '14px';
+  }
+
   // Resolve final colors with embed parameters taking priority
   const resolvedColors = {
     primaryColor: (isValidColor(embedPrimaryColor) ? embedPrimaryColor : config.theme?.primaryColor) || 'var(--primary)',
     backgroundColor: (isValidColor(embedBackgroundColor) ? embedBackgroundColor : config.theme?.backgroundColor) || 'var(--background)',
     textColor: (isValidColor(embedTextColor) ? embedTextColor : config.theme?.textColor) || 'var(--foreground)',
-    backgroundImageUrl: config.theme?.backgroundImageUrl
+    backgroundImageUrl: config.theme?.backgroundImageUrl,
+    titleFontSize,
+    descriptionFontSize
   };
 
   return resolvedColors;
@@ -37,7 +55,8 @@ export default function DynamicHomeScreen({
   config,
   onTopicClick,
   onActionClick,
-  className
+  className,
+  previewFontSizes
 }: DynamicHomeScreenProps) {
   if (!config || !config.components) {
     return (
@@ -72,8 +91,8 @@ export default function DynamicHomeScreen({
     }
   }, [backgroundImageUrl]);
 
-  // Resolve colors with embed parameters taking priority
-  const colors = resolveColors(config);
+  // Resolve colors and font sizes with embed parameters taking priority
+  const colors = resolveColors(config, previewFontSizes);
 
   return (
     <div

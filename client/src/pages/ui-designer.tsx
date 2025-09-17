@@ -939,6 +939,10 @@ Please consider these colors when generating the UI design to ensure visual cons
                       config={currentConfig}
                       onTopicClick={handleTopicClick}
                       onActionClick={(action) => console.log('Action:', action)}
+                      previewFontSizes={{
+                        titleFontSize,
+                        descriptionFontSize
+                      }}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground">
