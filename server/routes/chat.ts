@@ -735,10 +735,7 @@ async function handleStreamingResponse(
           content: chunk.bubble.content,
           sender: "bot",
           messageType: chunk.bubble.messageType,
-          metadata: {
-            ...chunk.bubble.metadata,
-            originalContent: chunk.bubble,
-          },
+          metadata: chunk.bubble.metadata || {},
         });
 
         // Send to client
