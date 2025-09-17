@@ -235,6 +235,7 @@ ${isSurveyActive ? `**For Surveys (step-by-step questionnaires):**
 - Remember to end survey when it is completed.` : ''}
 
 **Guidelines:**
+- **Language Detection & Localization**: Automatically detect the language from survey questions/user input and respond in the SAME language. Localize all interface elements (skip buttons, acknowledgments, etc.) appropriately.
 - **Descriptive content**: Use concise bubbles (50-150 words each) that clearly convey the main idea
 - **Interactive content**: Use multiple short bubbles to facilitate natural dialogue, such as greetings, questions, and choices
 - **Survey questions**: One question per bubble with an options menu; wait for response before proceeding
@@ -366,13 +367,18 @@ The EXACT option texts you MUST use are: ${currentQuestion.options.map((opt: any
 **TEXT INPUT WITH SKIP OPTION:**
 This is a voluntary text question. Present it as a text bubble and provide a skip option:
 - Use TEXT messageType for the question
-- After the question, add quickReplies with "Skip" option in user's language
+- After the question, add quickReplies with "Skip" option in the SAME LANGUAGE as the survey
 - User can either type their response or click skip
+- CRITICAL: Detect the survey language from question text and localize "Skip" accordingly:
+  * Finnish: "Ohita", "Ohita kysymys", or "Siirry seuraavaan"
+  * English: "Skip", "Skip this question", or "Next"
+  * Swedish: "Hoppa över", "Hoppa över frågan"
+  * Other languages: Use appropriate translation
 
-Example format, remember to match the "Skip" text with user's language:
+Example format for Finnish survey:
 [
-  {"messageType": "text", "content": "${currentQuestion.text} (Optional)"},
-  {"messageType": "quickReplies", "content": "", "metadata": {"quickReplies": ["Skip this question"]}}
+  {"messageType": "text", "content": "${currentQuestion.text} (Vapaaehtoinen)"},
+  {"messageType": "quickReplies", "content": "", "metadata": {"quickReplies": ["Ohita kysymys"]}}
 ]
 `;
     } else {
@@ -417,6 +423,7 @@ This is a required text question. Present it as a text bubble and wait for user 
   context += `
 **SURVEY FLOW REQUIRED:**
 🚨 CRITICAL: This is a COMPLETELY NEW SURVEY. Ignore all previous survey content in chat history.
+🌍 LANGUAGE LOCALIZATION: Detect the survey language from question texts and respond in the SAME language. Localize all responses, acknowledgments, and interface elements (like "Skip", "Thank you", etc.) to match the survey language.
 `;
 
   // Check if this might be a survey restart (question 1 but user just requested survey)
