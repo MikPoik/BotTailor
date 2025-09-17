@@ -72,3 +72,20 @@ export async function setupAuthRoutes(app: Express) {
     res.status(401).json({ message: "Authentication failed" });
   });
 }
+
+
+  // Check if current user is admin
+  app.get('/api/auth/admin-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const adminUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
+      
+      const isAdmin = adminUserId && userId === adminUserId;
+      
+      res.json({ isAdmin });
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      res.status(500).json({ message: "Failed to check admin status" });
+    }
+  });

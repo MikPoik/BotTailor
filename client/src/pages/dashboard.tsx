@@ -41,6 +41,13 @@ export default function Dashboard() {
   const [sessionId, setSessionId] = useState<string>("");
   const [, setLocation] = useLocation();
 
+  // Fetch admin status from a server-side endpoint
+  const { data: isAdmin } = useQuery<boolean>({
+    queryKey: ["/api/auth/isAdmin"],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
   // Generate session ID for chat widget
   useEffect(() => {
     const generateSessionId = () => {
@@ -170,11 +177,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        
+
       </div>
 
       {/* Subscription Limit Warning */}
-      {currentSubscription && currentSubscription.plan?.maxBots !== -1 && (
+      {currentSubscription && currentSubscription.plan?.maxBots !== -1 && !isAdmin && (
         <div className="mb-8">
           {(chatbots?.length || 0) >= currentSubscription.plan?.maxBots ? (
             <Card className="border-destructive/50 bg-destructive/5">
@@ -225,7 +232,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             {currentSubscription && (
               <div className="text-sm text-muted-foreground">
-                {chatbots?.length || 0}/{currentSubscription.plan?.maxBots === -1 ? '∞' : currentSubscription.plan?.maxBots || 0} chatbots
+                {chatbots?.length || 0}/{(isAdmin || currentSubscription.plan?.maxBots === -1) ? '∞' : currentSubscription.plan?.maxBots || 0} chatbots
               </div>
             )}
             <Button 
@@ -233,7 +240,7 @@ export default function Dashboard() {
                 console.log("Create Chatbot clicked");
                 setLocation("/chatbots/new");
               }}
-              disabled={currentSubscription && currentSubscription.plan?.maxBots !== -1 && (chatbots?.length || 0) >= currentSubscription.plan?.maxBots}
+              disabled={currentSubscription && currentSubscription.plan?.maxBots !== -1 && !isAdmin && (chatbots?.length || 0) >= currentSubscription.plan?.maxBots}
             >
               <Plus className="mr-2 h-4 w-4" />
               Create Chatbot
