@@ -386,7 +386,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" asChild>
-                <Link href="/support">Contact Support</Link>
+                <Link href="/contact">Contact Support</Link>
               </Button>
             </CardContent>
           </Card>

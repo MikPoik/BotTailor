@@ -126,7 +126,7 @@ This email was generated automatically from a form submission.
       const title = data.metadata?.title || 'Form Submission';
       
       // Use environment variables with provided parameters as fallbacks
-      const finalSenderEmail = process.env.BREVO_SENDER_EMAIL || senderEmail || 'noreply@chatbot.com';
+      const finalSenderEmail = process.env.BREVO_SENDER_EMAIL || senderEmail || 'noreply@bottailor.com';
       const finalSenderName = process.env.BREVO_SENDER_NAME || senderName || 'Chat Assistant';
       
       const emailRequest: BrevoEmailRequest = {

@@ -35,10 +35,10 @@ export function setupContactRoutes(app: Express) {
       const isSupport = contactType === 'support';
       const recipientEmail = isSupport 
         ? process.env.BREVO_SUPPORT_EMAIL || process.env.BREVO_RECIPIENT_EMAIL || 'support@bottailor.com'
-        : process.env.BREVO_SALES_EMAIL || process.env.BREVO_RECIPIENT_EMAIL || 'sales@bottailor.com';
+        : process.env.BREVO_SALES_EMAIL || process.env.BREVO_RECIPIENT_EMAIL || 'support@bottailor.com';
       
       const recipientName = isSupport ? 'Support Team' : 'Sales Team';
-      const senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@bottailor.com';
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || 'support@bottailor.com';
       const senderName = process.env.BREVO_SENDER_NAME || 'BotTailor Contact Form';
 
       // Check if Brevo is configured
