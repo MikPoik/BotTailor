@@ -96,7 +96,7 @@ export default function DynamicHomeScreen({
 
   return (
     <div
-      className={`h-full overflow-y-auto ${className || ''} relative`}
+      className={`h-full overflow-y-auto ${className || ''} relative flex flex-col min-h-full`}
       style={{
         backgroundColor: colors.backgroundColor,
         color: colors.textColor,
@@ -131,13 +131,12 @@ export default function DynamicHomeScreen({
         </div>
       )}
 
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col flex-1 min-h-0">
         {sortedComponents
         .filter((component) => component.visible !== false)
         .map((component) =>
           renderComponent(component, onTopicClick, onActionClick, colors)
         )}
-        <div className="pb-8"></div>
       </div>
     </div>
   );
