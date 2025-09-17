@@ -46,7 +46,7 @@ export const RatingMessage = memo(function RatingMessage({
           })}
         </div>
         {selectedRating && (
-          <p className="text-sm text-neutral-600">{selectedRating} / {maxValue} stars</p>
+          <p className="text-sm text-neutral-600">{selectedRating} / {maxValue}</p>
         )}
       </div>
     );

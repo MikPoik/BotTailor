@@ -36,7 +36,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
             <p dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
           </div>
           {!(message.metadata as MessageMetadata)?.isFollowUp && timeAgo && (<span className="text-xs text-neutral-500 mt-1 block text-right">
-            {timeAgo}
+            {timeAgo.includes('less') ? `${Math.floor(new Date().getSeconds())} s` : timeAgo}
           </span>)}
         </div>
       </div>
