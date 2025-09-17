@@ -222,7 +222,7 @@ export default function ChatbotTest() {
 
           {/* Right Side - Chat Interface */}
           <div className="lg:col-span-2">
-            <Card className="h-[600px]">
+            <Card className="h-[700px] lg:h-[800px]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5" />
