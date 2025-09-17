@@ -44,8 +44,18 @@ export const MultiselectMessage = memo(function MultiselectMessage({
     setIsSubmitting(true);
 
     try {
+      // Get the text descriptions for selected options
+      const selectedOptionsWithText = selectedOptions.map(optionId => {
+        const option = options.find((opt: any) => opt.id === optionId);
+        return {
+          id: optionId,
+          text: option?.text || `Option ${optionId}`
+        };
+      });
+
       const payload = {
-        selected_options: selectedOptions,
+        selected_options: selectedOptions, // Keep original format for compatibility
+        selected_options_with_text: selectedOptionsWithText, // Add text descriptions
         selection_count: selectedOptions.length
       };
 
