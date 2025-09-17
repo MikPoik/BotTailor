@@ -131,13 +131,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         createdAt: new Date(), // Use Date object for schema consistency
       };
 
-      // Ensure we fetch current messages before optimistic update to preserve welcome message
-      const currentData = queryClient.getQueryData(['/api/chat', sessionId, 'messages']);
-      if (!currentData) {
-        // If no messages cached, fetch them first to ensure we don't lose welcome message
-        const refreshPromise = queryClient.refetchQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
-        await refreshPromise;
-      }
+      // Get current data without refetching to preserve optimistic updates
 
       queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
         if (!old) return { messages: [optimisticUserMessage] };
@@ -317,11 +311,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       },
     });
     
-    // Wait a bit for welcome message to be created on server
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Then fetch messages to get the welcome message
-    queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+    // Session initialized - no need to invalidate queries for optimistic UI
     return sessionResult;
   };
 

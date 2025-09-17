@@ -354,8 +354,8 @@ export function setupChatRoutes(app: Express) {
           chatbotConfigId: chatbotConfigId || null,
         });
 
-        // Create welcome message for new sessions
-        await createWelcomeMessageIfNeeded(session);
+        // Skip automatic welcome message creation to allow optimistic UI updates
+        // await createWelcomeMessageIfNeeded(session);
       }
 
       res.json({ session });
@@ -396,8 +396,8 @@ export function setupChatRoutes(app: Express) {
           chatbotConfigId: chatbotConfigId || null,
         });
 
-        // Create welcome message for new sessions
-        await createWelcomeMessageIfNeeded(session);
+        // Skip automatic welcome message creation to allow optimistic UI updates
+        // await createWelcomeMessageIfNeeded(session);
       } else if (
         chatbotConfigId &&
         session.chatbotConfigId !== chatbotConfigId
