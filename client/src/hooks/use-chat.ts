@@ -67,6 +67,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       return response.json();
     },
     enabled: !!sessionId && !!session,
+    staleTime: 0, // Always refetch to ensure we get welcome message
   });
 
   const messages: Message[] = (messagesData?.messages || [])
@@ -129,6 +130,14 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         metadata: {},
         createdAt: new Date(), // Use Date object for schema consistency
       };
+
+      // Ensure we fetch current messages before optimistic update to preserve welcome message
+      const currentData = queryClient.getQueryData(['/api/chat', sessionId, 'messages']);
+      if (!currentData) {
+        // If no messages cached, fetch them first to ensure we don't lose welcome message
+        const refreshPromise = queryClient.refetchQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+        await refreshPromise;
+      }
 
       queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
         if (!old) return { messages: [optimisticUserMessage] };
@@ -296,6 +305,10 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   // Function to manually initialize session when chat is opened
   const initializeSession = () => {
     queryClient.invalidateQueries({ queryKey: ['/api/chat/session', sessionId, chatbotConfigId] });
+    // Also ensure messages are fetched to preserve welcome message
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+    }, 100);
   };
 
   return {
