@@ -197,8 +197,8 @@ export async function generateHomeScreenConfig(
 
         if (component.type === 'header') {
           component.props = {
-            title: component.title || 'Welcome',
-            subtitle: component.subtitle || 'How can I help you today?',
+            title: component.props?.title || component.title || 'Welcome',
+            subtitle: component.props?.subtitle || component.subtitle || 'How can I help you today?',
             topics: []
           };
         }
@@ -206,7 +206,7 @@ export async function generateHomeScreenConfig(
         if (component.type === 'category_tabs') {
           component.props = {
             topics: [],
-            categories: component.categories || []
+            categories: component.props?.categories || component.categories || []
           };
         }
 
@@ -374,8 +374,8 @@ Return the updated complete configuration as a JSON object with 'config' and 'ex
 
         if (component.type === 'header') {
           component.props = {
-            title: component.title || 'Welcome',
-            subtitle: component.subtitle || 'How can I help you today?',
+            title: component.props?.title || component.title || 'Welcome',
+            subtitle: component.props?.subtitle || component.subtitle || 'How can I help you today?',
             topics: []
           };
         }
@@ -383,10 +383,9 @@ Return the updated complete configuration as a JSON object with 'config' and 'ex
         if (component.type === 'category_tabs') {
           component.props = {
             topics: [],
-            categories: component.categories || []
+            categories: component.props?.categories || component.categories || []
           };
         }
-
 
         if (component.props?.actions) {
           component.props.actions.forEach((action: any) => {

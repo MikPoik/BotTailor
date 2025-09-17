@@ -742,7 +742,9 @@ subscriptionRouter.post("/seed-plans", async (req, res) => {
 
     for (const planData of plans) {
       if (planData.stripePriceId && planData.stripeProductId) {
-        await storage.createSubscriptionPlan(planData);
+        if (planData.stripePriceId && planData.stripeProductId) {
+          await storage.createSubscriptionPlan(planData);
+        }
       }
     }
 

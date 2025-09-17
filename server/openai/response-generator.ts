@@ -164,12 +164,12 @@ If this request involves generating or modifying surveys, return a valid JSON re
 
     // Return the response in the expected format
     return {
-      bubbles: [{
-        messageType: "text",
-        content: parsedResponse.content || "I've generated a survey for you!",
-        metadata: {}
-      }]
-    };
+        bubbles: [{
+          messageType: "text",
+          content: parsedResponse.content || "I've generated a survey for you!",
+          metadata: {}
+        }]
+      };
 
   } catch (error) {
     return handleCriticalError(error, "survey assistance generation");

@@ -535,7 +535,7 @@ export default function SurveyBuilderPage() {
                       {/* Questions list */}
                       <div className="space-y-4">
                         <Label>Questions</Label>
-                        {((selectedSurvey.surveyConfig && typeof selectedSurvey.surveyConfig === 'object') ? (selectedSurvey.surveyConfig as SurveyConfig).questions || [] : []).map((question: SurveyQuestion, index: number) => (
+                        {((selectedSurvey.surveyConfig as SurveyConfig)?.questions || []).map((question: SurveyQuestion, index: number) => (
                           <Card key={question.id} className="p-4">
                             {editingQuestion === index ? (
                               // Editing mode
@@ -918,7 +918,7 @@ export default function SurveyBuilderPage() {
                             </p>
                           )}
                         </div>
-                        {((selectedSurvey.surveyConfig && typeof selectedSurvey.surveyConfig === 'object') ? (selectedSurvey.surveyConfig as SurveyConfig).questions || [] : []).map((question: SurveyQuestion, index: number) => (
+                        {((selectedSurvey.surveyConfig as SurveyConfig)?.questions || []).map((question: SurveyQuestion, index: number) => (
                           <div key={question.id} className="p-4 border rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">Q{index + 1}</Badge>

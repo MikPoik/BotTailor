@@ -154,7 +154,7 @@ export class WebsiteScanner {
     if (urls.size < 5) {
       try {
         const crawledUrls = await this.crawlPageLinks(
-          websiteSource.url,
+          websiteSource.url!,
           baseUrl.origin,
         );
         crawledUrls.forEach((url) => urls.add(url));

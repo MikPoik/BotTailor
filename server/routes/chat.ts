@@ -56,7 +56,7 @@ export function setupChatRoutes(app: Express) {
 
               const updatedResponses = {
                 ...surveySession.responses,
-                [`q${surveySession.currentQuestionIndex || 0}`]: optionPayload || optionId
+                [`q${surveySession.currentQuestionIndex || 0}`]: payload || optionId
               };
 
               const updatedSession = await storage.updateSurveySession(
@@ -70,7 +70,7 @@ export function setupChatRoutes(app: Express) {
 
               console.log(
                 `[SURVEY RESPONSE] Successfully recorded survey response and advanced to question ${(updatedSession?.currentQuestionIndex || 0) + 1}`,
-                { optionId, optionPayload, surveyId }
+                { optionId, payload, surveyId: surveySession.surveyId }
               );
               surveyResponseRecorded = true;
             }
@@ -447,7 +447,7 @@ export function setupChatRoutes(app: Express) {
         await handleSurveySessionCreation(
           sessionId,
           internalMessage || messageData.content,
-          chatbotConfigId,
+          chatbotConfigId || session?.chatbotConfigId || undefined,
           session,
         );
       } catch (surveyError) {
@@ -646,13 +646,14 @@ async function handleStreamingResponse(
     // Get chatbot configuration
     let chatbotConfig;
     if (chatbotConfigId) {
-      chatbotConfig = await storage.getChatbotConfig(chatbotConfigId);
-      console.log(
-        `[STREAMING] Using chatbot config: ${chatbotConfig?.name || "Unknown"}`,
-      );
-    } else {
-      console.log(`[STREAMING] No chatbot config ID provided`);
-    }
+        const configId = typeof chatbotConfigId === 'string' ? parseInt(chatbotConfigId) : chatbotConfigId;
+        chatbotConfig = await storage.getChatbotConfig(configId);
+        console.log(
+          `[STREAMING] Using chatbot config: ${chatbotConfig?.name || "Unknown"}`,
+        );
+      } else {
+        console.log(`[STREAMING] No chatbot config ID provided`);
+      }
 
     // Get conversation history
     const conversationHistory = await storage.getMessages(sessionId);
@@ -854,7 +855,7 @@ async function handleSurveySessionCreation(
               `[SURVEY] Set survey ${targetSurvey.id} as active for session ${sessionId}`,
             );
             console.log(
-              `[SURVEY] Survey session status updated for survey: ${targetSurvey.surveyConfig?.title || targetSurvey.name}`,
+              `[SURVEY] Survey session status updated for survey: ${(targetSurvey.surveyConfig as any)?.title || targetSurvey.name}`,
             );
           } else {
             // No existing session, create a new one

@@ -40,6 +40,7 @@ const getDefaultConfig = (): HomeScreenConfig => ({
       props: {
         title: "Welcome",
         subtitle: "How can we help you today?",
+        topics: [],
       },
       order: 1,
       visible: true,
@@ -59,8 +60,11 @@ const getDefaultConfig = (): HomeScreenConfig => ({
             category: "general",
           },
         ],
-        titleFontSize: "16px",
-        descriptionFontSize: "14px",
+        style: {
+          itemStyle: "filled",
+          titleFontSize: "16px",
+          descriptionFontSize: "14px",
+        },
       },
       order: 2,
       visible: true,
@@ -137,6 +141,7 @@ export default function UIDesigner() {
         const style = topicGridComponent.props.style as any;
         if (style.titleFontSize) setTitleFontSize(style.titleFontSize);
         if (style.descriptionFontSize) setDescriptionFontSize(style.descriptionFontSize);
+        if (style.itemStyle) setItemStyle(style.itemStyle);
       }
 
       const headerComponent = config.components?.find(c => c.type === 'header');
