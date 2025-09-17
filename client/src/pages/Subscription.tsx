@@ -338,7 +338,7 @@ export default function Subscription() {
                 </CardDescription>
                 <div className="mt-4">
                   <span className="text-3xl font-bold">
-                    {formatPrice(plan.price, plan.currency)}
+                    {plan.name === 'Free' ? 'Free' : formatPrice(plan.price, plan.currency)}
                   </span>
                   {plan.name !== 'Free' && (
                     <span className="text-muted-foreground">/month</span>
