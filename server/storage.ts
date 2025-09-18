@@ -913,16 +913,36 @@ export class DatabaseStorage implements IStorage {
         const sessions = await db.select().from(surveySessions).where(eq(surveySessions.surveyId, survey.id));
         
         const totalResponses = sessions.length;
-        const completedResponses = sessions.filter(s => s.status === 'completed').length;
+        // Consider sessions as completed if they have responses for most questions or are marked inactive/completed
+        const completedResponses = sessions.filter(s => {
+          if (s.status === 'completed') return true;
+          if (s.status === 'inactive' && s.responses) {
+            // Count as completed if they answered most questions
+            const responseCount = Object.keys(s.responses as any || {}).length;
+            const surveyConfig = survey.surveyConfig as any;
+            const totalQuestions = surveyConfig?.questions?.length || 0;
+            return responseCount >= Math.ceil(totalQuestions * 0.5); // 50% completion threshold
+          }
+          return false;
+        }).length;
         const abandonedResponses = sessions.filter(s => s.status === 'abandoned').length;
         const completionRate = totalResponses > 0 ? (completedResponses / totalResponses) * 100 : 0;
         
-        // Calculate average completion time for completed sessions
-        const completedSessions = sessions.filter(s => s.status === 'completed' && s.completedAt && s.startedAt);
+        // Calculate average completion time for completed/inactive sessions with responses
+        const completedSessions = sessions.filter(s => {
+          if (s.status === 'completed' && s.completedAt && s.startedAt) return true;
+          if (s.status === 'inactive' && s.startedAt) {
+            // Use updatedAt as completion time for inactive sessions
+            const responseCount = Object.keys(s.responses as any || {}).length;
+            return responseCount > 0;
+          }
+          return false;
+        });
         let avgCompletionTime = 0;
         if (completedSessions.length > 0) {
           const totalTime = completedSessions.reduce((sum, session) => {
-            const completionTime = new Date(session.completedAt!).getTime() - new Date(session.startedAt).getTime();
+            const endTime = session.completedAt ? new Date(session.completedAt).getTime() : new Date(session.updatedAt).getTime();
+            const completionTime = endTime - new Date(session.startedAt).getTime();
             return sum + completionTime;
           }, 0);
           avgCompletionTime = totalTime / completedSessions.length;
@@ -934,13 +954,38 @@ export class DatabaseStorage implements IStorage {
         const surveyConfig = survey.surveyConfig as any;
         const questions = surveyConfig?.questions || [];
         
-        const questionAnalytics = questions.map((question: any) => {
+        const questionAnalytics = questions.map((question: any, index: number) => {
           const questionResponses = sessions
             .map(session => {
               const responses = session.responses as any;
-              return responses?.[question.id];
+              // Try multiple possible question ID formats
+              const possibleIds = [
+                question.id,                    // q_1, q_2, etc.
+                `q${index}`,                   // q0, q1, q2, etc.
+                `question_${index}`,           // question_0, question_1, etc.
+                `q_${index + 1}`,             // q_1, q_2, etc. (1-indexed)
+              ];
+              
+              for (const id of possibleIds) {
+                const response = responses?.[id];
+                if (response !== undefined && response !== null) {
+                  // Handle different response formats
+                  if (typeof response === 'object') {
+                    if (response.rating !== undefined) {
+                      return response.rating;
+                    } else if (response.selected_options) {
+                      return response.selected_options;
+                    } else if (response.selection_count) {
+                      return response.selected_options || response;
+                    }
+                    return response;
+                  }
+                  return response;
+                }
+              }
+              return null;
             })
-            .filter(response => response !== undefined && response !== null);
+            .filter(response => response !== null && response !== undefined);
 
           return {
             questionId: question.id,
