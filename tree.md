@@ -1,6 +1,6 @@
 # Directory Tree
 
-Generated on: 2025-09-17T14:04:47.975Z
+Generated on: 2025-09-18T19:41:52.760Z
 
 *Simple mode: Directory structure only*
 
@@ -60,6 +60,7 @@ Generated on: 2025-09-17T14:04:47.975Z
 │       │   ├── 📄 home.tsx
 │       │   ├── 📄 not-found.tsx
 │       │   ├── 📄 privacy.tsx
+│       │   ├── 📄 survey-analytics.tsx
 │       │   ├── 📄 survey-builder.tsx
 │       │   ├── 📄 terms.tsx
 │       │   └── 📄 ui-designer.tsx

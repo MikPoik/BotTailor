@@ -122,15 +122,15 @@
 **HARD LIMIT:** ≤4 total calls
 **STOP CONDITION:** When console confirms success - **NO VERIFICATION PERMITTED**
 
-### **MEDIUM COORDINATED PATTERN (≤8 TOOLS)**  
-**TRIGGERS:** 3-6 files, 100-200 lines, some unknowns, end-to-end changes
+### **MEDIUM COORDINATED PATTERN SELF-EXECUTE OR TARGETED DELEGATION (≤8 TOOLS)**  
+**TRIGGERS:** 3-5 files, 100-200 lines, some unknowns, end-to-end changes
 **MANDATORY FLOW:** read(batch) + search_codebase → analyze → multi_edit(batched) → selective testing
 **HARD LIMIT:** ≤8 total calls
 **VALIDATE:** Integration points **ONLY** - trust individual components
 
 ### **COMPLEX DELEGATION PATTERN (IMMEDIATE DELEGATION)**
 **TRIGGERS:** >5 files, >200 lines, OR genuine parallel workstreams  
-**MANDATORY FLOW:** Define boundaries → delegate with isolated scopes → integrate outputs
+**MANDATORY FLOW:** Call System Architect → Define boundaries → delegate with isolated scopes → integrate outputs
 **COORDINATION LIMIT:** Max 5 calls - abort if exceeded
 
 ---
@@ -299,27 +299,68 @@ SUCCESS CRITERIA:
 - Stop conditions must be explicitly identified
 - Tool usage must be justified within limits
 
+## Real-World Decision Examples
+
+### "AI decides when to search" (Recent Example)
+**Initial Assessment:** AI domain (Yellow) → Architect consultation
+**After Plan:** Clear implementation (API calls, caching, UI updates) → Self-execute
+**Lesson:** Re-classify based on implementation clarity, not initial domain
+
+### "User authentication system"
+**Assessment:** >5 files, multiple domains, parallel streams
+**Decision:** Call System Architect → Delegate (Auth specialist + UI specialist + DB specialist)
+**Why:** Genuine parallel workstreams with distinct expertise
+
+### "Fix search indicator bug"
+**Assessment:** UI bug, <3 files, familiar pattern
+**Decision:** Self-execute immediately (≤4 tools, stop at success)
+**Why:** Simple frontend state management, no validation needed
+
+### "Add shopping cart functionality" (Medium Self-Execute)
+**Assessment:** 4 files (frontend components, API routes, database schema), familiar e-commerce patterns, sequential dependencies
+**Decision:** Medium self-execute (≤8 tools)
+**Why:** End-to-end changes but familiar CRUD patterns, tight coordination needed between UI→API→DB
+
+### "Implement user dashboard with analytics" (Medium Targeted Delegation)
+**Assessment:** 5 files, dashboard UI + analytics queries, mixed expertise needed
+**Decision:** Targeted delegation (UI specialist + Analytics specialist)
+**Why:** Two distinct expertise domains that can work in parallel, clear integration boundary
+
+### "Performance optimization across app" (Complex with Architect)
+**Assessment:** >10 files, unknown bottlenecks, requires analysis + implementation
+**Decision:** Call System Architect → Performance audit → Targeted optimizations
+**Why:** Need architectural analysis before knowing what to optimize
+
+### "Migrate database schema" (Complex Delegation)
+**Assessment:** >8 files, data integrity concerns, migration scripts + API updates + frontend changes
+**Decision:** Call System Architect → Delegate (DB specialist + API specialist + Frontend specialist)
+**Why:** High-risk parallel streams requiring careful coordination
+
+### "Add forgot password feature" (Medium Self-Execute)
+**Assessment:** 3 files, familiar auth patterns, security considerations
+**Decision:** Medium self-execute with selective validation
+**Why:** Familiar implementation but security-sensitive, requires validation of auth flow
+
+### "Fix CSS styling issues" (Simple Self-Execute)
+**Assessment:** 2 files, visual bugs, familiar CSS patterns
+**Decision:** Self-execute immediately (≤4 tools, stop at visual confirmation)
+**Why:** Straightforward styling fixes, HMR provides immediate feedback
+
+### "Implement real-time notifications" (Boundary Case - 6 files)
+**Assessment:** 6 files, WebSocket + database + UI components, some unknowns with WebSocket patterns
+**Decision:** Call System Architect → Medium self-execute after clarification
+**Why:** Boundary case resolved by architect guidance making implementation approach clear
+
 **THIS POLICY IS IMMUTABLE AND NON-NEGOTIABLE**
 
 ## Overview
 
 This project is a full-stack React chat widget application featuring an Express.js backend and a React frontend. Its primary purpose is to provide an embeddable customer support chat widget for any website. The widget supports rich messaging, including text, interactive cards, menus, and quick replies, aiming to offer a comprehensive and customizable communication tool for businesses. The vision is to enable seamless integration of sophisticated chat functionalities, enhancing user engagement and support capabilities across various web platforms.
 
-## Development Workflow
-
-**CORE**: Fix root causes, work bottom-up, try the simplest fix, switch layers when stuck, batch changes, trust dev tools, stop on success.
-4-PHASE WORKFLOW:
-1. PLAN : Map all files/changes. Read error stacks fully - deepest frame = real issue.
-2. DISCOVER: Batch ALL reads/grep/rg . Never read→analyze→read.
-3. EXECUTE: Use multi_edit for multiple changes per file. Batch parallel edits. Fix patterns not instances.
-4. VALIDATE: Stop when HMR/console/LSP confirms success. No screenshots.
-RULES: Batch function_calls. Read multiple files simultaneously. No sub_agent calls. No task lists. No architect, unless requested. 
-COMMUNICATION: Explain each phase while working - Show me how you follow plan
-
 
 ## User Preferences
 
-Preferred communication style: Like talking to a developer, technical and detailed.
+Preferred communication style: Like talking to a software developer, technical and detailed.
 
 ### Notes for agent
 
@@ -372,7 +413,11 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 - **esbuild**: Backend bundling for production
 - **@replit/vite-plugin-runtime-error-modal**: Development error handling
 
-### Source tree
+# Directory Tree
+
+Generated on: 2025-09-18T19:41:52.760Z
+
+*Simple mode: Directory structure only*
 
 ```
 ├── 📁 client/
@@ -396,6 +441,7 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │       │   │   ├── 📄 survey-assistant-chatbox.tsx
 │       │   │   ├── 📄 tabbed-chat-interface.tsx
 │       │   │   └── 📄 typing-indicator.tsx
+│       │   ├── 📄 footer.tsx
 │       │   ├── 📄 navbar.tsx
 │       │   ├── 📄 theme-toggle.tsx
 │       │   └── 📁 ui-designer/
@@ -428,7 +474,10 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 │       │   ├── 📄 docs.tsx
 │       │   ├── 📄 home.tsx
 │       │   ├── 📄 not-found.tsx
+│       │   ├── 📄 privacy.tsx
+│       │   ├── 📄 survey-analytics.tsx
 │       │   ├── 📄 survey-builder.tsx
+│       │   ├── 📄 terms.tsx
 │       │   └── 📄 ui-designer.tsx
 │       └── 📁 types/
 │           └── 📄 message-metadata.ts
