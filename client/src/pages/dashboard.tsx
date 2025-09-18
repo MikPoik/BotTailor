@@ -101,6 +101,49 @@ export default function Dashboard() {
     retry: false,
   });
 
+  // Fetch survey analytics for all user chatbots
+  const { data: surveyAnalytics, isLoading: surveyAnalyticsLoading } = useQuery<{
+    totalSurveys: number;
+    totalResponses: number;
+    completionRate: number;
+    averageCompletionTime: number;
+  }>({
+    queryKey: ["/api/survey-analytics"],
+    queryFn: async () => {
+      if (!chatbots || chatbots.length === 0) {
+        return { totalSurveys: 0, totalResponses: 0, completionRate: 0, averageCompletionTime: 0 };
+      }
+      
+      // Aggregate analytics from all user chatbots
+      const analyticsPromises = chatbots.map(async (chatbot) => {
+        const response = await fetch(`/api/chatbots/${chatbot.id}/surveys/analytics`);
+        if (response.ok) {
+          return await response.json();
+        }
+        return { totalSurveys: 0, totalResponses: 0, completionRate: 0, averageCompletionTime: 0 };
+      });
+      
+      const allAnalytics = await Promise.all(analyticsPromises);
+      
+      // Aggregate totals
+      return allAnalytics.reduce(
+        (acc, analytics) => ({
+          totalSurveys: acc.totalSurveys + analytics.totalSurveys,
+          totalResponses: acc.totalResponses + analytics.totalResponses,
+          completionRate: allAnalytics.length > 0 
+            ? allAnalytics.reduce((sum, a) => sum + a.completionRate, 0) / allAnalytics.length
+            : 0,
+          averageCompletionTime: allAnalytics.length > 0
+            ? allAnalytics.reduce((sum, a) => sum + a.averageCompletionTime, 0) / allAnalytics.length
+            : 0,
+        }),
+        { totalSurveys: 0, totalResponses: 0, completionRate: 0, averageCompletionTime: 0 }
+      );
+    },
+    enabled: isAuthenticated && !!chatbots && chatbots.length > 0,
+    retry: false,
+  });
+
   // Get chatbot GUID from URL parameters or environment
   const urlParams = new URLSearchParams(window.location.search);
   const urlChatbotGuid = urlParams.get('chatbot');
@@ -148,7 +191,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Chatbots</CardTitle>
@@ -175,6 +218,21 @@ export default function Dashboard() {
             </div>
             <p className="text-xs text-muted-foreground">
               Total conversations
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Survey Responses</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {surveyAnalyticsLoading ? "..." : surveyAnalytics?.totalResponses || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {surveyAnalytics?.completionRate ? `${surveyAnalytics.completionRate.toFixed(1)}% completion rate` : 'No survey data'}
             </p>
           </CardContent>
         </Card>

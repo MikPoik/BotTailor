@@ -90,6 +90,29 @@ export interface IStorage {
   getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined>;
   deactivateAllSurveySessions(sessionId: string): Promise<void>;
 
+  // Survey analytics methods
+  getSurveyAnalyticsByChatbotGuid(chatbotGuid: string): Promise<{
+    totalSurveys: number;
+    totalResponses: number;
+    completionRate: number;
+    averageCompletionTime: number;
+    surveyBreakdown: Array<{
+      surveyId: number;
+      surveyName: string;
+      totalResponses: number;
+      completedResponses: number;
+      abandonedResponses: number;
+      completionRate: number;
+      avgCompletionTime: number;
+      questionAnalytics: Array<{
+        questionId: string;
+        questionText: string;
+        responses: any[];
+        responseCount: number;
+      }>;
+    }>;
+  }>;
+
   // Conversation count methods
   getConversationCount(userId: string): Promise<number>;
 
@@ -828,6 +851,131 @@ export class DatabaseStorage implements IStorage {
 
     const messagesUsed = subscription.messagesUsedThisMonth || 0;
     return messagesUsed < subscription.plan.maxMessagesPerMonth;
+  }
+
+  // Survey analytics implementation
+  async getSurveyAnalyticsByChatbotGuid(chatbotGuid: string): Promise<{
+    totalSurveys: number;
+    totalResponses: number;
+    completionRate: number;
+    averageCompletionTime: number;
+    surveyBreakdown: Array<{
+      surveyId: number;
+      surveyName: string;
+      totalResponses: number;
+      completedResponses: number;
+      abandonedResponses: number;
+      completionRate: number;
+      avgCompletionTime: number;
+      questionAnalytics: Array<{
+        questionId: string;
+        questionText: string;
+        responses: any[];
+        responseCount: number;
+      }>;
+    }>;
+  }> {
+    // Get chatbot config to find the ID
+    const chatbot = await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.guid, chatbotGuid)).limit(1);
+    if (!chatbot[0]) {
+      return {
+        totalSurveys: 0,
+        totalResponses: 0,
+        completionRate: 0,
+        averageCompletionTime: 0,
+        surveyBreakdown: [],
+      };
+    }
+
+    const chatbotConfigId = chatbot[0].id;
+
+    // Get all surveys for this chatbot
+    const allSurveys = await db.select().from(surveys).where(eq(surveys.chatbotConfigId, chatbotConfigId));
+    
+    if (allSurveys.length === 0) {
+      return {
+        totalSurveys: 0,
+        totalResponses: 0,
+        completionRate: 0,
+        averageCompletionTime: 0,
+        surveyBreakdown: [],
+      };
+    }
+
+    let totalResponses = 0;
+    let totalCompleted = 0;
+    let totalCompletionTimeMs = 0;
+    let completedWithTime = 0;
+
+    const surveyBreakdown = await Promise.all(
+      allSurveys.map(async (survey) => {
+        // Get all survey sessions for this survey
+        const sessions = await db.select().from(surveySessions).where(eq(surveySessions.surveyId, survey.id));
+        
+        const totalResponses = sessions.length;
+        const completedResponses = sessions.filter(s => s.status === 'completed').length;
+        const abandonedResponses = sessions.filter(s => s.status === 'abandoned').length;
+        const completionRate = totalResponses > 0 ? (completedResponses / totalResponses) * 100 : 0;
+        
+        // Calculate average completion time for completed sessions
+        const completedSessions = sessions.filter(s => s.status === 'completed' && s.completedAt && s.startedAt);
+        let avgCompletionTime = 0;
+        if (completedSessions.length > 0) {
+          const totalTime = completedSessions.reduce((sum, session) => {
+            const completionTime = new Date(session.completedAt!).getTime() - new Date(session.startedAt).getTime();
+            return sum + completionTime;
+          }, 0);
+          avgCompletionTime = totalTime / completedSessions.length;
+          totalCompletionTimeMs += totalTime;
+          completedWithTime += completedSessions.length;
+        }
+
+        // Analyze questions and responses
+        const surveyConfig = survey.surveyConfig as any;
+        const questions = surveyConfig?.questions || [];
+        
+        const questionAnalytics = questions.map((question: any) => {
+          const questionResponses = sessions
+            .map(session => {
+              const responses = session.responses as any;
+              return responses?.[question.id];
+            })
+            .filter(response => response !== undefined && response !== null);
+
+          return {
+            questionId: question.id,
+            questionText: question.text,
+            responses: questionResponses,
+            responseCount: questionResponses.length,
+          };
+        });
+
+        return {
+          surveyId: survey.id,
+          surveyName: survey.name,
+          totalResponses,
+          completedResponses,
+          abandonedResponses,
+          completionRate,
+          avgCompletionTime,
+          questionAnalytics,
+        };
+      })
+    );
+
+    // Calculate overall statistics
+    totalResponses = surveyBreakdown.reduce((sum, survey) => sum + survey.totalResponses, 0);
+    totalCompleted = surveyBreakdown.reduce((sum, survey) => sum + survey.completedResponses, 0);
+    const overallCompletionRate = totalResponses > 0 ? (totalCompleted / totalResponses) * 100 : 0;
+    const averageCompletionTime = completedWithTime > 0 ? totalCompletionTimeMs / completedWithTime : 0;
+
+    return {
+      totalSurveys: allSurveys.length,
+      totalResponses,
+      completionRate: overallCompletionRate,
+      averageCompletionTime,
+      surveyBreakdown,
+    };
   }
 
 }

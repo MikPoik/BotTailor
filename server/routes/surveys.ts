@@ -249,4 +249,25 @@ export function setupSurveyRoutes(app: Express) {
       res.status(500).json({ message: "Failed to fetch survey session status" });
     }
   });
+
+  // Survey Analytics endpoint  
+  app.get('/api/chatbots/:chatbotId/surveys/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const { chatbotId } = req.params;
+      const fullUserId = req.user.claims.sub;
+      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+
+      // Verify chatbot ownership
+      const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot not found" });
+      }
+
+      const analytics = await storage.getSurveyAnalyticsByChatbotGuid(chatbot.guid);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching survey analytics:", error);
+      res.status(500).json({ message: "Failed to fetch survey analytics" });
+    }
+  });
 }
