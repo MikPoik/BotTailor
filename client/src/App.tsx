@@ -19,6 +19,7 @@ import ChatbotTest from "@/pages/chatbot-test";
 import UIDesigner from "@/pages/ui-designer";
 import AddData from "@/pages/add-data";
 import SurveyBuilder from "@/pages/survey-builder";
+import SurveyAnalytics from "@/pages/survey-analytics";
 import ChatHistory from "@/pages/chat-history";
 import ChatbotEmbed from "@/pages/chatbot-embed";
 import Docs from "@/pages/docs";
@@ -75,6 +76,7 @@ function AuthenticatedRouter() {
           <Route path="/chatbots/:guid/test" component={ChatbotTest} />
           <Route path="/chatbots/:guid/ui-designer" component={UIDesigner} />
           <Route path="/chatbots/:guid/analytics" component={ChatHistory} />
+          <Route path="/chatbots/:guid/survey-analytics" component={SurveyAnalytics} />
           <Route path="/chatbots/:guid/surveys" component={SurveyBuilder} />
           <Route path="/chatbots/:guid/embed" component={ChatbotEmbed} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
