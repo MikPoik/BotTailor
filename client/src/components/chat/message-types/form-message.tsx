@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { FormMetadata } from "@/types/message-metadata";
 import { parseMarkdown } from "@/lib/markdown-utils";
+import { Send } from "lucide-react";
 
 interface FormMessageProps {
   content: string;
@@ -159,7 +160,10 @@ export const FormMessage = memo(function FormMessage({
                 Sending...
               </div>
             ) : (
-              metadata.submitButton?.text || 'Send Message'
+              <div className="flex items-center justify-center gap-2">
+                {metadata.submitButton?.icon === "Send" && <Send className="h-4 w-4" />}
+                {metadata.submitButton?.text || 'Send Message'}
+              </div>
             )}
           </Button>
         </form>

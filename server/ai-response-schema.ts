@@ -201,7 +201,7 @@ ${
         {"id": "email", "label": "Email", "type": "email", "placeholder": "Enter your email address", "required": true},
         {"id": "message", "label": "Message", "type": "textarea", "placeholder": "How can we help you?", "required": true}
       ],
-      "submitButton": {"id": "submit_contact", "text": "Send Message", "action": "submit_form"}
+      "submitButton": {"id": "submit_contact", "text": "Send", "icon": "Send", "action": "submit_form"}
     }}
   ]
 }`
