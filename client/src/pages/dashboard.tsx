@@ -381,7 +381,13 @@ export default function Dashboard() {
                         <DropdownMenuItem asChild>
                           <Link href={`/chatbots/${chatbot.guid}/analytics`} className="flex items-center cursor-pointer">
                             <TrendingUp className="mr-2 h-4 w-4" />
-                            Analytics
+                            Chat Analytics
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/survey-analytics`} className="flex items-center cursor-pointer">
+                            <BarChart3 className="mr-2 h-4 w-4" />
+                            Survey Analytics
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
