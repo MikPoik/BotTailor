@@ -110,6 +110,7 @@ export default function UIDesigner() {
   const [headerTransparent, setHeaderTransparent] = useState<boolean>(false);
   const [titleFontSize, setTitleFontSize] = useState<string>("16px");
   const [descriptionFontSize, setDescriptionFontSize] = useState<string>("14px");
+  const [backgroundImageTransparency, setBackgroundImageTransparency] = useState<number>(20);
 
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
@@ -131,6 +132,9 @@ export default function UIDesigner() {
         if (config.theme.backgroundColor) setBackgroundColor(config.theme.backgroundColor);
         if (config.theme.textColor) setTextColor(config.theme.textColor);
         if (config.theme.backgroundImageUrl) setBackgroundImageUrl(config.theme.backgroundImageUrl);
+        if (config.theme.backgroundImageTransparency !== undefined) {
+          setBackgroundImageTransparency(config.theme.backgroundImageTransparency);
+        }
       }
 
       // Initialize style settings from components
@@ -181,7 +185,8 @@ export default function UIDesigner() {
           primaryColor: primaryColor,
           backgroundColor: backgroundColor,
           textColor: textColor,
-          backgroundImageUrl: backgroundImageUrl
+          backgroundImageUrl: backgroundImageUrl,
+          backgroundImageTransparency: backgroundImageTransparency
         }
       };
 
@@ -207,7 +212,7 @@ export default function UIDesigner() {
 
       setEditableConfig(JSON.stringify(updatedConfig, null, 2));
     }
-  }, [primaryColor, backgroundColor, textColor, backgroundImageUrl, titleFontSize, descriptionFontSize, itemStyle, headerTransparent, currentConfig]);
+  }, [primaryColor, backgroundColor, textColor, backgroundImageUrl, titleFontSize, descriptionFontSize, itemStyle, headerTransparent, backgroundImageTransparency, currentConfig]);
 
   // Track unsaved changes
   useEffect(() => {
@@ -354,7 +359,8 @@ Please consider these colors when generating the UI design to ensure visual cons
           primaryColor: primaryColor,
           backgroundColor: backgroundColor,
           textColor: textColor,
-          backgroundImageUrl: backgroundImageUrl
+          backgroundImageUrl: backgroundImageUrl,
+          backgroundImageTransparency: backgroundImageTransparency
         };
 
         // Update style settings in components
@@ -434,7 +440,8 @@ Please consider these colors when generating the UI design to ensure visual cons
         primaryColor: primaryColor,
         backgroundColor: backgroundColor,
         textColor: textColor,
-        backgroundImageUrl: backgroundImageUrl
+        backgroundImageUrl: backgroundImageUrl,
+        backgroundImageTransparency: backgroundImageTransparency
       };
 
       // Update style settings in components
@@ -484,6 +491,7 @@ Please consider these colors when generating the UI design to ensure visual cons
     setHeaderTransparent(false);
     setTitleFontSize("16px");
     setDescriptionFontSize("14px");
+    setBackgroundImageTransparency(20);
 
     toast({
       title: "Configuration Reset",
@@ -842,6 +850,29 @@ Please consider these colors when generating the UI design to ensure visual cons
                         <p className="text-xs text-muted-foreground">
                           Make the header background transparent to show the background image behind it
                         </p>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="background-transparency">
+                            Background Image Transparency: {backgroundImageTransparency}%
+                          </Label>
+                          <input
+                            id="background-transparency"
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={backgroundImageTransparency}
+                            onChange={(e) => setBackgroundImageTransparency(Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                            data-testid="slider-background-transparency"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>No overlay</span>
+                            <span>Full overlay</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Controls the overlay opacity that ensures text readability over the background image
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>

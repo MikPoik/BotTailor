@@ -420,6 +420,7 @@ export const HomeScreenConfigSchema = z.object({
     textColor: z.string().optional(),
     borderRadius: z.string().optional(),
     backgroundImageUrl: z.string().optional(),
+    backgroundImageTransparency: z.number().optional(),
   }).optional(),
   settings: z.object({
     enableSearch: z.boolean().default(false),

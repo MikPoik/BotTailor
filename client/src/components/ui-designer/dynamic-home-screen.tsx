@@ -44,6 +44,7 @@ function resolveColors(config: HomeScreenConfig, previewFontSizes?: { titleFontS
     backgroundColor: (isValidColor(embedBackgroundColor) ? embedBackgroundColor : config.theme?.backgroundColor) || 'var(--background)',
     textColor: (isValidColor(embedTextColor) ? embedTextColor : config.theme?.textColor) || 'var(--foreground)',
     backgroundImageUrl: config.theme?.backgroundImageUrl,
+    backgroundImageTransparency: config.theme?.backgroundImageTransparency || 20,
     titleFontSize,
     descriptionFontSize
   };
@@ -115,10 +116,10 @@ export default function DynamicHomeScreen({
       {/* Background overlay for better text readability when background image is present */}
       {backgroundImageUrl && !imageError && (
         <div
-          className="absolute inset-0 bg-black/20 pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundColor: `${colors.backgroundColor}80`, // 50% opacity background
-            opacity: imageLoaded ? 1 : 0, // Apply opacity to overlay as well
+            backgroundColor: `${colors.backgroundColor}${Math.round((colors.backgroundImageTransparency / 100) * 255).toString(16).padStart(2, '0')}`,
+            opacity: imageLoaded ? 1 : 0,
             transition: 'opacity 0.5s ease-in-out'
           }}
         />
