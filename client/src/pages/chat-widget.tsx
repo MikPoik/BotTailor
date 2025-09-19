@@ -29,6 +29,15 @@ export default function ChatWidgetPage() {
         setSessionId(newSessionId);
       }
     }
+
+    // Set iframe-friendly styling when embedded
+    if (embedded) {
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.height = '100%';
+      document.body.style.height = '100%';
+    }
   }, []);
 
   if (!sessionId) {
@@ -55,7 +64,15 @@ export default function ChatWidgetPage() {
     };
     
     return (
-      <div className="w-full h-full">
+      <div 
+        className="w-full h-full" 
+        style={{ 
+          height: '100vh', 
+          margin: 0, 
+          padding: 0,
+          backgroundColor: theme.backgroundColor 
+        }}
+      >
         <ChatWidget 
           sessionId={sessionId} 
           primaryColor={theme.primaryColor}

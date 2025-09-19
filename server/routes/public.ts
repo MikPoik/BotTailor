@@ -211,6 +211,46 @@ export function setupPublicRoutes(app: Express) {
     }
   });
 
+  // Iframe embedding route - serves the chat widget directly for iframe embedding
+  app.get("/widget/:userId/:chatbotGuid", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId, chatbotGuid } = req.params;
+      const { 
+        primaryColor = '#2563eb', 
+        backgroundColor = '#ffffff', 
+        textColor = '#1f2937',
+        mobile = 'false',
+        embedded = 'true',
+        sessionId 
+      } = req.query;
+
+      // Validate required parameters
+      if (!userId || !chatbotGuid) {
+        return res.status(400).send('Missing required parameters: userId and chatbotGuid');
+      }
+
+      // Serve the React chat widget page with embedded flag
+      const queryParams = new URLSearchParams({
+        embedded: embedded as string,
+        mobile: mobile as string,
+        primaryColor: primaryColor as string,
+        backgroundColor: backgroundColor as string,
+        textColor: textColor as string,
+        ...(sessionId && { sessionId: sessionId as string })
+      });
+
+      // Set iframe-friendly headers
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Content-Security-Policy', "frame-ancestors 'self' *");
+
+      // Redirect to the chat widget page with proper parameters
+      res.redirect(`/chat-widget?${queryParams.toString()}`);
+    } catch (error) {
+      console.error("Error serving iframe widget:", error);
+      res.status(500).send('Error loading chat widget');
+    }
+  });
+
   // Route guard to prevent incorrect widget URLs from being served by Vite catch-all
   // This blocks URLs like /:userId/:chatbotGuid that should be /widget/:userId/:chatbotGuid
   // Only match very specific patterns to avoid interfering with valid routes
