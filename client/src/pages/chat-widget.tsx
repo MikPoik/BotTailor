@@ -54,6 +54,18 @@ export default function ChatWidgetPage() {
     const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     const chatbotConfig = injectedConfig?.chatbotConfig;
     
+    // STRICT VALIDATION: No fallback allowed - must have valid chatbot config
+    if (!injectedConfig?.embedded || !chatbotConfig?.id) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gray-50">
+          <div className="text-center p-4">
+            <p className="text-gray-600 text-sm">Chat widget configuration error</p>
+            <p className="text-gray-500 text-xs mt-1">No valid chatbot configuration found</p>
+          </div>
+        </div>
+      );
+    }
+    
     // Read theme colors from URL parameters first, then fallback to injected config, then defaults
     const urlParams = new URLSearchParams(window.location.search);
     

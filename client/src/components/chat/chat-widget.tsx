@@ -68,19 +68,23 @@ export default function ChatWidget({
   const safeLocalStorage = {
     getItem: (key: string): string | null => {
       try {
+        if (typeof Storage === "undefined" || typeof localStorage === "undefined") {
+          return null;
+        }
         return localStorage.getItem(key);
       } catch (error) {
         // In sandboxed iframe, localStorage may not be accessible
-        console.warn('localStorage not accessible, using session-based fallback');
         return null;
       }
     },
     setItem: (key: string, value: string): void => {
       try {
+        if (typeof Storage === "undefined" || typeof localStorage === "undefined") {
+          return;
+        }
         localStorage.setItem(key, value);
       } catch (error) {
-        // In sandboxed iframe, localStorage may not be accessible
-        console.warn('localStorage not accessible, skipping storage');
+        // In sandboxed iframe, localStorage may not be accessible - fail silently
       }
     }
   };

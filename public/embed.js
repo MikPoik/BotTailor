@@ -23,17 +23,16 @@
       // Merge options with default config
       this.config = { ...this.config, ...options };
 
-      // Validate required config
+      // Validate required config - STRICT validation, no fallbacks
       if (!this.config.apiUrl) {
-        // Silent fail in production - widget won't initialize
+        console.error('Chat widget: apiUrl is required but not provided');
         return;
       }
 
       // Validate that the API URL includes the proper /widget/ path for external embeds
       // This prevents the widget from showing when accessed through incorrect URLs
       if (!this.config.apiUrl.includes('/widget/')) {
-        console.warn('Chat widget: API URL must include /widget/ path for proper functionality');
-        // Silent fail - don't show widget for incorrectly formatted URLs
+        console.error('Chat widget: API URL must include /widget/ path for proper functionality');
         return;
       }
 

@@ -84,32 +84,12 @@ export function setupPublicRoutes(app: Express) {
       res.status(404).send('embed.css not found');
     }
   });
-  // Get default chatbot configuration for public access
+  // DISABLED: Get default chatbot configuration for public access
+  // User requested to remove default config fallback functionality
   app.get('/api/public/default-chatbot', async (req, res) => {
-    try {
-      const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
-      const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
-
-      if (!defaultGuid || !defaultUserId) {
-        console.log(`[DEFAULT CHATBOT] Environment variables not configured - returning empty response`);
-        return res.json(null); // Return null instead of 404 to prevent retry loops
-      }
-
-      console.log(`[DEFAULT CHATBOT] Serving default chatbot: ${defaultGuid} for admin user: ${defaultUserId}`);
-
-      const chatbotConfig = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
-      if (!chatbotConfig) {
-        console.log(`[DEFAULT CHATBOT] No chatbot found - returning empty response`);
-        return res.json(null); // Return null instead of 404 to prevent retry loops
-      }
-
-      console.log(`[DEFAULT CHATBOT] Serving default chatbot: ${chatbotConfig.name} (GUID: ${chatbotConfig.guid}) for admin user: ${defaultUserId}`);
-
-      res.json(chatbotConfig);
-    } catch (error) {
-      console.error("Error fetching default chatbot:", error);
-      res.json(null); // Return null instead of 500 to prevent retry loops
-    }
+    // Always return null to disable default chatbot fallback
+    console.log(`[DEFAULT CHATBOT] Default chatbot disabled - returning empty response`);
+    res.json(null);
   });
 
   // Get surveys available for public home screen
@@ -146,7 +126,12 @@ export function setupPublicRoutes(app: Express) {
       const chatbotConfig = await storage.getChatbotConfigByGuid(userId, chatbotGuid);
       if (!chatbotConfig || !chatbotConfig.isActive) {
         console.log(`Chatbot not found or inactive: ${chatbotGuid}`);
-        return res.status(404).json({ error: 'Chatbot not found or inactive' });
+        return res.status(404).json({ 
+          error: 'Chatbot not found or inactive',
+          message: 'The requested chatbot configuration could not be found or is not active. Please verify the userId and chatbotGuid parameters.',
+          userId,
+          chatbotGuid
+        });
       }
 
       // Return only the public configuration data needed for the embed widget
