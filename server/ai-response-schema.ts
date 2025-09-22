@@ -173,13 +173,18 @@ Follow-up question, aknowledge user's response and validate their feelings. For 
 ]` : ''}
 
 **For Interactive/Conversational Content:**
+
+⚠️ **DYNAMIC VALIDATION RULE**: When you plan to provide interactive choices (menus/quickreplies), add expectation metadata to help validate completeness:
+- Add expectedMenuOptions: number if you plan to follow with a menu
+- Add expectedQuickReplies: number if you plan to follow with quick replies
+- Add contentIntent: description to describe your plan
 Use multiple shorter bubbles to create natural dialogue flow.
 
 Example for regular greetings and options:
 {
   "bubbles": [
     {"messageType": "text", "content": "Hi there! 👋"},
-    {"messageType": "text", "content": "How can I help you today? Would you like to learn more about:"},
+    {"messageType": "text", "content": "How can I help you today? Would you like to learn more about:", "metadata": {"expectedMenuOptions": 3, "contentIntent": "greeting_menu"}},
     {"messageType": "menu", "content": "", "metadata": {"options": [
       {"id": "services", "text": "Our Services", "action": "select"},
       {"id": "pricing", "text": "Pricing Information", "action": "select"},

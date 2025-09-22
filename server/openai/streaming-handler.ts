@@ -11,6 +11,10 @@ import {
   validateSurveyMenuRequirements,
   type SurveyValidationResult
 } from "./survey-menu-validator";
+import {
+  validateDynamicContent,
+  type DynamicContentValidationResult
+} from "./dynamic-content-validator";
 import { handleCriticalError, generateFallbackResponse, attemptResponseSalvage } from "./error-handler";
 import type { ConversationMessage } from "./response-generator";
 
@@ -172,6 +176,20 @@ export async function* generateStreamingResponse(
       
       // Enhanced survey menu validation with regeneration capability
       const validationResult = await validateSurveyMenuRequirements(sessionId, validated);
+
+      // Dynamic content validation for non-survey interactive elements
+      const dynamicValidation = validateDynamicContent(validated);
+      
+      // Log dynamic validation results
+      if (!dynamicValidation.isValid || dynamicValidation.warnings.length > 0) {
+        console.warn(`[DYNAMIC VALIDATION] Validation result:`, {
+          isComplete: dynamicValidation.isComplete,
+          errors: dynamicValidation.errors,
+          warnings: dynamicValidation.warnings,
+          expectations: dynamicValidation.expectations,
+          actual: dynamicValidation.actualContent
+        });
+      }
       
       if (!validationResult.isValid && validationResult.needsRegeneration) {
         console.warn(`[SURVEY VALIDATION] Menu validation failed, attempting regeneration:`, validationResult.errors);
