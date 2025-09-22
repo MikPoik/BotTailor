@@ -7,13 +7,13 @@
 }
 
 .chatwidget-container.bottom-right {
-  bottom: 12px;
-  right: 12px;
+  bottom: 8px;
+  right: 8px;
 }
 
 .chatwidget-container.bottom-left {
-  bottom: 12px;
-  left: 12px;
+  bottom: 8px;
+  left: 8px;
 }
 
 .chatwidget-message-bubble {
@@ -150,7 +150,7 @@
 
 .chatwidget-iframe {
   position: fixed;
-  bottom: 12px;
+  bottom: 8px;
   width: 380px !important;
   height: 70vh !important;
   max-height: 700px !important;
@@ -165,11 +165,11 @@
 }
 
 .chatwidget-container.bottom-right .chatwidget-iframe {
-  right: 12px;
+  right: 8px;
 }
 
 .chatwidget-container.bottom-left .chatwidget-iframe {
-  left: 12px;
+  left: 8px;
 }
 
 .chatwidget-overlay {

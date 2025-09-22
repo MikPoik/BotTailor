@@ -43,8 +43,8 @@ export default function ChatWidget({
   const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(sessionId, chatbotConfigId);
 
   const positionClasses = {
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4'
+    'bottom-right': 'bottom-2 right-2',
+    'bottom-left': 'bottom-2 left-2'
   };
 
   // Resolve primary color for use in dynamic styles
