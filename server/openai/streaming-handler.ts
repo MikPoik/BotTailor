@@ -172,7 +172,7 @@ export async function* generateStreamingResponse(
         `[OpenAI] Final accumulated content length: ${accumulatedContent.length}`,
       );
       
-      const validated = parseOpenAIResponse(accumulatedContent);
+      let validated = parseOpenAIResponse(accumulatedContent);
       
       // Enhanced survey menu validation with regeneration capability
       const validationResult = await validateSurveyMenuRequirements(sessionId, validated);
@@ -194,18 +194,18 @@ export async function* generateStreamingResponse(
       if (!validationResult.isValid && validationResult.needsRegeneration) {
         console.warn(`[SURVEY VALIDATION] Menu validation failed, attempting regeneration:`, validationResult.errors);
         
-        // For now, we'll log the validation metadata for debugging
-        // In a production system, you might want to retry with different prompts
         if (validationResult.validationMetadata) {
           console.log(`[SURVEY VALIDATION] Expected format:`, {
-            menuType: validationResult.validationMetadata.expectedMenuType,
+            messageType: validationResult.validationMetadata.expectedMessageType,
             optionCount: validationResult.validationMetadata.expectedOptionCount,
-            expectedTexts: validationResult.validationMetadata.expectedOptions.map(o => o.text)
+            expectedTexts: validationResult.validationMetadata.expectedOptions?.map(o => o.text) || []
           });
         }
         
-        // Continue with current response but mark it as potentially problematic
-        console.warn(`[SURVEY VALIDATION] Proceeding with current response despite validation issues`);
+        // TODO: Implement actual regeneration logic with OpenAI API retry
+        // For now, log detailed validation information for debugging
+        console.warn(`[SURVEY VALIDATION] Using original response despite validation issues - regeneration not implemented yet`);
+        // Future enhancement: Call OpenAI API again with enhanced prompt that specifically mentions menu requirements
       }
 
       // Yield any remaining bubbles that weren't processed during streaming
