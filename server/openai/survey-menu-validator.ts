@@ -140,8 +140,8 @@ function validateMenuBubbleFormat(
   const errors: string[] = [];
 
   // 1. Check message type matches expectation
-  if (menuBubble.messageType !== metadata.expectedMenuType) {
-    errors.push(`Expected ${metadata.expectedMenuType} but got ${menuBubble.messageType}`);
+  if (menuBubble.messageType !== metadata.expectedMessageType) {
+    errors.push(`Expected ${metadata.expectedMessageType} but got ${menuBubble.messageType}`);
   }
 
   // 2. Check options exist and are properly formatted
@@ -170,7 +170,7 @@ function validateMenuBubbleFormat(
   });
 
   // 5. Check if option texts match expected texts (fuzzy match for localization)
-  const expectedTexts = metadata.expectedOptions.map(opt => opt.text.toLowerCase().trim());
+  const expectedTexts = metadata.expectedOptions?.map(opt => opt.text.toLowerCase().trim()) || [];
   const actualTexts = options.map((opt: any) => opt.text?.toLowerCase()?.trim() || '');
   
   const missingTexts = expectedTexts.filter(expected => 
@@ -182,7 +182,7 @@ function validateMenuBubbleFormat(
   }
 
   // 6. For multiselect menus, validate multiselect-specific properties
-  if (metadata.expectedMenuType === 'multiselect_menu') {
+  if (metadata.expectedMessageType === 'multiselect_menu') {
     const bubbleMetadata = menuBubble.metadata;
     
     if (bubbleMetadata.allowMultiple !== true) {

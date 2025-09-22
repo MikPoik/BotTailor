@@ -339,13 +339,20 @@ ${config.description ? `Survey Details: ${config.description}` : ""}
 Progress: Question ${currentQuestionIndex + 1} of ${config.questions.length}
 ${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ""}
 
-**CURRENT QUESTION**
+**🚨 CRITICAL SURVEY FLOW INSTRUCTION 🚨**
+IMMEDIATELY present the next question - DO NOT just acknowledge the previous response!
+
+**CURRENT QUESTION** (MUST PRESENT NOW)
 Question ${currentQuestionIndex + 1}: ${currentQuestion.text}
 Type: ${currentQuestion.type}
 Required: ${currentQuestion.required ? "Yes" : "No"}
 
 **QUESTION TYPE INSTRUCTIONS:**
 ${getQuestionTypeInstructions(currentQuestion)}
+
+**RESPONSE FORMAT REQUIREMENT:**
+1. Brief acknowledgment (1 sentence max): "Thank you for your response."
+2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
