@@ -110,7 +110,7 @@
 
 @layer components {
   .chat-bubble {
-    @apply w-14 h-14 rounded-full shadow-lg cursor-pointer flex items-center justify-center transition-all duration-200 hover:scale-105;
+    @apply w-12 h-12 rounded-full shadow-lg cursor-pointer flex items-center justify-center transition-all duration-200 hover:scale-105;
     background-color: var(--chat-bubble-bg);
     animation: pulse 2s infinite;
   }

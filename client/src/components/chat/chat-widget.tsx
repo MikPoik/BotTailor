@@ -541,10 +541,10 @@ export default function ChatWidget({
         <div className="relative">
           <button
             onClick={toggleChat}
-            className="w-16 h-16 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
+            className="w-12 h-12 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
             style={{ backgroundColor: resolvedPrimaryColor, border: '1px solid white' }}
           >
-            <MessageCircle className="w-6 h-6 text-white" />
+            <MessageCircle className="w-5 h-5 text-white" />
           </button>
 
           {hasNewMessage && (
