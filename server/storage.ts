@@ -763,6 +763,26 @@ export class DatabaseStorage implements IStorage {
       .where(eq(subscriptions.userId, userId));
   }
 
+  async updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<void> {
+    await db
+      .update(subscriptions)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId));
+  }
+
+  async getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined> {
+    const result = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId))
+      .limit(1);
+
+    return result[0] || undefined;
+  }
+
   async resetMonthlyMessageUsage(userId: string): Promise<void> {
     await db
       .update(subscriptions)

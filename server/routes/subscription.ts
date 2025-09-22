@@ -556,7 +556,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       const existingPeriodStart = new Date(
         existingSubscription.currentPeriodStart,
       );
-      if (newPeriodStart.getTime() !== existingPeriodStart.getTime()) {
+      // Use >= comparison to handle cases where the new period start is equal or later
+      if (newPeriodStart.getTime() > existingPeriodStart.getTime()) {
         shouldResetMessageCount = true;
         console.log(
           `[STRIPE_WEBHOOK] New billing cycle detected - resetting message count`,
@@ -565,6 +566,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
           `[STRIPE_WEBHOOK] Previous period: ${existingPeriodStart}, New period: ${newPeriodStart}`,
         );
       }
+    } else if (!existingSubscription && newPeriodStart) {
+      // First time subscription update - don't reset for initial setup
+      console.log(
+        `[STRIPE_WEBHOOK] Initial subscription update - not resetting message count`,
+      );
     }
 
     // Read the actual cancelAtPeriodEnd status from Stripe
@@ -618,19 +624,20 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     if ((invoice as any).subscription) {
       const subscriptionId = (invoice as any).subscription as string;
 
-      // Check if this is a subscription renewal (billing_reason: subscription_cycle)
+      // Check if this is a subscription renewal or cycle
       const isRenewal =
-        (invoice as any).billing_reason === "subscription_cycle";
+        (invoice as any).billing_reason === "subscription_cycle" ||
+        (invoice as any).billing_reason === "subscription_update";
 
       const updateData: any = {
         status: "active",
       };
 
-      // Reset message count for renewals
+      // Reset message count for renewals and subscription updates
       if (isRenewal) {
         updateData.messagesUsedThisMonth = 0;
         console.log(
-          `[STRIPE_WEBHOOK] Subscription renewal detected - resetting message count`,
+          `[STRIPE_WEBHOOK] Subscription renewal/update detected (reason: ${(invoice as any).billing_reason}) - resetting message count`,
         );
       }
 
