@@ -110,7 +110,7 @@
 
 @layer components {
   .chat-bubble {
-    @apply w-16 h-16 rounded-full shadow-lg cursor-pointer flex items-center justify-center transition-all duration-200 hover:scale-105;
+    @apply w-14 h-14 rounded-full shadow-lg cursor-pointer flex items-center justify-center transition-all duration-200 hover:scale-105;
     background-color: var(--chat-bubble-bg);
     animation: pulse 2s infinite;
   }
@@ -204,10 +204,10 @@
 
   .chat-interface {
     @apply absolute bottom-0 right-0 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden;
-    width: 500px;
-    height: 85vh;
-    min-height: 700px;
-    max-height: 90vh;
+    width: 420px;
+    height: 75vh;
+    min-height: 600px;
+    max-height: 85vh;
     animation: chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
 

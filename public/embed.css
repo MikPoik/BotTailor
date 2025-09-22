@@ -115,8 +115,8 @@
 }
 
 .chatwidget-bubble {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   cursor: pointer;
@@ -151,10 +151,10 @@
 .chatwidget-iframe {
   position: fixed;
   bottom: 24px;
-  width: 450px !important;
-  height: 75vh !important;
-  max-height: 800px !important;
-  min-height: 600px !important;
+  width: 380px !important;
+  height: 70vh !important;
+  max-height: 700px !important;
+  min-height: 500px !important;
   border: none;
   border-radius: 12px;
   box-shadow: 0 25px 50px rgba(0,0,0,0.15);

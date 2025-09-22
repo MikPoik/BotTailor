@@ -91,7 +91,7 @@ export default function ChatWidget({
       // Check if initial messages have been shown before using safe localStorage
       const storageKey = `chat-initial-messages-shown-${chatbotConfigId || 'default'}`;
       const hasShownBefore = safeLocalStorage.getItem(storageKey) === 'true';
-      
+
       if (!hasShownBefore) {
         const timeouts: NodeJS.Timeout[] = [];
 
@@ -112,7 +112,7 @@ export default function ChatWidget({
         timeouts.push(hideAllTimeout);
 
         messageTimeouts.current = timeouts;
-        
+
         // Mark as shown in safe localStorage
         safeLocalStorage.setItem(storageKey, 'true');
 
@@ -145,13 +145,13 @@ export default function ChatWidget({
     if (!color || !color.startsWith('#') || color.length !== 7) {
       return true; // Default to light if invalid color
     }
-    
+
     // Convert hex to RGB
     const hex = color.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
-    
+
     // Calculate luminance using the relative luminance formula
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5; // Return true if light, false if dark
@@ -167,11 +167,11 @@ export default function ChatWidget({
 
       const style = document.createElement('style');
       style.id = 'chat-widget-theme-styles';
-      
+
       // Use brightness detection instead of strict color matching
       const isLightBackground = isLightColor(backgroundColor);
-      
-      
+
+
       style.textContent = `
         :root {
           --chat-primary: ${resolvedPrimaryColor};
@@ -368,7 +368,7 @@ export default function ChatWidget({
       `;
       document.head.appendChild(style);
     };
-    
+
     injectThemeStyles(); // Call the function directly
 
     return () => {
@@ -421,14 +421,14 @@ export default function ChatWidget({
         <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slideUp">
           {/* Mobile header */}
           <div 
-            className="text-white p-3 flex items-center justify-between flex-shrink-0"
+            className="text-white p-2 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: resolvedPrimaryColor }}
           >
             <div className="flex items-center space-x-2">
               <img 
                 src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
                 alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w10 h-10 rounded-full border-2 border-white"
+                className="w-10 h-10 rounded-full border-2 border-white"
               />
 
               <div>
@@ -487,7 +487,7 @@ export default function ChatWidget({
       <div className="chat-widget-embedded">
         {/* Desktop header - sticky at top */}
         <div 
-          className="chat-header text-white p-3 flex items-center justify-between"
+          className="chat-header text-white p-2 flex items-center justify-between"
           style={{ backgroundColor: resolvedPrimaryColor }}
         >
           <div className="flex items-center space-x-2">
@@ -625,7 +625,7 @@ export default function ChatWidget({
         } : {}}>
           {/* Chat header */}
           <div 
-            className="text-white p-3 flex items-center justify-between flex-shrink-0"
+            className="text-white p-2 flex items-center justify-between flex-shrink-0"
             style={{ backgroundColor: resolvedPrimaryColor }}
           >
             <div className="flex items-center space-x-2">
