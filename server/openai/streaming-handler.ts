@@ -9,7 +9,7 @@ import {
 } from "./response-parser";
 import {
   validateSurveyMenuRequirements,
-  type SurveyMenuValidationResult
+  type SurveyValidationResult
 } from "./survey-menu-validator";
 import { handleCriticalError, generateFallbackResponse, attemptResponseSalvage } from "./error-handler";
 import type { ConversationMessage } from "./response-generator";
