@@ -80,7 +80,7 @@
         // Fallback to current origin if URL parsing fails
         baseUrl = window.location.origin;
       }
-      
+
       // Force HTTPS for CSS loading
       baseUrl = this.forceHttps(baseUrl);
       link.href = `${baseUrl}/embed.css`;
@@ -131,17 +131,17 @@
 
       const style = document.createElement('style');
       style.id = 'chatwidget-theme-vars';
-      
+
       // Determine appropriate muted and border colors based on background
       const backgroundColor = this.config.backgroundColor || '#ffffff';
       const isDarkBackground = backgroundColor !== '#ffffff' && backgroundColor !== '#fff';
-      
+
       const mutedColor = isDarkBackground ? '#2a2a2a' : '#f1f5f9';
       const mutedForegroundColor = isDarkBackground ? '#a1a1aa' : '#64748b';
       const borderColor = isDarkBackground ? '#404040' : '#e2e8f0';
       const inputColor = isDarkBackground ? '#262626' : '#ffffff';
       const accentColor = isDarkBackground ? '#262626' : '#f1f5f9';
-      
+
       style.textContent = `
         :root {
           --chat-primary-color: ${this.config.primaryColor || '#2563eb'};
@@ -158,20 +158,20 @@
           --chat-accent: ${accentColor};
         }
       `;
-      
+
       document.head.appendChild(style);
     },
 
     createWidget: function() {
       // Inject CSS variables for theme support
       this.injectThemeVariables();
-      
+
       // Create iframe container
       const container = document.createElement('div');
       container.id = 'chatwidget-container';
       container.className = `chatwidget-container ${this.config.position}`;
       container.style.zIndex = this.config.zIndex;
-      
+
       // Add initial positioning styles to prevent FOUC
       container.style.position = 'fixed';
       container.style.bottom = '24px';
@@ -186,7 +186,7 @@
       const messageBubble = document.createElement('div');
       messageBubble.id = 'chatwidget-message-bubble';
       messageBubble.className = `chatwidget-message-bubble ${this.config.position}`;
-      
+
       // Add initial styles to prevent FOUC
       messageBubble.style.position = 'absolute';
       messageBubble.style.bottom = '80px';
@@ -223,7 +223,7 @@
       bubble.id = 'chatwidget-bubble';
       bubble.className = 'chatwidget-bubble';
       bubble.style.backgroundColor = this.config.primaryColor;
-      
+
       // Add initial styles to prevent FOUC
       bubble.style.width = '56px';
       bubble.style.height = '56px';
@@ -250,7 +250,7 @@
       badge.id = 'chatwidget-badge';
       badge.className = 'chatwidget-badge';
       badge.textContent = '1';
-      
+
       // Add initial styles to prevent FOUC
       badge.style.position = 'absolute';
       badge.style.top = '-6px';
@@ -266,7 +266,7 @@
       badge.style.alignItems = 'center';
       badge.style.justifyContent = 'center';
       badge.style.border = '2px solid white';
-      
+
       bubble.appendChild(badge);
 
       // Create iframe placeholder for chat interface (lazy load)
@@ -274,7 +274,7 @@
       iframe.id = 'chatwidget-iframe';
       iframe.className = 'chatwidget-iframe';
       iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
-      
+
       // Add initial styles to prevent white screen during transitions
       iframe.style.width = '450px';
       iframe.style.height = '75vh';
@@ -298,7 +298,7 @@
       const overlay = document.createElement('div');
       overlay.id = 'chatwidget-overlay';
       overlay.className = 'chatwidget-overlay';
-      
+
       // Add initial styles to prevent visual glitches
       overlay.style.position = 'fixed';
       overlay.style.top = '0';
@@ -314,7 +314,7 @@
       mobileIframe.id = 'chatwidget-mobile-iframe';
       mobileIframe.className = 'chatwidget-mobile-iframe';
       mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
-      
+
       // Add initial styles to prevent white screen during transitions
       mobileIframe.style.position = 'fixed';
       mobileIframe.style.top = '0';
@@ -490,7 +490,7 @@
           if (mobileIframe.contentWindow) {
             mobileIframe.contentWindow.postMessage({ type: 'CLOSE_CHAT' }, '*');
           }
-          
+
           // Trigger smooth closing animation
           mobileIframe.classList.add('closing');
           mobileIframe.classList.remove('show');
@@ -504,7 +504,7 @@
           if (iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'CLOSE_CHAT' }, '*');
           }
-          
+
           // Trigger smooth closing animation
           iframe.classList.add('closing');
           iframe.classList.remove('show');
@@ -513,7 +513,7 @@
             iframe.classList.remove('closing');
           }, 800); // Match animation duration
         }
-        
+
         bubble.style.display = 'flex';
       };
 
@@ -558,14 +558,14 @@
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
           const nowMobile = isMobile();
-          
+
           if (isOpen) {
             if (nowMobile && overlay.style.display === 'none') {
               // Switch from desktop to mobile view
               iframe.classList.remove('show');
               iframe.style.visibility = 'hidden';
               bubble.style.display = 'flex';
-              
+
               // Ensure mobile iframe has src before showing
               if (!mobileIframe.src && iframe.src) {
                 // Transfer the current session to mobile iframe
@@ -573,7 +573,7 @@
                 const mobileUrl = currentSrc.replace('mobile=false', 'mobile=true');
                 mobileIframe.src = mobileUrl;
               }
-              
+
               overlay.style.display = 'block';
               mobileIframe.style.visibility = 'visible';
               mobileIframe.classList.add('show');
@@ -582,7 +582,7 @@
               overlay.style.display = 'none';
               mobileIframe.classList.remove('show');
               mobileIframe.style.visibility = 'hidden';
-              
+
               // Ensure desktop iframe has src before showing
               if (!iframe.src && mobileIframe.src) {
                 // Transfer the current session to desktop iframe
@@ -590,7 +590,7 @@
                 const desktopUrl = currentSrc.replace('mobile=true', 'mobile=false');
                 iframe.src = desktopUrl;
               }
-              
+
               bubble.style.display = 'none';
               iframe.style.visibility = 'visible';
               iframe.classList.add('show');
@@ -623,10 +623,10 @@
         } catch (error) {
           baseUrl = window.location.origin;
         }
-        
+
         // Force HTTPS for API requests
         baseUrl = this.forceHttps(baseUrl);
-        
+
         fetch(`${baseUrl}/api/public/chatbot/${userId}/${chatbotGuid}`)
           .then(response => {
             if (!response.ok) {
@@ -660,13 +660,13 @@
       messageBubble.style.display = 'none';
 
       const container = document.getElementById('chatwidget-container');
-      
+
       // Create individual bubbles for each message
       messages.forEach((message, index) => {
         const individualBubble = document.createElement('div');
         individualBubble.className = 'chatwidget-initial-message-bubble';
         individualBubble.setAttribute('data-index', index);
-        
+
         // Add initial styles to prevent FOUC
         individualBubble.style.position = 'absolute';
         individualBubble.style.maxWidth = '350px';
@@ -683,7 +683,7 @@
         } else {
           individualBubble.style.left = '0';
         }
-        
+
         individualBubble.innerHTML = `
           <div class="chatwidget-message-content" style="display: flex; align-items: flex-start; gap: 12px;">
             <div class="chatwidget-speech-bubble" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
@@ -696,17 +696,18 @@
             </button>
           </div>
         `;
-        
-        // Position the bubble above previous ones
-        individualBubble.style.bottom = `${80 + (index * 80)}px`;
-        
+
+        // Calculate position for this bubble (stack them above the chat bubble)
+        const bottomOffset = 80 + (index * 50); // 80px base + 50px per bubble
+        individualBubble.style.bottom = `${bottomOffset}px`;
+
         // Add event listeners for the individual bubble
         const closeBtn = individualBubble.querySelector('.chatwidget-close-btn');
         closeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           this.hideInitialMessage(index);
         });
-        
+
         // Make the bubble clickable to open chat (but not the close button)
         individualBubble.addEventListener('click', (e) => {
           if (!closeBtn.contains(e.target)) {
@@ -714,9 +715,9 @@
             if (bubble) bubble.click();
           }
         });
-        
+
         container.appendChild(individualBubble);
-        
+
         // Show bubble with delay based on index
         setTimeout(() => {
           individualBubble.style.opacity = '1';
@@ -724,7 +725,7 @@
           individualBubble.style.transform = 'translateY(0) scale(1)';
           individualBubble.classList.add('visible');
         }, 3000 + (index * 1000));
-        
+
         // Auto-hide after showing all messages (only for the last message)
         if (index === messages.length - 1) {
           setTimeout(() => {
@@ -810,7 +811,7 @@
     // Add reset method for reinitialization
     reset: function() {
       this._initialized = false;
-      
+
       // Remove all widget elements  
       const elementsToRemove = [
         'chatwidget-bubble',
