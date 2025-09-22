@@ -351,7 +351,7 @@ Required: ${currentQuestion.required ? "Yes" : "No"}
 ${getQuestionTypeInstructions(currentQuestion)}
 
 **RESPONSE FORMAT REQUIREMENT:**
-1. Brief acknowledgment (1 sentence max): "Thank you for your response."
+1. Brief acknowledgment and validation of user's response (1 sentence max), adjust to current survey context. Example: "Thank you for your response, I understand your situation." 
 2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
 `;
 
