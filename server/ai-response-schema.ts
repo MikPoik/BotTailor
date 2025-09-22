@@ -292,18 +292,34 @@ Previous conversations about other surveys are irrelevant to this new survey.
       .join("\n\n");
 
     return `
-**SURVEY COMPLETED**
 Survey: "${survey.name}" (${config.title})
 ${survey.description ? `Description: ${survey.description}` : ""}
 ${config.description ? `Survey Details: ${config.description}` : ""}
-Completion message: "${config.completionMessage || "Thank you for completing the survey!"}"
 ${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ""}
 
 **COMPLETE SURVEY RESPONSES**
 ${qaContext}
 
-Do not ask any more survey questions.
-Offer a contact form or a link to contact us instead.
+**SURVEY COMPLETION FLOW:**
+1. Start with completion message: "${config.completionMessage || "Thank you for completing the survey!"}"
+2. ${chatbotConfig?.formRecipientEmail ? 'Offer contact form using example below' : 'Suggest alternative contact methods'}
+
+${chatbotConfig?.formRecipientEmail ? `**CONTACT FORM EXAMPLE:**
+{
+  "bubbles": [
+    {"messageType": "text", "content": "${config.completionMessage || "Thank you for completing the survey!"}"},
+    {"messageType": "text", "content": "Would you like to get in touch? Please fill out the form below:"},
+    {"messageType": "form", "content": "Contact Form", "metadata": {
+      "title": "Get in Touch",
+      "formFields": [
+        {"id": "name", "label": "Name", "type": "text", "placeholder": "Your name", "required": true},
+        {"id": "email", "label": "Email", "type": "email", "placeholder": "Your email", "required": true},
+        {"id": "message", "label": "Message", "type": "textarea", "placeholder": "How can we help?", "required": true}
+      ],
+      "submitButton": {"id": "submit_contact", "text": "Send", "action": "submit_form"}
+    }}
+  ]
+}` : ''}
 `;
   }
 
