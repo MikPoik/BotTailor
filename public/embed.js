@@ -272,7 +272,7 @@
       const iframe = document.createElement('iframe');
       iframe.id = 'chatwidget-iframe';
       iframe.className = 'chatwidget-iframe';
-      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
 
       // Add initial styles to prevent white screen during transitions
       iframe.style.width = '450px';
@@ -312,7 +312,7 @@
       const mobileIframe = document.createElement('iframe');
       mobileIframe.id = 'chatwidget-mobile-iframe';
       mobileIframe.className = 'chatwidget-mobile-iframe';
-      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups');
+      mobileIframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
 
       // Add initial styles to prevent white screen during transitions
       mobileIframe.style.position = 'fixed';
