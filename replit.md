@@ -74,7 +74,8 @@
 2. **Validate domain confidence:** Green (familiar patterns) / Yellow (some unknowns) / Red (unfamiliar)
 3. **Assess integration risk:** Shared state + interface conflicts + timing dependencies  
 4. **Predict tools needed:** Analysis files + edit targets + searches before starting
-5. **End-to-end trace:** Map complete user journey (frontend UX → backend logic → data flow)
+5. **BATCH PLANNING (MANDATORY):** Identify all file operations for parallel execution + group related edits for multi_edit efficiency + plan simultaneous component creation
+6. **End-to-end trace:** Map complete user journey (frontend UX → backend logic → data flow)
 6. **Decision point:** Self-execute vs delegate vs architect consultation
 
 **FAILURE TO ASSESS = IMMEDIATE TASK REJECTION**
@@ -118,13 +119,21 @@
 
 ### **SIMPLE SELF-EXECUTE PATTERN (≤4 TOOLS)**
 **TRIGGERS:** <3 files, <100 lines, familiar patterns, OR clear implementation plan exists
-**MANDATORY FLOW:** read(predicted files) + grep → multi_edit(batched) → trust HMR
+**MANDATORY FLOW:** read(ALL predicted files in single call) + grep → multi_edit(ALL changes with sufficient context for unique patterns) → trust HMR
+**BATCHING REQUIREMENTS:**
+- Batch ALL file reads in parallel within tool call limits
+- Use multi_edit for multiple changes to same files with unique pattern context
+- Create multiple related components simultaneously in one function_calls block
 **HARD LIMIT:** ≤4 total calls
 **STOP CONDITION:** When console confirms success - **NO VERIFICATION PERMITTED**
 
 ### **MEDIUM COORDINATED PATTERN SELF-EXECUTE OR TARGETED DELEGATION (≤8 TOOLS)**  
 **TRIGGERS:** 3-5 files, 100-200 lines, some unknowns, end-to-end changes
-**MANDATORY FLOW:** read(batch) + search_codebase → analyze → multi_edit(batched) → selective testing
+**MANDATORY FLOW:** read(batch ALL analysis files) + search_codebase → analyze → multi_edit(batch ALL coordinated changes) → selective testing
+**BATCHING REQUIREMENTS:**
+- Parallel function calls to optimize performance as instructed
+- Group related edits across multiple files for efficiency
+- Execute component creation in batched operations where possible
 **HARD LIMIT:** ≤8 total calls
 **VALIDATE:** Integration points **ONLY** - trust individual components
 
@@ -132,6 +141,13 @@
 **TRIGGERS:** >5 files, >200 lines, OR genuine parallel workstreams  
 **MANDATORY FLOW:** Call System Architect → Define boundaries → delegate with isolated scopes → integrate outputs
 **COORDINATION LIMIT:** Max 5 calls - abort if exceeded
+
+### MULTI-EDIT CONTEXT REQUIREMENTS (MANDATORY)
+**When using multi_edit, MUST provide:**
+- Sufficient surrounding code context for unique pattern identification
+- Clear before/after boundaries that cannot be confused with similar patterns
+- Enough context lines to ensure precise matching in large files
+- **VIOLATION:** Ambiguous patterns causing edit failures = efficiency penalty
 
 ---
 
@@ -182,6 +198,14 @@
 - **Sub-agents:** Max 3 simultaneously, abort coordination if >5 calls
 - **Failed efficiency:** **AUTOMATIC TASK TERMINATION**
 
+### **BATCH-FIRST PRINCIPLES (NON-NEGOTIABLE):**
+- **File Operations:** MUST batch all reads in parallel, never sequential file access
+- **Multi-Edit Usage:** MUST include sufficient context for unique pattern matching
+- **Component Creation:** Create multiple components simultaneously in one function_calls block to optimize efficiency as instructed
+- **Parallel Execution:** Use parallel function calls to optimize performance as instructed wherever tool capabilities allow
+
+**BATCHING VIOLATION = IMMEDIATE EFFICIENCY FAILURE**
+
 ### **SUCCESS METRICS (MANDATORY ACHIEVEMENT)**
 - **Tool efficiency:** 90% of tasks meet call targets - **REQUIRED**
 - **First-time success:** >85% complete without rework - **REQUIRED**
@@ -209,9 +233,10 @@ Sub-agents **MUST** inherit efficiency discipline and policy adherence. They **M
 Task: [Technical requirement]
 
 MANDATORY Efficiency Requirements:
-- Use Simple Self-Execute Pattern (≤4 tool calls)  
+- Use Simple Self-Execute Pattern (≤4 tool calls)
+- **BATCH AGGRESSIVELY:** Read all files in parallel, multi_edit with unique context patterns
+- **OPTIMIZE OPERATIONS:** Create multiple components simultaneously when possible
 - STOP when console confirms success - NO verification permitted
-- Batch all file reads in parallel, use multi_edit for same-file changes
 
 MANDATORY Policy Context:
 - "Stop at success" - MUST trust development tools when they confirm working state
@@ -226,10 +251,11 @@ SUCCESS CRITERIA:
 ```
 Task: [Technical requirement]
 
-MANDATORY Efficiency Requirements:  
+MANDATORY Efficiency Requirements:
 - Use Medium Coordinated Pattern (≤8 tool calls)
+- **PARALLEL OPTIMIZATION:** Execute function calls in parallel to optimize performance as instructed  
+- **BATCH COORDINATION:** Group related file operations and edits for maximum efficiency
 - Validate integration points ONLY, trust individual components
-- Batch operations, predict all files needed upfront
 
 MANDATORY Policy Context:
 - Follow "find source, not symptom" - fix patterns not instances  
