@@ -52,10 +52,10 @@ const getSurveyConfig = (survey: Survey | null): SurveyConfig => {
       },
     };
   }
-  
+
   // Type-safe handling of unknown surveyConfig
   const config = survey.surveyConfig as any;
-  
+
   return {
     id: config?.id || `survey_${Date.now()}`,
     title: config?.title || "Untitled Survey",
@@ -708,6 +708,67 @@ export default function SurveyBuilderPage() {
                                     </Button>
                                   </div>
                                 )}
+
+                                {
+                                  question.type === 'rating' && (
+                                    <div className="space-y-3">
+                                      <Label>Rating Configuration</Label>
+                                      <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                          <Label>Min Value</Label>
+                                          <Input
+                                            type="number"
+                                            value={question.metadata?.minValue || 1}
+                                            onChange={(e) => handleUpdateQuestion(selectedSurvey.id, index, {
+                                              metadata: {
+                                                ...question.metadata,
+                                                minValue: parseInt(e.target.value) || 1
+                                              }
+                                            })}
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label>Max Value</Label>
+                                          <Input
+                                            type="number"
+                                            value={question.metadata?.maxValue || 5}
+                                            onChange={(e) => handleUpdateQuestion(selectedSurvey.id, index, {
+                                              metadata: {
+                                                ...question.metadata,
+                                                maxValue: parseInt(e.target.value) || 5
+                                              }
+                                            })}
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label>Rating Type</Label>
+                                          <Select
+                                            value={question.metadata?.ratingType || 'stars'}
+                                            onValueChange={(value) => handleUpdateQuestion(selectedSurvey.id, index, {
+                                              metadata: {
+                                                ...question.metadata,
+                                                ratingType: value as 'stars' | 'numbers' | 'scale'
+                                              }
+                                            })}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="stars">Stars</SelectItem>
+                                              <SelectItem value="numbers">Numbers</SelectItem>
+                                              <SelectItem value="scale">Scale</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">
+                                        Stars display as clickable star icons, while numbers/scale show as numbered buttons. The rating value is stored as a number in the backend.
+                                      </p>
+                                    </div>
+                                  )
+                                }
+
 
                                 <div className="flex items-center gap-2 pt-4 border-t">
                                   <Button
