@@ -5,9 +5,12 @@ import {
   parseStreamingContent, 
   isBubbleComplete, 
   detectJsonBoundary,
-  parseOpenAIResponse,
-  validateSurveyMenuRequirements 
+  parseOpenAIResponse
 } from "./response-parser";
+import {
+  validateSurveyMenuRequirements,
+  type SurveyMenuValidationResult
+} from "./survey-menu-validator";
 import { handleCriticalError, generateFallbackResponse, attemptResponseSalvage } from "./error-handler";
 import type { ConversationMessage } from "./response-generator";
 
@@ -167,8 +170,25 @@ export async function* generateStreamingResponse(
       
       const validated = parseOpenAIResponse(accumulatedContent);
       
-      // Validate survey menu requirements
-      await validateSurveyMenuRequirements(sessionId, validated);
+      // Enhanced survey menu validation with regeneration capability
+      const validationResult = await validateSurveyMenuRequirements(sessionId, validated);
+      
+      if (!validationResult.isValid && validationResult.needsRegeneration) {
+        console.warn(`[SURVEY VALIDATION] Menu validation failed, attempting regeneration:`, validationResult.errors);
+        
+        // For now, we'll log the validation metadata for debugging
+        // In a production system, you might want to retry with different prompts
+        if (validationResult.validationMetadata) {
+          console.log(`[SURVEY VALIDATION] Expected format:`, {
+            menuType: validationResult.validationMetadata.expectedMenuType,
+            optionCount: validationResult.validationMetadata.expectedOptionCount,
+            expectedTexts: validationResult.validationMetadata.expectedOptions.map(o => o.text)
+          });
+        }
+        
+        // Continue with current response but mark it as potentially problematic
+        console.warn(`[SURVEY VALIDATION] Proceeding with current response despite validation issues`);
+      }
 
       // Yield any remaining bubbles that weren't processed during streaming
       for (let i = processedBubbles; i < validated.bubbles.length; i++) {

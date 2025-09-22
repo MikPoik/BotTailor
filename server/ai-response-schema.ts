@@ -260,7 +260,7 @@ ${isSurveyActive ? `**For Surveys (step-by-step questionnaires):**
 }
 
 // Function to build survey context for AI when a survey is active
-export function buildSurveyContext(survey: any, surveySession: any): string {
+export function buildSurveyContext(survey: any, surveySession: any, chatbotConfig?: any): string {
   const config = survey.surveyConfig;
   const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
   const responses = surveySession.responses || {};

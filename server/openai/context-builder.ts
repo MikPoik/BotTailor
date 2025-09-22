@@ -38,7 +38,7 @@ export async function buildWebsiteContext(
 /**
  * Build survey context for active surveys
  */
-export async function buildActiveSurveyContext(sessionId: string): Promise<{
+export async function buildActiveSurveyContext(sessionId: string, chatbotConfig?: any): Promise<{
   context: string;
   hasMenuRequired: boolean;
   questionIndex: number;
@@ -66,7 +66,7 @@ export async function buildActiveSurveyContext(sessionId: string): Promise<{
       } : null);
       
       if (survey) {
-        const context = buildSurveyContext(survey, surveySession);
+        const context = buildSurveyContext(survey, surveySession, chatbotConfig);
         
         // Check if current question has options (requires menu)
         const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
@@ -105,7 +105,7 @@ export async function buildCompleteSystemPrompt(
   surveyInfo: { hasMenuRequired: boolean; questionIndex: number } 
 }> {
   // Check if there's an active survey to determine which message types to show
-  const { context: surveyContext, hasMenuRequired, questionIndex } = await buildActiveSurveyContext(sessionId);
+  const { context: surveyContext, hasMenuRequired, questionIndex } = await buildActiveSurveyContext(sessionId, chatbotConfig);
   const isSurveyActive = !!surveyContext;
   
   // Base system prompt with survey context
