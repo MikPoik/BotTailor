@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   ArrowLeft, 
   Plus, 
@@ -399,6 +400,18 @@ export default function AddData() {
             Add content sources to provide context for your chatbot. You can add websites to scan, paste text content directly, or upload text files.
           </p>
         </div>
+
+        {/* Scanning notification */}
+        {websiteSources && websiteSources.some((source: WebsiteSource) => 
+          source.status === 'scanning' || source.status === 'pending'
+        ) && (
+          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950" data-testid="scanning-notification">
+            <RefreshCw className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200 font-medium">
+              ⚠️ Do not leave the page until scan is complete
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Add Content Forms */}
