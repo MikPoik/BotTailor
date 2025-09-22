@@ -283,15 +283,15 @@
       iframe.style.border = 'none';
       iframe.style.borderRadius = '12px';
       iframe.style.position = 'fixed';
-      iframe.style.bottom = '24px';
+      iframe.style.bottom = '12px';
       iframe.style.backgroundColor = 'transparent';
       iframe.style.visibility = 'hidden';
       iframe.style.transition = 'all 0.3s ease-out';
       iframe.style.zIndex = this.config.zIndex;
       if (this.config.position === 'bottom-right') {
-        iframe.style.right = '24px';
+        iframe.style.right = '12px';
       } else {
-        iframe.style.left = '24px';
+        iframe.style.left = '12px';
       }
 
       // Mobile overlay for small screens
