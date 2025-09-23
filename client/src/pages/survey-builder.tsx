@@ -262,6 +262,48 @@ export default function SurveyBuilderPage() {
     });
   };
 
+  const handleMoveQuestionUp = (surveyId: number, questionIndex: number) => {
+    if (!selectedSurvey || questionIndex === 0) return;
+
+    const currentConfig = getSurveyConfig(selectedSurvey);
+    const questions = [...currentConfig.questions];
+    
+    // Swap with previous question
+    [questions[questionIndex - 1], questions[questionIndex]] = [questions[questionIndex], questions[questionIndex - 1]];
+    
+    const updatedConfig = {
+      ...currentConfig,
+      questions,
+    };
+
+    updateSurveyMutation.mutate({
+      id: surveyId,
+      updates: { surveyConfig: updatedConfig },
+    });
+  };
+
+  const handleMoveQuestionDown = (surveyId: number, questionIndex: number) => {
+    if (!selectedSurvey) return;
+
+    const currentConfig = getSurveyConfig(selectedSurvey);
+    if (questionIndex >= currentConfig.questions.length - 1) return;
+    
+    const questions = [...currentConfig.questions];
+    
+    // Swap with next question
+    [questions[questionIndex], questions[questionIndex + 1]] = [questions[questionIndex + 1], questions[questionIndex]];
+    
+    const updatedConfig = {
+      ...currentConfig,
+      questions,
+    };
+
+    updateSurveyMutation.mutate({
+      id: surveyId,
+      updates: { surveyConfig: updatedConfig },
+    });
+  };
+
   // Save survey details function
   const handleSaveSurveyDetails = () => {
     if (!selectedSurvey) return;
@@ -887,7 +929,28 @@ export default function SurveyBuilderPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
+                                    onClick={() => handleMoveQuestionUp(selectedSurvey.id, index)}
+                                    disabled={index === 0}
+                                    data-testid={`button-move-up-question-${index}`}
+                                    title="Move question up"
+                                  >
+                                    <ChevronUp className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleMoveQuestionDown(selectedSurvey.id, index)}
+                                    disabled={index >= getSurveyConfig(selectedSurvey).questions.length - 1}
+                                    data-testid={`button-move-down-question-${index}`}
+                                    title="Move question down"
+                                  >
+                                    <ChevronDown className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => setEditingQuestion(index)}
+                                    data-testid={`button-edit-question-${index}`}
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -895,6 +958,7 @@ export default function SurveyBuilderPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleDeleteQuestion(selectedSurvey.id, index)}
+                                    data-testid={`button-delete-question-${index}`}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
