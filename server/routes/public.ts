@@ -248,8 +248,8 @@ export function setupPublicRoutes(app: Express) {
       console.log(`Found chatbot config: ${chatbotConfig.name}`);
 
       const sessionId = req.query.sessionId as string || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const isMobile = req.query.mobile === 'true';
-      const isEmbedded = req.query.embedded === 'true';
+      const isMobile = mobile === 'true';
+      const isEmbedded = embedded === 'true';
 
       // Extract theme configuration from chatbot config or use defaults
       const homeScreenConfig = chatbotConfig.homeScreenConfig as any;
