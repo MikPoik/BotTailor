@@ -30,7 +30,10 @@ import Terms from "@/pages/terms";
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
-  const isEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
+  // Check both URL params and injected config
+  const urlEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
+  const configEmbedded = (window as any).__CHAT_WIDGET_CONFIG__?.embedded;
+  const isEmbedded = urlEmbedded || configEmbedded;
 
   if (isEmbedded) {
     // For embedded widgets, skip authentication entirely
@@ -95,7 +98,10 @@ function AuthenticatedRouter() {
 
 function Router() {
   // Check if this is an embedded widget context
-  const isEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
+  // Check both URL params and injected config
+  const urlEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
+  const configEmbedded = (window as any).__CHAT_WIDGET_CONFIG__?.embedded;
+  const isEmbedded = urlEmbedded || configEmbedded;
 
   if (isEmbedded) {
     // For embedded widgets, bypass authentication and navbar entirely

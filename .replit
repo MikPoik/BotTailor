@@ -15,16 +15,16 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 38037
-externalPort = 3002
-
-[[ports]]
 localPort = 38163
 externalPort = 3001
 
 [[ports]]
 localPort = 40827
 externalPort = 3000
+
+[[ports]]
+localPort = 42317
+externalPort = 3002
 
 [workflows]
 runButton = "Project"
@@ -46,6 +46,9 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-42bfe332-3543-42c6-8322-bbddc297d322"
