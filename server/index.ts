@@ -20,6 +20,18 @@ app.use(express.urlencoded({ extended: false }));
 // Enable trust proxy for proper IP forwarding
 app.set('trust proxy', true);
 
+// Redirect fly.dev development domain to production APP_URL in production
+if (process.env.NODE_ENV === 'production' && process.env.APP_URL) {
+  app.use((req, res, next) => {
+    const host = req.get('Host');
+    if (host && host.includes('fly.dev')) {
+      const redirectUrl = process.env.APP_URL + req.originalUrl;
+      return res.redirect(301, redirectUrl);
+    }
+    next();
+  });
+}
+
 // Serve static files from public directory - this will be handled by public routes
 
 // Configure CORS to allow cross-origin requests for the embed widget
