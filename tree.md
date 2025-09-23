@@ -1,6 +1,6 @@
 # Directory Tree
 
-Generated on: 2025-09-18T19:41:52.760Z
+Generated on: 2025-09-23T18:51:19.035Z
 
 *Simple mode: Directory structure only*
 
@@ -78,12 +78,14 @@ Generated on: 2025-09-18T19:41:52.760Z
 │   ├── 📁 openai/
 │   │   ├── 📄 client.ts
 │   │   ├── 📄 context-builder.ts
+│   │   ├── 📄 dynamic-content-validator.ts
 │   │   ├── 📄 error-handler.ts
 │   │   ├── 📄 index.ts
 │   │   ├── 📄 response-generator.ts
 │   │   ├── 📄 response-parser.ts
 │   │   ├── 📄 schema.ts
-│   │   └── 📄 streaming-handler.ts
+│   │   ├── 📄 streaming-handler.ts
+│   │   └── 📄 survey-menu-validator.ts
 │   ├── 📄 replitAuth.ts
 │   ├── 📁 routes/
 │   │   ├── 📄 auth.ts
