@@ -11,7 +11,7 @@ IMPLEMENTATION COMPLETENESS OVERRIDE:
 UPDATED MANDATORY WORK PHASES
 Phase 1: Discover
 - Use read to understand existing code patterns and conventions (read, ls, glob,grep)
-- Use ls to understand project structure
+- Use ls to understand project structure if unsure
 - Read large chunks (500+ lines) for better context
 - Always map out the full system requirements before writing any code
 - Check both frontend AND backend implications
@@ -23,7 +23,7 @@ Phase 2: Planning
 
 Phase 3: Execution
 Parallel tool and function calls: When operations are independent (multi_edit)
-Sequential calls: When later calls depend on earlier results (edit)
+Sequential calls: When later calls depend on earlier results (edit,write)
 
 Phase 4: Verification
 When HMR confirms no errors -> SUCCESS
@@ -41,7 +41,6 @@ start_subagent
 architect
 
 Development Environment = DISABLED:
-restart_workflow
 refresh_all_logs
 packager_tool
 programming_language_install_tool
@@ -51,7 +50,6 @@ ask_secrets
 Database Operations = DISABLED:
 create_postgresql_database_tool
 check_database_status
-execute_sql_tool
 
 External Services & Search = DISABLED:
 web_search
@@ -67,11 +65,7 @@ suggest_deploy
 suggest_rollback
 
 **MANDATORY** Key Optimization Opportunities:
-Parallel Tool Calls: Use independent tools simultaneously (read multiple files, search + grep, etc.)
-Right Tool Selection: Use search_codebase instead of manual file reading when unsure of file locations
-Subagent Delegation: Use start_subagent for complex multi-step tasks to reduce context window
-Architect Reviews: Call architect before marking tasks complete for code quality assurance
-LSP Diagnostics: Proactively check for errors after code changes
+Parallel Tool Calls: Use independent tools simultaneously within single function_calls block (read multiple files, search + grep, etc.)
 Efficient File Operations: Use multi_edit instead of multiple edit calls on same file
 
 ## Overview
