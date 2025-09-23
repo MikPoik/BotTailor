@@ -7,6 +7,13 @@
 ## CORE PHILOSOPHY (MANDATORY)
 **IMMUTABLE PRINCIPLES**: Find source, not symptom → Fix pattern, not instance → Batch operations → Delegate strategically → Trust tools → **STOP AT SUCCESS**
 
+**IMPLEMENTATION COMPLETENESS OVERRIDE**:
+- When core functionality is missing (APIs, endpoints, database methods), implement it fully rather than working around it
+- Missing backend functionality should be treated as required work, not obstacles to avoid
+- Creating necessary files/endpoints for core functionality is always "truly important"
+- Don't seek permission for implementing missing pieces that are clearly needed for the feature to work
+- Prefer complete implementation over workarounds, even if it requires more files/changes
+  
 ---
 
 ## PART I: ABSOLUTE CONSTRAINTS (NON-NEGOTIABLE)
