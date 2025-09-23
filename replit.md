@@ -30,8 +30,8 @@ When HMR confirms no errors -> SUCCESS
 
 Following tools are permanently DISABLED:
 
-**Code Analysis & Search = DISABLED**
-search_codebase, USAGE PROHIBITED; DO NOT USE;
+Code Analysis & Search = DISABLED
+search_codebase
 get_latest_lsp_diagnostics
 
 Task & Project Management = DISABLED:
