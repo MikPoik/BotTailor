@@ -204,10 +204,10 @@
 
   .chat-interface {
     @apply absolute bottom-0 right-0 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden;
-    width: 420px;
-    height: 75vh;
-    min-height: 600px;
-    max-height: 85vh;
+    width: 520px;
+    height: 85vh;
+    min-height: 700px;
+    max-height: 95vh;
     animation: chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
   }
 

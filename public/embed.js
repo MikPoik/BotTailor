@@ -275,10 +275,10 @@
       iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-same-origin');
 
       // Add initial styles to prevent white screen during transitions
-      iframe.style.width = '450px';
-      iframe.style.height = '75vh';
-      iframe.style.maxHeight = '800px';
-      iframe.style.minHeight = '600px';
+      iframe.style.width = '550px';
+      iframe.style.height = '85vh';
+      iframe.style.maxHeight = '900px';
+      iframe.style.minHeight = '700px';
       iframe.style.border = 'none';
       iframe.style.borderRadius = '12px';
       iframe.style.position = 'fixed';

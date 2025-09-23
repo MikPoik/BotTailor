@@ -608,11 +608,11 @@ export default function ChatWidget({
         <div className={`chat-widget-container bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fadeIn ${
           isMobile 
             ? 'fixed inset-4 z-50' 
-            : 'w-[450px]'
+            : 'w-[550px]'
         }`} style={!isMobile ? { 
-          height: '75vh', 
-          maxHeight: '800px', 
-          minHeight: '600px', 
+          height: '85vh', 
+          maxHeight: '900px', 
+          minHeight: '700px', 
           animation: isClosing 
             ? 'chatWidgetClose 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards' 
             : 'chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)'
