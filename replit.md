@@ -30,17 +30,17 @@ When HMR confirms no errors -> SUCCESS
 
 Following tools are permanently DISABLED:
 
-**Code Analysis & Search**
-search_codebase - Natural language search across the codebase
-get_latest_lsp_diagnostics - Get syntax/type errors from language server
+**Code Analysis & Search = DISABLED**
+search_codebase, USAGE PROHIBITED; DO NOT USE;
+get_latest_lsp_diagnostics
 
-Task & Project Management DISABLED:
+Task & Project Management = DISABLED:
 write_task_list
 read_task_list
 start_subagent
 architect
 
-Development Environment DISABLED:
+Development Environment = DISABLED:
 restart_workflow
 refresh_all_logs
 packager_tool
@@ -48,12 +48,12 @@ programming_language_install_tool
 check_secrets
 ask_secrets
 
-Database Operations DISABLED:
+Database Operations = DISABLED:
 create_postgresql_database_tool
 check_database_status
 execute_sql_tool
 
-External Services & Search DISABLED:
+External Services & Search = DISABLED:
 web_search
 web_fetch
 search_integrations
@@ -61,7 +61,7 @@ use_integration
 search_replit_docs
 stock_image_tool
 
-User Interaction & Deployment DISABLED:
+User Interaction & Deployment = DISABLED:
 mark_completed_and_get_feedback
 suggest_deploy
 suggest_rollback
