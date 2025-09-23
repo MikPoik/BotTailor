@@ -412,6 +412,15 @@ export default function ChatWidget({
   };
 
 
+  // Initialize session for embedded chat when embedded mode is active
+  useEffect(() => {
+    if (isEmbedded) {
+      initializeSession();
+    }
+  }, [isEmbedded, initializeSession]);
+
+  // Render different interfaces based on conditions but all at the end
+  // Mobile full-screen interface
   if (isMobile && isOpen) {
     return (
       <>
@@ -436,16 +445,8 @@ export default function ChatWidget({
               />
 
               <div>
-
                 <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-                {/*
-                <div className="flex items-center space-x-1 text-xs text-blue-100">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                  <span>Online</span>
-                </div>
-                */}
               </div>
-
             </div>
             <button 
               onClick={closeChat}
@@ -473,131 +474,8 @@ export default function ChatWidget({
     );
   }
 
-  // If embedded (iframe), show the full chat interface
+  // Embedded iframe interface
   if (isEmbedded) {
-    const handleEmbeddedClose = () => {
-      // Send close message to parent window
-      if (window.parent) {
-        window.parent.postMessage({ type: 'CLOSE_CHAT' }, '*');
-      }
-    };
-
-    // Initialize session for embedded chat since it's immediately visible
-    useEffect(() => {
-      initializeSession();
-    }, [initializeSession]);
-
-    return (
-      <div className="chat-widget-embedded">
-        {/* Desktop header - sticky at top */}
-        <div 
-          className="chat-header text-white p-2 flex items-center justify-between"
-          style={{ backgroundColor: resolvedPrimaryColor }}
-        >
-          <div className="flex items-center space-x-2">
-            <img 
-              src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-              alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-              className="w-10 h-10 rounded-full border-2 border-white"
-            />
-
-            <div>
-              <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-              {/*
-              <div className="flex items-center space-x-1 text-xs text-blue-100">
-                <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                <span>Online</span>
-              </div>
-              */}
-            </div>
-
-          </div>
-          <button 
-            onClick={handleEmbeddedClose}
-            className="text-white p-1.5 rounded transition-colors"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <Minimize2 className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Chat content - takes remaining space */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <TabbedChatInterface 
-            sessionId={sessionId} 
-            isMobile={false} 
-            isPreloaded={!isSessionLoading && !isMessagesLoading}
-            isEmbedded={true}
-            chatbotConfigId={chatbotConfigId}
-            chatbotConfig={chatbotConfig}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Mobile full-screen overlay - separate return without early hook calling
-  const renderMobileChat = () => (
-    <>
-      {/* Mobile overlay */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={closeChat}
-      />
-
-      {/* Mobile chat interface */}
-      <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slideUp">
-        {/* Mobile header */}
-        <div 
-          className="text-white p-2 flex items-center justify-between flex-shrink-0"
-          style={{ backgroundColor: resolvedPrimaryColor }}
-        >
-          <div className="flex items-center space-x-2">
-            <img 
-              src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-              alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-              className="w-10 h-10 rounded-full border-2 border-white"
-            />
-
-            <div>
-              <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-            </div>
-          </div>
-          <button 
-            onClick={closeChat}
-            className="text-white p-1.5 rounded transition-colors"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Chat content - takes remaining space */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <TabbedChatInterface 
-            sessionId={sessionId} 
-            isMobile={true} 
-            isPreloaded={!isSessionLoading && !isMessagesLoading}
-            chatbotConfigId={chatbotConfigId}
-            chatbotConfig={chatbotConfig}
-            onSessionInitialize={initializeSession}
-          />
-        </div>
-      </div>
-    </>
-  );
-
-  // Initialize session for embedded chat when embedded mode is active
-  useEffect(() => {
-    if (isEmbedded) {
-      initializeSession();
-    }
-  }, [isEmbedded, initializeSession]);
-
-  // Embedded chat interface - separate return
-  const renderEmbeddedChat = () => {
     const handleEmbeddedClose = () => {
       // Send close message to parent window
       if (window.parent) {
@@ -646,16 +524,8 @@ export default function ChatWidget({
         </div>
       </div>
     );
-  };
-
-  // Main render logic with proper conditional returns
-  if (isMobile && isOpen) {
-    return renderMobileChat();
   }
 
-  if (isEmbedded) {
-    return renderEmbeddedChat();
-  }
 
   // For non-embedded (development page), show floating widget
   return (

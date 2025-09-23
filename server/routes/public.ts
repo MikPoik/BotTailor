@@ -84,12 +84,29 @@ export function setupPublicRoutes(app: Express) {
       res.status(404).send('embed.css not found');
     }
   });
-  // DISABLED: Get default chatbot configuration for public access
-  // User requested to remove default config fallback functionality
+  // Get default chatbot configuration for public access
   app.get('/api/public/default-chatbot', async (req, res) => {
-    // Always return null to disable default chatbot fallback
-    console.log(`[DEFAULT CHATBOT] Default chatbot disabled - returning empty response`);
-    res.json(null);
+    try {
+      const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
+      const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
+
+      if (!defaultGuid || !defaultUserId) {
+        console.log(`[DEFAULT CHATBOT] No environment variables found - returning null`);
+        return res.json(null);
+      }
+
+      const chatbotConfig = await storage.getChatbotConfigByGuid(defaultUserId, defaultGuid);
+      if (!chatbotConfig || !chatbotConfig.isActive) {
+        console.log(`[DEFAULT CHATBOT] Chatbot not found or inactive: ${defaultGuid}`);
+        return res.json(null);
+      }
+
+      console.log(`[DEFAULT CHATBOT] Found default chatbot: ${chatbotConfig.name}`);
+      res.json(chatbotConfig);
+    } catch (error) {
+      console.error('[DEFAULT CHATBOT] Error fetching default chatbot:', error);
+      res.json(null);
+    }
   });
 
   // Get surveys available for public home screen
