@@ -68,7 +68,8 @@ export function setupChatRoutes(app: Express) {
               if (payload && typeof payload === 'object' && !isSkipResponse) {
                 // For multiselect responses, format properly
                 if (payload.selected_options_with_text && Array.isArray(payload.selected_options_with_text)) {
-                  response = payload.selected_options_with_text.join(', ');
+                  // Extract text from each object in the array
+                  response = payload.selected_options_with_text.map((item: any) => item.text || item).join(', ');
                 } else if (payload.selected_options && Array.isArray(payload.selected_options)) {
                   response = payload.selected_options.join(', ');
                 } else if (payload.rating !== undefined) {

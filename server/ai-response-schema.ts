@@ -319,9 +319,10 @@ Previous conversations about other surveys are irrelevant to this new survey.
         if (typeof response === 'object' && response !== null) {
           if (response.rating) {
             response = `Rating: ${response.rating}`;
-          } else if (response.selected_options_with_text) {
-            response = response.selected_options_with_text.join(', ');
-          } else if (response.selected_options) {
+          } else if (response.selected_options_with_text && Array.isArray(response.selected_options_with_text)) {
+            // Extract text from each object in the array
+            response = response.selected_options_with_text.map((item: any) => item.text || item).join(', ');
+          } else if (response.selected_options && Array.isArray(response.selected_options)) {
             response = response.selected_options.join(', ');
           } else {
             response = JSON.stringify(response);
@@ -467,9 +468,10 @@ This is a required text question. Present it as a text bubble and wait for user 
         const responseObj = answer as any;
         if (responseObj.rating) {
           formattedAnswer = `Rating: ${responseObj.rating}`;
-        } else if (responseObj.selected_options_with_text) {
-          formattedAnswer = responseObj.selected_options_with_text.join(', ');
-        } else if (responseObj.selected_options) {
+        } else if (responseObj.selected_options_with_text && Array.isArray(responseObj.selected_options_with_text)) {
+          // Extract text from each object in the array
+          formattedAnswer = responseObj.selected_options_with_text.map((item: any) => item.text || item).join(', ');
+        } else if (responseObj.selected_options && Array.isArray(responseObj.selected_options)) {
           formattedAnswer = responseObj.selected_options.join(', ');
         } else {
           formattedAnswer = JSON.stringify(answer);
