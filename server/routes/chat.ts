@@ -534,17 +534,23 @@ export function setupChatRoutes(app: Express) {
       }
 
       // Handle survey text answers and skip responses
-      try {
-        await handleSurveyTextResponse(
-          sessionId,
-          messageData.content,
-        );
-      } catch (textError) {
-        console.error(
-          `[SURVEY] Error in text response handling:`,
-          textError,
-        );
-        // Continue with normal response even if handling fails
+      // BUT ONLY if this is not from a menu selection (which is handled by select-option endpoint)
+      const isMenuSelectionMessage = internalMessage && internalMessage.includes('User selected option');
+      if (!isMenuSelectionMessage) {
+        try {
+          await handleSurveyTextResponse(
+            sessionId,
+            messageData.content,
+          );
+        } catch (textError) {
+          console.error(
+            `[SURVEY] Error in text response handling:`,
+            textError,
+          );
+          // Continue with normal response even if handling fails
+        }
+      } else {
+        console.log(`[SURVEY TEXT] Skipping text response processing for menu selection message`);
       }
 
       // Generate streaming response
