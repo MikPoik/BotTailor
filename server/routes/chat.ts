@@ -555,11 +555,21 @@ export function setupChatRoutes(app: Express) {
       const isMenuSelectionMessage = internalMessage && internalMessage.includes('User selected option');
       if (!isMenuSelectionMessage) {
         try {
-          // Parse the message to check for metadata
-          const parsedMessage = JSON.parse(messageData.content);
+          // Try to parse as JSON first, fallback to plain text
+          let parsedMessage;
+          try {
+            parsedMessage = JSON.parse(messageData.content);
+          } catch (jsonError) {
+            // Not JSON, treat as plain text message
+            parsedMessage = {
+              content: messageData.content,
+              metadata: {}
+            };
+          }
+          
           await handleSurveyTextResponse(
             sessionId,
-            parsedMessage, // Pass the parsed message
+            parsedMessage, // Pass the parsed or plain message
           );
         } catch (textError) {
           console.error(
