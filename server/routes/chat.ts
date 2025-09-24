@@ -63,7 +63,7 @@ export function setupChatRoutes(app: Express) {
               // Record the survey response with proper formatting
               const questionId = `question_${surveySession.currentQuestionIndex}`;
               let response: any = isSkipResponse ? 'Skipped' : (optionText || optionId);
-              
+
               // Handle complex payload data for proper storage
               if (payload && typeof payload === 'object' && !isSkipResponse) {
                 // For multiselect responses, format properly
@@ -90,7 +90,7 @@ export function setupChatRoutes(app: Express) {
 
               const newQuestionIndex = (surveySession.currentQuestionIndex || 0) + 1;
               const isCompleted = newQuestionIndex >= surveyConfig.questions.length;
-              
+
               console.log(`[SURVEY COMPLETION] Question index will be ${newQuestionIndex}, total questions: ${surveyConfig.questions.length}, isCompleted: ${isCompleted}`);
 
               const updatedSession = await storage.updateSurveySession(
@@ -554,9 +554,11 @@ export function setupChatRoutes(app: Express) {
       const isMenuSelectionMessage = internalMessage && internalMessage.includes('User selected option');
       if (!isMenuSelectionMessage) {
         try {
+          // Parse the message to check for metadata
+          const parsedMessage = JSON.parse(messageData.content);
           await handleSurveyTextResponse(
             sessionId,
-            messageData.content,
+            parsedMessage, // Pass the parsed message
           );
         } catch (textError) {
           console.error(
@@ -862,59 +864,62 @@ function getTextualRepresentation(msg: any): string {
 // Helper function to handle survey text responses (both answers and skips)
 async function handleSurveyTextResponse(
   sessionId: string,
-  messageContent: string,
+  parsedMessage: any, // Accept parsed message object
 ) {
   // Get active survey session
   const surveySession = await storage.getActiveSurveySession(sessionId);
   if (!surveySession || surveySession.status !== 'active') {
     return; // No active survey
   }
-  
+
   // Get survey to check current question
   const survey = await storage.getSurvey(surveySession.surveyId);
   if (!survey) {
     console.log(`[SURVEY TEXT] Survey not found`);
     return;
   }
-  
+
   const surveyConfig = survey.surveyConfig as any;
   const totalQuestions = surveyConfig?.questions?.length || 0;
   const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
   const currentQuestion = surveyConfig?.questions?.[currentQuestionIndex];
-  
+
   if (!currentQuestion) {
     return; // No current question
   }
-  
+
   // Check if current question is a text question
   const isTextQuestion = currentQuestion.type === 'text';
-  
+
   if (!isTextQuestion) {
     return; // Not a text question, so text responses don't advance it
   }
-  
+
   console.log(`[SURVEY TEXT] Processing text response for text question: "${currentQuestion.text}"`);
-  
+
+  // Extract message content and metadata from the parsed message
+  const messageContent = typeof parsedMessage === 'string' ? parsedMessage : parsedMessage.content;
+  const messageMetadata = typeof parsedMessage === 'object' ? parsedMessage.metadata : {};
+
+
   // Check if it's a skip message
-  const skipKeywords = [
-    'ohita', 'skip', 'ohita kysymys', 'skip question', 
-    'siirry seuraavaan', 'next', 'hoppa över', 'passer'
-  ];
-  
-  const isSkipMessage = skipKeywords.some(keyword => 
-    messageContent.toLowerCase().includes(keyword.toLowerCase())
-  );
-  
+  // First check for explicit skip metadata, then fall back to text pattern matching
+  const hasSkipMetadata = messageMetadata?.action === 'skip_question';
+  const isSkipMessage = hasSkipMetadata || 
+                       messageContent.toLowerCase().includes('skip') || 
+                       messageContent.toLowerCase().includes('pass') ||
+                       messageContent.toLowerCase().includes('next');
+
   let responseValue = isSkipMessage ? 'Skipped' : messageContent;
-  
+
   console.log(`[SURVEY TEXT] Response type: ${isSkipMessage ? 'SKIP' : 'ANSWER'}, content: "${messageContent}"`);
-  
+
   // Calculate next state
   const newQuestionIndex = currentQuestionIndex + 1;
   const isCompleted = newQuestionIndex >= totalQuestions;
-  
+
   console.log(`[SURVEY TEXT] Advancing survey: currentIndex=${currentQuestionIndex}, newIndex=${newQuestionIndex}, totalQuestions=${totalQuestions}, isCompleted=${isCompleted}`);
-  
+
   // Record response and advance survey
   const currentResponses = surveySession.responses && typeof surveySession.responses === 'object' 
     ? surveySession.responses as any : {};
@@ -923,14 +928,14 @@ async function handleSurveyTextResponse(
     ...currentResponses,
     [responseKey]: responseValue
   };
-  
+
   await storage.updateSurveySession(surveySession.id, {
     responses: updatedResponses,
     currentQuestionIndex: newQuestionIndex,
     status: isCompleted ? 'completed' : 'active',
     completedAt: isCompleted ? new Date() : surveySession.completedAt
   });
-  
+
   console.log(`[SURVEY TEXT] Survey session updated: ${isCompleted ? 'COMPLETED' : 'ADVANCED'} - Response recorded: "${responseValue}"`);
 }
 

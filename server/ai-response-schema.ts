@@ -140,7 +140,8 @@ ${isSurveyActive ? `**SURVEY RULES:**
 - 🚨 MULTISELECT_MENU CRITICAL RULE: NEVER use "Option 1", "Option 2" - use the EXACT survey option texts provided
 - Use exact option texts provided in survey context
 - Do not invent new options or change existing ones
-- For optional questions: provide skip option using quickReplies
+- For optional questions: provide skip option using quickReplies with explicit metadata:
+  Example: {"messageType": "quickReplies", "content": "", "metadata": {"quickReplies": [{"text": "Skip this question", "action": "skip_question"}]}}
 - Present surveys only if there is active survey context!` : ''}
 
 For natural conversations, adapt your bubble strategy based on the content type:
