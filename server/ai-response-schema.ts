@@ -309,8 +309,22 @@ Previous conversations about other surveys are irrelevant to this new survey.
       .map((question: any, index: number) => {
         // Try indexed ID first (question_0, question_1, etc.), then fallback to question.id
         const indexedId = `question_${index}`;
-        const response =
-          responses[indexedId] || responses[question.id] || "No response";
+        const qKey = `q${index}`;
+        let response = responses[indexedId] || responses[question.id] || responses[qKey] || "No response";
+        
+        // Format complex response objects properly
+        if (typeof response === 'object' && response !== null) {
+          if (response.rating) {
+            response = `Rating: ${response.rating}`;
+          } else if (response.selected_options_with_text) {
+            response = response.selected_options_with_text.join(', ');
+          } else if (response.selected_options) {
+            response = response.selected_options.join(', ');
+          } else {
+            response = JSON.stringify(response);
+          }
+        }
+        
         return `Q${index + 1}: ${question.text}\nA${index + 1}: ${response}`;
       })
       .join("\n\n");

@@ -525,6 +525,20 @@ export function setupChatRoutes(app: Express) {
         // Continue with normal response even if survey creation fails
       }
 
+      // Handle survey skip responses
+      try {
+        await handleSurveySkipResponse(
+          sessionId,
+          messageData.content,
+        );
+      } catch (skipError) {
+        console.error(
+          `[SURVEY] Error in skip response handling:`,
+          skipError,
+        );
+        // Continue with normal response even if skip handling fails
+      }
+
       // Generate streaming response
       await handleStreamingResponse(
         internalMessage || messageData.content,
@@ -813,6 +827,66 @@ function getTextualRepresentation(msg: any): string {
     default:
       return original.content;
   }
+}
+
+// Helper function to handle survey skip responses
+async function handleSurveySkipResponse(
+  sessionId: string,
+  messageContent: string,
+) {
+  const skipKeywords = [
+    'ohita', 'skip', 'ohita kysymys', 'skip question', 
+    'siirry seuraavaan', 'next', 'hoppa över', 'passer'
+  ];
+  
+  const isSkipMessage = skipKeywords.some(keyword => 
+    messageContent.toLowerCase().includes(keyword.toLowerCase())
+  );
+  
+  if (!isSkipMessage) {
+    return; // Not a skip message
+  }
+  
+  console.log(`[SURVEY SKIP] Detected skip response: "${messageContent}"`);
+  
+  // Get active survey session
+  const surveySession = await storage.getActiveSurveySession(sessionId);
+  if (!surveySession || surveySession.status !== 'active') {
+    console.log(`[SURVEY SKIP] No active survey session found`);
+    return;
+  }
+  
+  // Get survey to check total questions
+  const survey = await storage.getSurvey(surveySession.surveyId);
+  if (!survey) {
+    console.log(`[SURVEY SKIP] Survey not found`);
+    return;
+  }
+  
+  const surveyConfig = survey.surveyConfig as any;
+  const totalQuestions = surveyConfig?.questions?.length || 0;
+  const newQuestionIndex = (surveySession.currentQuestionIndex || 0) + 1;
+  const isCompleted = newQuestionIndex >= totalQuestions;
+  
+  console.log(`[SURVEY SKIP] Advancing survey: currentIndex=${surveySession.currentQuestionIndex}, newIndex=${newQuestionIndex}, totalQuestions=${totalQuestions}, isCompleted=${isCompleted}`);
+  
+  // Record skip response and advance survey
+  const currentResponses = surveySession.responses && typeof surveySession.responses === 'object' 
+    ? surveySession.responses as any : {};
+  const skipKey = `q${surveySession.currentQuestionIndex || 0}`;
+  const updatedResponses = {
+    ...currentResponses,
+    [skipKey]: 'Skipped'
+  };
+  
+  await storage.updateSurveySession(surveySession.id, {
+    responses: updatedResponses,
+    currentQuestionIndex: newQuestionIndex,
+    status: isCompleted ? 'completed' : 'active',
+    completedAt: isCompleted ? new Date() : surveySession.completedAt
+  });
+  
+  console.log(`[SURVEY SKIP] Survey session updated: ${isCompleted ? 'COMPLETED' : 'ADVANCED'}`);
 }
 
 async function handleSurveySessionCreation(
