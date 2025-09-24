@@ -1,6 +1,6 @@
 # Source Code Tree
 
-Generated on: 2025-09-24T05:44:35.538Z
+Generated on: 2025-09-24T10:19:38.250Z
 
 
 ```
@@ -21,7 +21,8 @@ Generated on: 2025-09-24T05:44:35.538Z
   position = 'bottom-right',
   primaryColor = '#2563eb',
   backgroundColor = '#ffffff',
-  textColor = '#1f2937',  chatbotConfig
+  textColor = '#1f2937',
+  chatbotConfig
 }: ChatWidgetProps): Element
 │       │   │   │   📋 ChatWidgetProps
 │       │   │   ├── 📄 home-tab.tsx
@@ -310,6 +311,7 @@ Generated on: 2025-09-24T05:44:35.538Z
 │   │   │   ⚡ normalizeAIResponse(resp: any): any
 │   │   ├── 📄 schema.ts
 │   │   ├── 📄 streaming-handler.ts
+│   │   │   ⚡ async cleanupCompletedSurveySession(sessionId: string): Promise<void>
 │   │   │   ⚡ export async generateStreamingResponse(userMessage: string, sessionId: string, conversationHistory: ConversationMessage[], chatbotConfig?: any): AsyncGenerator<StreamingBubbleEvent, void, unknown>
 │   │   │   📋 StreamingBubbleEvent
 │   │   └── 📄 survey-menu-validator.ts
@@ -338,6 +340,7 @@ Generated on: 2025-09-24T05:44:35.538Z
 │   │   │   ⚡ export setupChatRoutes(app: Express): void
 │   │   │   ⚡ async handleStreamingResponse(userMessage: string, sessionId: string, res: any, chatbotConfigId?: string): Promise<void>
 │   │   │   ⚡ getTextualRepresentation(msg: any): string
+│   │   │   ⚡ async handleSurveyTextResponse(sessionId: string, parsedMessage: any): Promise<void>
 │   │   │   ⚡ async handleSurveySessionCreation(sessionId: string, messageContent: string, chatbotConfigId?: string, session?: any): Promise<void>
 │   │   ├── 📄 chatbots.ts
 │   │   │   ⚡ export setupChatbotRoutes(app: Express): void
