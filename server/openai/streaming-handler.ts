@@ -17,6 +17,7 @@ import {
 } from "./dynamic-content-validator";
 import { handleCriticalError, generateFallbackResponse, attemptResponseSalvage } from "./error-handler";
 import type { ConversationMessage } from "./response-generator";
+import { storage } from "../storage";
 
 export interface StreamingBubbleEvent {
   type: "bubble" | "complete";
@@ -24,6 +25,22 @@ export interface StreamingBubbleEvent {
   content?: string;
   messageType?: string;
   metadata?: any;
+}
+
+/**
+ * Clean up completed survey sessions after first completion response
+ */
+async function cleanupCompletedSurveySession(sessionId: string): Promise<void> {
+  try {
+    const surveySession = await storage.getActiveSurveySession(sessionId);
+    if (surveySession && surveySession.status === 'completed') {
+      console.log(`[SURVEY CLEANUP] Deactivating completed survey session ${surveySession.id} for session ${sessionId}`);
+      await storage.updateSurveySession(surveySession.id, { status: 'inactive' });
+      console.log(`[SURVEY CLEANUP] Completed survey session deactivated to prevent repeated injection`);
+    }
+  } catch (error) {
+    console.error("[SURVEY CLEANUP] Error cleaning up completed survey session:", error);
+  }
 }
 
 /**
@@ -225,6 +242,9 @@ export async function* generateStreamingResponse(
       );
       yield { type: "complete", content: "streaming_complete" };
       
+      // Clean up completed survey sessions to prevent repeated injection
+      await cleanupCompletedSurveySession(sessionId);
+      
     } catch (parseError) {
       console.error("[OpenAI] Error parsing final response:", parseError);
       
@@ -239,6 +259,9 @@ export async function* generateStreamingResponse(
         
         console.log("[OpenAI] Successfully salvaged response");
         yield { type: "complete", content: "streaming_complete" };
+        
+        // Clean up completed survey sessions to prevent repeated injection
+        await cleanupCompletedSurveySession(sessionId);
         return;
       }
       
