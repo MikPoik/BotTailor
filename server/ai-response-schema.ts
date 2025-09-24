@@ -288,27 +288,27 @@ ${qaContext}
 
 2. **Personalized Summary**: Based on the responses above, provide a personalized summary and recommendation about which services would be most suitable. Analyze the user's answers and give specific guidance.
 
-3. **Next Steps**: ${chatbotConfig?.formRecipientEmail ? 'Present the contact form using the EXACT format below' : 'Suggest alternative contact methods like phone or email'}
+3. **Next Steps**: ${chatbotConfig?.formRecipientEmail ? 'Present the contact form using the format below' : 'Suggest alternative contact methods like phone or email'}
 
 🔴 **MANDATORY**: Use all three elements above in sequence - acknowledgment, personalized summary, and contact form.
 
 ${chatbotConfig?.formRecipientEmail ? `
-**🔴 MANDATORY CONTACT FORM FORMAT - USE EXACTLY:**
-After providing the personalized summary, present the contact form using this EXACT structure:
+**🔴 MANDATORY CONTACT FORM FORMAT:**
+After providing the personalized summary, present the contact form using this structure but translating content:
 
 {
   "bubbles": [
-    {"messageType": "text", "content": "${config.completionMessage || "Kiitos kyselyyn vastaamisesta!"}"},
+    {"messageType": "text", "content": "${config.completionMessage || "Thank you for completing the survey!"}"},
     {"messageType": "text", "content": "[YOUR PERSONALIZED SUMMARY AND RECOMMENDATIONS BASED ON RESPONSES]"},
-    {"messageType": "text", "content": "Haluatko ottaa yhteyttä? Täytä yhteydenottolomake:"},
-    {"messageType": "form", "content": "Yhteydenotto", "metadata": {
-      "title": "Ota yhteyttä",
+    {"messageType": "text", "content": "Would you like to get in touch? Fill out the contact form:"},
+    {"messageType": "form", "content": "Contact", "metadata": {
+      "title": "Contact Us",
       "formFields": [
-        {"id": "name", "label": "Nimi", "type": "text", "placeholder": "Nimesi", "required": true},
-        {"id": "email", "label": "Sähköposti", "type": "email", "placeholder": "Sähköpostiosoitteesi", "required": true},
-        {"id": "message", "label": "Viesti", "type": "textarea", "placeholder": "Miten voimme auttaa?", "required": true}
+        {"id": "name", "label": "Name", "type": "text", "placeholder": "Your Name", "required": true},
+        {"id": "email", "label": "Email", "type": "email", "placeholder": "Your Email Address", "required": true},
+        {"id": "message", "label": "Message", "type": "textarea", "placeholder": "How can we help?", "required": true}
       ],
-      "submitButton": {"id": "submit_contact", "text": "Lähetä", "action": "submit_form"}
+      "submitButton": {"id": "submit_contact", "text": "Send", "action": "submit_form"}
     }}
   ]
 }
