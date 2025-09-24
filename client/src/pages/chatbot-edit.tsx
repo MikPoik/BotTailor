@@ -1,12 +1,42 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
@@ -17,7 +47,19 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation, useRoute } from "wouter";
 import { useEffect } from "react";
 import { z } from "zod";
-import { ArrowLeft, Bot, Save, User, X, Plus, Trash2, Sparkles, ChevronUp, ChevronDown, AlertTriangle, } from "lucide-react";
+import {
+  ArrowLeft,
+  Bot,
+  Save,
+  User,
+  X,
+  Plus,
+  Trash2,
+  Sparkles,
+  ChevronUp,
+  ChevronDown,
+  AlertTriangle,
+} from "lucide-react";
 import { Link } from "wouter";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
@@ -37,7 +79,11 @@ const formSchema = z.object({
   initialMessages: z.array(z.string()).optional(),
   isActive: z.boolean().default(true),
   // Email configuration
-  formRecipientEmail: z.string().email("Valid email required").or(z.literal("")).optional(),
+  formRecipientEmail: z
+    .string()
+    .email("Valid email required")
+    .or(z.literal(""))
+    .optional(),
   formRecipientName: z.string().optional(),
   formConfirmationMessage: z.string().optional(),
 });
@@ -82,12 +128,14 @@ export default function ChatbotEdit() {
       name: "",
       description: "",
       avatarUrl: "",
-      systemPrompt: "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
+      systemPrompt:
+        "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
       model: "gpt-4.1",
       temperature: 7,
       maxTokens: 1000,
       welcomeMessage: "Hello! How can I help you today?",
-      fallbackMessage: "I'm sorry, I didn't understand that. Could you please rephrase your question?",
+      fallbackMessage:
+        "I'm sorry, I didn't understand that. Could you please rephrase your question?",
       initialMessages: [],
       isActive: true,
       formRecipientEmail: "",
@@ -140,7 +188,10 @@ export default function ChatbotEdit() {
         description: "Chatbot configuration updated successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] }); // Refresh dashboard list
-      queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotGuid}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/chatbots/${chatbotGuid}`],
+      });
+      setLocation("/dashboard");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -156,7 +207,8 @@ export default function ChatbotEdit() {
       }
       toast({
         title: "Error",
-        description: "Failed to update chatbot configuration. Please try again.",
+        description:
+          "Failed to update chatbot configuration. Please try again.",
         variant: "destructive",
       });
     },
@@ -220,7 +272,10 @@ export default function ChatbotEdit() {
       <div className="container max-w-4xl mx-auto py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Chatbot Not Found</h1>
-          <p className="text-muted-foreground mb-4">The chatbot you're looking for doesn't exist or you don't have permission to edit it.</p>
+          <p className="text-muted-foreground mb-4">
+            The chatbot you're looking for doesn't exist or you don't have
+            permission to edit it.
+          </p>
           <Button asChild>
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -246,7 +301,9 @@ export default function ChatbotEdit() {
         </div>
         <div className="flex items-center gap-3 mb-2">
           <Bot className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight">Edit Chatbot: {chatbot.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Edit Chatbot: {chatbot.name}
+          </h1>
         </div>
         <p className="text-muted-foreground">
           Update your chatbot's personality, behavior, and responses
@@ -288,10 +345,10 @@ export default function ChatbotEdit() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea 
+                      <Textarea
                         placeholder="A helpful customer support assistant that can answer questions about our products and services."
                         className="min-h-[80px]"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
@@ -316,7 +373,8 @@ export default function ChatbotEdit() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Upload a custom avatar or provide an image URL for your chatbot.
+                      Upload a custom avatar or provide an image URL for your
+                      chatbot.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -329,11 +387,10 @@ export default function ChatbotEdit() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        Active Status
-                      </FormLabel>
+                      <FormLabel className="text-base">Active Status</FormLabel>
                       <FormDescription>
-                        Enable or disable this chatbot. When disabled, the chatbot won't respond to messages.
+                        Enable or disable this chatbot. When disabled, the
+                        chatbot won't respond to messages.
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -371,9 +428,15 @@ export default function ChatbotEdit() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cost-effective)</SelectItem>
-                        <SelectItem value="gpt-4o">GPT-4o (Advanced Performance)</SelectItem>
-                        <SelectItem value="gpt-4.1">GPT-4.1 (Most Accurate Performance)</SelectItem>
+                        <SelectItem value="gpt-4o-mini">
+                          GPT-4o Mini (Fast & Cost-effective)
+                        </SelectItem>
+                        <SelectItem value="gpt-4o">
+                          GPT-4o (Advanced Performance)
+                        </SelectItem>
+                        <SelectItem value="gpt-4.1">
+                          GPT-4.1 (Most Accurate Performance)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
@@ -391,14 +454,15 @@ export default function ChatbotEdit() {
                   <FormItem>
                     <FormLabel>System Prompt</FormLabel>
                     <FormControl>
-                      <Textarea 
+                      <Textarea
                         placeholder="You are a helpful AI assistant..."
                         className="min-h-[420px]"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Define your chatbot's personality and role. This instruction guides how it responds.
+                      Define your chatbot's personality and role. This
+                      instruction guides how it responds.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -412,23 +476,29 @@ export default function ChatbotEdit() {
                     <Sparkles className="h-4 w-4" />
                     AI Prompt Assistant
                   </h4>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setPromptAssistantOpen(!promptAssistantOpen)}
                     type="button"
                   >
-                    {promptAssistantOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {promptAssistantOpen ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
 
                 {promptAssistantOpen && (
-                  <PromptAssistantChatbox 
-                    currentPrompt={form.watch('systemPrompt') || ""}
-                    onPromptGenerated={(newPrompt) => form.setValue('systemPrompt', newPrompt)}
-                    chatbotConfig={{ 
-                      name: form.watch('name'), 
-                      description: form.watch('description') 
+                  <PromptAssistantChatbox
+                    currentPrompt={form.watch("systemPrompt") || ""}
+                    onPromptGenerated={(newPrompt) =>
+                      form.setValue("systemPrompt", newPrompt)
+                    }
+                    chatbotConfig={{
+                      name: form.watch("name"),
+                      description: form.watch("description"),
                     }}
                     chatbotGuid={chatbotGuid || ""}
                   />
@@ -469,12 +539,14 @@ export default function ChatbotEdit() {
                     <FormItem>
                       <FormLabel>Maximum Response Length</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          min={100} 
-                          max={4000} 
+                        <Input
+                          type="number"
+                          min={100}
+                          max={4000}
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormDescription>
@@ -504,10 +576,10 @@ export default function ChatbotEdit() {
                   <FormItem>
                     <FormLabel>Welcome Message</FormLabel>
                     <FormControl>
-                      <Textarea 
+                      <Textarea
                         placeholder="Hello! How can I help you today?"
                         className="min-h-[80px]"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
@@ -525,14 +597,15 @@ export default function ChatbotEdit() {
                   <FormItem>
                     <FormLabel>Fallback Message</FormLabel>
                     <FormControl>
-                      <Textarea 
+                      <Textarea
                         placeholder="I'm sorry, I didn't understand that. Could you please rephrase your question?"
                         className="min-h-[80px]"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Message shown when the AI cannot understand or respond appropriately
+                      Message shown when the AI cannot understand or respond
+                      appropriately
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -546,12 +619,16 @@ export default function ChatbotEdit() {
                   <FormItem>
                     <FormLabel>Initial Messages</FormLabel>
                     <FormDescription>
-                      Messages that appear as bubbles above the chat widget to engage visitors
+                      Messages that appear as bubbles above the chat widget to
+                      engage visitors
                     </FormDescription>
                     <FormControl>
                       <div className="space-y-3">
                         {(field.value || []).map((message, index) => (
-                          <div key={index} className="flex items-center space-x-2">
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2"
+                          >
                             <Input
                               value={message}
                               onChange={(e) => {
@@ -566,7 +643,9 @@ export default function ChatbotEdit() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                const newMessages = (field.value || []).filter((_, i) => i !== index);
+                                const newMessages = (field.value || []).filter(
+                                  (_, i) => i !== index,
+                                );
                                 field.onChange(newMessages);
                               }}
                             >
@@ -611,10 +690,10 @@ export default function ChatbotEdit() {
                     <FormItem>
                       <FormLabel>Form Recipient Email</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="email"
                           placeholder="recipient@example.com"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormDescription>
@@ -632,10 +711,7 @@ export default function ChatbotEdit() {
                     <FormItem>
                       <FormLabel>Recipient Name</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Support Team"
-                          {...field} 
-                        />
+                        <Input placeholder="Support Team" {...field} />
                       </FormControl>
                       <FormDescription>
                         Name of the person/team receiving forms
@@ -652,14 +728,15 @@ export default function ChatbotEdit() {
                     <FormItem>
                       <FormLabel>Form Confirmation Message</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Thank you! Your message has been sent successfully. We will contact you soon."
                           className="min-h-[80px]"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        Message displayed in chat after successful form submission
+                        Message displayed in chat after successful form
+                        submission
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -673,8 +750,8 @@ export default function ChatbotEdit() {
           <div className="flex justify-between items-center">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="destructive"
                   disabled={deleteMutation.isPending}
                 >
@@ -698,13 +775,14 @@ export default function ChatbotEdit() {
                     Delete Chatbot
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete "{chatbot?.name}"? This action cannot be undone. 
-                    All chat history and configuration will be permanently removed.
+                    Are you sure you want to delete "{chatbot?.name}"? This
+                    action cannot be undone. All chat history and configuration
+                    will be permanently removed.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction 
+                  <AlertDialogAction
                     onClick={() => deleteMutation.mutate()}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
@@ -715,17 +793,10 @@ export default function ChatbotEdit() {
             </AlertDialog>
 
             <div className="flex space-x-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                asChild
-              >
+              <Button type="button" variant="outline" asChild>
                 <Link href="/dashboard">Cancel</Link>
               </Button>
-              <Button 
-                type="submit" 
-                disabled={updateMutation.isPending}
-              >
+              <Button type="submit" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
