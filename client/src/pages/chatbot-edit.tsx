@@ -35,6 +35,7 @@ const formSchema = z.object({
   welcomeMessage: z.string().optional(),
   fallbackMessage: z.string().optional(),
   initialMessages: z.array(z.string()).optional(),
+  isActive: z.boolean().default(true),
   // Email configuration
   formRecipientEmail: z.string().email("Valid email required").or(z.literal("")).optional(),
   formRecipientName: z.string().optional(),
@@ -88,6 +89,7 @@ export default function ChatbotEdit() {
       welcomeMessage: "Hello! How can I help you today?",
       fallbackMessage: "I'm sorry, I didn't understand that. Could you please rephrase your question?",
       initialMessages: [],
+      isActive: true,
       formRecipientEmail: "",
       formRecipientName: "",
       formConfirmationMessage: "",
@@ -108,6 +110,7 @@ export default function ChatbotEdit() {
         welcomeMessage: chatbot.welcomeMessage || "",
         fallbackMessage: chatbot.fallbackMessage || "",
         initialMessages: (chatbot.initialMessages as string[]) || [],
+        isActive: chatbot.isActive !== undefined ? chatbot.isActive : true,
         formRecipientEmail: chatbot.formRecipientEmail || "",
         formRecipientName: chatbot.formRecipientName || "",
         formConfirmationMessage: chatbot.formConfirmationMessage || "",
@@ -316,6 +319,30 @@ export default function ChatbotEdit() {
                       Upload a custom avatar or provide an image URL for your chatbot.
                     </FormDescription>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Active Status
+                      </FormLabel>
+                      <FormDescription>
+                        Enable or disable this chatbot. When disabled, the chatbot won't respond to messages.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={updateMutation.isPending}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />
