@@ -878,15 +878,16 @@ export class DatabaseStorage implements IStorage {
       subscription = await this.getOrCreateFreeSubscription(userId);
     }
 
-    // Count current bots
-    const currentBots = await this.getChatbotConfigs(userId);
+    // Count only active bots
+    const allBots = await this.getChatbotConfigs(userId);
+    const activeBots = allBots.filter(bot => bot.isActive);
 
     // Check if under limit (-1 means unlimited)
     if (subscription.plan.maxBots === -1) {
       return true;
     }
 
-    return currentBots.length < subscription.plan.maxBots;
+    return activeBots.length < subscription.plan.maxBots;
   }
 
   async checkMessageLimit(userId: string): Promise<boolean> {

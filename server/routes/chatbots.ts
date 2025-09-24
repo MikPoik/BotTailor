@@ -53,16 +53,19 @@ export function setupChatbotRoutes(app: Express) {
       const canCreateBot = await storage.checkBotLimit(userId);
       if (!canCreateBot) {
         // Get current usage details for better error message
-        const currentBots = await storage.getChatbotConfigs(userId);
+        const allBots = await storage.getChatbotConfigs(userId);
+        const activeBots = allBots.filter(bot => bot.isActive);
         const subscription = await storage.getUserSubscriptionWithPlan(userId);
         
-        const currentCount = currentBots.length;
+        const activeCount = activeBots.length;
+        const totalCount = allBots.length;
         const maxBots = subscription?.plan?.maxBots || 2;
         
         return res.status(403).json({ 
-          message: `You have reached your chatbot limit (${currentCount}/${maxBots === -1 ? 'unlimited' : maxBots}). Please upgrade your subscription to create more chatbots.`,
+          message: `You have reached your active chatbot limit (${activeCount}/${maxBots === -1 ? 'unlimited' : maxBots}). Please upgrade your subscription or deactivate some chatbots to create more.`,
           details: {
-            currentBots: currentCount,
+            activeBots: activeCount,
+            totalBots: totalCount,
             maxBots: maxBots,
             planName: subscription?.plan?.name || 'Free',
             upgradeRequired: true
