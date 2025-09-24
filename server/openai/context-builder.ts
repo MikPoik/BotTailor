@@ -52,7 +52,6 @@ export async function buildActiveSurveyContext(sessionId: string, chatbotConfig?
       surveyId: surveySession.surveyId, 
       status: surveySession.status,
       currentQuestionIndex: surveySession.currentQuestionIndex,
-      responses: surveySession.responses,
       completionHandled: surveySession.completionHandled
     } : null);
     
@@ -60,10 +59,7 @@ export async function buildActiveSurveyContext(sessionId: string, chatbotConfig?
       const survey = await storage.getSurvey(surveySession.surveyId);
       console.log(`[SURVEY AI CONTEXT] Survey found:`, survey ? {
         id: survey.id,
-        name: survey.name,
-        title: (survey.surveyConfig as any)?.title,
-        description: survey.description,
-        questionCount: (survey.surveyConfig as any)?.questions?.length
+        name: survey.name
       } : null);
       
       if (survey) {

@@ -8,6 +8,10 @@ IMPLEMENTATION COMPLETENESS OVERRIDE:
 - Don't seek permission for implementing missing pieces that are clearly needed for the feature to work
 - ALWAYS Prefer complete implementation over workarounds, even if it requires more files/changes
 - Trace to source, not symptoms - Find the actual originating file/function, not just where errors surface
+- For server routes, create modular structure with separation of concerns
+- Use modular design for features
+- UI design choices should be mobile first unless stated otherwise.
+- If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
 
 
 UPDATED MANDATORY WORK PHASES
@@ -29,6 +33,7 @@ Phase 3: Execution
 - Sequential calls: When later calls depend on earlier results (edit,write)
 - **Fully implement features instead leaving TODO log entries as a shortcut.**
 - Fix the pattern, not just the instance
+- Always prefer dynamic solutions instead of hardcoded patterns, for example keyword string matching
 
 Phase 4: Verification
 - When HMR confirms no errors -> SUCCESS
@@ -84,15 +89,6 @@ This project is a full-stack React chat widget application featuring an Express.
 ## User Preferences
 
 **REQUIRED MANDATORY** communication style: Like talking to a software developer, technical and detailed.
-
-### Notes for agent
-
-For server routes, create modular structure with separation of concerns
-Use modular design for features
-UI design choices should be mobile first unless stated otherwise.
-If you need to use OpenAI models, model "gpt-4.1" is the newest model released on 14.4.2025
-
-
 
 ## System Architecture
 

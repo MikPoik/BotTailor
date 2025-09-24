@@ -9,7 +9,7 @@ import { storage } from "../storage";
 export function parseOpenAIResponse(accumulatedContent: string): AIResponse {
   try {
     const parsedResponse = JSON.parse(accumulatedContent);
-    console.log(`[OpenAI] Raw response: ${accumulatedContent}`);
+    //console.log(`[OpenAI] Raw response: ${accumulatedContent}`);
 
     // Normalize messageType variants before validation
     const normalized = normalizeAIResponse(parsedResponse);
