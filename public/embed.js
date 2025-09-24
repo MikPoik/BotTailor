@@ -634,6 +634,13 @@
             return response.json();
           })
           .then(data => {
+            // Check if chatbot is active - if not, hide the entire widget
+            if (!data.isActive) {
+              console.log('Chat widget: Chatbot is inactive, hiding widget');
+              this.hideWidget();
+              return;
+            }
+            
             if (data.initialMessages && data.initialMessages.length > 0) {
               this.displayInitialMessages(messageBubble, data.initialMessages);
             } else {
@@ -641,8 +648,9 @@
             }
           })
           .catch(error => {
-            // Silent fallback in production
-            this.showDefaultMessage(messageBubble);
+            // Silent fallback in production - hide widget on error
+            console.log('Chat widget: Error fetching chatbot config, hiding widget');
+            this.hideWidget();
           });
       } else {
         this.showDefaultMessage(messageBubble);
@@ -770,6 +778,17 @@
           messageBubble.classList.remove('visible');
         }
       }
+    },
+
+    // Method to hide the entire widget when chatbot is inactive
+    hideWidget: function() {
+      const container = document.getElementById('chatwidget-container');
+      const overlay = document.getElementById('chatwidget-overlay');
+      const mobileIframe = document.getElementById('chatwidget-mobile-iframe');
+      
+      if (container) container.style.display = 'none';
+      if (overlay) overlay.style.display = 'none';
+      if (mobileIframe) mobileIframe.style.display = 'none';
     },
 
     // Helper method to hide all initial messages
