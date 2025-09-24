@@ -60,16 +60,31 @@ export function setupChatRoutes(app: Express) {
                   optionText.toLowerCase().includes(skip)
                 ));
 
-              // Record the survey response
+              // Record the survey response with proper formatting
               const questionId = `question_${surveySession.currentQuestionIndex}`;
-              const response = isSkipResponse ? 'Skipped' : (optionText || optionId);
+              let response: any = isSkipResponse ? 'Skipped' : (optionText || optionId);
+              
+              // Handle complex payload data for proper storage
+              if (payload && typeof payload === 'object' && !isSkipResponse) {
+                // For multiselect responses, format properly
+                if (payload.selected_options_with_text && Array.isArray(payload.selected_options_with_text)) {
+                  response = payload.selected_options_with_text.join(', ');
+                } else if (payload.selected_options && Array.isArray(payload.selected_options)) {
+                  response = payload.selected_options.join(', ');
+                } else if (payload.rating !== undefined) {
+                  response = `Rating: ${payload.rating}`;
+                } else {
+                  // Use the human-readable text for other cases
+                  response = optionText || optionId;
+                }
+              }
 
               const currentResponses = surveySession.responses && typeof surveySession.responses === 'object'
                 ? surveySession.responses as Record<string, any>
                 : {};
               const updatedResponses = {
                 ...currentResponses,
-                [`q${surveySession.currentQuestionIndex || 0}`]: payload || optionId
+                [`q${surveySession.currentQuestionIndex || 0}`]: response
               };
 
               const newQuestionIndex = (surveySession.currentQuestionIndex || 0) + 1;
