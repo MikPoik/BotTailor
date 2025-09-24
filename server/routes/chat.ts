@@ -446,21 +446,21 @@ export function setupChatRoutes(app: Express) {
               `[CHATBOT_INACTIVE] Chatbot ${chatbotConfig.name} (ID: ${chatbotConfig.id}) is disabled`,
             );
 
-            // Use the chatbot's configured fallback message or a default inactive message
-            const inactiveMessage =
+            // Use the same fallback message as usage limit exceeded
+            const fallbackMessage =
               chatbotConfig.fallbackMessage ||
-              "This chatbot is currently inactive. Please try again later or contact support.";
+              "I'm temporarily unavailable. Please try again later or leave your contact details and we'll reach out to you.";
 
-            // Send inactive chatbot event
+            // Send limit exceeded event with same structure as usage limit
             res.write(
               `data: ${JSON.stringify({
-                type: "chatbot_inactive",
-                message: inactiveMessage,
+                type: "limit_exceeded",
+                message: fallbackMessage,
                 readOnlyMode: true,
-                showContactForm: false,
+                showContactForm: !!chatbotConfig.formRecipientEmail,
                 chatbotConfig: {
                   name: chatbotConfig.name,
-                  isActive: false,
+                  fallbackMessage: chatbotConfig.fallbackMessage,
                 },
               })}\n\n`,
             );
@@ -537,19 +537,19 @@ export function setupChatRoutes(app: Express) {
               `[CHATBOT_INACTIVE] Default chatbot ${defaultChatbotConfig.name} is disabled`,
             );
 
-            const inactiveMessage =
+            const fallbackMessage =
               defaultChatbotConfig.fallbackMessage ||
-              "This chatbot is currently inactive. Please try again later or contact support.";
+              "I'm temporarily unavailable. Please try again later or leave your contact details and we'll reach out to you.";
 
             res.write(
               `data: ${JSON.stringify({
-                type: "chatbot_inactive",
-                message: inactiveMessage,
+                type: "limit_exceeded",
+                message: fallbackMessage,
                 readOnlyMode: true,
-                showContactForm: false,
+                showContactForm: !!defaultChatbotConfig.formRecipientEmail,
                 chatbotConfig: {
                   name: defaultChatbotConfig.name,
-                  isActive: false,
+                  fallbackMessage: defaultChatbotConfig.fallbackMessage,
                 },
               })}\n\n`,
             );
