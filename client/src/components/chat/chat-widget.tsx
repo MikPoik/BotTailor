@@ -42,6 +42,11 @@ export default function ChatWidget({
   // Initialize chat data only when needed
   const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(sessionId, chatbotConfigId);
 
+  // Don't render widget if chatbot is inactive
+  if (chatbotConfig && !chatbotConfig.isActive) {
+    return null;
+  }
+
   const positionClasses = {
     'bottom-right': 'bottom-2 right-2',
     'bottom-left': 'bottom-2 left-2'

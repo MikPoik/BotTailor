@@ -66,6 +66,18 @@ export default function ChatWidgetPage() {
       );
     }
     
+    // Check if chatbot is active
+    if (!chatbotConfig.isActive) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gray-50">
+          <div className="text-center p-4">
+            <p className="text-gray-600 text-sm">Chatbot is currently inactive</p>
+            <p className="text-gray-500 text-xs mt-1">This chatbot has been disabled by the administrator</p>
+          </div>
+        </div>
+      );
+    }
+    
     // Read theme colors from URL parameters first, then fallback to injected config, then defaults
     const urlParams = new URLSearchParams(window.location.search);
     

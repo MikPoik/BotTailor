@@ -458,7 +458,7 @@ export default function Dashboard() {
       </div>
 
       {/* Chat Widget */}
-      {sessionId && selectedChatbot && (
+      {sessionId && selectedChatbot && selectedChatbot.isActive && (
         <ChatWidget 
           sessionId={sessionId}
           position="bottom-right"

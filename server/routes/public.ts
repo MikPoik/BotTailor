@@ -257,9 +257,14 @@ export function setupPublicRoutes(app: Express) {
 
       // Get chatbot config from database
       const chatbotConfig = await storage.getChatbotConfigByGuid(userId, chatbotGuid);
-      if (!chatbotConfig || !chatbotConfig.isActive) {
-        console.log(`Chatbot not found or inactive: ${chatbotGuid}`);
-        return res.status(404).send('Chatbot not found or inactive');
+      if (!chatbotConfig) {
+        console.log(`Chatbot not found: ${chatbotGuid}`);
+        return res.status(404).send('Chatbot not found');
+      }
+      
+      if (!chatbotConfig.isActive) {
+        console.log(`Chatbot is inactive: ${chatbotGuid}`);
+        return res.status(404).send('Chatbot is currently inactive');
       }
 
       console.log(`Found chatbot config: ${chatbotConfig.name}`);

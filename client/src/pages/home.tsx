@@ -385,7 +385,7 @@ export default function Home() {
       </section>
 
       {/* Chat Widget */}
-      {sessionId && defaultChatbot && (
+      {sessionId && defaultChatbot && defaultChatbot.isActive && (
         <ChatWidget 
           sessionId={sessionId}
           position="bottom-right"
