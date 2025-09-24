@@ -158,26 +158,41 @@ Example for service descriptions:
 
 ${isSurveyActive ? `**Survey Examples:**
 
+⚠️ **CRITICAL**: Survey examples MUST include expectation metadata to ensure all menu options are generated!
+
 First question:
 [
   {"messageType": "text", "content": "Let's begin the survey. This will help us understand your needs."},
-  {"messageType": "text", "content": "Question 1: How would you describe your current situation?"},
-  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
+  {"messageType": "text", "content": "Question 1: How would you describe your current situation?", "metadata": {"expectedMenuOptions": 4, "contentIntent": "survey_question_1", "completionRequired": true}},
+  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [
+    {"id": "option1", "text": "First option", "action": "select"},
+    {"id": "option2", "text": "Second option", "action": "select"},
+    {"id": "option3", "text": "Third option", "action": "select"},
+    {"id": "option4", "text": "Fourth option", "action": "select"}
+  ]}}
 ]
 
-Follow-up question, aknowledge user's response and validate their feelings. For example :
+Follow-up question, acknowledge user's response and validate their feelings:
 [
   {"messageType": "text", "content": "Thank you for your response, it is common to feel that way. Let's continue."},
-  {"messageType": "text", "content": "Question 2: How urgent is your situation?"},
-  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [...]}}
+  {"messageType": "text", "content": "Question 2: How urgent is your situation?", "metadata": {"expectedMenuOptions": 3, "contentIntent": "survey_question_2", "completionRequired": true}},
+  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [
+    {"id": "urgent", "text": "Very urgent", "action": "select"},
+    {"id": "moderate", "text": "Somewhat urgent", "action": "select"},
+    {"id": "not_urgent", "text": "Not urgent", "action": "select"}
+  ]}}
 ]` : ''}
 
 **For Interactive/Conversational Content:**
 
-⚠️ **DYNAMIC VALIDATION RULE**: When you plan to provide interactive choices (menus/quickreplies), add expectation metadata to help validate completeness:
-- Add expectedMenuOptions: number if you plan to follow with a menu
+🚨 **CRITICAL DYNAMIC VALIDATION RULE**: When you plan to provide interactive choices (menus/quickreplies), YOU MUST add expectation metadata to help validate completeness:
+- Add expectedMenuOptions: number if you plan to follow with a menu (REQUIRED for surveys)
 - Add expectedQuickReplies: number if you plan to follow with quick replies
-- Add contentIntent: description to describe your plan
+- Add contentIntent: description to describe your plan (e.g., "survey_question_1", "greeting_menu")
+- Add completionRequired: true for surveys to ensure all options are generated
+
+⚠️ **SURVEY VALIDATION**: This metadata enables validation that ensures ALL intended menu options are generated and prevents truncation!
+
 Use multiple shorter bubbles to create natural dialogue flow.
 
 Example for regular greetings and options:
@@ -219,7 +234,7 @@ ${isSurveyActive ? `**For Surveys (step-by-step questionnaires):**
 {
   "bubbles": [
     {"messageType": "text", "content": "Let me help you with a quick assessment."},
-    {"messageType": "text", "content": "Question 1: How would you describe your current situation?"},
+    {"messageType": "text", "content": "Question 1: How would you describe your current situation?", "metadata": {"expectedMenuOptions": 4, "contentIntent": "survey_question_1", "completionRequired": true}},
     {"messageType": "menu", "content": "", "metadata": {
       "options": [
         {"id": "option1", "text": "First option", "action": "select"},
@@ -233,9 +248,10 @@ ${isSurveyActive ? `**For Surveys (step-by-step questionnaires):**
 
 **CRITICAL: Survey Consistency Rules:**
 - EVERY survey question MUST end with a menu of options
-- NEVER present a question without providing answer choices
+- NEVER present a question without providing answer choices  
+- ⚠️ **EXPECTATION METADATA REQUIRED**: Always add expectedMenuOptions, contentIntent, and completionRequired to the question text bubble
 - If you see previous menu history like "[MENU] Presented options: option1, option2, option3", continue the same pattern
-- Survey questions should ALWAYS follow this format: Question text + Menu with options
+- Survey questions should ALWAYS follow this format: Question text (with expectation metadata) + Menu with options
 - Never break survey flow by omitting menu options
 - Remember to end survey when it is completed.` : ''}
 
@@ -353,6 +369,7 @@ ${getQuestionTypeInstructions(currentQuestion)}
 **RESPONSE FORMAT REQUIREMENT:**
 1. Brief acknowledgment and validation of user's response (1 sentence max), adjust to current survey context. Example: "Thank you for your response, I understand your situation." 
 2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
+3. ⚠️ **CRITICAL**: Include expectation metadata in the question text bubble: expectedMenuOptions: ${currentQuestion.options?.length || 0}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
@@ -383,6 +400,7 @@ ${menuExample}
 2. Use EXACT option texts - DO NOT change to "Option 1", "Option 2"
 3. Never omit any options!
 4. Copy the JSON format exactly as shown above
+5. ⚠️ **VALIDATION METADATA**: Add expectation metadata to the question text bubble: {"expectedMenuOptions": ${currentQuestion.options.length}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
 
 The EXACT option texts you MUST use are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(", ")}
 `;
@@ -534,33 +552,39 @@ function getMenuTypeForQuestion(question: any): string {
 // Helper function to generate menu example based on question type
 function generateMenuExample(question: any, optionsForExample: string): string {
   const menuType = getMenuTypeForQuestion(question);
+  const optionCount = question.options?.length || 0;
 
   if (menuType === 'multiselect_menu') {
     return `🚨 CRITICAL MULTISELECT FORMAT - COPY EXACTLY:
 {
-  "messageType": "multiselect_menu",
-  "content": "Select all that apply:",
-  "metadata": {
-    "allowMultiple": true,
-    "minSelections": 1,
-    "maxSelections": ${question.options?.length || 999},
-    "options": [
+  "bubbles": [
+    {"messageType": "text", "content": "${question.text}", "metadata": {"expectedMenuOptions": ${optionCount}, "contentIntent": "survey_question", "completionRequired": true}},
+    {"messageType": "multiselect_menu", "content": "Select all that apply:", "metadata": {
+      "allowMultiple": true,
+      "minSelections": 1,
+      "maxSelections": ${optionCount},
+      "options": [
 ${optionsForExample}
-    ]
-  }
+      ]
+    }}
+  ]
 }
 
 ⚠️ WARNING: You MUST use the EXACT option texts provided above. DO NOT change them to "Option 1", "Option 2". Use the actual text from the survey options!`;
   } else {
-    return `{
-  "messageType": "menu",
-  "content": "Please select one option:",
-  "metadata": {
-    "options": [
+    return `🚨 CRITICAL MENU FORMAT - COPY EXACTLY:
+{
+  "bubbles": [
+    {"messageType": "text", "content": "${question.text}", "metadata": {"expectedMenuOptions": ${optionCount}, "contentIntent": "survey_question", "completionRequired": true}},
+    {"messageType": "menu", "content": "Please select one option:", "metadata": {
+      "options": [
 ${optionsForExample}
-    ]
-  }
-}`;
+      ]
+    }}
+  ]
+}
+
+⚠️ WARNING: You MUST use the EXACT option texts provided above. DO NOT change them to "Option 1", "Option 2". Use the actual text from the survey options!`;
   }
 }
 
