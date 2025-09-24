@@ -29,6 +29,132 @@ export interface StreamingBubbleEvent {
 }
 
 /**
+ * Build enhanced system prompt for dynamic content regeneration
+ */
+function buildDynamicRegenerationPrompt(
+  originalSystemPrompt: string,
+  dynamicValidation: DynamicContentValidationResult
+): string {
+  const { expectations, actualContent, errors, warnings, truncatedContent } = dynamicValidation;
+  
+  let enhancement = "\n\n🚨 DYNAMIC CONTENT VALIDATION REQUIREMENTS - MANDATORY COMPLIANCE:\n";
+  
+  // Add specific requirements based on expectations
+  if (expectations) {
+    if (expectations.expectedMenuOptions) {
+      enhancement += `\n- MENU REQUIREMENT: You MUST generate ${expectations.expectedMenuOptions} menu options\n`;
+      enhancement += `- Current: Found ${actualContent.menuOptions} menu options (expected ${expectations.expectedMenuOptions})\n`;
+    }
+    
+    if (expectations.expectedQuickReplies) {
+      enhancement += `\n- QUICK REPLIES REQUIREMENT: You MUST generate ${expectations.expectedQuickReplies} quick reply options\n`;
+      enhancement += `- Current: Found ${actualContent.quickReplies} quick replies (expected ${expectations.expectedQuickReplies})\n`;
+    }
+    
+    if (expectations.expectedInteractiveElements) {
+      enhancement += `\n- INTERACTIVE ELEMENTS REQUIREMENT: You MUST generate ${expectations.expectedInteractiveElements} interactive elements\n`;
+      enhancement += `- Current: Found ${actualContent.interactiveElements} interactive elements (expected ${expectations.expectedInteractiveElements})\n`;
+    }
+    
+    if (expectations.contentIntent) {
+      enhancement += `\n- CONTENT INTENT: "${expectations.contentIntent}" - ensure this intent is fully realized\n`;
+    }
+  }
+  
+  // Add specific error fixes
+  if (errors.length > 0) {
+    enhancement += `\nCRITICAL ERRORS TO FIX:\n${errors.map(err => `- ${err}`).join('\n')}\n`;
+  }
+  
+  // Add truncation warnings
+  if (truncatedContent) {
+    enhancement += `\n⚠️  TRUNCATION DETECTED: Complete all interactive elements, don't leave content incomplete\n`;
+  }
+  
+  // Add warnings
+  if (warnings.length > 0) {
+    enhancement += `\nWARNINGS TO ADDRESS:\n${warnings.map(warn => `- ${warn}`).join('\n')}\n`;
+  }
+  
+  enhancement += `\n⚠️  DYNAMIC CONTENT REGENERATION - Your previous response had incomplete interactive elements. You MUST generate complete, functional interactive content.\n`;
+  
+  return originalSystemPrompt + enhancement;
+}
+
+/**
+ * Regenerate response for dynamic content validation failures
+ */
+async function regenerateResponseWithDynamicValidation(
+  userMessage: string,
+  conversationHistory: any[],
+  originalSystemPrompt: string,
+  dynamicValidation: DynamicContentValidationResult,
+  chatbotConfig: any
+): Promise<any> {
+  console.log(`[DYNAMIC REGENERATION] Starting regeneration for dynamic content validation failures`);
+  
+  try {
+    const openai = getOpenAIClient();
+    
+    // Build enhanced system prompt with specific dynamic content requirements
+    const enhancedSystemPrompt = buildDynamicRegenerationPrompt(originalSystemPrompt, dynamicValidation);
+    
+    console.log(`[DYNAMIC REGENERATION] Enhanced prompt length: ${enhancedSystemPrompt.length} chars`);
+    console.log(`[DYNAMIC REGENERATION] Enhancement details:`, {
+      expectations: dynamicValidation.expectations,
+      actualContent: dynamicValidation.actualContent,
+      errors: dynamicValidation.errors,
+      truncated: dynamicValidation.truncatedContent
+    });
+    
+    // Prepare messages with enhanced system prompt
+    const messages = [
+      { role: "system" as const, content: enhancedSystemPrompt },
+      ...conversationHistory,
+      { role: "user" as const, content: userMessage },
+    ];
+    
+    // Extract configuration (same as original request)
+    const model = chatbotConfig?.model || "gpt-4.1";
+    const temperature = chatbotConfig?.temperature ? chatbotConfig.temperature / 10 : 0.7;
+    const maxTokens = chatbotConfig?.maxTokens || 2000;
+    
+    console.log(`[DYNAMIC REGENERATION] Calling OpenAI API with model: ${model}`);
+    
+    // Make non-streaming regeneration call for faster processing
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      stream: false,
+      response_format: {
+        type: "json_schema",
+        json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
+      },
+      temperature,
+      max_tokens: maxTokens,
+    });
+    
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content in dynamic regeneration response');
+    }
+    
+    console.log(`[DYNAMIC REGENERATION] Received regenerated content (${content.length} chars)`);
+    
+    // Parse the regenerated response
+    const regeneratedResponse = parseOpenAIResponse(content);
+    
+    console.log(`[DYNAMIC REGENERATION] Parsed ${regeneratedResponse.bubbles.length} bubbles from regenerated response`);
+    
+    return regeneratedResponse;
+    
+  } catch (error) {
+    console.error(`[DYNAMIC REGENERATION] Regeneration failed:`, error);
+    throw error;
+  }
+}
+
+/**
  * Build enhanced system prompt for regeneration based on validation failures
  */
 function buildRegenerationPrompt(
@@ -349,7 +475,8 @@ export async function* generateStreamingResponse(
           errors: dynamicValidation.errors,
           warnings: dynamicValidation.warnings,
           expectations: dynamicValidation.expectations,
-          actual: dynamicValidation.actualContent
+          actual: dynamicValidation.actualContent,
+          needsRegeneration: dynamicValidation.needsRegeneration
         });
       }
       
@@ -388,6 +515,54 @@ export async function* generateStreamingResponse(
         } catch (regenerationError) {
           console.error(`[SURVEY REGENERATION ERROR] Regeneration attempt failed:`, regenerationError);
           console.warn(`[SURVEY VALIDATION] Using original response due to regeneration error`);
+        }
+      }
+      
+      // Handle dynamic content validation failures with regeneration
+      if (!dynamicValidation.isValid && dynamicValidation.needsRegeneration) {
+        console.warn(`[DYNAMIC VALIDATION] Dynamic content validation failed, attempting regeneration:`, dynamicValidation.errors);
+        
+        if (dynamicValidation.expectations) {
+          console.log(`[DYNAMIC VALIDATION] Expected content:`, {
+            menuOptions: dynamicValidation.expectations.expectedMenuOptions,
+            quickReplies: dynamicValidation.expectations.expectedQuickReplies,
+            interactiveElements: dynamicValidation.expectations.expectedInteractiveElements,
+            intent: dynamicValidation.expectations.contentIntent
+          });
+          
+          console.log(`[DYNAMIC VALIDATION] Actual content:`, dynamicValidation.actualContent);
+        }
+        
+        try {
+          // Skip dynamic regeneration if we already regenerated for survey validation
+          // to avoid double regeneration conflicts
+          if (!validationResult.isValid && validationResult.needsRegeneration) {
+            console.log(`[DYNAMIC VALIDATION] Skipping dynamic regeneration - already regenerated for survey validation`);
+          } else {
+            // Attempt regeneration with enhanced prompt for dynamic content
+            const regeneratedResponse = await regenerateResponseWithDynamicValidation(
+              userMessage,
+              conversationHistory,
+              systemPrompt,
+              dynamicValidation,
+              chatbotConfig
+            );
+            
+            // Re-validate the regenerated response
+            const dynamicRevalidation = validateDynamicContent(regeneratedResponse);
+            
+            if (dynamicRevalidation.isValid) {
+              console.log(`[DYNAMIC REGENERATION SUCCESS] Regenerated response passed dynamic validation`);
+              validated = regeneratedResponse;
+              console.log(`[DYNAMIC REGENERATION] Using regenerated response with ${validated.bubbles.length} bubbles`);
+            } else {
+              console.warn(`[DYNAMIC REGENERATION FAILED] Regenerated response still failed dynamic validation:`, dynamicRevalidation.errors);
+              console.warn(`[DYNAMIC VALIDATION] Using original response despite dynamic regeneration failure`);
+            }
+          }
+        } catch (regenerationError) {
+          console.error(`[DYNAMIC REGENERATION ERROR] Dynamic regeneration attempt failed:`, regenerationError);
+          console.warn(`[DYNAMIC VALIDATION] Using original response due to dynamic regeneration error`);
         }
       }
 
