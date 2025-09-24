@@ -135,7 +135,7 @@ export const surveys = pgTable("surveys", {
 export const surveySessions = pgTable("survey_sessions", {
   id: serial("id").primaryKey(),
   surveyId: integer("survey_id").notNull().references(() => surveys.id, { onDelete: "cascade" }),
-  sessionId: text("session_id").notNull(),
+  sessionId: text("session_id").notNull().references(() => chatSessions.sessionId),
   userId: varchar("user_id").references(() => users.id),
   currentQuestionIndex: integer("current_question_index").default(0),
   responses: jsonb("responses").default({}), // Stores all user responses
