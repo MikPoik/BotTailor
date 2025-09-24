@@ -52,7 +52,7 @@ export interface RatingMetadata {
 }
 
 export interface QuickRepliesMetadata {
-  quickReplies: string[];
+  quickReplies: (string | {text: string, action?: string})[];
 }
 
 export interface FormMetadata {

@@ -85,15 +85,31 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
         {/* Quick replies for text messages (only for non-streaming) */}
         {!isStreamingMetadata(message.metadata) && message.messageType === 'text' && (message.metadata as MessageMetadata)?.quickReplies && (
           <div className="flex flex-wrap gap-2 mt-2 pl-0">
-            {(message.metadata as MessageMetadata).quickReplies!.map((reply: string, index: number) => (
-              <button
-                key={`msg-quickreply-${message.id}-${reply}-${index}`}
-                onClick={() => onQuickReply(reply)}
-                className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
-              >
-                {reply}
-              </button>
-            ))}
+            {(message.metadata as MessageMetadata).quickReplies!.map((reply: string | {text: string, action?: string}, index: number) => {
+              const replyText = typeof reply === 'string' ? reply : reply.text;
+              const replyAction = typeof reply === 'object' ? reply.action : undefined;
+              
+              return (
+                <button
+                  key={`msg-quickreply-${message.id}-${replyText}-${index}`}
+                  onClick={() => {
+                    if (replyAction === 'skip_question') {
+                      // Handle skip with metadata
+                      onQuickReply(JSON.stringify({
+                        content: replyText,
+                        metadata: { action: 'skip_question' }
+                      }));
+                    } else {
+                      // Handle regular quick reply
+                      onQuickReply(replyText);
+                    }
+                  }}
+                  className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
+                >
+                  {replyText}
+                </button>
+              );
+            })}
           </div>
         )}
 
