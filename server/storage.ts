@@ -700,6 +700,10 @@ export class DatabaseStorage implements IStorage {
     return plan || undefined;
   }
 
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true));
+  }
+
   // Subscription methods
   async getUserSubscription(userId: string): Promise<Subscription | undefined> {
     const [subscription] = await db.select().from(subscriptions)
@@ -714,6 +718,25 @@ export class DatabaseStorage implements IStorage {
       .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId))
       .limit(1);
     return subscription || undefined;
+  }
+
+  async getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | null> {
+    const result = await db
+      .select()
+      .from(subscriptions)
+      .leftJoin(subscriptionPlans, eq(subscriptions.planId, subscriptionPlans.id))
+      .where(eq(subscriptions.userId, userId))
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1);
+
+    if (!result[0] || !result[0].subscription_plans) {
+      return null;
+    }
+
+    return {
+      ...result[0].subscriptions,
+      plan: result[0].subscription_plans
+    };
   }
 
   async createSubscription(subscriptionData: InsertSubscription): Promise<Subscription> {
@@ -779,6 +802,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   
+
+  async updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<void> {
+    await db
+      .update(subscriptions)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId));
+  }
+
+  async getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined> {
+    const result = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId))
+      .limit(1);
+
+    return result[0] || undefined;
+  }
 
   async resetMonthlyMessageUsage(userId: string): Promise<void> {
     await db
