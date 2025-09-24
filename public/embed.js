@@ -175,6 +175,7 @@
       container.style.position = 'fixed';
       container.style.bottom = '24px';
       container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      container.style.display = 'none'; // Hide by default until we confirm chatbot is active
       if (this.config.position === 'bottom-right') {
         container.style.right = '24px';
       } else {
@@ -634,12 +635,15 @@
             return response.json();
           })
           .then(data => {
-            // Check if chatbot is active - if not, hide the entire widget
+            // Check if chatbot is active - if not, keep widget hidden
             if (!data.isActive) {
-              console.log('Chat widget: Chatbot is inactive, hiding widget');
-              this.hideWidget();
+              console.log('Chat widget: Chatbot is inactive, keeping widget hidden');
               return;
             }
+            
+            // Chatbot is active, show the widget
+            console.log('Chat widget: Chatbot is active, showing widget');
+            this.showWidget();
             
             if (data.initialMessages && data.initialMessages.length > 0) {
               this.displayInitialMessages(messageBubble, data.initialMessages);
@@ -648,12 +652,13 @@
             }
           })
           .catch(error => {
-            // Silent fallback in production - hide widget on error
-            console.log('Chat widget: Error fetching chatbot config, hiding widget');
-            this.hideWidget();
+            // Silent fallback in production - keep widget hidden on error
+            console.log('Chat widget: Error fetching chatbot config, keeping widget hidden');
+            // Widget is already hidden by default, no need to call hideWidget
           });
       } else {
-        this.showDefaultMessage(messageBubble);
+        // Invalid URL format - keep widget hidden
+        console.log('Chat widget: Invalid URL format, keeping widget hidden');
       }
     },
 
@@ -777,6 +782,14 @@
         if (messageBubble) {
           messageBubble.classList.remove('visible');
         }
+      }
+    },
+
+    // Method to show the widget when chatbot is active
+    showWidget: function() {
+      const container = document.getElementById('chatwidget-container');
+      if (container) {
+        container.style.display = 'block';
       }
     },
 
