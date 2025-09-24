@@ -25,27 +25,7 @@ export default function Docs() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const embedCode = `<script src="https://bottailor.com/embed.js"></script>
-<script>
-  ChatWidget.init({
-    chatbotId: 'YOUR_CHATBOT_GUID',
-    position: 'bottom-right',
-    primaryColor: '#3b82f6'
-  });
-</script>`;
 
-  const advancedEmbedCode = `<script src="https://bottailor.com/embed.js"></script>
-<script>
-  ChatWidget.init({
-    chatbotId: 'YOUR_CHATBOT_GUID',
-    position: 'bottom-right',
-    primaryColor: '#3b82f6',
-    backgroundColor: '#ffffff',
-    textColor: '#1f2937',
-    backgroundImage: 'url(your-background.jpg)',
-    welcomeMessage: 'Custom welcome message'
-  });
-</script>`;
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -109,10 +89,7 @@ export default function Docs() {
               <p className="text-muted-foreground mb-4">
                 Embed your chatbot on any website with a simple code snippet.
               </p>
-              <Button size="sm" variant="outline">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View Embed Guide
-              </Button>
+
             </CardContent>
           </Card>
         </div>
@@ -219,93 +196,7 @@ export default function Docs() {
       {/* Embedding Guide */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-6">Embedding Your Chatbot</h2>
-        
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Basic Embed Code</CardTitle>
-            <CardDescription>
-              Copy this code snippet and paste it into your website's HTML
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-                <code>{embedCode}</code>
-              </pre>
-              <Button
-                size="sm"
-                variant="outline"
-                className="absolute top-2 right-2"
-                onClick={() => copyToClipboard(embedCode, 'basic')}
-              >
-                {copiedCode === 'basic' ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Advanced Configuration</CardTitle>
-            <CardDescription>
-              Customize colors, position, and messages directly in the embed code
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-                <code>{advancedEmbedCode}</code>
-              </pre>
-              <Button
-                size="sm"
-                variant="outline"
-                className="absolute top-2 right-2"
-                onClick={() => copyToClipboard(advancedEmbedCode, 'advanced')}
-              >
-                {copiedCode === 'advanced' ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuration Options</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <Badge variant="outline" className="mb-1">chatbotId</Badge>
-                  <p className="text-muted-foreground">Your chatbot's unique GUID identifier</p>
-                </div>
-                <div>
-                  <Badge variant="outline" className="mb-1">position</Badge>
-                  <p className="text-muted-foreground">bottom-right or bottom-left</p>
-                </div>
-                <div>
-                  <Badge variant="outline" className="mb-1">primaryColor</Badge>
-                  <p className="text-muted-foreground">Hex color code for buttons and accents</p>
-                </div>
-                <div>
-                  <Badge variant="outline" className="mb-1">backgroundColor</Badge>
-                  <p className="text-muted-foreground">Chat interface background color</p>
-                </div>
-                <div>
-                  <Badge variant="outline" className="mb-1">textColor</Badge>
-                  <p className="text-muted-foreground">Main text color</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>
@@ -316,16 +207,10 @@ export default function Docs() {
                 Use our built-in testing tools to preview how your chatbot will appear on external websites.
               </p>
               <div className="space-y-2">
-                <Button size="sm" variant="outline" asChild className="w-full">
-                  <Link href="/widget-test">Widget Tester</Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild className="w-full">
-                  <Link href="/chat-widget">Live Demo</Link>
-                </Button>
               </div>
             </CardContent>
           </Card>
-        </div>
+
       </section>
 
       {/* AI Configuration */}
@@ -491,7 +376,7 @@ export default function Docs() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button asChild className="w-full">
-                <Link href="/support">Contact Support</Link>
+                <Link href="/contact">Contact Support</Link>
               </Button>
               <p className="text-sm text-muted-foreground">
                 Our support team is here to help with setup, configuration, and troubleshooting.
