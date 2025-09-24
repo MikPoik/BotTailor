@@ -26,7 +26,7 @@ export async function generateSurveyAssistance(
     name?: string;
     description?: string;
   },
-  currentSurvey?: any
+  currentSurvey?: any,
 ): Promise<AIResponse> {
   console.log(`[OpenAI] Generating survey assistance for action: "${action}"`);
 
@@ -42,9 +42,9 @@ export async function generateSurveyAssistance(
     let assistantPrompt = `You are an expert survey designer specializing in creating effective, engaging, and professional surveys. Your role is to help users create well-structured surveys that collect meaningful data while providing a good user experience.
 
 Context about the chatbot:
-- Name: ${chatbotContext?.name || 'Untitled Chatbot'}
-- Description: ${chatbotContext?.description || 'No description provided'}
-${currentSurvey ? `- Current Survey: "${currentSurvey.name}" with ${currentSurvey.surveyConfig?.questions?.length || 0} questions` : '- No current survey selected'}
+- Name: ${chatbotContext?.name || "Untitled Chatbot"}
+- Description: ${chatbotContext?.description || "No description provided"}
+${currentSurvey ? `- Current Survey: "${currentSurvey.name}" with ${currentSurvey.surveyConfig?.questions?.length || 0} questions` : "- No current survey selected"}
 
 Guidelines for creating effective surveys:
 1. Keep questions clear, concise, and unbiased
@@ -93,21 +93,21 @@ Be helpful, create professional surveys, and ensure all generated JSON is valid 
 
     // Handle different actions
     switch (action) {
-      case 'generate_customer_satisfaction':
+      case "generate_customer_satisfaction":
         assistantPrompt += `\n\nUser Request: Generate a customer satisfaction survey for this chatbot. Create 5-8 questions that measure user satisfaction, service quality, and improvement suggestions.
 
 IMPORTANT: Return a valid JSON response with:
 1. "surveyConfig" field containing the complete survey structure
 2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
-      case 'generate_feedback':
+      case "generate_feedback":
         assistantPrompt += `\n\nUser Request: Generate a product feedback survey for this chatbot. Create 5-8 questions that gather feedback about products, features, and user experience.
 
 IMPORTANT: Return a valid JSON response with:
 1. "surveyConfig" field containing the complete survey structure
 2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
-      case 'improve_questions':
+      case "improve_questions":
         assistantPrompt += `\n\nUser Request: Analyze and improve the current survey questions. Make them clearer, more engaging, and more effective at gathering useful data.
 
 Current Survey Context: ${JSON.stringify(currentSurvey?.surveyConfig || {}, null, 2)}
@@ -116,7 +116,7 @@ IMPORTANT: Return a valid JSON response with:
 1. "surveyConfig" field containing the improved survey structure
 2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
-      case 'add_questions':
+      case "add_questions":
         assistantPrompt += `\n\nUser Request: Add 2-4 relevant questions to the current survey to gather additional valuable insights.
 
 Current Survey Context: ${JSON.stringify(currentSurvey?.surveyConfig || {}, null, 2)}
@@ -125,7 +125,7 @@ IMPORTANT: Return a valid JSON response with:
 1. "surveyConfig" field containing the enhanced survey structure
 2. "content" field with a detailed explanation of the survey design choices, question rationale, and how it addresses the user's needs`;
         break;
-      case 'custom':
+      case "custom":
         assistantPrompt += `\n\nUser Request: ${userMessage}
 
 If this request involves generating or modifying surveys, return a valid JSON response with a "surveyConfig" field. Otherwise, provide helpful advice as a "content" field only.`;
@@ -137,7 +137,10 @@ If this request involves generating or modifying surveys, return a valid JSON re
     // Prepare messages
     const messages = [
       { role: "system" as const, content: assistantPrompt },
-      { role: "user" as const, content: userMessage || `Please ${action} a survey for this chatbot.` },
+      {
+        role: "user" as const,
+        content: userMessage || `Please ${action} a survey for this chatbot.`,
+      },
     ];
 
     // Create request with JSON response format
@@ -163,16 +166,19 @@ If this request involves generating or modifying surveys, return a valid JSON re
     }
 
     // Return the response in the expected format
-      return {
-          bubbles: [{
-            messageType: "text",
-            content: parsedResponse.content || "I've generated a survey for you!",
-            metadata: parsedResponse.surveyConfig ? {
-              surveyConfig: parsedResponse.surveyConfig
-            } : {}
-          }]
-        };
-
+    return {
+      bubbles: [
+        {
+          messageType: "text",
+          content: parsedResponse.content || "I've generated a survey for you!",
+          metadata: parsedResponse.surveyConfig
+            ? {
+                surveyConfig: parsedResponse.surveyConfig,
+              }
+            : {},
+        },
+      ],
+    };
   } catch (error) {
     return handleCriticalError(error, "survey assistance generation");
   }
@@ -188,7 +194,7 @@ export async function generatePromptAssistance(
     name?: string;
     description?: string;
     currentPrompt?: string;
-  }
+  },
 ): Promise<AIResponse> {
   console.log(`[OpenAI] Generating prompt assistance for action: "${action}"`);
 
@@ -204,9 +210,9 @@ export async function generatePromptAssistance(
     let assistantPrompt = `You are an expert AI prompt engineer specializing in creating and improving system prompts for chatbots. Your role is to help users create effective, clear, and well-structured system prompts that will make their chatbots perform better.
 
 Context about the chatbot:
-- Name: ${chatbotContext?.name || 'Untitled Chatbot'}
-- Description: ${chatbotContext?.description || 'No description provided'}
-- Current System Prompt: ${chatbotContext?.currentPrompt || 'No current prompt'}
+- Name: ${chatbotContext?.name || "Untitled Chatbot"}
+- Description: ${chatbotContext?.description || "No description provided"}
+- Current System Prompt: ${chatbotContext?.currentPrompt || "No current prompt"}
 
 Guidelines for creating effective system prompts:
 1. Be specific about the chatbot's role and personality
@@ -225,31 +231,37 @@ Be helpful, constructive, and provide actionable suggestions.`;
 
     // Handle different actions
     switch (action) {
-      case 'generate':
+      case "generate":
         assistantPrompt += `\n\nUser Request: Generate a complete system prompt for this chatbot. Base it on the chatbot's name, description, and intended use case.
 
 IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
 1. First bubble: ONLY the clean, ready-to-use system prompt without any headers, explanations, or formatting markers
 2. Second bubble: Your analysis and explanation of the prompt choices`;
         break;
-      case 'improve':
+      case "improve":
         assistantPrompt += `\n\nUser Request: Analyze and improve the current system prompt. Provide the improved version and explain what changes were made and why.
 
 IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
 1. First bubble: ONLY the clean, improved system prompt without any headers, explanations, formatting markers, or prefixes like "**Improved System Prompt:**"
 2. Second bubble: Your detailed explanation of what changes were made and why`;
         break;
-      case 'chat':
+      case "chat":
         assistantPrompt += `\n\nUser Question: ${userMessage}`;
         break;
       default:
-        throw new Error("Invalid action. Must be 'generate', 'improve', or 'chat'");
+        throw new Error(
+          "Invalid action. Must be 'generate', 'improve', or 'chat'",
+        );
     }
 
     // Prepare messages
     const messages = [
       { role: "system" as const, content: assistantPrompt },
-      { role: "user" as const, content: userMessage || `Please ${action} a system prompt for this chatbot.` },
+      {
+        role: "user" as const,
+        content:
+          userMessage || `Please ${action} a system prompt for this chatbot.`,
+      },
     ];
 
     // Create request with JSON schema
@@ -306,7 +318,7 @@ export async function generateMultiBubbleResponse(
     const { systemPrompt } = await buildCompleteSystemPrompt(
       chatbotConfig,
       sessionId,
-      userMessage
+      userMessage,
     );
 
     // Extract configuration
@@ -366,8 +378,11 @@ export async function generateOptionResponse(
   conversationHistory: ConversationMessage[] = [],
   chatbotConfig?: any,
 ): Promise<AIResponse> {
-  const contextMessage = `User selected option "${optionId}"` +
-    (payload !== undefined && payload !== null ? ` with payload: ${JSON.stringify(payload)}` : '') +
+  const contextMessage =
+    `User selected option "${optionId}"` +
+    (payload !== undefined && payload !== null
+      ? ` with payload: ${JSON.stringify(payload)}`
+      : "") +
     ". Provide a helpful response.";
 
   return generateMultiBubbleResponse(

@@ -52,7 +52,7 @@ export async function* generateStreamingResponse(
       // Use last 4 messages for better context in streaming
       conversationHistory.slice(-4).map(msg => msg.content).join("\n") || userMessage
     );
-
+    console.log(`[OpenAI] Using system prompt: ${systemPrompt}`)
     // Extract configuration
     const model = chatbotConfig?.model || "gpt-4.1";
     const temperature = chatbotConfig?.temperature
