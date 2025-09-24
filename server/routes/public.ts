@@ -158,7 +158,8 @@ export function setupPublicRoutes(app: Express) {
         name: chatbotConfig.name,
         avatarUrl: chatbotConfig.avatarUrl,
         initialMessages: chatbotConfig.initialMessages || [],
-        welcomeMessage: chatbotConfig.welcomeMessage
+        welcomeMessage: chatbotConfig.welcomeMessage,
+        isActive: chatbotConfig.isActive
       };
 
       res.json(publicConfig);
