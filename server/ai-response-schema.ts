@@ -185,11 +185,14 @@ Follow-up question, acknowledge user's response and validate their feelings:
 
 **For Interactive/Conversational Content:**
 
-🚨 **CRITICAL DYNAMIC VALIDATION RULE**: When you plan to provide interactive choices (menus/quickreplies), YOU MUST add expectation metadata to help validate completeness:
+🚨 **CRITICAL DYNAMIC VALIDATION RULE**: When you plan to provide interactive choices (menus/quickreplies), YOU MUST add expectation metadata to the PRECEDING text bubble:
 - Add expectedMenuOptions: number if you plan to follow with a menu (REQUIRED for surveys)
 - Add expectedQuickReplies: number if you plan to follow with quick replies
 - Add contentIntent: description to describe your plan (e.g., "survey_question_1", "greeting_menu")
 - Add completionRequired: true for surveys to ensure all options are generated
+
+🔴 **CRITICAL**: Put expectation metadata in the QUESTION TEXT bubble, NOT the menu bubble!
+This ensures validation catches missing menus even if AI stops generating before the menu bubble.
 
 ⚠️ **SURVEY VALIDATION**: This metadata enables validation that ensures ALL intended menu options are generated and prevents truncation!
 
@@ -369,7 +372,7 @@ ${getQuestionTypeInstructions(currentQuestion)}
 **RESPONSE FORMAT REQUIREMENT:**
 1. Brief acknowledgment and validation of user's response (1 sentence max), adjust to current survey context. Example: "Thank you for your response, I understand your situation." 
 2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
-3. ⚠️ **CRITICAL**: Include expectation metadata in the question text bubble: expectedMenuOptions: ${currentQuestion.options?.length || 0}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
+3. 🔴 **CRITICAL VALIDATION**: Include expectation metadata in the QUESTION TEXT bubble (NOT the menu): expectedMenuOptions: ${currentQuestion.options?.length || 0}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
@@ -400,7 +403,7 @@ ${menuExample}
 2. Use EXACT option texts - DO NOT change to "Option 1", "Option 2"
 3. Never omit any options!
 4. Copy the JSON format exactly as shown above
-5. ⚠️ **VALIDATION METADATA**: Add expectation metadata to the question text bubble: {"expectedMenuOptions": ${currentQuestion.options.length}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
+5. 🔴 **CRITICAL VALIDATION METADATA**: Add expectation metadata to the QUESTION TEXT bubble (NOT the menu): {"expectedMenuOptions": ${currentQuestion.options.length}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
 
 The EXACT option texts you MUST use are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(", ")}
 `;
@@ -570,6 +573,9 @@ ${optionsForExample}
   ]
 }
 
+🚨 **CRITICAL VALIDATION POINT**: The expectation metadata MUST be in the question text bubble, NOT the menu bubble!
+This ensures validation catches missing menus even if AI stops generating before the menu bubble.
+
 ⚠️ WARNING: You MUST use the EXACT option texts provided above. DO NOT change them to "Option 1", "Option 2". Use the actual text from the survey options!`;
   } else {
     return `🚨 CRITICAL MENU FORMAT - COPY EXACTLY:
@@ -583,6 +589,9 @@ ${optionsForExample}
     }}
   ]
 }
+
+🚨 **CRITICAL VALIDATION POINT**: The expectation metadata MUST be in the question text bubble, NOT the menu bubble!
+This ensures validation catches missing menus even if AI stops generating before the menu bubble.
 
 ⚠️ WARNING: You MUST use the EXACT option texts provided above. DO NOT change them to "Option 1", "Option 2". Use the actual text from the survey options!`;
   }
