@@ -17,7 +17,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation, useRoute } from "wouter";
 import { useEffect } from "react";
 import { z } from "zod";
-import { ArrowLeft, Bot, Save, User, X, Plus, Trash2, Sparkles, ChevronUp, ChevronDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Bot, Save, User, X, Plus, Trash2, Sparkles, ChevronUp, ChevronDown, AlertTriangle, } from "lucide-react";
 import { Link } from "wouter";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
