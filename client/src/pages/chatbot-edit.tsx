@@ -191,6 +191,7 @@ export default function ChatbotEdit() {
       queryClient.invalidateQueries({
         queryKey: [`/api/chatbots/${chatbotGuid}`],
       });
+      setLocation("/dashboard");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
