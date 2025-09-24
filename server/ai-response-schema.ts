@@ -461,15 +461,30 @@ This is a required text question. Present it as a text bubble and wait for user 
 `;
     // Build Q&A pairs for previous responses
     Object.entries(responses).forEach(([qId, answer]) => {
+      // Format complex response objects properly
+      let formattedAnswer = answer;
+      if (typeof answer === 'object' && answer !== null) {
+        const responseObj = answer as any;
+        if (responseObj.rating) {
+          formattedAnswer = `Rating: ${responseObj.rating}`;
+        } else if (responseObj.selected_options_with_text) {
+          formattedAnswer = responseObj.selected_options_with_text.join(', ');
+        } else if (responseObj.selected_options) {
+          formattedAnswer = responseObj.selected_options.join(', ');
+        } else {
+          formattedAnswer = JSON.stringify(answer);
+        }
+      }
+      
       // Handle indexed question IDs (question_0, question_1, etc.)
       const indexMatch = qId.match(/^question_(\d+)$/);
       if (indexMatch) {
         const questionIndex = parseInt(indexMatch[1], 10);
         const question = config.questions[questionIndex];
         if (question) {
-          context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${answer}\n\n`;
+          context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${formattedAnswer}\n\n`;
         } else {
-          context += `${qId}: ${answer}\n`;
+          context += `${qId}: ${formattedAnswer}\n`;
         }
       } else {
         // Fallback: try to find question by ID
@@ -478,9 +493,9 @@ This is a required text question. Present it as a text bubble and wait for user 
           const questionIndex = config.questions.findIndex(
             (q: any) => q.id === qId,
           );
-          context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${answer}\n\n`;
+          context += `Q${questionIndex + 1}: ${question.text}\nA${questionIndex + 1}: ${formattedAnswer}\n\n`;
         } else {
-          context += `${qId}: ${answer}\n`;
+          context += `${qId}: ${formattedAnswer}\n`;
         }
       }
     });
