@@ -1,6 +1,7 @@
 import { getOpenAIClient, isOpenAIConfigured } from "./client";
 import { MULTI_BUBBLE_RESPONSE_SCHEMA } from "./schema";
 import { buildCompleteSystemPrompt } from "./context-builder";
+import { buildSystemPrompt } from "../ai-response-schema";
 import { 
   parseStreamingContent, 
   isBubbleComplete, 
@@ -25,6 +26,150 @@ export interface StreamingBubbleEvent {
   content?: string;
   messageType?: string;
   metadata?: any;
+}
+
+/**
+ * Build enhanced system prompt for regeneration based on validation failures
+ */
+function buildRegenerationPrompt(
+  originalSystemPrompt: string,
+  validationResult: SurveyValidationResult
+): string {
+  const { validationMetadata, errors, detectedBubble } = validationResult;
+  
+  if (!validationMetadata) {
+    return originalSystemPrompt + "\n\nIMPORTANT: The previous response had validation issues. Please ensure your response follows the exact JSON schema format.";
+  }
+
+  // Build specific enhancement based on expected message type
+  let enhancement = "\n\n🚨 CRITICAL VALIDATION REQUIREMENTS - MANDATORY COMPLIANCE:\n";
+  
+  const { expectedMessageType, questionIndex, expectedOptionCount, expectedOptions } = validationMetadata;
+  
+  switch (expectedMessageType) {
+    case 'menu':
+      enhancement += `
+- QUESTION ${questionIndex + 1} REQUIRES SINGLE-CHOICE MENU: You MUST generate a bubble with messageType: "menu"
+- REQUIRED: ${expectedOptionCount} menu options in metadata.options array
+- EACH OPTION MUST HAVE: {id: "unique_id", text: "option text", action: "send_message"}
+`;
+      if (expectedOptions) {
+        enhancement += `- EXPECTED OPTION TEXTS: ${expectedOptions.map(o => `"${o.text}"`).join(', ')}
+`;
+      }
+      break;
+      
+    case 'multiselect_menu':
+      enhancement += `
+- QUESTION ${questionIndex + 1} REQUIRES MULTIPLE-CHOICE MENU: You MUST generate a bubble with messageType: "multiselect_menu"
+- REQUIRED: ${expectedOptionCount} menu options in metadata.options array
+- REQUIRED: metadata.allowMultiple: true
+- REQUIRED: metadata.minSelections and metadata.maxSelections (numbers)
+- EACH OPTION MUST HAVE: {id: "unique_id", text: "option text", action: "send_message"}
+`;
+      if (expectedOptions) {
+        enhancement += `- EXPECTED OPTION TEXTS: ${expectedOptions.map(o => `"${o.text}"`).join(', ')}
+`;
+      }
+      break;
+      
+    case 'rating':
+      enhancement += `
+- QUESTION ${questionIndex + 1} REQUIRES RATING: You MUST generate a bubble with messageType: "rating"
+- REQUIRED: metadata.minValue: ${validationMetadata.expectedMinValue || 1}
+- REQUIRED: metadata.maxValue: ${validationMetadata.expectedMaxValue || 5}
+- REQUIRED: metadata.ratingType: "${validationMetadata.expectedRatingType || 'stars'}"
+`;
+      if (validationMetadata.expectedStep) {
+        enhancement += `- REQUIRED: metadata.step: ${validationMetadata.expectedStep}
+`;
+      }
+      break;
+  }
+  
+  // Add specific error details
+  enhancement += `\nPREVIOUS ERRORS TO FIX:\n${errors.map(err => `- ${err}`).join('\n')}\n`;
+  
+  // Add detected bubble info if available
+  if (detectedBubble) {
+    enhancement += `\nDETECTED BUBBLE HAD: messageType "${detectedBubble.messageType}" (should be "${expectedMessageType}")\n`;
+  }
+  
+  enhancement += `\n⚠️  REGENERATION ATTEMPT - Your previous response failed validation. You MUST fix these specific issues.\n`;
+  
+  return originalSystemPrompt + enhancement;
+}
+
+/**
+ * Regenerate response using enhanced prompt with validation requirements
+ */
+async function regenerateResponseWithValidation(
+  userMessage: string,
+  conversationHistory: any[],
+  originalSystemPrompt: string,
+  validationResult: SurveyValidationResult,
+  chatbotConfig: any
+): Promise<any> {
+  console.log(`[SURVEY REGENERATION] Starting regeneration for failed validation`);
+  
+  try {
+    const openai = getOpenAIClient();
+    
+    // Build enhanced system prompt with specific validation requirements
+    const enhancedSystemPrompt = buildRegenerationPrompt(originalSystemPrompt, validationResult);
+    
+    console.log(`[SURVEY REGENERATION] Enhanced prompt length: ${enhancedSystemPrompt.length} chars`);
+    console.log(`[SURVEY REGENERATION] Enhancement details:`, {
+      expectedType: validationResult.validationMetadata?.expectedMessageType,
+      expectedCount: validationResult.validationMetadata?.expectedOptionCount,
+      errors: validationResult.errors
+    });
+    
+    // Prepare messages with enhanced system prompt
+    const messages = [
+      { role: "system" as const, content: enhancedSystemPrompt },
+      ...conversationHistory,
+      { role: "user" as const, content: userMessage },
+    ];
+    
+    // Extract configuration (same as original request)
+    const model = chatbotConfig?.model || "gpt-4.1";
+    const temperature = chatbotConfig?.temperature ? chatbotConfig.temperature / 10 : 0.7;
+    const maxTokens = chatbotConfig?.maxTokens || 2000;
+    
+    console.log(`[SURVEY REGENERATION] Calling OpenAI API with model: ${model}`);
+    
+    // Make non-streaming regeneration call for faster processing
+    const completion = await openai.chat.completions.create({
+      model,
+      messages,
+      stream: false,
+      response_format: {
+        type: "json_schema",
+        json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
+      },
+      temperature,
+      max_tokens: maxTokens,
+    });
+    
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content in regeneration response');
+    }
+    
+    console.log(`[SURVEY REGENERATION] Received regenerated content (${content.length} chars)`);
+    
+    // Parse the regenerated response
+    const regeneratedResponse = parseOpenAIResponse(content);
+    
+    console.log(`[SURVEY REGENERATION] Parsed ${regeneratedResponse.bubbles.length} bubbles from regenerated response`);
+    
+    return regeneratedResponse;
+    
+  } catch (error) {
+    console.error(`[SURVEY REGENERATION] Regeneration failed:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -219,10 +364,31 @@ export async function* generateStreamingResponse(
           });
         }
         
-        // TODO: Implement actual regeneration logic with OpenAI API retry
-        // For now, log detailed validation information for debugging
-        console.warn(`[SURVEY VALIDATION] Using original response despite validation issues - regeneration not implemented yet`);
-        // Future enhancement: Call OpenAI API again with enhanced prompt that specifically mentions menu requirements
+        try {
+          // Attempt regeneration with enhanced prompt
+          const regeneratedResponse = await regenerateResponseWithValidation(
+            userMessage,
+            conversationHistory,
+            systemPrompt,
+            validationResult,
+            chatbotConfig
+          );
+          
+          // Re-validate the regenerated response
+          const revalidationResult = await validateSurveyMenuRequirements(sessionId, regeneratedResponse);
+          
+          if (revalidationResult.isValid) {
+            console.log(`[SURVEY REGENERATION SUCCESS] Regenerated response passed validation`);
+            validated = regeneratedResponse;
+            console.log(`[SURVEY REGENERATION] Using regenerated response with ${validated.bubbles.length} bubbles`);
+          } else {
+            console.warn(`[SURVEY REGENERATION FAILED] Regenerated response still failed validation:`, revalidationResult.errors);
+            console.warn(`[SURVEY VALIDATION] Using original response despite regeneration failure`);
+          }
+        } catch (regenerationError) {
+          console.error(`[SURVEY REGENERATION ERROR] Regeneration attempt failed:`, regenerationError);
+          console.warn(`[SURVEY VALIDATION] Using original response due to regeneration error`);
+        }
       }
 
       // Yield any remaining bubbles that weren't processed during streaming
