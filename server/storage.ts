@@ -343,6 +343,11 @@ export class DatabaseStorage implements IStorage {
     return results[0] || null;
   }
 
+  async getChatbotConfigByGuidPublic(guid: string): Promise<ChatbotConfig | null> {
+    const result = await db.select().from(chatbotConfigs).where(eq(chatbotConfigs.guid, guid)).limit(1);
+    return result[0] || null;
+  }
+
   async getPublicChatbotConfigByGuid(guid: string): Promise<ChatbotConfig | null> {
     const results = await db.select().from(chatbotConfigs)
       .where(eq(chatbotConfigs.guid, guid));
@@ -605,6 +610,16 @@ export class DatabaseStorage implements IStorage {
     return session || undefined;
   }
 
+  async getActiveSurveySessionBySurveyId(surveyId: number, sessionId: string): Promise<SurveySession | undefined> {
+    const [session] = await db.select().from(surveySessions)
+      .where(and(
+        eq(surveySessions.surveyId, surveyId),
+        eq(surveySessions.sessionId, sessionId),
+        eq(surveySessions.status, 'active')
+      ));
+    return session || undefined;
+  }
+
   // Active survey tracking methods
   async setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined> {
     const [session] = await db
@@ -763,25 +778,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(subscriptions.userId, userId));
   }
 
-  async updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<void> {
-    await db
-      .update(subscriptions)
-      .set({
-        ...data,
-        updatedAt: new Date()
-      })
-      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId));
-  }
-
-  async getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined> {
-    const result = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId))
-      .limit(1);
-
-    return result[0] || undefined;
-  }
+  
 
   async resetMonthlyMessageUsage(userId: string): Promise<void> {
     await db
@@ -950,8 +947,8 @@ export class DatabaseStorage implements IStorage {
         
         // Calculate average completion time for completed/inactive sessions with responses
         const completedSessions = sessions.filter(s => {
-          if (s.status === 'completed' && s.completedAt && s.startedAt) return true;
-          if (s.status === 'inactive' && s.startedAt) {
+          if (s.status === 'completed' && s.completedAt && s.createdAt) return true;
+          if (s.status === 'inactive' && s.createdAt) {
             // Use updatedAt as completion time for inactive sessions
             const responseCount = Object.keys(s.responses as any || {}).length;
             return responseCount > 0;
@@ -962,7 +959,7 @@ export class DatabaseStorage implements IStorage {
         if (completedSessions.length > 0) {
           const totalTime = completedSessions.reduce((sum, session) => {
             const endTime = session.completedAt ? new Date(session.completedAt).getTime() : new Date(session.updatedAt).getTime();
-            const completionTime = endTime - new Date(session.startedAt).getTime();
+            const completionTime = endTime - new Date(session.createdAt).getTime();
             return sum + completionTime;
           }, 0);
           avgCompletionTime = totalTime / completedSessions.length;
