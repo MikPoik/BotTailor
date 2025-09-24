@@ -201,6 +201,7 @@ export const insertChatbotConfigSchema = createInsertSchema(chatbotConfigs).pick
   model: true,
   temperature: true,
   maxTokens: true,
+  isActive: true,
   welcomeMessage: true,
   fallbackMessage: true,
   homeScreenConfig: true,

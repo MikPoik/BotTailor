@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -121,17 +120,18 @@ export default function ChatbotEdit() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      console.log("Updating chatbot with values:", data); // Debug log
       const response = await fetch(`/api/chatbots/${chatbotGuid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -139,9 +139,8 @@ export default function ChatbotEdit() {
         title: "Success",
         description: "Chatbot configuration updated successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] }); // Refresh dashboard list
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbotGuid}`] });
-      setLocation("/dashboard");
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -168,12 +167,12 @@ export default function ChatbotEdit() {
       const response = await fetch(`/api/chatbots/${chatbotGuid}`, {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -422,7 +421,7 @@ export default function ChatbotEdit() {
                     {promptAssistantOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </div>
-                
+
                 {promptAssistantOpen && (
                   <PromptAssistantChatbox 
                     currentPrompt={form.watch('systemPrompt') || ""}
