@@ -52,9 +52,17 @@ export function setupChatRoutes(app: Express) {
                 `[SURVEY RESPONSE] Option selected: ${optionId} - ${optionText}`,
               );
 
+              // Check if this is a skip response first
+              const isSkipResponse = 
+                optionId === 'survey_skip' || 
+                (payload && payload === 'SURVEY_SKIP_QUESTION') ||
+                (optionText && ['ohita', 'skip', 'ohita kysymys', 'skip question'].some(skip => 
+                  optionText.toLowerCase().includes(skip)
+                ));
+
               // Record the survey response
               const questionId = `question_${surveySession.currentQuestionIndex}`;
-              const response = optionText || optionId;
+              const response = isSkipResponse ? 'Skipped' : (optionText || optionId);
 
               const currentResponses = surveySession.responses && typeof surveySession.responses === 'object'
                 ? surveySession.responses as Record<string, any>
@@ -525,18 +533,18 @@ export function setupChatRoutes(app: Express) {
         // Continue with normal response even if survey creation fails
       }
 
-      // Handle survey skip responses
+      // Handle survey text answers and skip responses
       try {
-        await handleSurveySkipResponse(
+        await handleSurveyTextResponse(
           sessionId,
           messageData.content,
         );
-      } catch (skipError) {
+      } catch (textError) {
         console.error(
-          `[SURVEY] Error in skip response handling:`,
-          skipError,
+          `[SURVEY] Error in text response handling:`,
+          textError,
         );
-        // Continue with normal response even if skip handling fails
+        // Continue with normal response even if handling fails
       }
 
       // Generate streaming response
@@ -829,11 +837,43 @@ function getTextualRepresentation(msg: any): string {
   }
 }
 
-// Helper function to handle survey skip responses
-async function handleSurveySkipResponse(
+// Helper function to handle survey text responses (both answers and skips)
+async function handleSurveyTextResponse(
   sessionId: string,
   messageContent: string,
 ) {
+  // Get active survey session
+  const surveySession = await storage.getActiveSurveySession(sessionId);
+  if (!surveySession || surveySession.status !== 'active') {
+    return; // No active survey
+  }
+  
+  // Get survey to check current question
+  const survey = await storage.getSurvey(surveySession.surveyId);
+  if (!survey) {
+    console.log(`[SURVEY TEXT] Survey not found`);
+    return;
+  }
+  
+  const surveyConfig = survey.surveyConfig as any;
+  const totalQuestions = surveyConfig?.questions?.length || 0;
+  const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
+  const currentQuestion = surveyConfig?.questions?.[currentQuestionIndex];
+  
+  if (!currentQuestion) {
+    return; // No current question
+  }
+  
+  // Check if current question is a text question
+  const isTextQuestion = currentQuestion.type === 'text';
+  
+  if (!isTextQuestion) {
+    return; // Not a text question, so text responses don't advance it
+  }
+  
+  console.log(`[SURVEY TEXT] Processing text response for text question: "${currentQuestion.text}"`);
+  
+  // Check if it's a skip message
   const skipKeywords = [
     'ohita', 'skip', 'ohita kysymys', 'skip question', 
     'siirry seuraavaan', 'next', 'hoppa över', 'passer'
@@ -843,40 +883,23 @@ async function handleSurveySkipResponse(
     messageContent.toLowerCase().includes(keyword.toLowerCase())
   );
   
-  if (!isSkipMessage) {
-    return; // Not a skip message
-  }
+  let responseValue = isSkipMessage ? 'Skipped' : messageContent;
   
-  console.log(`[SURVEY SKIP] Detected skip response: "${messageContent}"`);
+  console.log(`[SURVEY TEXT] Response type: ${isSkipMessage ? 'SKIP' : 'ANSWER'}, content: "${messageContent}"`);
   
-  // Get active survey session
-  const surveySession = await storage.getActiveSurveySession(sessionId);
-  if (!surveySession || surveySession.status !== 'active') {
-    console.log(`[SURVEY SKIP] No active survey session found`);
-    return;
-  }
-  
-  // Get survey to check total questions
-  const survey = await storage.getSurvey(surveySession.surveyId);
-  if (!survey) {
-    console.log(`[SURVEY SKIP] Survey not found`);
-    return;
-  }
-  
-  const surveyConfig = survey.surveyConfig as any;
-  const totalQuestions = surveyConfig?.questions?.length || 0;
-  const newQuestionIndex = (surveySession.currentQuestionIndex || 0) + 1;
+  // Calculate next state
+  const newQuestionIndex = currentQuestionIndex + 1;
   const isCompleted = newQuestionIndex >= totalQuestions;
   
-  console.log(`[SURVEY SKIP] Advancing survey: currentIndex=${surveySession.currentQuestionIndex}, newIndex=${newQuestionIndex}, totalQuestions=${totalQuestions}, isCompleted=${isCompleted}`);
+  console.log(`[SURVEY TEXT] Advancing survey: currentIndex=${currentQuestionIndex}, newIndex=${newQuestionIndex}, totalQuestions=${totalQuestions}, isCompleted=${isCompleted}`);
   
-  // Record skip response and advance survey
+  // Record response and advance survey
   const currentResponses = surveySession.responses && typeof surveySession.responses === 'object' 
     ? surveySession.responses as any : {};
-  const skipKey = `q${surveySession.currentQuestionIndex || 0}`;
+  const responseKey = `q${currentQuestionIndex}`;
   const updatedResponses = {
     ...currentResponses,
-    [skipKey]: 'Skipped'
+    [responseKey]: responseValue
   };
   
   await storage.updateSurveySession(surveySession.id, {
@@ -886,7 +909,7 @@ async function handleSurveySkipResponse(
     completedAt: isCompleted ? new Date() : surveySession.completedAt
   });
   
-  console.log(`[SURVEY SKIP] Survey session updated: ${isCompleted ? 'COMPLETED' : 'ADVANCED'}`);
+  console.log(`[SURVEY TEXT] Survey session updated: ${isCompleted ? 'COMPLETED' : 'ADVANCED'} - Response recorded: "${responseValue}"`);
 }
 
 async function handleSurveySessionCreation(
