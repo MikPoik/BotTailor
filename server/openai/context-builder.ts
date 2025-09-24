@@ -55,7 +55,7 @@ export async function buildActiveSurveyContext(sessionId: string, chatbotConfig?
       responses: surveySession.responses
     } : null);
     
-    if (surveySession && surveySession.status === 'active') {
+    if (surveySession && (surveySession.status === 'active' || surveySession.status === 'completed')) {
       const survey = await storage.getSurvey(surveySession.surveyId);
       console.log(`[SURVEY AI CONTEXT] Survey found:`, survey ? {
         id: survey.id,
