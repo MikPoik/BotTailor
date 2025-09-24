@@ -28,7 +28,42 @@ export function attemptResponseSalvage(accumulatedContent: string): AIResponse |
         bubbles: [singleMessage]
       };
     }
+    
+    // Try to extract content if it's a plain text response
+    if (typeof singleMessage === 'string') {
+      console.log("[OpenAI] Salvaging plain text response");
+      return {
+        bubbles: [{
+          messageType: "text",
+          content: singleMessage,
+          metadata: {}
+        }]
+      };
+    }
+    
+    // Try to find any content that looks like a message
+    if (singleMessage.content) {
+      console.log("[OpenAI] Salvaging response with content field");
+      return {
+        bubbles: [{
+          messageType: "text",
+          content: singleMessage.content,
+          metadata: {}
+        }]
+      };
+    }
   } catch (salvageError) {
+    // Try to parse as plain text if JSON parsing fails
+    if (accumulatedContent && typeof accumulatedContent === 'string' && accumulatedContent.trim().length > 0) {
+      console.log("[OpenAI] Salvaging as plain text content");
+      return {
+        bubbles: [{
+          messageType: "text",
+          content: accumulatedContent.trim(),
+          metadata: {}
+        }]
+      };
+    }
     console.log("[OpenAI] Could not salvage response");
   }
   
@@ -44,18 +79,21 @@ export function handleParseError(
   context: string = "response generation"
 ): AIResponse {
   console.error(`[OpenAI] Error ${context}:`, parseError);
+  console.log(`[OpenAI] Raw content that failed to parse (${accumulatedContent.length} chars):`, accumulatedContent?.substring(0, 500) + (accumulatedContent?.length > 500 ? '...' : ''));
   
-  // Try to salvage if it's a parsing error and we have content
-  if (parseError instanceof SyntaxError && accumulatedContent) {
+  // Always try to salvage if we have content, regardless of error type
+  if (accumulatedContent && accumulatedContent.trim().length > 0) {
     console.log(`[OpenAI] Attempting to salvage response from parsing error in ${context}`);
     
     const salvaged = attemptResponseSalvage(accumulatedContent);
     if (salvaged) {
+      console.log(`[OpenAI] Successfully salvaged response for ${context}`);
       return salvaged;
     }
   }
   
   // Return fallback response
+  console.log(`[OpenAI] Using fallback response for ${context}`);
   return generateFallbackResponse();
 }
 

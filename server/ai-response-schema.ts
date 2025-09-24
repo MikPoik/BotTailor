@@ -269,12 +269,15 @@ ${isSurveyActive ? `**For Surveys (step-by-step questionnaires):**
 - **Complete menu options**: Each option must include "id", "text", and "action"
 - **Valid JSON only**: Ensure all responses are valid JSON with no extra text or incomplete objects.
 
-**CRITICAL: Response Format Requirements:**
-- ALWAYS wrap your response in a "bubbles" array
+🚨 **CRITICAL: Response Format Requirements** 🚨
+- ALWAYS wrap your response in a "bubbles" array - THIS IS MANDATORY
 - NEVER send a single message object directly  
 - Even for simple single responses, use: {"bubbles": [{"messageType": "text", "content": "your message"}]}
 - Invalid format: {"messageType": "text", "content": "message"}
 - Correct format: {"bubbles": [{"messageType": "text", "content": "message"}]}
+- **EVERY RESPONSE MUST START WITH:** {"bubbles":[
+- **EVERY RESPONSE MUST END WITH:** ]}
+- **NO EXCEPTIONS** - All responses require the bubbles array wrapper
 `;
 
   // Add survey context if provided
