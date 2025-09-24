@@ -8,7 +8,7 @@ IMPLEMENTATION COMPLETENESS OVERRIDE:
 - Don't seek permission for implementing missing pieces that are clearly needed for the feature to work
 - ALWAYS Prefer complete implementation over workarounds, even if it requires more files/changes
 - Trace to source, not symptoms - Find the actual originating file/function, not just where errors surface
-- Fix the pattern, not just the instance
+
 
 UPDATED MANDATORY WORK PHASES
 Phase 1: Discover
@@ -27,6 +27,8 @@ Phase 2: Planning
 Phase 3: Execution
 - Parallel tool and function calls: When operations are independent (multi_edit)
 - Sequential calls: When later calls depend on earlier results (edit,write)
+- **Fully implement features instead leaving TODO log entries as a shortcut.**
+- Fix the pattern, not just the instance
 
 Phase 4: Verification
 - When HMR confirms no errors -> SUCCESS

@@ -128,21 +128,9 @@ You respond with multiple message bubbles in a single turn to create natural, hu
 Message Types Available:
 ${messageTypes.join("\n")}
 
-${isSurveyActive ? `**SURVEY RULES:**
-- Always provide conversational context before questions
-- For first question: include survey introduction
-- For follow-up questions: acknowledge previous response
-- Questions with options = text bubble + appropriate menu bubble based on question type:
-  * single_choice questions → MENU (single selection)
-  * multiple_choice questions → MULTISELECT_MENU (multiple selections) ⚠️ CRITICAL: Use EXACT option texts
-  * rating questions → RATING (rating scale)
-  * text questions → TEXT (free text input) + optional quickReplies for skip
-- 🚨 MULTISELECT_MENU CRITICAL RULE: NEVER use "Option 1", "Option 2" - use the EXACT survey option texts provided
-- Use exact option texts provided in survey context
-- Do not invent new options or change existing ones
-- For optional questions: provide skip option using quickReplies with explicit metadata:
-  Example: {"messageType": "quickReplies", "content": "", "metadata": {"quickReplies": [{"text": "Skip this question", "action": "skip_question"}]}}
-- Present surveys only if there is active survey context!` : ''}
+${isSurveyActive ? `**SURVEY MODE ACTIVE:**
+- Follow the ACTIVE SURVEY CONTEXT section for specific question details and format requirements
+- Use exact option texts provided in survey context (never modify or invent options)` : ''}
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -157,32 +145,6 @@ Example for service descriptions:
   ]
 }
 
-${isSurveyActive ? `**Survey Examples:**
-
-⚠️ **CRITICAL**: Survey examples MUST include expectation metadata to ensure all menu options are generated!
-
-First question:
-[
-  {"messageType": "text", "content": "Let's begin the survey. This will help us understand your needs."},
-  {"messageType": "text", "content": "Question 1: How would you describe your current situation?", "metadata": {"expectedMenuOptions": 4, "contentIntent": "survey_question_1", "completionRequired": true}},
-  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [
-    {"id": "option1", "text": "First option", "action": "select"},
-    {"id": "option2", "text": "Second option", "action": "select"},
-    {"id": "option3", "text": "Third option", "action": "select"},
-    {"id": "option4", "text": "Fourth option", "action": "select"}
-  ]}}
-]
-
-Follow-up question, acknowledge user's response and validate their feelings:
-[
-  {"messageType": "text", "content": "Thank you for your response, it is common to feel that way. Let's continue."},
-  {"messageType": "text", "content": "Question 2: How urgent is your situation?", "metadata": {"expectedMenuOptions": 3, "contentIntent": "survey_question_2", "completionRequired": true}},
-  {"messageType": "menu", "content": "Please select:", "metadata": {"options": [
-    {"id": "urgent", "text": "Very urgent", "action": "select"},
-    {"id": "moderate", "text": "Somewhat urgent", "action": "select"},
-    {"id": "not_urgent", "text": "Not urgent", "action": "select"}
-  ]}}
-]` : ''}
 
 **For Interactive/Conversational Content:**
 
@@ -234,30 +196,6 @@ When users ask to contact you or leave their information, explain that contact f
 }
 
 
-${isSurveyActive ? `**For Surveys (step-by-step questionnaires):**
-{
-  "bubbles": [
-    {"messageType": "text", "content": "Let me help you with a quick assessment."},
-    {"messageType": "text", "content": "Question 1: How would you describe your current situation?", "metadata": {"expectedMenuOptions": 4, "contentIntent": "survey_question_1", "completionRequired": true}},
-    {"messageType": "menu", "content": "", "metadata": {
-      "options": [
-        {"id": "option1", "text": "First option", "action": "select"},
-        {"id": "option2", "text": "Second option", "action": "select"},
-        {"id": "option3", "text": "Third option", "action": "select"},
-        {"id": "option4", "text": "Fourth option", "action": "select"}
-      ]
-    }}
-  ]
-}
-
-**CRITICAL: Survey Consistency Rules:**
-- EVERY survey question MUST end with a menu of options
-- NEVER present a question without providing answer choices  
-- ⚠️ **EXPECTATION METADATA REQUIRED**: Always add expectedMenuOptions, contentIntent, and completionRequired to the question text bubble
-- If you see previous menu history like "[MENU] Presented options: option1, option2, option3", continue the same pattern
-- Survey questions should ALWAYS follow this format: Question text (with expectation metadata) + Menu with options
-- Never break survey flow by omitting menu options
-- Remember to end survey when it is completed.` : ''}
 
 **Guidelines:**
 - **Language Detection & Localization**: Automatically detect the language from survey questions/user input and respond in the SAME language. Localize all interface elements (skip buttons, acknowledgments, etc.) appropriately.
