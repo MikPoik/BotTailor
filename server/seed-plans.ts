@@ -24,7 +24,8 @@ async function seedSubscriptionPlans() {
         "Community support",
         "Email integration",
         "Analytics",
-        "Custom Branding"],
+        "Custom Branding",
+      ],
       isActive: true,
     },
     {
@@ -42,15 +43,15 @@ async function seedSubscriptionPlans() {
         "1,000 messages/month",
         "Email integration",
         "Analytics",
-        "Custom Branding"
+        "Custom Branding",
       ],
       isActive: true,
     },
     {
       name: "Premium",
       description: "Advanced features for growing businesses",
-      stripePriceId: "price_premium", // Replace with actual Stripe price ID
-      stripeProductId: "prod_premium", // Replace with actual Stripe product ID
+      stripePriceId: process.env.PRICE_SUB_PREMIUM, // Replace with actual Stripe price ID
+      stripeProductId: process.env.PROD_SUB_PREMIUM, // Replace with actual Stripe product ID
       price: 2999, // $29.99
       currency: "eur",
       billingInterval: "month",
@@ -68,8 +69,8 @@ async function seedSubscriptionPlans() {
     {
       name: "Ultra",
       description: "Complete solution for enterprises and agencies",
-      stripePriceId: "price_ultra", // Replace with actual Stripe price ID
-      stripeProductId: "prod_ultra", // Replace with actual Stripe product ID
+      stripePriceId: process.env.PRICE_SUB_ULTRA, // Replace with actual Stripe price ID
+      stripeProductId: process.env.PROD_SUB_ULTRA, // Replace with actual Stripe product ID
       price: 9999, // $99.99
       currency: "eur",
       billingInterval: "month",
@@ -103,7 +104,9 @@ async function seedSubscriptionPlans() {
           .where(eq(subscriptionPlans.name, planData.name))
           .returning();
 
-        console.log(`Updated plan: ${updatedPlan.name} (ID: ${updatedPlan.id})`);
+        console.log(
+          `Updated plan: ${updatedPlan.name} (ID: ${updatedPlan.id})`,
+        );
         continue;
       }
 

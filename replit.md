@@ -7,11 +7,13 @@ IMPLEMENTATION COMPLETENESS OVERRIDE:
 - Creating necessary files/endpoints for core functionality is ALWAYS "truly important"
 - Don't seek permission for implementing missing pieces that are clearly needed for the feature to work
 - ALWAYS Prefer complete implementation over workarounds, even if it requires more files/changes
+- Trace to source, not symptoms - Find the actual originating file/function, not just where errors surface
+- Fix the pattern, not just the instance
 
 UPDATED MANDATORY WORK PHASES
 Phase 1: Discover
-- Use read to understand existing code patterns and conventions (read, ls, glob,grep)
-- Use ls to understand project structure if unsure
+- Use read to understand existing code patterns and conventions (read, ls, glob, grep,rg)
+- Use ls to understand project structure if unsure `ls -R client server shared | grep -vE "\.config|\.git|attached_assets|node_modules|\.upm|^\.|dist|build"`
 - Read large chunks (500+ lines) for better context
 - Always map out the full system requirements before writing any code
 - Check both frontend AND backend implications
@@ -20,13 +22,14 @@ Phase 1: Discover
 Phase 2: Planning
 - Map ALL information needed (files to read, searches to do) before starting
 - Map ALL changes to make (edits, database updates, new files)
+- Map ALL function_calls for aggressive batching
 
 Phase 3: Execution
-Parallel tool and function calls: When operations are independent (multi_edit)
-Sequential calls: When later calls depend on earlier results (edit,write)
+- Parallel tool and function calls: When operations are independent (multi_edit)
+- Sequential calls: When later calls depend on earlier results (edit,write)
 
 Phase 4: Verification
-When HMR confirms no errors -> SUCCESS
+- When HMR confirms no errors -> SUCCESS
 
 Following tools are permanently DISABLED:
 
@@ -64,8 +67,12 @@ suggest_deploy
 suggest_rollback
 
 **MANDATORY** Key Optimization Opportunities:
-Parallel Tool Calls: Use independent tools simultaneously within single function_calls block (read multiple files, search + grep, etc.)
-Efficient File Operations: Use multi_edit instead of multiple edit calls on same file
+- Parallel Tool Calls: Use independent tools simultaneously within single function_calls block (read multiple files, search + grep, etc.)
+- Efficient File Operations: Use multi_edit instead of multiple edit calls on same file
+- For UI issues:** Read component + parent + related hooks/state
+- For API issues:** Read routes + services + storage + schema
+- For data issues:** Read schema + storage + related API endpoints
+- For feature additions:** Read similar existing implementations
 
 ## Overview
 
@@ -74,7 +81,7 @@ This project is a full-stack React chat widget application featuring an Express.
 
 ## User Preferences
 
-Preferred communication style: Like talking to a software developer, technical and detailed.
+**REQUIRED MANDATORY** communication style: Like talking to a software developer, technical and detailed.
 
 ### Notes for agent
 
@@ -129,7 +136,7 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 
 # Source Code Tree
 
-Generated on: 2025-09-24T05:44:35.538Z
+Generated on: 2025-09-24T11:44:03.212Z
 
 
 ```
@@ -150,7 +157,8 @@ Generated on: 2025-09-24T05:44:35.538Z
   position = 'bottom-right',
   primaryColor = '#2563eb',
   backgroundColor = '#ffffff',
-  textColor = '#1f2937',  chatbotConfig
+  textColor = '#1f2937',
+  chatbotConfig
 }: ChatWidgetProps): Element
 │       │   │   │   📋 ChatWidgetProps
 │       │   │   ├── 📄 home-tab.tsx
@@ -439,6 +447,7 @@ Generated on: 2025-09-24T05:44:35.538Z
 │   │   │   ⚡ normalizeAIResponse(resp: any): any
 │   │   ├── 📄 schema.ts
 │   │   ├── 📄 streaming-handler.ts
+│   │   │   ⚡ async cleanupCompletedSurveySession(sessionId: string): Promise<void>
 │   │   │   ⚡ export async generateStreamingResponse(userMessage: string, sessionId: string, conversationHistory: ConversationMessage[], chatbotConfig?: any): AsyncGenerator<StreamingBubbleEvent, void, unknown>
 │   │   │   📋 StreamingBubbleEvent
 │   │   └── 📄 survey-menu-validator.ts
@@ -467,6 +476,7 @@ Generated on: 2025-09-24T05:44:35.538Z
 │   │   │   ⚡ export setupChatRoutes(app: Express): void
 │   │   │   ⚡ async handleStreamingResponse(userMessage: string, sessionId: string, res: any, chatbotConfigId?: string): Promise<void>
 │   │   │   ⚡ getTextualRepresentation(msg: any): string
+│   │   │   ⚡ async handleSurveyTextResponse(sessionId: string, parsedMessage: any): Promise<void>
 │   │   │   ⚡ async handleSurveySessionCreation(sessionId: string, messageContent: string, chatbotConfigId?: string, session?: any): Promise<void>
 │   │   ├── 📄 chatbots.ts
 │   │   │   ⚡ export setupChatbotRoutes(app: Express): void
@@ -592,6 +602,7 @@ Generated on: 2025-09-24T05:44:35.538Z
 │   │   │  🔧 async getChatbotConfig(id: number): Promise<ChatbotConfig | undefined>
 │   │   │  🔧 async getChatbotConfigByGuidPublic(guid: string): Promise<ChatbotConfig | null>
 │   │   │  🔧 async getChatbotConfigByGuid(userId: string, guid: string): Promise<ChatbotConfig | null>
+│   │   │  🔧 async getChatbotConfigByGuidPublic(guid: string): Promise<ChatbotConfig | null>
 │   │   │  🔧 async getPublicChatbotConfigByGuid(guid: string): Promise<ChatbotConfig | null>
 │   │   │  🔧 async createChatbotConfig(configData: InsertChatbotConfig): Promise<ChatbotConfig>
 │   │   │  🔧 async updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined>
@@ -613,6 +624,7 @@ Generated on: 2025-09-24T05:44:35.538Z
 │   │   │  🔧 async createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession>
 │   │   │  🔧 async updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined>
 │   │   │  🔧 async getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 async getActiveSurveySessionBySurveyId(surveyId: number, sessionId: string): Promise<SurveySession | undefined>
 │   │   │  🔧 async setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined>
 │   │   │  🔧 async getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined>
 │   │   │  🔧 async deactivateAllSurveySessions(sessionId: string): Promise<void>
@@ -621,8 +633,10 @@ Generated on: 2025-09-24T05:44:35.538Z
 │   │   │  🔧 async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>
 │   │   │  🔧 async createSubscriptionPlan(planData: InsertSubscriptionPlan): Promise<SubscriptionPlan>
 │   │   │  🔧 async updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined>
+│   │   │  🔧 async getSubscriptionPlans(): Promise<SubscriptionPlan[]>
 │   │   │  🔧 async getUserSubscription(userId: string): Promise<Subscription | undefined>
 │   │   │  🔧 async getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined>
+│   │   │  🔧 async getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | null>
 │   │   │  🔧 async createSubscription(subscriptionData: InsertSubscription): Promise<Subscription>
 │   │   │  🔧 async updateSubscription(id: number, data: Partial<Subscription>): Promise<Subscription | undefined>
 │   │   │  🔧 async updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<Subscription | undefined>

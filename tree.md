@@ -1,6 +1,6 @@
 # Source Code Tree
 
-Generated on: 2025-09-24T10:19:38.250Z
+Generated on: 2025-09-24T11:44:03.212Z
 
 
 ```
@@ -466,6 +466,7 @@ Generated on: 2025-09-24T10:19:38.250Z
 │   │   │  🔧 async getChatbotConfig(id: number): Promise<ChatbotConfig | undefined>
 │   │   │  🔧 async getChatbotConfigByGuidPublic(guid: string): Promise<ChatbotConfig | null>
 │   │   │  🔧 async getChatbotConfigByGuid(userId: string, guid: string): Promise<ChatbotConfig | null>
+│   │   │  🔧 async getChatbotConfigByGuidPublic(guid: string): Promise<ChatbotConfig | null>
 │   │   │  🔧 async getPublicChatbotConfigByGuid(guid: string): Promise<ChatbotConfig | null>
 │   │   │  🔧 async createChatbotConfig(configData: InsertChatbotConfig): Promise<ChatbotConfig>
 │   │   │  🔧 async updateChatbotConfig(id: number, data: Partial<ChatbotConfig>): Promise<ChatbotConfig | undefined>
@@ -487,6 +488,7 @@ Generated on: 2025-09-24T10:19:38.250Z
 │   │   │  🔧 async createSurveySession(sessionData: InsertSurveySession): Promise<SurveySession>
 │   │   │  🔧 async updateSurveySession(id: number, data: Partial<SurveySession>): Promise<SurveySession | undefined>
 │   │   │  🔧 async getSurveySessionBySessionId(sessionId: string): Promise<SurveySession | undefined>
+│   │   │  🔧 async getActiveSurveySessionBySurveyId(surveyId: number, sessionId: string): Promise<SurveySession | undefined>
 │   │   │  🔧 async setActiveSurvey(sessionId: string, surveyId: number | null): Promise<ChatSession | undefined>
 │   │   │  🔧 async getActiveSurveySession(sessionId: string): Promise<SurveySession | undefined>
 │   │   │  🔧 async deactivateAllSurveySessions(sessionId: string): Promise<void>
@@ -495,8 +497,10 @@ Generated on: 2025-09-24T10:19:38.250Z
 │   │   │  🔧 async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>
 │   │   │  🔧 async createSubscriptionPlan(planData: InsertSubscriptionPlan): Promise<SubscriptionPlan>
 │   │   │  🔧 async updateSubscriptionPlan(id: number, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined>
+│   │   │  🔧 async getSubscriptionPlans(): Promise<SubscriptionPlan[]>
 │   │   │  🔧 async getUserSubscription(userId: string): Promise<Subscription | undefined>
 │   │   │  🔧 async getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined>
+│   │   │  🔧 async getUserSubscriptionWithPlan(userId: string): Promise<(Subscription & { plan: SubscriptionPlan }) | null>
 │   │   │  🔧 async createSubscription(subscriptionData: InsertSubscription): Promise<Subscription>
 │   │   │  🔧 async updateSubscription(id: number, data: Partial<Subscription>): Promise<Subscription | undefined>
 │   │   │  🔧 async updateSubscriptionByStripeId(stripeSubscriptionId: string, data: Partial<Subscription>): Promise<Subscription | undefined>

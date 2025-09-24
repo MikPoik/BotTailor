@@ -195,7 +195,7 @@ Follow-up question, acknowledge user's response and validate their feelings:
 🔴 **CRITICAL**: Put expectation metadata in the QUESTION TEXT bubble, NOT the menu bubble!
 This ensures validation catches missing menus even if AI stops generating before the menu bubble.
 
-⚠️ **SURVEY VALIDATION**: This metadata enables validation that ensures ALL intended menu options are generated and prevents truncation!
+${isSurveyActive ? `⚠️ **SURVEY VALIDATION**: This metadata enables validation that ensures ALL intended menu options are generated and prevents truncation!`: ''}
 
 Use multiple shorter bubbles to create natural dialogue flow.
 
