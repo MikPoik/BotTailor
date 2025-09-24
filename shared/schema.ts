@@ -134,13 +134,15 @@ export const surveys = pgTable("surveys", {
 // Survey Sessions table for tracking user progress through surveys
 export const surveySessions = pgTable("survey_sessions", {
   id: serial("id").primaryKey(),
-  surveyId: integer("survey_id").notNull().references(() => surveys.id),
-  sessionId: text("session_id").notNull().references(() => chatSessions.sessionId),
+  surveyId: integer("survey_id").notNull().references(() => surveys.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
   userId: varchar("user_id").references(() => users.id),
   currentQuestionIndex: integer("current_question_index").default(0),
   responses: jsonb("responses").default({}), // Stores all user responses
   status: text("status").notNull().default("active"), // 'active' | 'completed' | 'abandoned'
-  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completionHandled: boolean("completion_handled").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
 });
 

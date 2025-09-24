@@ -52,10 +52,11 @@ export async function buildActiveSurveyContext(sessionId: string, chatbotConfig?
       surveyId: surveySession.surveyId, 
       status: surveySession.status,
       currentQuestionIndex: surveySession.currentQuestionIndex,
-      responses: surveySession.responses
+      responses: surveySession.responses,
+      completionHandled: surveySession.completionHandled
     } : null);
     
-    if (surveySession && (surveySession.status === 'active' || surveySession.status === 'completed')) {
+    if (surveySession && surveySession.status === 'active') {
       const survey = await storage.getSurvey(surveySession.surveyId);
       console.log(`[SURVEY AI CONTEXT] Survey found:`, survey ? {
         id: survey.id,
@@ -83,6 +84,25 @@ export async function buildActiveSurveyContext(sessionId: string, chatbotConfig?
           context,
           hasMenuRequired,
           questionIndex: currentQuestionIndex
+        };
+      }
+    } else if (surveySession && surveySession.status === 'completed' && !surveySession.completionHandled) {
+      // One-time completion context injection
+      const survey = await storage.getSurvey(surveySession.surveyId);
+      if (survey) {
+        console.log(`[SURVEY COMPLETION] Providing one-time completion context for completed survey`);
+        
+        // Mark completion as handled to prevent repeated injections
+        await storage.updateSurveySession(surveySession.id, {
+          completionHandled: true
+        });
+        
+        const context = buildSurveyContext(survey, surveySession, chatbotConfig);
+        
+        return {
+          context,
+          hasMenuRequired: false,
+          questionIndex: surveySession.currentQuestionIndex || 0
         };
       }
     }

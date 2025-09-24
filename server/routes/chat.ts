@@ -99,7 +99,8 @@ export function setupChatRoutes(app: Express) {
                   responses: updatedResponses,
                   currentQuestionIndex: newQuestionIndex,
                   status: isCompleted ? 'completed' : 'active',
-                  completedAt: isCompleted ? new Date() : surveySession.completedAt
+                  completedAt: isCompleted ? new Date() : surveySession.completedAt,
+                  completionHandled: false // Reset flag so completion context can be injected once
                 }
               );
 
@@ -933,7 +934,8 @@ async function handleSurveyTextResponse(
     responses: updatedResponses,
     currentQuestionIndex: newQuestionIndex,
     status: isCompleted ? 'completed' : 'active',
-    completedAt: isCompleted ? new Date() : surveySession.completedAt
+    completedAt: isCompleted ? new Date() : surveySession.completedAt,
+    completionHandled: false // Reset flag so completion context can be injected once
   });
 
   console.log(`[SURVEY TEXT] Survey session updated: ${isCompleted ? 'COMPLETED' : 'ADVANCED'} - Response recorded: "${responseValue}"`);
