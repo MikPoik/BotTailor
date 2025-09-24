@@ -342,26 +342,58 @@ ${config.aiInstructions ? `AI Instructions: ${config.aiInstructions}` : ""}
 **COMPLETE SURVEY RESPONSES**
 ${qaContext}
 
-**SURVEY COMPLETION FLOW:**
-1. Start with completion message: "${config.completionMessage || "Thank you for completing the survey!"}"
-2. ${chatbotConfig?.formRecipientEmail ? 'Offer contact form using example below' : 'Suggest alternative contact methods'}
+**🎯 SURVEY COMPLETION FLOW - REQUIRED ACTIONS:**
+🚨 CRITICAL: The survey is now COMPLETED. You must:
 
-${chatbotConfig?.formRecipientEmail ? `**CONTACT FORM EXAMPLE:**
+1. **Completion Acknowledgment**: Start with: "${config.completionMessage || "Thank you for completing the survey!"}"
+
+2. **Personalized Summary**: Based on the responses above, provide a personalized summary and recommendation about which services would be most suitable. Analyze the user's answers and give specific guidance.
+
+3. **Next Steps**: ${chatbotConfig?.formRecipientEmail ? 'Present the contact form using the EXACT format below' : 'Suggest alternative contact methods like phone or email'}
+
+🔴 **MANDATORY**: Use all three elements above in sequence - acknowledgment, personalized summary, and contact form.
+
+${chatbotConfig?.formRecipientEmail ? `
+**🔴 MANDATORY CONTACT FORM FORMAT - USE EXACTLY:**
+After providing the personalized summary, present the contact form using this EXACT structure:
+
 {
   "bubbles": [
-    {"messageType": "text", "content": "${config.completionMessage || "Thank you for completing the survey!"}"},
-    {"messageType": "text", "content": "Would you like to get in touch? Please fill out the form below:"},
-    {"messageType": "form", "content": "Contact Form", "metadata": {
-      "title": "Get in Touch",
+    {"messageType": "text", "content": "${config.completionMessage || "Kiitos kyselyyn vastaamisesta!"}"},
+    {"messageType": "text", "content": "[YOUR PERSONALIZED SUMMARY AND RECOMMENDATIONS BASED ON RESPONSES]"},
+    {"messageType": "text", "content": "Haluatko ottaa yhteyttä? Täytä yhteydenottolomake:"},
+    {"messageType": "form", "content": "Yhteydenotto", "metadata": {
+      "title": "Ota yhteyttä",
       "formFields": [
-        {"id": "name", "label": "Name", "type": "text", "placeholder": "Your name", "required": true},
-        {"id": "email", "label": "Email", "type": "email", "placeholder": "Your email", "required": true},
-        {"id": "message", "label": "Message", "type": "textarea", "placeholder": "How can we help?", "required": true}
+        {"id": "name", "label": "Nimi", "type": "text", "placeholder": "Nimesi", "required": true},
+        {"id": "email", "label": "Sähköposti", "type": "email", "placeholder": "Sähköpostiosoitteesi", "required": true},
+        {"id": "message", "label": "Viesti", "type": "textarea", "placeholder": "Miten voimme auttaa?", "required": true}
       ],
-      "submitButton": {"id": "submit_contact", "text": "Send", "action": "submit_form"}
+      "submitButton": {"id": "submit_contact", "text": "Lähetä", "action": "submit_form"}
     }}
   ]
-}` : ''}
+}
+
+🚨 **CRITICAL REQUIREMENTS:**
+- Replace [YOUR PERSONALIZED SUMMARY...] with actual analysis of user's responses
+- Provide specific service recommendations based on their answers
+- Use the survey language (Finnish in this case) for all text
+- Include the contact form as the final step` : ''}
+
+**🔴 COMPLETION CONTEXT REMINDER:**
+This is a COMPLETED survey. Do not ask more questions. Focus on:
+1. Confirming completion
+2. Analyzing responses to provide personalized recommendations
+3. Facilitating next steps with contact form or alternative contact methods
+
+**SURVEY ANALYSIS GUIDANCE:**
+Based on the complete responses above, analyze:
+- What services would be most appropriate for this user
+- Any urgent concerns that require immediate attention
+- Specific recommendations tailored to their situation and timeline
+- Appropriate tone (supportive, professional, understanding)
+
+Provide concrete, actionable guidance rather than generic responses.
 `;
   }
 
