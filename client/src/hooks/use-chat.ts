@@ -43,7 +43,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
     queryFn: async () => {
-      const response = await apiRequest('POST', '/api/chat/session', { 
+      const response = await apiRequest('POST', '/api/chat/session', {
         sessionId,
         chatbotConfigId: chatbotConfigId || null
       });
@@ -61,7 +61,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       const baseUrl = config?.apiUrl || '';
       const url = `/api/chat/${sessionId}/messages`;
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
-      
+
       const response = await fetch(fullUrl);
       if (!response.ok) throw new Error('Failed to fetch messages');
       return response.json();
@@ -143,13 +143,13 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       const baseUrl = config?.apiUrl || '';
       const url = `/api/chat/${sessionId}/messages/stream`;
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
-      
+
       const response = await fetch(fullUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           content: userDisplayText,
           messageType: 'text',
           internalMessage: internalMessage !== userDisplayText ? internalMessage : undefined,
@@ -169,29 +169,29 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       }
 
       let buffer = ''; // Buffer for incomplete lines
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value);
         buffer += chunk;
-        
+
         // Process complete lines from buffer
         const lines = buffer.split('\n');
-        
+
         // Keep the last line in buffer if it doesn't end with newline
         // (it might be incomplete)
         buffer = lines.pop() || '';
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
               const jsonData = line.slice(6).trim();
-              
+
               // Skip empty data lines
               if (!jsonData) continue;
-              
+
               const data = JSON.parse(jsonData);
 
               if (data.type === 'bubble' && data.message) {
@@ -206,7 +206,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
                 setLimitExceededInfo({
                   message: data.message,
                   showContactForm: data.showContactForm,
-                  chatbotConfig: data.chatbotConfig
+                  chatbotConfig: data.chatbotConfig,
                 });
                 // Store in localStorage to persist across page loads
                 safeLocalStorage.setItem(`chat-limit-exceeded-${sessionId}`, JSON.stringify({
@@ -221,6 +221,15 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
               } else if (data.type === 'end') {
                 setIsTyping(false);
                 break;
+              } else if (eventData.type === "chatbot_inactive") {
+                setIsTyping(false);
+                setReadOnlyMode(true);
+                setLimitExceededInfo({
+                  message: eventData.message,
+                  showContactForm: eventData.showContactForm,
+                  chatbotConfig: eventData.chatbotConfig,
+                });
+                onError?.(eventData.message);
               }
             } catch (parseError) {
               console.warn('Failed to parse streaming data:', parseError, 'Line:', line);
@@ -303,14 +312,14 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     const sessionResult = await queryClient.fetchQuery({
       queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
       queryFn: async () => {
-        const response = await apiRequest('POST', '/api/chat/session', { 
+        const response = await apiRequest('POST', '/api/chat/session', {
           sessionId,
           chatbotConfigId: chatbotConfigId || null
         });
         return response.json();
       },
     });
-    
+
     // Session initialized - no need to invalidate queries for optimistic UI
     return sessionResult;
   };

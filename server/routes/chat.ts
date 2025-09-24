@@ -440,6 +440,34 @@ export function setupChatRoutes(app: Express) {
           currentChatbotConfigId,
         );
         if (chatbotConfig) {
+          // Check if chatbot is active before processing messages
+          if (!chatbotConfig.isActive) {
+            console.log(
+              `[CHATBOT_INACTIVE] Chatbot ${chatbotConfig.name} (ID: ${chatbotConfig.id}) is disabled`,
+            );
+
+            // Use the chatbot's configured fallback message or a default inactive message
+            const inactiveMessage =
+              chatbotConfig.fallbackMessage ||
+              "This chatbot is currently inactive. Please try again later or contact support.";
+
+            // Send inactive chatbot event
+            res.write(
+              `data: ${JSON.stringify({
+                type: "chatbot_inactive",
+                message: inactiveMessage,
+                readOnlyMode: true,
+                showContactForm: false,
+                chatbotConfig: {
+                  name: chatbotConfig.name,
+                  isActive: false,
+                },
+              })}\n\n`,
+            );
+
+            res.end();
+            return;
+          }
           // Check if the chatbot owner has exceeded their message limit
           const canSendMessage = await storage.checkMessageLimit(
             chatbotConfig.userId,
@@ -495,7 +523,41 @@ export function setupChatRoutes(app: Express) {
       } else {
         // No chatbot config ID available - check against default admin user or deny
         const defaultUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
-        if (defaultUserId) {
+        const defaultGuid = process.env.DEFAULT_SITE_CHATBOT_GUID;
+        
+        if (defaultUserId && defaultGuid) {
+          // Get default chatbot config to check if it's active
+          const defaultChatbotConfig = await storage.getChatbotConfigByGuid(
+            defaultUserId,
+            defaultGuid,
+          );
+          
+          if (defaultChatbotConfig && !defaultChatbotConfig.isActive) {
+            console.log(
+              `[CHATBOT_INACTIVE] Default chatbot ${defaultChatbotConfig.name} is disabled`,
+            );
+
+            const inactiveMessage =
+              defaultChatbotConfig.fallbackMessage ||
+              "This chatbot is currently inactive. Please try again later or contact support.";
+
+            res.write(
+              `data: ${JSON.stringify({
+                type: "chatbot_inactive",
+                message: inactiveMessage,
+                readOnlyMode: true,
+                showContactForm: false,
+                chatbotConfig: {
+                  name: defaultChatbotConfig.name,
+                  isActive: false,
+                },
+              })}\n\n`,
+            );
+
+            res.end();
+            return;
+          }
+          
           const canSendMessage = await storage.checkMessageLimit(defaultUserId);
           if (!canSendMessage) {
             console.log(
