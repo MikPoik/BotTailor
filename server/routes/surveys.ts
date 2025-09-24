@@ -218,9 +218,20 @@ export function setupSurveyRoutes(app: Express) {
       const currentResponses = surveySession.responses && typeof surveySession.responses === 'object' ? surveySession.responses as any : {};
       const updatedResponses = { ...currentResponses, [questionId]: response };
 
+      // Get survey config to check for completion
+      const survey = await storage.getSurvey(surveySession.surveyId);
+      const surveyConfig = survey?.surveyConfig as any;
+      const totalQuestions = surveyConfig?.questions?.length || 0;
+      const newQuestionIndex = (surveySession.currentQuestionIndex || 0) + 1;
+      const isCompleted = newQuestionIndex >= totalQuestions;
+      
+      console.log(`[SURVEY COMPLETION] Question index will be ${newQuestionIndex}, total questions: ${totalQuestions}, isCompleted: ${isCompleted}`);
+
       const updatedSession = await storage.updateSurveySession(surveySession.id, {
         responses: updatedResponses,
-        currentQuestionIndex: (surveySession.currentQuestionIndex || 0) + 1
+        currentQuestionIndex: newQuestionIndex,
+        status: isCompleted ? 'completed' : 'active',
+        completedAt: isCompleted ? new Date() : surveySession.completedAt
       });
 
       res.json(updatedSession);

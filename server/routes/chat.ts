@@ -64,11 +64,18 @@ export function setupChatRoutes(app: Express) {
                 [`q${surveySession.currentQuestionIndex || 0}`]: payload || optionId
               };
 
+              const newQuestionIndex = (surveySession.currentQuestionIndex || 0) + 1;
+              const isCompleted = newQuestionIndex >= surveyConfig.questions.length;
+              
+              console.log(`[SURVEY COMPLETION] Question index will be ${newQuestionIndex}, total questions: ${surveyConfig.questions.length}, isCompleted: ${isCompleted}`);
+
               const updatedSession = await storage.updateSurveySession(
                 surveySession.id,
                 {
                   responses: updatedResponses,
-                  currentQuestionIndex: (surveySession.currentQuestionIndex || 0) + 1,
+                  currentQuestionIndex: newQuestionIndex,
+                  status: isCompleted ? 'completed' : 'active',
+                  completedAt: isCompleted ? new Date() : surveySession.completedAt
                 }
               );
 
