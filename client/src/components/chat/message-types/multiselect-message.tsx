@@ -9,6 +9,18 @@ interface MultiselectMessageProps {
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
 }
 
+// Helper function to detect if an option is the "Other" option
+const isOtherOption = (option: any): boolean => {
+  if (!option) return false;
+  
+  // Check ID first (most reliable)
+  if (option.id === "other") return true;
+  
+  // Check text content (case-insensitive)
+  const text = option.text?.toLowerCase() || "";
+  return text === "other" || text.includes("other");
+};
+
 export const MultiselectMessage = memo(function MultiselectMessage({ 
   metadata, 
   onOptionSelect 
@@ -20,6 +32,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
     : (rawOptions && typeof rawOptions === 'object')
       ? Object.values(rawOptions)
       : [];
+  
   const [selectedOptions, setSelectedOptions] = useState<string[]>(metadata.selectedOptions || []);
   const [otherText, setOtherText] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +53,10 @@ export const MultiselectMessage = memo(function MultiselectMessage({
   };
 
   // Check if "other" option is selected and has text
-  const hasOtherSelected = selectedOptions.includes("other");
+  const hasOtherSelected = selectedOptions.some(optionId => {
+    const option = options.find((opt: any) => opt.id === optionId);
+    return isOtherOption(option);
+  });
   const isOtherTextRequired = hasOtherSelected && !otherText.trim();
 
   const handleMultiselectSubmit = async (e: React.FormEvent) => {
@@ -57,7 +73,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       const selectedOptionsWithText = selectedOptions.map(optionId => {
         const option = options.find((opt: any) => opt.id === optionId);
         // If this is the "other" option and we have custom text, use that instead
-        if (optionId === "other" && otherText.trim()) {
+        if (isOtherOption(option) && otherText.trim()) {
           return {
             id: optionId,
             text: otherText.trim()
@@ -98,7 +114,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       <div className="space-y-2">
         {options.map((option: any, index: number) => {
           const isSelected = selectedOptions.includes(option.id);
-          const isOtherOption = option.id === "other";
+          const isCurrentOptionOther = isOtherOption(option);
 
           return (
             <div key={`${option.id}-${index}`}>
@@ -124,15 +140,17 @@ export const MultiselectMessage = memo(function MultiselectMessage({
                 </span>
               </button>
               
-              {isOtherOption && isSelected && (
+              {isCurrentOptionOther && isSelected && (
                 <div className="mt-2 ml-6">
                   <Input
                     value={otherText}
                     onChange={(e) => setOtherText(e.target.value)}
                     placeholder="Please specify..."
-                    className="w-full"
+                    className="w-full border-2 border-blue-300 bg-blue-50"
+                    autoFocus
                     data-testid="input-multiselect-other-text"
                   />
+                  <p className="text-xs text-gray-600 mt-1">Enter your custom option above</p>
                 </div>
               )}
             </div>
