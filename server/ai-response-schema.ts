@@ -361,15 +361,48 @@ ${getQuestionTypeInstructions(currentQuestion)}
 **RESPONSE FORMAT REQUIREMENT:**
 1. Brief acknowledgment and validation of user's response (1 sentence max), adjust to current survey context. Example: "Thank you for your response, I understand your situation." 
 2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
-3. 🔴 **CRITICAL VALIDATION**: Include expectation metadata in the QUESTION TEXT bubble (NOT the menu): expectedMenuOptions: ${currentQuestion.options ? (currentQuestion.allowFreeChoice ? currentQuestion.options.length + 1 : currentQuestion.options.length) : 0}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
-${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: Add an "Other" option translated to the survey language (detect from question text and translate naturally). Use id="q_other" for the option.` : ''}
+3. 🔴 **CRITICAL VALIDATION**: Include expectation metadata in the QUESTION TEXT bubble (NOT the menu): expectedMenuOptions: ${(() => {
+  if (!currentQuestion.options) return 0;
+  if (!currentQuestion.allowFreeChoice) return currentQuestion.options.length;
+  // Check if there's already an "Other" option
+  const hasExistingOther = currentQuestion.options.some((option: any) => 
+    option.text?.toLowerCase().trim() === 'other' ||
+    option.text?.toLowerCase().includes('other')
+  );
+  // If no existing "Other", add one (+1). If existing "Other", replace it (same count)
+  return hasExistingOther ? currentQuestion.options.length : currentQuestion.options.length + 1;
+})()}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
+${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: ${(() => {
+  if (!currentQuestion.options) return 'Add an "Other" option with id="q_other"';
+  const hasExistingOther = currentQuestion.options.some((option: any) => 
+    option.text?.toLowerCase().trim() === 'other' ||
+    option.text?.toLowerCase().includes('other')
+  );
+  return hasExistingOther ? 'REPLACE existing "Other" option with id="q_other"' : 'ADD new "Other" option with id="q_other"';
+})()}. Translate the visible text to match survey language naturally.` : ''}
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
     const menuType = getMenuTypeForQuestion(currentQuestion);
     
-    // Use base options (AI will add localized "Other" option if allowFreeChoice is enabled)
+    // Check for existing "Other" option and prepare effective options
     let effectiveOptions = [...currentQuestion.options];
+    let hasExistingOther = false;
+    let finalOptionCount = effectiveOptions.length;
+    
+    if (currentQuestion.allowFreeChoice) {
+      // Check if there's already an "Other" option (by text)
+      hasExistingOther = effectiveOptions.some(option => 
+        option.text?.toLowerCase().trim() === 'other' ||
+        option.text?.toLowerCase().includes('other')
+      );
+      
+      // If no existing "Other" option, we'll add one (so +1 to count)
+      // If there's already an "Other" option, we'll replace it (so same count)
+      if (!hasExistingOther) {
+        finalOptionCount = effectiveOptions.length + 1;
+      }
+    }
     
     context += `
 **OPTIONS (MUST PRESENT AS ${menuType.toUpperCase()})**
@@ -389,18 +422,20 @@ ${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: Add
     const menuExample = generateMenuExample(currentQuestion, optionsForExample);
 
     context += `
-**${menuType.toUpperCase()} FORMAT REQUIRED** (MUST INCLUDE ALL ${effectiveOptions.length} OPTIONS):
+**${menuType.toUpperCase()} FORMAT REQUIRED** (MUST INCLUDE ALL ${finalOptionCount} OPTIONS):
 ${menuExample}
 
 🚨 CRITICAL REQUIREMENTS:
-1. You MUST include ALL ${currentQuestion.allowFreeChoice ? currentQuestion.options.length + 1 : effectiveOptions.length} options in the ${menuType}
+1. You MUST include ALL ${finalOptionCount} options in the ${menuType}
 2. Use EXACT option texts for predefined options - DO NOT change to "Option 1", "Option 2"
 3. Never omit any options!
 4. Copy the JSON format exactly as shown above
-5. 🔴 **CRITICAL VALIDATION METADATA**: Add expectation metadata to the QUESTION TEXT bubble (NOT the menu): {"expectedMenuOptions": ${currentQuestion.allowFreeChoice ? currentQuestion.options.length + 1 : effectiveOptions.length}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
-${currentQuestion.allowFreeChoice ? `6. 🌍 **FREE CHOICE ENABLED**: You MUST add a localized "Other" option with id="q_other". Translate the visible text to match the survey language naturally (e.g., "Muu" for Finnish, "Andet" for Danish, "Other" for English, etc.)` : ''}
+5. 🔴 **CRITICAL VALIDATION METADATA**: Add expectation metadata to the QUESTION TEXT bubble (NOT the menu): {"expectedMenuOptions": ${finalOptionCount}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
+${currentQuestion.allowFreeChoice ? (hasExistingOther ? 
+`6. 🌍 **REPLACE EXISTING "OTHER"**: There's already an "Other" option in the predefined options. REPLACE it with id="q_other" and translate the text to match the survey language naturally (e.g., "Muu" for Finnish, "Other" for English, etc.). Do NOT add an additional "Other" option.` : 
+`6. 🌍 **ADD "OTHER" OPTION**: Add a localized "Other" option with id="q_other". Translate the visible text to match the survey language naturally (e.g., "Muu" for Finnish, "Andet" for Danish, "Other" for English, etc.)`) : ''}
 
-The predefined option texts you MUST use are: ${effectiveOptions.map((opt: any) => `"${opt.text}"`).join(", ")}${currentQuestion.allowFreeChoice ? ` + localized "Other" option` : ''}
+The predefined option texts you MUST use are: ${effectiveOptions.map((opt: any) => `"${opt.text}"`).join(", ")}${currentQuestion.allowFreeChoice ? (hasExistingOther ? ` (replace any "Other" with localized version and id="q_other")` : ` + localized "Other" option`) : ''}
 `;
   } else if (currentQuestion.type === 'rating') {
     context += generateRatingExample(currentQuestion);
