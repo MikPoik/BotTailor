@@ -146,11 +146,10 @@ export const MultiselectMessage = memo(function MultiselectMessage({
                     value={otherText}
                     onChange={(e) => setOtherText(e.target.value)}
                     placeholder="Please specify..."
-                    className="w-full border-2 border-blue-300 bg-blue-50"
+                    className="w-full"
                     autoFocus
                     data-testid="input-multiselect-other-text"
                   />
-                  <p className="text-xs text-gray-600 mt-1">Enter your custom option above</p>
                 </div>
               )}
             </div>

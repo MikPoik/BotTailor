@@ -9,6 +9,18 @@ interface MenuMessageProps {
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
 }
 
+// Helper function to detect if an option is the "Other" option
+const isOtherOption = (option: any): boolean => {
+  if (!option) return false;
+  
+  // Check ID first (most reliable)
+  if (option.id === "other") return true;
+  
+  // Check text content (case-insensitive)
+  const text = option.text?.toLowerCase() || "";
+  return text === "other" || text.includes("other");
+};
+
 export const MenuMessage = memo(function MenuMessage({ 
   metadata, 
   onOptionSelect 
@@ -25,8 +37,8 @@ export const MenuMessage = memo(function MenuMessage({
   const [otherText, setOtherText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Check if any option has id "other" (indicating allowFreeChoice is enabled)
-  const hasOtherOption = options.some((option: any) => option.id === "other");
+  // Check if any option is an "Other" option (indicating allowFreeChoice is enabled)
+  const hasOtherOption = options.some((option: any) => isOtherOption(option));
 
   const handleOtherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +56,7 @@ export const MenuMessage = memo(function MenuMessage({
   };
 
   const handleOptionClick = (option: any) => {
-    if (option.id === "other") {
+    if (isOtherOption(option)) {
       setSelectedOtherOption(option.id);
       // Don't submit immediately, wait for user to enter text
     } else {
@@ -57,7 +69,7 @@ export const MenuMessage = memo(function MenuMessage({
     <div className="space-y-2">
       <div className="space-y-2">
         {options.map((option: any, index: number) => {
-          const isOtherOption = option.id === "other";
+          const isCurrentOptionOther = isOtherOption(option);
           const isOtherSelected = selectedOtherOption === option.id;
           
           return (
@@ -75,7 +87,7 @@ export const MenuMessage = memo(function MenuMessage({
                 <span className="rich-message-text">{option.text}</span>
               </button>
               
-              {isOtherOption && isOtherSelected && (
+              {isCurrentOptionOther && isOtherSelected && (
                 <form onSubmit={handleOtherSubmit} className="mt-2 flex gap-2">
                   <Input
                     value={otherText}

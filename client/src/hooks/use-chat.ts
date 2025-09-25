@@ -221,15 +221,15 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
               } else if (data.type === 'end') {
                 setIsTyping(false);
                 break;
-              } else if (eventData.type === "chatbot_inactive") {
+              } else if (data.type === "chatbot_inactive") {
                 setIsTyping(false);
                 setReadOnlyMode(true);
                 setLimitExceededInfo({
-                  message: eventData.message,
-                  showContactForm: eventData.showContactForm,
-                  chatbotConfig: eventData.chatbotConfig,
+                  message: data.message,
+                  showContactForm: data.showContactForm,
+                  chatbotConfig: data.chatbotConfig,
                 });
-                onError?.(eventData.message);
+                onError?.(data.message);
               }
             } catch (parseError) {
               console.warn('Failed to parse streaming data:', parseError, 'Line:', line);
