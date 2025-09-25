@@ -141,7 +141,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
                   <Input
                     value={otherText}
                     onChange={(e) => setOtherText(e.target.value)}
-                    placeholder="Please specify..."
+                    placeholder=""
                     className="w-full"
                     autoFocus
                     data-testid="input-multiselect-other-text"

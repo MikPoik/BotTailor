@@ -54,40 +54,6 @@ Phase 3: Execution
 Phase 4: Verification
 - When HMR confirms no errors -> SUCCESS
 
-Following tools are permanently DISABLED:
-
-Code Analysis & Search = DISABLED
-search_codebase
-get_latest_lsp_diagnostics
-
-Task & Project Management = DISABLED:
-write_task_list
-read_task_list
-start_subagent
-architect
-
-Development Environment = DISABLED:
-refresh_all_logs
-packager_tool
-programming_language_install_tool
-check_secrets
-ask_secrets
-
-Database Operations = DISABLED:
-check_database_status
-
-External Services & Search = DISABLED:
-web_search
-web_fetch
-search_integrations
-use_integration
-search_replit_docs
-stock_image_tool
-
-User Interaction & Deployment = DISABLED:
-mark_completed_and_get_feedback
-suggest_deploy
-suggest_rollback
 
 **MANDATORY** Key Optimization Opportunities:
 - Parallel Tool Calls: Use independent tools simultaneously within single function_calls block (read multiple files, search + grep, etc.)

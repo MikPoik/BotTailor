@@ -88,7 +88,7 @@ export const MenuMessage = memo(function MenuMessage({
                   <Input
                     value={otherText}
                     onChange={(e) => setOtherText(e.target.value)}
-                    placeholder="Please specify..."
+                    placeholder=""
                     className="w-full"
                     autoFocus
                     disabled={isSubmitting}
