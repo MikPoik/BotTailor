@@ -301,7 +301,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   };
 
   const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
-    console.log(`[FRONTEND] Selecting option: ${optionId}, text: ${optionText}`);
+    //console.log(`[FRONTEND] Selecting option: ${optionId}, text: ${optionText}`);
     return selectOptionMutation.mutateAsync({ optionId, payload, optionText });
   };
 

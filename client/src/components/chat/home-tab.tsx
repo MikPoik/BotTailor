@@ -149,7 +149,7 @@ export default function HomeTab({
     };
 
     const handleActionClick = (action: any) => {
-      console.log("Action:", action);
+      //console.log("Action:", action);
 
       // Handle survey actions specifically
       if (action.action === "take_assessment" || action.actionType === "survey") {
