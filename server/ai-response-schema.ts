@@ -361,40 +361,48 @@ ${getQuestionTypeInstructions(currentQuestion)}
 **RESPONSE FORMAT REQUIREMENT:**
 1. Brief acknowledgment and validation of user's response (1 sentence max), adjust to current survey context. Example: "Thank you for your response, I understand your situation." 
 2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
-3. 🔴 **CRITICAL VALIDATION**: Include expectation metadata in the QUESTION TEXT bubble (NOT the menu): expectedMenuOptions: ${currentQuestion.options?.length || 0}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
+3. 🔴 **CRITICAL VALIDATION**: Include expectation metadata in the QUESTION TEXT bubble (NOT the menu): expectedMenuOptions: ${currentQuestion.options ? (currentQuestion.allowFreeChoice ? currentQuestion.options.length + 1 : currentQuestion.options.length) : 0}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
     const menuType = getMenuTypeForQuestion(currentQuestion);
+    
+    // Create a copy of options and add "Other" option if allowFreeChoice is enabled
+    let effectiveOptions = [...currentQuestion.options];
+    if (currentQuestion.allowFreeChoice) {
+      effectiveOptions.push({ id: "other", text: "Other", action: "select" });
+    }
+    
     context += `
 **OPTIONS (MUST PRESENT AS ${menuType.toUpperCase()})**
 `;
-    currentQuestion.options.forEach((option: any, index: number) => {
+    effectiveOptions.forEach((option: any, index: number) => {
       context += `${index + 1}. ${option.text}\n`;
     });
 
-    // Generate dynamic menu format example with ALL options
-    const optionsForExample = currentQuestion.options
+    // Generate dynamic menu format example with ALL options (including "Other" if enabled)
+    const optionsForExample = effectiveOptions
       .map(
         (option: any, index: number) =>
-          `      {"id": "option${index + 1}", "text": "${option.text}", "action": "select"}`,
+          `      {"id": "${option.id || `option${index + 1}`}", "text": "${option.text}", "action": "select"}`,
       )
       .join(",\n");
 
     const menuExample = generateMenuExample(currentQuestion, optionsForExample);
 
     context += `
-**${menuType.toUpperCase()} FORMAT REQUIRED** (MUST INCLUDE ALL ${currentQuestion.options.length} OPTIONS):
+**${menuType.toUpperCase()} FORMAT REQUIRED** (MUST INCLUDE ALL ${effectiveOptions.length} OPTIONS):
 ${menuExample}
 
 🚨 CRITICAL REQUIREMENTS:
-1. You MUST include ALL ${currentQuestion.options.length} options in the ${menuType}
+1. You MUST include ALL ${effectiveOptions.length} options in the ${menuType}
 2. Use EXACT option texts - DO NOT change to "Option 1", "Option 2"
 3. Never omit any options!
 4. Copy the JSON format exactly as shown above
-5. 🔴 **CRITICAL VALIDATION METADATA**: Add expectation metadata to the QUESTION TEXT bubble (NOT the menu): {"expectedMenuOptions": ${currentQuestion.options.length}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
+5. 🔴 **CRITICAL VALIDATION METADATA**: Add expectation metadata to the QUESTION TEXT bubble (NOT the menu): {"expectedMenuOptions": ${effectiveOptions.length}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
+${currentQuestion.allowFreeChoice ? `6. 🟡 **FREE CHOICE ENABLED**: This question includes an "Other" option for free text input. Users can select "Other" and provide custom text.` : ''}
 
-The EXACT option texts you MUST use are: ${currentQuestion.options.map((opt: any) => `"${opt.text}"`).join(", ")}
+The EXACT option texts you MUST use are: ${effectiveOptions.map((opt: any) => `"${opt.text}"`).join(", ")}
 `;
   } else if (currentQuestion.type === 'rating') {
     context += generateRatingExample(currentQuestion);
@@ -560,7 +568,9 @@ function getMenuTypeForQuestion(question: any): string {
 // Helper function to generate menu example based on question type
 function generateMenuExample(question: any, optionsForExample: string): string {
   const menuType = getMenuTypeForQuestion(question);
-  const optionCount = question.options?.length || 0;
+  // Calculate effective option count including "Other" if allowFreeChoice is enabled
+  const baseOptionCount = question.options?.length || 0;
+  const optionCount = question.allowFreeChoice ? baseOptionCount + 1 : baseOptionCount;
 
   if (menuType === 'multiselect_menu') {
     return `🚨 CRITICAL MULTISELECT FORMAT - COPY EXACTLY:

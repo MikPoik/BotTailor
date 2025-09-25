@@ -447,6 +447,7 @@ export const SurveyQuestionSchema = z.object({
     value: z.any().optional(),
   })).optional(),
   required: z.boolean().default(true),
+  allowFreeChoice: z.boolean().default(false), // Enable "Other" option with inline text input
   metadata: z.object({
     aiInstructions: z.string().optional(),
     validationRules: z.array(z.string()).optional(),

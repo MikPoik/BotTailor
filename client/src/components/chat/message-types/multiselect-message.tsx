@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Check, Send } from "lucide-react";
 import { MultiselectMenuMetadata } from "@/types/message-metadata";
 
@@ -20,6 +21,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       ? Object.values(rawOptions)
       : [];
   const [selectedOptions, setSelectedOptions] = useState<string[]>(metadata.selectedOptions || []);
+  const [otherText, setOtherText] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   
@@ -37,9 +39,16 @@ export const MultiselectMessage = memo(function MultiselectMessage({
     });
   };
 
+  // Check if "other" option is selected and has text
+  const hasOtherSelected = selectedOptions.includes("other");
+  const isOtherTextRequired = hasOtherSelected && !otherText.trim();
+
   const handleMultiselectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedOptions.length === 0 || isSubmitting || isSubmitted) return;
+    
+    // If "other" is selected but no text provided, prevent submission
+    if (isOtherTextRequired) return;
 
     setIsSubmitting(true);
 
@@ -47,6 +56,13 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       // Get the text descriptions for selected options
       const selectedOptionsWithText = selectedOptions.map(optionId => {
         const option = options.find((opt: any) => opt.id === optionId);
+        // If this is the "other" option and we have custom text, use that instead
+        if (optionId === "other" && otherText.trim()) {
+          return {
+            id: optionId,
+            text: otherText.trim()
+          };
+        }
         return {
           id: optionId,
           text: option?.text || `Option ${optionId}`
@@ -56,7 +72,8 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       const payload = {
         selected_options: selectedOptions, // Keep original format for compatibility
         selected_options_with_text: selectedOptionsWithText, // Add text descriptions
-        selection_count: selectedOptions.length
+        selection_count: selectedOptions.length,
+        other_text: hasOtherSelected ? otherText.trim() : undefined // Include other text if provided
       };
 
       // Create display text from selected option texts
@@ -81,29 +98,44 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       <div className="space-y-2">
         {options.map((option: any, index: number) => {
           const isSelected = selectedOptions.includes(option.id);
+          const isOtherOption = option.id === "other";
 
           return (
-            <button
-              key={`${option.id}-${index}`}
-              onClick={() => handleOptionToggle(option.id, option.text)}
-              className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 ${
-                isSelected 
-                  ? 'bg-primary/10 border-primary text-primary' 
-                  : 'border-neutral-200 hover:bg-neutral-50'
-              }`}
-            >
-              <div className={`w-4 h-4 border rounded flex items-center justify-center ${
-                isSelected ? 'bg-primary border-primary' : 'border-neutral-300'
-              }`}>
-                {isSelected && <Check className="w-3 h-3 text-white" />}
-              </div>
-              {option.icon && (
-                <i className={`${option.icon} ${isSelected ? 'text-primary' : ''}`}></i>
+            <div key={`${option.id}-${index}`}>
+              <button
+                onClick={() => handleOptionToggle(option.id, option.text)}
+                className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 ${
+                  isSelected 
+                    ? 'bg-primary/10 border-primary text-primary' 
+                    : 'border-neutral-200 hover:bg-neutral-50'
+                }`}
+                data-testid={`option-${option.id}`}
+              >
+                <div className={`w-4 h-4 border rounded flex items-center justify-center ${
+                  isSelected ? 'bg-primary border-primary' : 'border-neutral-300'
+                }`}>
+                  {isSelected && <Check className="w-3 h-3 text-white" />}
+                </div>
+                {option.icon && (
+                  <i className={`${option.icon} ${isSelected ? 'text-primary' : ''}`}></i>
+                )}
+                <span className="rich-message-text" title={option.text || 'No text'}>
+                  {option.text || `[EMPTY OPTION ${index}]`}
+                </span>
+              </button>
+              
+              {isOtherOption && isSelected && (
+                <div className="mt-2 ml-6">
+                  <Input
+                    value={otherText}
+                    onChange={(e) => setOtherText(e.target.value)}
+                    placeholder="Please specify..."
+                    className="w-full"
+                    data-testid="input-multiselect-other-text"
+                  />
+                </div>
               )}
-              <span className="rich-message-text" title={option.text || 'No text'}>
-                {option.text || `[EMPTY OPTION ${index}]`}
-              </span>
-            </button>
+            </div>
           );
         })}
       </div>
@@ -113,8 +145,9 @@ export const MultiselectMessage = memo(function MultiselectMessage({
         <Button
           type="submit"
           onClick={handleMultiselectSubmit}
-          disabled={selectedOptions.length === 0 || isSubmitting || isSubmitted}
+          disabled={selectedOptions.length === 0 || isSubmitting || isSubmitted || isOtherTextRequired}
           className="w-40 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          data-testid="button-submit-multiselect"
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center">

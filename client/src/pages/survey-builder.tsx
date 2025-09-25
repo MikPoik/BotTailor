@@ -686,6 +686,27 @@ export default function SurveyBuilderPage() {
                                   </div>
                                 </div>
 
+                                {(question.type === 'single_choice' || question.type === 'multiple_choice') && (
+                                  <div>
+                                    <Label>Allow Free Choice</Label>
+                                    <Select
+                                      value={question.allowFreeChoice ? "true" : "false"}
+                                      onValueChange={(value) => handleUpdateQuestion(selectedSurvey.id, index, { allowFreeChoice: value === "true" })}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="false">No</SelectItem>
+                                        <SelectItem value="true">Yes - Include "Other" option</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      When enabled, an "Other" option with text input will be automatically added to this question.
+                                    </p>
+                                  </div>
+                                )}
+
                                 {question.options && (
                                   <div className="space-y-3">
                                     <Label>Answer Options</Label>
