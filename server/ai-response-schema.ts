@@ -362,7 +362,7 @@ ${getQuestionTypeInstructions(currentQuestion)}
 1. Brief acknowledgment and validation of user's response (1 sentence max), adjust to current survey context. Example: "Thank you for your response, I understand your situation." 
 2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
 3. 🔴 **CRITICAL VALIDATION**: Include expectation metadata in the QUESTION TEXT bubble (NOT the menu): expectedMenuOptions: ${currentQuestion.options ? (currentQuestion.allowFreeChoice ? currentQuestion.options.length + 1 : currentQuestion.options.length) : 0}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
-${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: Add an "Other" option translated to the survey language (detect from question text). Examples: Finnish="Muu", Swedish="Annat", German="Andere", Spanish="Otro", French="Autre". Use id="other" for the option.` : ''}
+${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: Add an "Other" option translated to the survey language (detect from question text and translate naturally). Use id="q_other" for the option.` : ''}
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
@@ -398,14 +398,7 @@ ${menuExample}
 3. Never omit any options!
 4. Copy the JSON format exactly as shown above
 5. 🔴 **CRITICAL VALIDATION METADATA**: Add expectation metadata to the QUESTION TEXT bubble (NOT the menu): {"expectedMenuOptions": ${currentQuestion.allowFreeChoice ? currentQuestion.options.length + 1 : effectiveOptions.length}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
-${currentQuestion.allowFreeChoice ? `6. 🌍 **FREE CHOICE ENABLED**: You MUST add a localized "Other" option with id="other" in the survey language. Detect language from question text and translate appropriately:
-   • Finnish: "Muu" 
-   • Swedish: "Annat"
-   • German: "Andere"
-   • Spanish: "Otro"
-   • French: "Autre"
-   • English: "Other"
-   • For other languages, use the appropriate translation` : ''}
+${currentQuestion.allowFreeChoice ? `6. 🌍 **FREE CHOICE ENABLED**: You MUST add a localized "Other" option with id="q_other". Translate the visible text to match the survey language naturally (e.g., "Muu" for Finnish, "Andet" for Danish, "Other" for English, etc.)` : ''}
 
 The predefined option texts you MUST use are: ${effectiveOptions.map((opt: any) => `"${opt.text}"`).join(", ")}${currentQuestion.allowFreeChoice ? ` + localized "Other" option` : ''}
 `;
