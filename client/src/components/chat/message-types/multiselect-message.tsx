@@ -9,16 +9,34 @@ interface MultiselectMessageProps {
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
 }
 
-// Helper function to detect if an option is the "Other" option
+// Helper function to detect if an option is the "Other" option in any language
 const isOtherOption = (option: any): boolean => {
   if (!option) return false;
   
   // Check ID first (most reliable)
   if (option.id === "other") return true;
   
-  // Check text content (case-insensitive)
-  const text = option.text?.toLowerCase() || "";
-  return text === "other" || text.includes("other");
+  // Check text content against common "Other" translations (case-insensitive)
+  const text = option.text?.toLowerCase().trim() || "";
+  const otherTranslations = [
+    "other",    // English
+    "muu",      // Finnish
+    "annat",    // Swedish 
+    "andere",   // German
+    "otro",     // Spanish
+    "autre",    // French
+    "altro",    // Italian
+    "outro",    // Portuguese
+    "ander",    // Dutch
+    "другой",   // Russian
+    "其他",     // Chinese
+    "その他",   // Japanese
+    "기타"      // Korean
+  ];
+  
+  return otherTranslations.some(translation => 
+    text === translation || text.includes(translation)
+  );
 };
 
 export const MultiselectMessage = memo(function MultiselectMessage({ 
