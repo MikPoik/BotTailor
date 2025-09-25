@@ -137,7 +137,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
               </button>
               
               {isCurrentOptionOther && isSelected && (
-                <div className="mt-2 ml-6">
+                <div className="mt-2 px-2 sm:ml-6 sm:px-0">
                   <Input
                     value={otherText}
                     onChange={(e) => setOtherText(e.target.value)}

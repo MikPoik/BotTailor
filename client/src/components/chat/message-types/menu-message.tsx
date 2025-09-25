@@ -84,11 +84,12 @@ export const MenuMessage = memo(function MenuMessage({
               </button>
               
               {isCurrentOptionOther && isOtherSelected && (
-                <form onSubmit={handleOtherSubmit} className="mt-2 flex gap-2">
+                <form onSubmit={handleOtherSubmit} className="mt-2 flex gap-2 px-2 sm:px-0">
                   <Input
                     value={otherText}
                     onChange={(e) => setOtherText(e.target.value)}
                     placeholder="Please specify..."
+                    className="w-full"
                     autoFocus
                     disabled={isSubmitting}
                     data-testid="input-other-text"
