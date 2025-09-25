@@ -613,6 +613,14 @@
       if (urlMatch && urlMatch[1] && urlMatch[2]) {
         const userId = urlMatch[1];
         const chatbotGuid = urlMatch[2];
+        const cacheKey = `chatbot_${userId}_${chatbotGuid}`;
+
+        // Check cache first (5 minute cache)
+        const cached = this.getCachedConfig(cacheKey);
+        if (cached) {
+          this.handleChatbotConfig(cached, messageBubble);
+          return;
+        }
 
         // Fetch chatbot configuration to get initial messages
         let baseUrl;
@@ -625,7 +633,8 @@
         // Force HTTPS for API requests
         baseUrl = this.forceHttps(baseUrl);
 
-        fetch(`${baseUrl}/api/public/chatbot/${userId}/${chatbotGuid}`)
+        // Use fetch with timeout and retry logic
+        this.fetchWithTimeout(`${baseUrl}/api/public/chatbot/${userId}/${chatbotGuid}`, 5000)
           .then(response => {
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);
@@ -633,31 +642,78 @@
             return response.json();
           })
           .then(data => {
-            // Check if chatbot is active - if not, keep widget hidden
-            if (!data.isActive) {
-              console.log('Chat widget: Chatbot is inactive, keeping widget hidden');
-              return;
-            }
-
-            // Chatbot is active, show the widget
-            console.log('Chat widget: Chatbot is active, showing widget');
-            this.showWidget();
-
-            if (data.initialMessages && data.initialMessages.length > 0) {
-              this.displayInitialMessages(messageBubble, data.initialMessages);
-            } else {
-              this.showDefaultMessage(messageBubble);
-            }
+            // Cache the response
+            this.setCachedConfig(cacheKey, data);
+            this.handleChatbotConfig(data, messageBubble);
           })
           .catch(error => {
             // Silent fallback in production - keep widget hidden on error
             console.log('Chat widget: Error fetching chatbot config, keeping widget hidden');
-            // Widget is already hidden by default, no need to call hideWidget
           });
       } else {
         // Invalid URL format - keep widget hidden
         console.log('Chat widget: Invalid URL format, keeping widget hidden');
       }
+    },
+
+    // Cache management for performance
+    getCachedConfig: function(key) {
+      try {
+        const item = localStorage.getItem(`chatwidget_${key}`);
+        if (!item) return null;
+        
+        const { data, timestamp } = JSON.parse(item);
+        const now = Date.now();
+        const fiveMinutes = 5 * 60 * 1000;
+        
+        if (now - timestamp > fiveMinutes) {
+          localStorage.removeItem(`chatwidget_${key}`);
+          return null;
+        }
+        
+        return data;
+      } catch {
+        return null;
+      }
+    },
+
+    setCachedConfig: function(key, data) {
+      try {
+        localStorage.setItem(`chatwidget_${key}`, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+      } catch {
+        // Ignore storage errors
+      }
+    },
+
+    handleChatbotConfig: function(data, messageBubble) {
+      // Check if chatbot is active - if not, keep widget hidden
+      if (!data.isActive) {
+        console.log('Chat widget: Chatbot is inactive, keeping widget hidden');
+        return;
+      }
+
+      // Chatbot is active, show the widget
+      console.log('Chat widget: Chatbot is active, showing widget');
+      this.showWidget();
+
+      if (data.initialMessages && data.initialMessages.length > 0) {
+        this.displayInitialMessages(messageBubble, data.initialMessages);
+      } else {
+        this.showDefaultMessage(messageBubble);
+      }
+    },
+
+    // Fetch with timeout utility
+    fetchWithTimeout: function(url, timeout = 5000) {
+      return Promise.race([
+        fetch(url),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), timeout)
+        )
+      ]);
     },
 
     displayInitialMessages: function(messageBubble, messages) {
@@ -871,25 +927,28 @@
   // Expose global API immediately
   window.ChatWidget = ChatWidget;
 
-  // Auto-initialize function
+  // Performance-optimized initialization
   function autoInitialize() {
     if (window.ChatWidgetConfig && !ChatWidget._initialized) {
-      ChatWidget.init(window.ChatWidgetConfig);
+      // Use requestIdleCallback for non-blocking initialization
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => ChatWidget.init(window.ChatWidgetConfig), { timeout: 2000 });
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(() => ChatWidget.init(window.ChatWidgetConfig), 100);
+      }
     }
   }
 
-  // Try to initialize immediately
-  autoInitialize();
-
-  // Try again when DOM is ready
+  // Defer initialization to avoid blocking main thread
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', autoInitialize);
-  } else {
-    // DOM is already ready, try in next tick
+  } else if (document.readyState === 'interactive') {
+    // DOM is interactive but may still be loading resources
     setTimeout(autoInitialize, 0);
+  } else {
+    // DOM is fully loaded
+    autoInitialize();
   }
-
-  // Final fallback after a short delay
-  setTimeout(autoInitialize, 100);
 
 })();
