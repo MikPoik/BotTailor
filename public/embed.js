@@ -422,19 +422,18 @@
           // Only load iframe once to preserve chat session
           if (!mobileIframe.src) {
             try {
-              // Build URL with sessionId if provided, otherwise let server generate it
-              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+              // Build iframe URL with sessionId if provided, otherwise let server generate it
+              // Don't pass sessionId - let each page load generate a fresh session
               const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
-              // Check if apiUrl already contains a specific widget path
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
-                // Specific widget URL - use as-is with query parameters
+                // Specific widget URL - use as-is with query parameters  
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}${themeParams}mobile=true&embedded=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${themeParams}mobile=true&embedded=true`;
               }
 
               // Force HTTPS for iframe URL
@@ -453,26 +452,25 @@
           // Only load iframe once to preserve chat session
           if (!iframe.src) {
             try {
-              // Build URL with sessionId if provided, otherwise let server generate it
-              const sessionParam = this.config.sessionId ? `sessionId=${this.config.sessionId}&` : '';
+              // Build iframe URL with sessionId if provided, otherwise let server generate it
+              // Don't pass sessionId - let each page load generate a fresh session
               const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
-              // Check if apiUrl already contains a specific widget path
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
-                // Specific widget URL - use as-is with query parameters
+                // Specific widget URL - use as-is with query parameters  
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${sessionParam}${themeParams}mobile=false&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}${themeParams}embedded=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${sessionParam}${themeParams}mobile=false&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?${themeParams}embedded=true`;
               }
 
               // Force HTTPS for iframe URL
               iframe.src = this.forceHttps(widgetUrl);
             } catch (error) {
               // Fallback URL construction
-              iframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=false&embedded=true`);
+              iframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}embedded=true`);
             }
           }
           bubble.style.display = 'none';
@@ -640,11 +638,11 @@
               console.log('Chat widget: Chatbot is inactive, keeping widget hidden');
               return;
             }
-            
+
             // Chatbot is active, show the widget
             console.log('Chat widget: Chatbot is active, showing widget');
             this.showWidget();
-            
+
             if (data.initialMessages && data.initialMessages.length > 0) {
               this.displayInitialMessages(messageBubble, data.initialMessages);
             } else {
@@ -798,7 +796,7 @@
       const container = document.getElementById('chatwidget-container');
       const overlay = document.getElementById('chatwidget-overlay');
       const mobileIframe = document.getElementById('chatwidget-mobile-iframe');
-      
+
       if (container) container.style.display = 'none';
       if (overlay) overlay.style.display = 'none';
       if (mobileIframe) mobileIframe.style.display = 'none';

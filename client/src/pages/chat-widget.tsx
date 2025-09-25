@@ -11,23 +11,16 @@ export default function ChatWidgetPage() {
     const embedded = urlParams.get('embedded') === 'true';
     setIsEmbedded(embedded);
 
-    // Check if we have injected config from production widget
-    const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
+    // Always generate a new session ID for each page load
+    // This ensures that users get fresh conversations every time
+    const paramSessionId = urlParams.get('sessionId');
     
-    if (injectedConfig && injectedConfig.sessionId) {
-      setSessionId(injectedConfig.sessionId);
+    if (paramSessionId) {
+      setSessionId(paramSessionId);
     } else {
-      // Always generate a new session ID for each page load
-      // This ensures that logged-in users get fresh conversations every time
-      const paramSessionId = urlParams.get('sessionId');
-      
-      if (paramSessionId) {
-        setSessionId(paramSessionId);
-      } else {
-        // Generate a new session ID - always fresh for each page load
-        const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        setSessionId(newSessionId);
-      }
+      // Generate a new session ID - always fresh for each page load
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setSessionId(newSessionId);
     }
 
     // Set iframe-friendly styling when embedded
