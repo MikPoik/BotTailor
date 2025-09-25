@@ -370,7 +370,14 @@ ${getQuestionTypeInstructions(currentQuestion)}
     // Create a copy of options and add "Other" option if allowFreeChoice is enabled
     let effectiveOptions = [...currentQuestion.options];
     if (currentQuestion.allowFreeChoice) {
-      effectiveOptions.push({ id: "other", text: "Other", action: "select" });
+      // Check if "Other" option already exists to avoid duplicates
+      const hasOtherOption = effectiveOptions.some(option => 
+        option.text?.toLowerCase() === "other" || 
+        option.id?.toLowerCase() === "other"
+      );
+      if (!hasOtherOption) {
+        effectiveOptions.push({ id: "other", text: "Other", action: "select" });
+      }
     }
     
     context += `
