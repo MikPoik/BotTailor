@@ -253,7 +253,7 @@ Previous conversations about other surveys are irrelevant to this new survey.
         const indexedId = `question_${index}`;
         const qKey = `q${index}`;
         let response = responses[indexedId] || responses[question.id] || responses[qKey] || "No response";
-        
+
         // Format complex response objects properly
         if (typeof response === 'object' && response !== null) {
           if (response.rating) {
@@ -267,7 +267,7 @@ Previous conversations about other surveys are irrelevant to this new survey.
             response = JSON.stringify(response);
           }
         }
-        
+
         return `Q${index + 1}: ${question.text}\nA${index + 1}: ${response}`;
       })
       .join("\n\n");
@@ -316,7 +316,7 @@ After providing the personalized summary, present the contact form using this st
 🚨 **CRITICAL REQUIREMENTS:**
 - Replace [YOUR PERSONALIZED SUMMARY...] with actual analysis of user's responses
 - Provide specific service recommendations based on their answers
-- Use the survey language (Finnish in this case) for all text
+- Use the same language as the survey questions for all text
 - Include the contact form as the final step` : ''}
 
 **🔴 COMPLETION CONTEXT REMINDER:**
@@ -384,26 +384,26 @@ ${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: ${(
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
     const menuType = getMenuTypeForQuestion(currentQuestion);
-    
+
     // Check for existing "Other" option and prepare effective options
     let effectiveOptions = [...currentQuestion.options];
     let hasExistingOther = false;
     let finalOptionCount = effectiveOptions.length;
-    
+
     if (currentQuestion.allowFreeChoice) {
       // Check if there's already an "Other" option (by text)
       hasExistingOther = effectiveOptions.some(option => 
         option.text?.toLowerCase().trim() === 'other' ||
         option.text?.toLowerCase().includes('other')
       );
-      
+
       // If no existing "Other" option, we'll add one (so +1 to count)
       // If there's already an "Other" option, we'll replace it (so same count)
       if (!hasExistingOther) {
         finalOptionCount = effectiveOptions.length + 1;
       }
     }
-    
+
     context += `
 **OPTIONS (MUST PRESENT AS ${menuType.toUpperCase()})**
 `;
@@ -489,7 +489,7 @@ This is a required text question. Present it as a text bubble and wait for user 
           formattedAnswer = JSON.stringify(answer);
         }
       }
-      
+
       // Handle indexed question IDs (question_0, question_1, etc.)
       const indexMatch = qId.match(/^question_(\d+)$/);
       if (indexMatch) {
