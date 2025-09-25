@@ -35,6 +35,22 @@ Phase 3: Execution
 - Fix the pattern, not just the instance
 - Always prefer dynamic solutions instead of hardcoded patterns, for example keyword string matching
 
+**LANGUAGE-AGNOSTIC IMPLEMENTATION REQUIREMENTS:**
+- NEVER use hardcoded English text patterns, keywords, or language-specific detection logic
+- NEVER implement string matching based on specific language words (e.g., "would you like to", "yes", "no", etc.)
+- ALWAYS use structural patterns, metadata, or configuration-driven approaches instead
+- ALWAYS design systems that work regardless of the content language
+- When detecting user intent, use:
+  - Metadata flags and structured data
+  - Configuration parameters
+  - Pattern recognition based on structure, not language
+  - AI/LLM analysis for language-independent intent detection
+- Replace hardcoded keyword lists with:
+  - Configurable pattern definitions
+  - AI-powered intent classification
+  - Structural analysis (punctuation, formatting, etc.)
+  - Metadata-driven logic flows
+
 Phase 4: Verification
 - When HMR confirms no errors -> SUCCESS
 

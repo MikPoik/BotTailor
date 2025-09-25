@@ -109,37 +109,39 @@ function extractExpectations(bubbles: any[]): DynamicContentExpectation | null {
 
 /**
  * Infer expectations from content patterns when not explicitly declared
+ * Uses language-agnostic structural analysis instead of hardcoded keywords
  */
 function inferExpectationsFromContent(bubbles: any[]): DynamicContentExpectation | null {
-  // Look for patterns that suggest interactive content is coming
+  // Look for structural patterns that suggest interactive content is coming
   const textBubbles = bubbles.filter(b => b.messageType === 'text');
   
   for (const bubble of textBubbles) {
-    const content = (bubble.content || '').toLowerCase();
+    const content = (bubble.content || '');
     
-    // Patterns that suggest menu options are coming
-    if (content.includes('would you like to') && content.includes(':')) {
+    // Pattern: Question ending with colon (suggests options coming)
+    if (content.includes('?') && content.trim().endsWith(':')) {
       return {
-        expectedMenuOptions: 3, // Common pattern: services, pricing, contact
+        expectedMenuOptions: 3, // Common pattern for choice questions
         contentIntent: 'interactive_menu',
         completionRequired: true
       };
     }
     
-    // Patterns that suggest quick replies
-    if (content.includes('yes') && content.includes('no')) {
+    // Pattern: Multiple question marks or choice indicators
+    const questionMarks = (content.match(/\?/g) || []).length;
+    if (questionMarks >= 2) {
       return {
         expectedQuickReplies: 2,
-        contentIntent: 'yes_no_choice',
+        contentIntent: 'multiple_choice',
         completionRequired: true
       };
     }
     
-    // Help/support patterns
-    if (content.includes('help') && (content.includes('with') || content.includes('about'))) {
+    // Pattern: Content ending with colon suggests list/menu follows
+    if (content.trim().endsWith(':') && content.length > 20) {
       return {
-        expectedMenuOptions: 4, // Common help categories
-        contentIntent: 'help_menu',
+        expectedMenuOptions: 4,
+        contentIntent: 'list_menu',
         completionRequired: true
       };
     }
@@ -268,17 +270,21 @@ function checkForTruncation(bubbles: any[], result: DynamicContentValidationResu
 }
 
 /**
- * Check for incomplete interactive patterns
+ * Check for incomplete interactive patterns using language-agnostic structural analysis
  */
 function checkInteractivePatterns(bubbles: any[], result: DynamicContentValidationResult): void {
-  // Pattern: text mentions options but no menu follows
+  // Pattern: text with choice indicators but no interactive element follows
   for (let i = 0; i < bubbles.length - 1; i++) {
     const bubble = bubbles[i];
     if (bubble.messageType === 'text' && bubble.content) {
-      const content = bubble.content.toLowerCase();
+      const content = bubble.content;
       
-      // Mentions choices but no interactive element follows
-      if ((content.includes('would you like to') || content.includes('choose') || content.includes('select')) &&
+      // Structural patterns that suggest choices (language-agnostic)
+      const hasQuestionWithColon = content.includes('?') && content.includes(':');
+      const hasMultipleQuestions = (content.match(/\?/g) || []).length >= 2;
+      const endsWithColon = content.trim().endsWith(':');
+      
+      if ((hasQuestionWithColon || hasMultipleQuestions || endsWithColon) &&
           !hasInteractiveElementAfter(bubbles, i)) {
         result.warnings.push(`Text bubble suggests interactive choices but no menu/quickreplies found after it`);
       }
