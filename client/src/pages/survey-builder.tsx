@@ -335,7 +335,7 @@ export default function SurveyBuilderPage() {
   const handleUpdateQuestion = (surveyId: number, questionIndex: number, updates: Partial<SurveyQuestion>) => {
     if (!selectedSurvey) return;
 
-    console.log(`Updating question ${questionIndex} with:`, updates);
+    
 
     const currentConfig = getSurveyConfig(selectedSurvey);
     const updatedQuestions = currentConfig.questions.map((q: SurveyQuestion, index: number) =>
@@ -347,7 +347,7 @@ export default function SurveyBuilderPage() {
       questions: updatedQuestions,
     };
 
-    console.log('Updated survey config:', updatedConfig);
+
 
     // Optimistically update the selected survey state
     const optimisticUpdatedSurvey = {
@@ -724,10 +724,10 @@ export default function SurveyBuilderPage() {
                                             size="sm"
                                             onClick={async () => {
                                               if (question.options && question.options.length > 2) {
-                                                console.log(`Deleting option ${optionIndex} from question ${index}. Current options:`, question.options);
+                                                //console.log(`Deleting option ${optionIndex} from question ${index}. Current options:`, question.options);
 
                                                 const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
-                                                console.log('Updated options after deletion:', updatedOptions);
+                                                //console.log('Updated options after deletion:', updatedOptions);
 
                                                 // Clear local state for deleted option and adjust indices
                                                 setLocalOptionTexts(prev => {
