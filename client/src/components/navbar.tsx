@@ -11,13 +11,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bot, LogOut, Settings, User, Menu, X, CreditCard } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const isMobile = useIsMobile();
+  const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -63,7 +64,7 @@ export function Navbar() {
             <div className="flex items-center space-x-4">
               {isAuthenticated && (
                 <>
-                  <Button asChild>
+                  <Button variant={location === "/dashboard" ? "default" : "outline"} asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </Button>
                   <Button variant="ghost" asChild>
@@ -174,10 +175,14 @@ export function Navbar() {
       {/* Mobile Menu */}
       {isMobile && isMenuOpen && (
         <div className="border-t bg-background/95 backdrop-blur">
-          <div className="container mx-auto py-4 space-y-3">
+          <div className="container mx-auto px-4 py-4 space-y-3">
             {isAuthenticated ? (
               <>
-                <Button asChild className="w-full justify-start mb-2">
+                <Button 
+                  variant={location === "/dashboard" ? "default" : "outline"} 
+                  asChild 
+                  className="w-full justify-start mb-2"
+                >
                   <Link
                     href="/dashboard"
                     onClick={closeMenu}
