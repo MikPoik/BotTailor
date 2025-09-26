@@ -59,17 +59,24 @@ export function Navbar() {
         {/* Spacer to push content to center and right */}
         <div className="flex flex-1 items-center justify-center">
           {/* Desktop Navigation - Centered */}
-          {!isMobile && isAuthenticated && (
+          {!isMobile && (
             <div className="flex items-center space-x-4">
               <Button variant="ghost" asChild>
                 <Link href="/docs">Documentation</Link>
               </Button>
               <Button variant="ghost" asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/pricing">Pricing</Link>
               </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/subscription">Subscription</Link>
-              </Button>
+              {isAuthenticated && (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link href="/subscription">Subscription</Link>
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -143,7 +150,7 @@ export function Navbar() {
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
-            
+
             {isAuthenticated ? (
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user?.profileImageUrl || ""} alt={user?.email || ""} />
@@ -226,6 +233,20 @@ export function Navbar() {
                   onClick={closeMenu}
                 >
                   Home
+                </Link>
+                <Link
+                  href="/docs"
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Documentation
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Pricing
                 </Link>
                 <a
                   href="/api/login"

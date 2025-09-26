@@ -86,6 +86,7 @@ function AuthenticatedRouter() {
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
           <Route path="/subscription" component={Subscription} />
+          <Route path="/pricing" component={lazy(() => import("./pages/pricing"))} />
           <Route path="/docs" component={Docs} />
           <Route path="/support" component={Docs} />
           <Route component={NotFound} />
