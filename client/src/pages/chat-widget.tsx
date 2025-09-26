@@ -17,6 +17,12 @@ export default function ChatWidgetPage() {
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     setSessionId(newSessionId);
 
+    // Clear React Query cache to ensure fresh chat sessions
+    // This prevents previous conversations from being loaded
+    import('@/lib/queryClient').then(({ queryClient }) => {
+      queryClient.clear();
+    });
+
     // Set iframe-friendly styling when embedded
     if (embedded) {
       document.body.style.margin = '0';
