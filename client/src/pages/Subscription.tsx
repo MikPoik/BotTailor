@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Loader2, Crown, Zap, Rocket, X, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import ChatWidget from "@/components/chat/chat-widget";
+import { useState, useEffect } from "react";
 
 interface SubscriptionPlan {
   id: number;
@@ -44,6 +46,7 @@ const PLAN_COLORS = {
 export default function Subscription() {
   const { toast, dismiss } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
+  const [sessionId, setSessionId] = useState<string>("");
 
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
@@ -54,6 +57,21 @@ export default function Subscription() {
   const { data: currentSubscription, isLoading: subscriptionLoading } = useQuery<UserSubscription>({
     queryKey: ["/api/subscription/current"],
   });
+
+  // Fetch the site default chatbot for chat widget
+  const { data: defaultChatbot } = useQuery({
+    queryKey: ['/api/public/default-chatbot'],
+    enabled: true,
+    retry: false,
+  });
+
+  useEffect(() => {
+    // Generate session ID only once per component mount
+    if (!sessionId) {
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setSessionId(newSessionId);
+    }
+  }, [sessionId]);
 
   // Create checkout session mutation
   const createCheckoutMutation = useMutation({
@@ -424,6 +442,18 @@ export default function Subscription() {
       <div className="text-center mt-12 text-sm text-muted-foreground">
         <p>Cancel anytime. No hidden fees.</p>
       </div>
+
+      {/* Chat Widget */}
+      {sessionId && defaultChatbot && defaultChatbot.isActive && (
+        <ChatWidget 
+          sessionId={sessionId}
+          position="bottom-right"
+          primaryColor={defaultChatbot.homeScreenConfig?.theme?.primaryColor || "#3b82f6"}
+          backgroundColor={defaultChatbot.homeScreenConfig?.theme?.backgroundColor || "#ffffff"}
+          textColor={defaultChatbot.homeScreenConfig?.theme?.textColor || "#1f2937"}
+          chatbotConfig={defaultChatbot}
+        />
+      )}
     </div>
   );
 }

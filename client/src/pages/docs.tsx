@@ -6,8 +6,20 @@ import { Separator } from "@/components/ui/separator";
 import { Bot, MessageSquare, Settings, Globe, Palette, BarChart3, Code, ExternalLink, Copy, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import ChatWidget from "@/components/chat/chat-widget";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Docs() {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string>("");
+
+  // Fetch the site default chatbot for chat widget
+  const { data: defaultChatbot } = useQuery({
+    queryKey: ['/api/public/default-chatbot'],
+    enabled: true,
+    retry: false,
+  });
+
   useEffect(() => {
     // Set page title and meta description for SEO
     document.title = "Documentation - BotTailor | Complete Guide to AI Chatbot Creation";
@@ -16,8 +28,13 @@ export default function Docs() {
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Complete guide to creating, customizing, and deploying AI chatbots with BotTailor. Learn embedding, configuration, and best practices.');
     }
-  }, []);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+    // Generate session ID only once per component mount
+    if (!sessionId) {
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setSessionId(newSessionId);
+    }
+  }, [sessionId]);
 
   const copyToClipboard = (text: string, codeId: string) => {
     navigator.clipboard.writeText(text);
@@ -386,6 +403,18 @@ export default function Docs() {
 
         </div>
       </section>
+
+      {/* Chat Widget */}
+      {sessionId && defaultChatbot && defaultChatbot.isActive && (
+        <ChatWidget 
+          sessionId={sessionId}
+          position="bottom-right"
+          primaryColor={defaultChatbot.homeScreenConfig?.theme?.primaryColor || "#3b82f6"}
+          backgroundColor={defaultChatbot.homeScreenConfig?.theme?.backgroundColor || "#ffffff"}
+          textColor={defaultChatbot.homeScreenConfig?.theme?.textColor || "#1f2937"}
+          chatbotConfig={defaultChatbot}
+        />
+      )}
     </div>
   );
 }
