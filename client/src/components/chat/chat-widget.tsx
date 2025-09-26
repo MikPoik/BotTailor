@@ -145,13 +145,7 @@ export default function ChatWidget({
           timeouts.push(timeout);
         });
 
-        // Hide all messages together after the last message has been visible for 8 seconds
-        const lastMessageDelay = (initialMessages.length - 1) * 2000;
-        const hideAllTimeout = setTimeout(() => {
-          setVisibleMessages([]);
-        }, lastMessageDelay + 8000);
-
-        timeouts.push(hideAllTimeout);
+        // Note: Removed auto-hide timeout - users must close messages manually
 
         // Mark initial messages as shown for this browser session
         safeSessionStorage.setItem(cacheKey, 'true');

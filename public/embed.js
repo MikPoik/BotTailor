@@ -837,12 +837,7 @@
           individualBubble.classList.add('visible');
         }, 3000 + (index * 1000));
 
-        // Auto-hide after showing all messages (only for the last message)
-        if (index === messages.length - 1) {
-          setTimeout(() => {
-            this.hideAllInitialMessages();
-          }, 3000 + (messages.length * 1000) + 8000);
-        }
+        // Note: Removed auto-hide timeout - users must close messages manually
       });
     },
 
@@ -854,15 +849,7 @@
         messageBubble.style.transform = 'translateY(0) scale(1)';
         messageBubble.classList.add('visible');
 
-        // Auto-hide after 10 seconds unless user interacts
-        setTimeout(() => {
-          if (messageBubble.classList.contains('visible')) {
-            messageBubble.style.opacity = '0';
-            messageBubble.style.visibility = 'hidden';
-            messageBubble.style.transform = 'translateY(10px) scale(0.95)';
-            messageBubble.classList.remove('visible');
-          }
-        }, 10000);
+        // Note: Removed auto-hide timeout - users must close message manually
       }, 3000);
     },
 
