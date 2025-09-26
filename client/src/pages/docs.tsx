@@ -8,10 +8,12 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Docs() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>("");
+  const { isAuthenticated } = useAuth();
 
   // Fetch the site default chatbot for chat widget
   const { data: defaultChatbot } = useQuery({
@@ -72,9 +74,15 @@ export default function Docs() {
               <p className="text-muted-foreground mb-4">
                 Start by creating your first AI chatbot with our intuitive setup wizard.
               </p>
-              <Button size="sm" asChild>
-                <Link href="/chatbots/new">Create Chatbot</Link>
-              </Button>
+              {isAuthenticated ? (
+                <Button size="sm" asChild>
+                  <Link href="/chatbots/new">Create Chatbot</Link>
+                </Button>
+              ) : (
+                <Button size="sm" asChild>
+                  <a href="/api/login">Sign In to Create</a>
+                </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -89,9 +97,15 @@ export default function Docs() {
               <p className="text-muted-foreground mb-4">
                 Add your content, customize the appearance, and train your chatbot.
               </p>
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/dashboard">Go to Dashboard</Link>
-              </Button>
+              {isAuthenticated ? (
+                <Button size="sm" variant="outline" asChild>
+                  <Link href="/dashboard">Go to Dashboard</Link>
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" asChild>
+                  <a href="/api/login">Sign In to Access</a>
+                </Button>
+              )}
             </CardContent>
           </Card>
 
