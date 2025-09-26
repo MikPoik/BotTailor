@@ -5,23 +5,52 @@ export default function ChatWidgetPage() {
   const [sessionId, setSessionId] = useState<string>("");
   const [isEmbedded, setIsEmbedded] = useState<boolean>(false);
 
+  // Safe sessionStorage access that handles sandboxed environments
+  const safeSessionStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return sessionStorage.getItem(key);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, using session-based fallback');
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        sessionStorage.setItem(key, value);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, skipping storage');
+      }
+    }
+  };
+
   useEffect(() => {
     // Check if we're in embedded mode
     const urlParams = new URLSearchParams(window.location.search);
     const embedded = urlParams.get('embedded') === 'true';
     setIsEmbedded(embedded);
 
-    // Generate session ID only once per page load
-    // For embedded mode, use injected sessionId if available, otherwise generate fresh
+    // Session ID handling with sessionStorage persistence for development mode
     const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     let newSessionId: string;
     
     if (embedded && injectedConfig?.sessionId) {
-      // Use session ID from server injection (already optimized)
+      // Use session ID from server injection (already optimized for embedded mode)
       newSessionId = injectedConfig.sessionId;
+      console.log('[CHAT-WIDGET] Using server-injected session ID:', newSessionId);
     } else {
-      // Generate fresh session ID for development mode
-      newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Development mode: Use sessionStorage for session persistence across page refreshes
+      const storageKey = 'chat-session-id-widget';
+      const storedSessionId = safeSessionStorage.getItem(storageKey);
+      
+      if (storedSessionId) {
+        newSessionId = storedSessionId;
+        console.log('[CHAT-WIDGET] Retrieved session ID from sessionStorage:', newSessionId);
+      } else {
+        newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        safeSessionStorage.setItem(storageKey, newSessionId);
+        console.log('[CHAT-WIDGET] Generated and stored new session ID:', newSessionId);
+      }
     }
     
     setSessionId(newSessionId);
