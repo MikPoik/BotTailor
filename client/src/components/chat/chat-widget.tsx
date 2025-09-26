@@ -451,12 +451,22 @@ export default function ChatWidget({
       console.warn('sessionStorage not accessible, session refresh may not persist');
     }
     
-    // Clear query cache to force fresh data
+    // Clear query cache for old session
     queryClient.invalidateQueries({ queryKey: ['/api/chat/session'] });
     queryClient.invalidateQueries({ queryKey: ['/api/chat', providedSessionId, 'messages'] });
     
-    // Force page reload to reinitialize with new session
-    window.location.reload();
+    // Remove old session data to force fresh cache
+    queryClient.removeQueries({ queryKey: ['/api/chat', providedSessionId] });
+    
+    // Re-initialize the session with new ID
+    if (initializeSession) {
+      // Small delay to ensure state updates are processed
+      setTimeout(() => {
+        initializeSession();
+      }, 100);
+    }
+    
+    console.log(`[REFRESH] Chat history cleared, new session started: ${newSessionId}`);
   };
 
 
