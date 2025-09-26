@@ -35,7 +35,18 @@ export default function Contact() {
   const { sessionId } = useGlobalChatSession();
 
   // Fetch the site default chatbot for chat widget
-  const { data: defaultChatbot } = useQuery({
+  const { data: defaultChatbot } = useQuery<{
+    id: number;
+    isActive: boolean;
+    homeScreenConfig?: {
+      theme?: {
+        primaryColor?: string;
+        backgroundColor?: string;
+        textColor?: string;
+      };
+    };
+    [key: string]: any;
+  }>({
     queryKey: ['/api/public/default-chatbot'],
     enabled: true,
     retry: false,
