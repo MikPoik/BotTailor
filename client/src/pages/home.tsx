@@ -53,13 +53,23 @@ export default function Home() {
       return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     };
 
-    const storedSessionId = localStorage.getItem('home_chat_session_id');
-    if (storedSessionId) {
-      setSessionId(storedSessionId);
-    } else {
-      const newSessionId = generateSessionId();
-      localStorage.setItem('home_chat_session_id', newSessionId);
-      setSessionId(newSessionId);
+    // Always generate a fresh session ID for each page visit
+    // This ensures users get fresh conversations every time they reload the page
+    const newSessionId = generateSessionId();
+    console.log(`[HOME] Generated fresh session ID: ${newSessionId}`);
+    setSessionId(newSessionId);
+    
+    // Clear any previously stored session ID to prevent persistence
+    try {
+      localStorage.removeItem('home_chat_session_id');
+      // Also clear other chat-related localStorage keys
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('chat') || key.includes('session') || key.includes('message')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.warn('[HOME] Could not access localStorage:', error);
     }
   }, []);
 

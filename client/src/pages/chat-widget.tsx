@@ -30,8 +30,17 @@ export default function ChatWidgetPage() {
       
       // Also clear any localStorage that might persist session data
       try {
-        Object.keys(localStorage).forEach(key => {
-          if (key.includes('chat') || key.includes('session') || key.includes('message')) {
+        // Clear specific keys that could persist chat sessions
+        const keysToRemove = [
+          'home_chat_session_id',
+          'chat-initial-messages-shown-4',
+          ...Object.keys(localStorage).filter(key => 
+            key.includes('chat') || key.includes('session') || key.includes('message')
+          )
+        ];
+        
+        keysToRemove.forEach(key => {
+          if (localStorage.getItem(key)) {
             console.log(`[CHAT WIDGET] Clearing localStorage key: ${key}`);
             localStorage.removeItem(key);
           }
