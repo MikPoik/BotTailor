@@ -606,11 +606,10 @@ export default function ChatWidget({
         >
           <button
             onClick={() => setVisibleMessages([])}
-            className="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition-colors duration-200 flex items-center gap-2 text-xs font-medium"
+            className="bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-800 rounded-full p-2 shadow-lg border border-gray-200 transition-colors duration-200"
             title="Hide all messages"
           >
-            <X className="w-3 h-3" />
-            Hide all
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -640,20 +639,11 @@ export default function ChatWidget({
               }}
             >
               <div className="flex items-start gap-2">
-                <div className="flex-1 pr-1">
+                <div className="flex-1">
                   <p className="text-gray-800 text-sm leading-relaxed font-normal">
                     {initialMessages[messageIndex]}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    dismissMessage(messageIndex);
-                  }}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 -mt-1 -mr-1"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
 
               {/* Arrow pointing to chat bubble */}

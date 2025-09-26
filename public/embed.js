@@ -788,11 +788,10 @@
         globalCloseBtn.style.zIndex = '46';
 
         globalCloseBtn.innerHTML = `
-          <button class="chatwidget-global-close-btn" style="background: #374151; color: white; border: none; cursor: pointer; border-radius: 50px; padding: 8px 12px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease; hover:background: #4b5563;" title="Hide all messages">
-            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+          <button class="chatwidget-global-close-btn" style="background: white; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; border-radius: 50%; padding: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease;" title="Hide all messages" onmouseover="this.style.background='#f9fafb'; this.style.color='#374151';" onmouseout="this.style.background='white'; this.style.color='#6b7280';">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
             </svg>
-            Hide all
           </button>
         `;
 
@@ -841,11 +840,6 @@
             <div class="chatwidget-speech-bubble" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
               <p class="chatwidget-message-main" style="margin: 0; color: #333; line-height: 1.4;">${message.content || message}</p>
             </div>
-            <button class="chatwidget-close-btn" style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; color: #666; hover:background: #f0f0f0;" data-index="${index}">
-              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
           </div>
         `;
 
@@ -853,19 +847,10 @@
         const bottomOffset = 80 + (index * 50); // 80px base + 50px per bubble
         individualBubble.style.bottom = `${bottomOffset}px`;
 
-        // Add event listeners for the individual bubble
-        const closeBtn = individualBubble.querySelector('.chatwidget-close-btn');
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.hideInitialMessage(index);
-        });
-
-        // Make the bubble clickable to open chat (but not the close button)
+        // Make the bubble clickable to open chat
         individualBubble.addEventListener('click', (e) => {
-          if (!closeBtn.contains(e.target)) {
-            const bubble = document.getElementById('chatwidget-bubble');
-            if (bubble) bubble.click();
-          }
+          const bubble = document.getElementById('chatwidget-bubble');
+          if (bubble) bubble.click();
         });
 
         container.appendChild(individualBubble);
