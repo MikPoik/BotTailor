@@ -13,15 +13,9 @@ export default function ChatWidgetPage() {
 
     // Always generate a new session ID for each page load
     // This ensures that users get fresh conversations every time
-    const paramSessionId = urlParams.get('sessionId');
-    
-    if (paramSessionId) {
-      setSessionId(paramSessionId);
-    } else {
-      // Generate a new session ID - always fresh for each page load
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setSessionId(newSessionId);
-    }
+    // Don't use URL sessionId parameter - always create fresh sessions
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    setSessionId(newSessionId);
 
     // Set iframe-friendly styling when embedded
     if (embedded) {
