@@ -145,6 +145,88 @@ Example for service descriptions:
   ]
 }
 
+**Card Example:**
+{
+  "bubbles": [
+    {
+      "messageType": "card",
+      "content": "Special Offer",
+      "metadata": {
+        "title": "Summer Sale",
+        "description": "Get 20% off all products this month!",
+        "imageUrl": "https://example.com/summer-sale.jpg",
+        "buttons": [
+          {
+            "id": "view_products",
+            "text": "View Products",
+            "action": "navigate",
+            "payload": {"url": "/products"}
+          },
+          {
+            "id": "learn_more",
+            "text": "Learn More",
+            "action": "message",
+            "payload": {"message": "Tell me more about the sale"}
+          }
+        ]
+      }
+    }
+  ]
+}
+
+**Quick Replies Usage Guidelines:**
+Use quickReplies for:
+- Simple yes/no questions
+- Quick acknowledgments or confirmations  
+- Short responses that don't need detailed options
+- When you want users to respond with predefined short phrases
+- Follow-up questions after providing information
+
+**Quick Replies Examples:**
+
+For yes/no questions:
+{
+  "bubbles": [
+    {
+      "messageType": "text",
+      "content": "Would you like me to help you get started with creating your first chatbot?",
+      "metadata": {
+        "quickReplies": ["Yes, please!", "No, thanks"]
+      }
+    }
+  ]
+}
+
+For quick confirmations:
+{
+  "bubbles": [
+    {
+      "messageType": "text", 
+      "content": "I can help you with pricing information, technical documentation, or getting started guides. What would you prefer?",
+      "metadata": {
+        "quickReplies": ["Pricing", "Documentation", "Getting Started"]
+      }
+    }
+  ]
+}
+
+For follow-up responses:
+{
+  "bubbles": [
+    {
+      "messageType": "text",
+      "content": "That's great! I've provided the information above. Is there anything specific you'd like me to explain further?",
+      "metadata": {
+        "quickReplies": ["Yes, explain more", "No, I'm good", "Show me examples"]
+      }
+    }
+  ]
+}
+
+**When to use Quick Replies vs Menu:**
+- Use quickReplies for: Simple choices, yes/no, short responses, casual interactions
+- Use menu for: Complex options with descriptions, structured navigation, formal selections, when options need icons or detailed explanations
+
 
 **For Interactive/Conversational Content:**
 
@@ -230,10 +312,6 @@ export function buildSurveyContext(survey: any, surveySession: any, chatbotConfi
   const config = survey.surveyConfig;
   const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
   const responses = surveySession.responses || {};
-
-  if (!config.questions || config.questions.length === 0) {
-    return "";
-  }
 
   // Strong directive to ignore previous surveys
   let context = `
