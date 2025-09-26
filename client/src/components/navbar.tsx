@@ -61,15 +61,6 @@ export function Navbar() {
           {/* Desktop Navigation - Centered */}
           {!isMobile && (
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" asChild>
-                <Link href="/docs">Documentation</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/pricing">Pricing</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/contact">Contact us</Link>
-              </Button>
               {isAuthenticated && (
                 <>
                   <Button asChild>
@@ -80,6 +71,16 @@ export function Navbar() {
                   </Button>
                 </>
               )}
+              <Button variant="ghost" asChild>
+                <Link href="/docs">Documentation</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/pricing">Pricing</Link>
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/contact">Contact us</Link>
+              </Button>
+
             </div>
           )}
         </div>
