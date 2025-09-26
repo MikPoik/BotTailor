@@ -45,7 +45,41 @@ const PLAN_COLORS = {
 export default function Subscription() {
   const { toast, dismiss } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
-  const [sessionId, setSessionId] = useState<string>("");
+
+  // Safe sessionStorage access that handles sandboxed environments
+  const safeSessionStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return sessionStorage.getItem(key);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, using session-based fallback');
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        sessionStorage.setItem(key, value);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, skipping storage');
+      }
+    }
+  };
+
+  // Generate or retrieve session ID from sessionStorage
+  const [sessionId] = useState(() => {
+    const storageKey = 'chat-session-id-subscription';
+    const storedSessionId = safeSessionStorage.getItem(storageKey);
+
+    if (storedSessionId) {
+      console.log("[SUBSCRIPTION] Retrieved session ID from storage:", storedSessionId);
+      return storedSessionId;
+    }
+
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    safeSessionStorage.setItem(storageKey, newSessionId);
+    console.log("[SUBSCRIPTION] Generated and stored new session ID:", newSessionId);
+    return newSessionId;
+  });
 
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
@@ -63,14 +97,6 @@ export default function Subscription() {
     enabled: true,
     retry: false,
   });
-
-  useEffect(() => {
-    // Generate session ID only once per component mount
-    if (!sessionId) {
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setSessionId(newSessionId);
-    }
-  }, [sessionId]);
 
   // Create checkout session mutation
   const createCheckoutMutation = useMutation({

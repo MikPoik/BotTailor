@@ -16,7 +16,7 @@ interface ChatWidgetProps {
 }
 
 export default function ChatWidget({ 
-  sessionId, 
+  sessionId: providedSessionId, 
   position = 'bottom-right',
   primaryColor = '#2563eb',
   backgroundColor = '#ffffff',
@@ -69,8 +69,49 @@ export default function ChatWidget({
     }
   }, [chatbotConfig]);
 
-  // Safe sessionStorage access for initial message persistence
+  // Safe sessionStorage access that handles sandboxed environments
   const safeSessionStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return sessionStorage.getItem(key);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, using session-based fallback');
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        sessionStorage.setItem(key, value);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, skipping storage');
+      }
+    }
+  };
+
+  // Generate or retrieve session ID from sessionStorage
+  const getSessionId = () => {
+    if (providedSessionId) {
+      return providedSessionId;
+    }
+
+    const storageKey = `chat-session-id-${chatbotConfig?.id || 'default'}`;
+    const storedSessionId = safeSessionStorage.getItem(storageKey);
+
+    if (storedSessionId) {
+      console.log("[CHAT WIDGET] Retrieved session ID from storage:", storedSessionId);
+      return storedSessionId;
+    }
+
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    safeSessionStorage.setItem(storageKey, newSessionId);
+    console.log("[CHAT WIDGET] Generated and stored new session ID:", newSessionId);
+    return newSessionId;
+  };
+
+  const sessionId = getSessionId();
+
+  // Safe sessionStorage access for initial message persistence
+  const safeSessionStorageForMessages = {
     getItem: (key: string): string | null => {
       if (isEmbedded) return null; // Skip sessionStorage in embedded mode
       try {
@@ -105,7 +146,7 @@ export default function ChatWidget({
       const dismissedKey = `chat-initial-messages-dismissed-${messagesHash}`;
 
       // Check if initial messages were manually dismissed (default is false/not dismissed)
-      const areDismissed = safeSessionStorage.getItem(dismissedKey) === 'true';
+      const areDismissed = safeSessionStorageForMessages.getItem(dismissedKey) === 'true';
 
       if (!areDismissed) {
         const timeouts: NodeJS.Timeout[] = [];
@@ -424,9 +465,9 @@ export default function ChatWidget({
     if (remainingMessages.length === 0) {
       const messagesHash = chatbotConfig?.id ? 
         `${chatbotConfig.id}_${initialMessages.join('|')}` : 
-        initialInitialMessages.join('|'); // Corrected variable name here to initialInitialMessages
+        initialMessages.join('|'); // Corrected variable name here to initialInitialMessages
       const dismissedKey = `chat-initial-messages-dismissed-${messagesHash}`;
-      safeSessionStorage.setItem(dismissedKey, 'true');
+      safeSessionStorageForMessages.setItem(dismissedKey, 'true');
     }
   };
 
@@ -595,7 +636,7 @@ export default function ChatWidget({
                 `${chatbotConfig.id}_${initialMessages.join('|')}` : 
                 initialMessages.join('|');
               const dismissedKey = `chat-initial-messages-dismissed-${messagesHash}`;
-              safeSessionStorage.setItem(dismissedKey, 'true');
+              safeSessionStorageForMessages.setItem(dismissedKey, 'true');
             }}
             className="bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-800 rounded-full p-2 shadow-lg border border-gray-200 transition-colors duration-200"
             title="Hide all messages"

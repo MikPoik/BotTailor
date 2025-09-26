@@ -30,7 +30,40 @@ interface ChatbotConfig {
 }
 
 export default function Home() {
-  const [sessionId, setSessionId] = useState<string>("");
+  // Safe sessionStorage access that handles sandboxed environments
+  const safeSessionStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return sessionStorage.getItem(key);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, using session-based fallback');
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        sessionStorage.setItem(key, value);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, skipping storage');
+      }
+    }
+  };
+
+  // Generate or retrieve session ID from sessionStorage
+  const [sessionId] = useState(() => {
+    const storageKey = 'chat-session-id-home';
+    const storedSessionId = safeSessionStorage.getItem(storageKey);
+
+    if (storedSessionId) {
+      console.log("[HOME] Retrieved session ID from storage:", storedSessionId);
+      return storedSessionId;
+    }
+
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    safeSessionStorage.setItem(storageKey, newSessionId);
+    console.log("[HOME] Generated and stored new session ID:", newSessionId);
+    return newSessionId;
+  });
   const { isAuthenticated } = useAuth();
 
   // Always fetch the site default chatbot for consistency
@@ -44,19 +77,14 @@ export default function Home() {
     // Set page title and meta description dynamically - only once
     if (document.title !== "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants") {
       document.title = "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants";
-      
+
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
         metaDescription.setAttribute('content', 'Create intelligent, customizable AI chatbots for your website in minutes. Deploy anywhere with our powerful AI platform. No coding required - start free today!');
       }
     }
 
-    // Generate session ID only once per component mount
-    if (!sessionId) {
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      console.log('[HOME] Generated fresh session ID:', newSessionId);
-      setSessionId(newSessionId);
-    }
+    // The sessionId is now managed by useState and sessionStorage, so this useEffect block is no longer needed for sessionId generation.
   }, [sessionId]);
 
   return (
@@ -81,7 +109,7 @@ export default function Home() {
             Create intelligent, customizable chatbots that understand your business. 
             Deploy anywhere in minutes with our powerful AI platform.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             {isAuthenticated ? (
               <>
@@ -131,7 +159,7 @@ export default function Home() {
               Build chatbots that actually understand your customers and provide real value
             </p>
           </header>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto">
             <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
@@ -257,7 +285,7 @@ export default function Home() {
             Click the chat bubble below to start a conversation with our AI assistant. 
             See how natural and helpful AI-powered support can be.
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 mx-auto">
             <Card className="text-left">
               <CardHeader>
@@ -303,7 +331,7 @@ export default function Home() {
               Get answers to common questions about BotTailor AI chatbots
             </p>
           </header>
-          
+
           <div className="grid gap-6">
             <Card itemScope itemType="https://schema.org/Question">
               <CardHeader>

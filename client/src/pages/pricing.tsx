@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +34,40 @@ const PLAN_COLORS = {
 
 export default function Pricing() {
   const { isAuthenticated } = useAuth();
-  const [sessionId, setSessionId] = useState<string>("");
+  // Safe sessionStorage access that handles sandboxed environments
+  const safeSessionStorage = {
+    getItem: (key: string): string | null => {
+      try {
+        return sessionStorage.getItem(key);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, using session-based fallback');
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      try {
+        sessionStorage.setItem(key, value);
+      } catch (error) {
+        console.warn('sessionStorage not accessible, skipping storage');
+      }
+    }
+  };
+
+  // Generate or retrieve session ID from sessionStorage
+  const [sessionId] = useState(() => {
+    const storageKey = 'chat-session-id-pricing';
+    const storedSessionId = safeSessionStorage.getItem(storageKey);
+
+    if (storedSessionId) {
+      console.log("[PRICING] Retrieved session ID from storage:", storedSessionId);
+      return storedSessionId;
+    }
+
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    safeSessionStorage.setItem(storageKey, newSessionId);
+    console.log("[PRICING] Generated and stored new session ID:", newSessionId);
+    return newSessionId;
+  });
 
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
@@ -52,18 +84,13 @@ export default function Pricing() {
   useEffect(() => {
     // Set page title and meta description for SEO
     document.title = "Pricing - BotTailor | Affordable AI Chatbot Plans";
-    
+
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Choose the perfect AI chatbot plan for your business. Flexible pricing with powerful features starting free.');
     }
 
-    // Generate session ID only once per component mount
-    if (!sessionId) {
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setSessionId(newSessionId);
-    }
-  }, [sessionId]);
+  }, []);
 
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
