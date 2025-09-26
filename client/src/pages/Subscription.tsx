@@ -8,6 +8,7 @@ import { Check, Loader2, Crown, Zap, Rocket, X, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import ChatWidget from "@/components/chat/chat-widget";
+import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 
 interface SubscriptionPlan {
   id: number;
@@ -45,41 +46,8 @@ const PLAN_COLORS = {
 export default function Subscription() {
   const { toast, dismiss } = useToast();
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
-
-  // Safe sessionStorage access that handles sandboxed environments
-  const safeSessionStorage = {
-    getItem: (key: string): string | null => {
-      try {
-        return sessionStorage.getItem(key);
-      } catch (error) {
-        console.warn('sessionStorage not accessible, using session-based fallback');
-        return null;
-      }
-    },
-    setItem: (key: string, value: string): void => {
-      try {
-        sessionStorage.setItem(key, value);
-      } catch (error) {
-        console.warn('sessionStorage not accessible, skipping storage');
-      }
-    }
-  };
-
-  // Generate or retrieve session ID from sessionStorage
-  const [sessionId] = useState(() => {
-    const storageKey = 'chat-session-id-subscription';
-    const storedSessionId = safeSessionStorage.getItem(storageKey);
-
-    if (storedSessionId) {
-      console.log("[SUBSCRIPTION] Retrieved session ID from storage:", storedSessionId);
-      return storedSessionId;
-    }
-
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    safeSessionStorage.setItem(storageKey, newSessionId);
-    console.log("[SUBSCRIPTION] Generated and stored new session ID:", newSessionId);
-    return newSessionId;
-  });
+  // Use unified global chat session
+  const { sessionId } = useGlobalChatSession();
 
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
@@ -92,7 +60,18 @@ export default function Subscription() {
   });
 
   // Fetch the site default chatbot for chat widget
-  const { data: defaultChatbot } = useQuery({
+  const { data: defaultChatbot } = useQuery<{
+    id: number;
+    isActive: boolean;
+    homeScreenConfig?: {
+      theme?: {
+        primaryColor?: string;
+        backgroundColor?: string;
+        textColor?: string;
+      };
+    };
+    [key: string]: any;
+  }>({
     queryKey: ['/api/public/default-chatbot'],
     enabled: true,
     retry: false,

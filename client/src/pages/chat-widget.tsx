@@ -39,13 +39,13 @@ export default function ChatWidgetPage() {
       newSessionId = injectedConfig.sessionId;
       console.log('[CHAT-WIDGET] Using server-injected session ID:', newSessionId);
     } else {
-      // Development mode: Use sessionStorage for session persistence across page refreshes
-      const storageKey = 'chat-session-id-widget';
+      // Development mode: Use global session storage for consistency
+      const storageKey = 'global-chat-session-id';
       const storedSessionId = safeSessionStorage.getItem(storageKey);
       
       if (storedSessionId) {
         newSessionId = storedSessionId;
-        console.log('[CHAT-WIDGET] Retrieved session ID from sessionStorage:', newSessionId);
+        console.log('[CHAT-WIDGET] Retrieved session ID from global storage:', newSessionId);
       } else {
         newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         safeSessionStorage.setItem(storageKey, newSessionId);
