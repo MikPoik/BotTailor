@@ -28,6 +28,8 @@ export default function ChatWidget({
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [initialMessages, setInitialMessages] = useState<string[]>([]);
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
+  // Reactive session ID state that can be updated on refresh
+  const [currentSessionId, setCurrentSessionId] = useState(providedSessionId);
   const messageTimeouts = useRef<NodeJS.Timeout[]>([]);
   const queryClient = useQueryClient();
 
@@ -40,7 +42,7 @@ export default function ChatWidget({
   const chatbotConfigId = injectedConfig?.chatbotConfig?.id || chatbotConfig?.id;
 
   // Initialize chat data only when needed
-  const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(providedSessionId, chatbotConfigId);
+  const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(currentSessionId, chatbotConfigId);
 
   // Don't render widget if chatbot is inactive
   if (chatbotConfig && !chatbotConfig.isActive) {
@@ -453,10 +455,13 @@ export default function ChatWidget({
     
     // Clear query cache for old session
     queryClient.invalidateQueries({ queryKey: ['/api/chat/session'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/chat', providedSessionId, 'messages'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
     
     // Remove old session data to force fresh cache
-    queryClient.removeQueries({ queryKey: ['/api/chat', providedSessionId] });
+    queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId] });
+    
+    // Update the current session ID state to trigger re-renders
+    setCurrentSessionId(newSessionId);
     
     // Re-initialize the session with new ID
     if (initializeSession) {
@@ -472,10 +477,10 @@ export default function ChatWidget({
 
   // Initialize session for embedded chat when embedded mode is active and sessionId is available
   useEffect(() => {
-    if (isEmbedded && providedSessionId) {
+    if (isEmbedded && currentSessionId) {
       initializeSession();
     }
-  }, [isEmbedded, providedSessionId, initializeSession]);
+  }, [isEmbedded, currentSessionId, initializeSession]);
 
   // Render different interfaces based on conditions but all at the end
   // Mobile full-screen interface
@@ -532,7 +537,7 @@ export default function ChatWidget({
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
             <TabbedChatInterface 
-              sessionId={providedSessionId} 
+              sessionId={currentSessionId} 
               isMobile={true} 
               isPreloaded={!isSessionLoading && !isMessagesLoading}
               chatbotConfigId={chatbotConfigId}
@@ -598,7 +603,7 @@ export default function ChatWidget({
         {/* Chat content - takes remaining space */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <TabbedChatInterface 
-            sessionId={providedSessionId} 
+            sessionId={currentSessionId} 
             isMobile={false} 
             isPreloaded={!isSessionLoading && !isMessagesLoading}
             isEmbedded={true}
@@ -665,7 +670,7 @@ export default function ChatWidget({
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex, bubbleIndex) => {
         const messageBottomOffset = 80 + (bubbleIndex * 50);
-        const uniqueKey = `initial-message-${messageIndex}-${bubbleIndex}-${providedSessionId}`;
+        const uniqueKey = `initial-message-${messageIndex}-${bubbleIndex}-${currentSessionId}`;
         return (
           <div
             key={uniqueKey}
@@ -683,7 +688,7 @@ export default function ChatWidget({
               onClick={() => {
                 setIsOpen(true);
                 setHasNewMessage(false);
-                queryClient.invalidateQueries({ queryKey: ['/api/chat', providedSessionId, 'messages'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
               }}
             >
               <div className="flex items-start gap-2">
@@ -770,7 +775,7 @@ export default function ChatWidget({
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
             <TabbedChatInterface 
-              sessionId={providedSessionId}
+              sessionId={currentSessionId}
               isMobile={isMobile}
               isPreloaded={!isSessionLoading && !isMessagesLoading}
               chatbotConfigId={chatbotConfigId}
