@@ -866,10 +866,11 @@
         globalCloseBtn.style.opacity = '0';
         globalCloseBtn.style.visibility = 'hidden';
         globalCloseBtn.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)';
-        globalCloseBtn.style.zIndex = '46';
+        globalCloseBtn.style.zIndex = '1002';
+        globalCloseBtn.style.pointerEvents = 'none';
 
         globalCloseBtn.innerHTML = `
-          <button class="chatwidget-global-close-btn" style="background: white; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; border-radius: 50%; padding: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease;" onmouseover="this.style.background='#f9fafb'; this.style.color='#374151';" onmouseout="this.style.background='white'; this.style.color='#6b7280';">
+          <button class="chatwidget-global-close-btn" style="background: white; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; border-radius: 50%; padding: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease; pointer-events: auto;" onmouseover="this.style.background='#f9fafb'; this.style.color='#374151';" onmouseout="this.style.background='white'; this.style.color='#6b7280';">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
             </svg>
@@ -927,6 +928,7 @@
         // Calculate position for this bubble (stack them above the chat bubble)
         const bottomOffset = 80 + (index * 50); // 80px base + 50px per bubble
         individualBubble.style.bottom = `${bottomOffset}px`;
+        individualBubble.style.zIndex = '1001';
 
         // Make the bubble clickable to open chat
         individualBubble.addEventListener('click', (e) => {
