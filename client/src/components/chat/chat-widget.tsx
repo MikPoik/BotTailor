@@ -496,10 +496,10 @@ export default function ChatWidget({
         />
 
         {/* Mobile chat interface */}
-        <div className={`fixed inset-0 z-50 bg-white flex flex-col transition-transform duration-300 ease-out ${
+        <div className={`fixed inset-0 z-50 bg-white flex flex-col ${
           isClosing 
-            ? 'transform translate-y-full' 
-            : 'transform translate-y-0 animate-slideUp'
+            ? 'animate-slideDown' 
+            : 'animate-slideUp'
         }`}>
           {/* Mobile header */}
           <div 
