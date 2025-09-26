@@ -443,7 +443,7 @@ export default function ChatWidget({
   const refreshSession = () => {
     // Generate new session ID
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Update sessionStorage with new session ID
     const storageKey = isEmbedded ? 'embed-session-id' : 'global-chat-session-id';
     try {
@@ -452,17 +452,17 @@ export default function ChatWidget({
     } catch (error) {
       console.warn('sessionStorage not accessible, session refresh may not persist');
     }
-    
+
     // Clear query cache for old session
     queryClient.invalidateQueries({ queryKey: ['/api/chat/session'] });
     queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
-    
+
     // Remove old session data to force fresh cache
     queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId] });
-    
+
     // Update the current session ID state to trigger re-renders
     setCurrentSessionId(newSessionId);
-    
+
     // Re-initialize the session with new ID
     if (initializeSession) {
       // Small delay to ensure state updates are processed
@@ -470,7 +470,7 @@ export default function ChatWidget({
         initializeSession();
       }, 100);
     }
-    
+
     console.log(`[REFRESH] Chat history cleared, new session started: ${newSessionId}`);
   };
 
@@ -517,7 +517,7 @@ export default function ChatWidget({
                 <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
               </div>
             </div>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-3">
               <button 
                 onClick={refreshSession}
                 className="text-white p-1.5 rounded transition-colors"
@@ -583,7 +583,7 @@ export default function ChatWidget({
               <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
             </div>
           </div>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-3">
             <button 
               onClick={refreshSession}
               className="text-white p-1.5 rounded transition-colors"
@@ -755,7 +755,7 @@ export default function ChatWidget({
               </div>
 
             </div>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-3">
               <button 
                 onClick={refreshSession}
                 className="text-white p-1.5 rounded transition-colors"
