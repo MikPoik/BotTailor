@@ -4,6 +4,7 @@ import ChatWidget from "@/components/chat/chat-widget";
 export default function ChatWidgetPage() {
   const [sessionId, setSessionId] = useState<string>("");
   const [isEmbedded, setIsEmbedded] = useState<boolean>(false);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   useEffect(() => {
     // Check if we're in embedded mode
@@ -16,6 +17,9 @@ export default function ChatWidgetPage() {
     // Don't use URL sessionId parameter - always create fresh sessions
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     console.log(`[CHAT WIDGET] Generated new session ID: ${newSessionId}`);
+    
+    // Force complete component refresh by updating refresh key
+    setRefreshKey(Date.now());
     setSessionId(newSessionId);
 
     // Clear React Query cache and any localStorage to ensure fresh chat sessions
@@ -105,6 +109,7 @@ export default function ChatWidgetPage() {
         }}
       >
         <ChatWidget 
+          key={`${sessionId}-${refreshKey}-embedded`}
           sessionId={sessionId} 
           primaryColor={theme.primaryColor}
           backgroundColor={theme.backgroundColor}
@@ -170,7 +175,7 @@ export default function ChatWidgetPage() {
       </div>
 
       {/* Chat Widget */}
-      <ChatWidget sessionId={sessionId} />
+      <ChatWidget key={`${sessionId}-${refreshKey}`} sessionId={sessionId} />
     </div>
   );
 }
