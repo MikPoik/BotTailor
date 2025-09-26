@@ -307,6 +307,10 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
   // Function to manually initialize session when chat is opened
   const initializeSession = async () => {
+    // Clear any cached data for this session to ensure fresh start
+    queryClient.removeQueries({ queryKey: ['/api/chat/session', sessionId] });
+    queryClient.removeQueries({ queryKey: ['/api/chat', sessionId] });
+    
     // Enable and execute session creation immediately
     queryClient.setQueryDefaults(['/api/chat/session', sessionId, chatbotConfigId], { enabled: true });
     const sessionResult = await queryClient.fetchQuery({

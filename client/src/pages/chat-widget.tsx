@@ -15,12 +15,26 @@ export default function ChatWidgetPage() {
     // This ensures that users get fresh conversations every time
     // Don't use URL sessionId parameter - always create fresh sessions
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[CHAT WIDGET] Generated new session ID: ${newSessionId}`);
     setSessionId(newSessionId);
 
-    // Clear React Query cache to ensure fresh chat sessions
+    // Clear React Query cache and any localStorage to ensure fresh chat sessions
     // This prevents previous conversations from being loaded
     import('@/lib/queryClient').then(({ queryClient }) => {
+      console.log('[CHAT WIDGET] Clearing all React Query cache for fresh session');
       queryClient.clear();
+      
+      // Also clear any localStorage that might persist session data
+      try {
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('chat') || key.includes('session') || key.includes('message')) {
+            console.log(`[CHAT WIDGET] Clearing localStorage key: ${key}`);
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (error) {
+        console.warn('[CHAT WIDGET] Could not access localStorage:', error);
+      }
     });
 
     // Set iframe-friendly styling when embedded
