@@ -638,10 +638,25 @@
         const cacheKey = `chatbot_${userId}_${chatbotGuid}`;
 
         // Check cache first (5 minute cache)
-        const cached = this.getCachedConfig(cacheKey);
-        if (cached) {
-          this.handleChatbotConfig(cached, messageBubble);
-          return;
+        const cachedData = sessionStorage.getItem(cacheKey);
+
+        if (cachedData) {
+          try {
+            const cached = JSON.parse(cachedData);
+            const fiveMinutes = 5 * 60 * 1000;
+
+            if (Date.now() - cached.timestamp < fiveMinutes) {
+              console.log('Using cached chatbot config');
+              this.handleChatbotConfig(cached.config, messageBubble);
+              return;
+            } else {
+              // Cache expired, remove it
+              sessionStorage.removeItem(cacheKey);
+            }
+          } catch (e) {
+            // Invalid cache data, remove it
+            sessionStorage.removeItem(cacheKey);
+          }
         }
 
         // Fetch chatbot configuration to get initial messages
@@ -665,7 +680,10 @@
           })
           .then(data => {
             // Cache the response
-            this.setCachedConfig(cacheKey, data);
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+              config: data,
+              timestamp: Date.now()
+            }));
             this.handleChatbotConfig(data, messageBubble);
           })
           .catch(error => {
@@ -681,7 +699,7 @@
     // Cache management for performance
     getCachedConfig: function(key) {
       try {
-        const item = localStorage.getItem(`chatwidget_${key}`);
+        const item = sessionStorage.getItem(`chatwidget_${key}`);
         if (!item) return null;
 
         const { data, timestamp } = JSON.parse(item);
@@ -689,7 +707,7 @@
         const fiveMinutes = 5 * 60 * 1000;
 
         if (now - timestamp > fiveMinutes) {
-          localStorage.removeItem(`chatwidget_${key}`);
+          sessionStorage.removeItem(`chatwidget_${key}`);
           return null;
         }
 
@@ -701,7 +719,7 @@
 
     setCachedConfig: function(key, data) {
       try {
-        localStorage.setItem(`chatwidget_${key}`, JSON.stringify({
+        sessionStorage.setItem(`chatwidget_${key}`, JSON.stringify({
           data,
           timestamp: Date.now()
         }));
@@ -748,7 +766,7 @@
       const messagesHash = messages.join('|');
       const chatbotId = this.config.chatbotConfig?.id || 'default';
       const cacheKey = `chat-initial-messages-shown-${chatbotId}_${messagesHash}`;
-      
+
       // Check if initial messages were already shown in this browser session
       try {
         const alreadyShown = sessionStorage.getItem(cacheKey);
@@ -788,7 +806,7 @@
         globalCloseBtn.style.zIndex = '46';
 
         globalCloseBtn.innerHTML = `
-          <button class="chatwidget-global-close-btn" style="background: white; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; border-radius: 50%; padding: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease;" title="Hide all messages" onmouseover="this.style.background='#f9fafb'; this.style.color='#374151';" onmouseout="this.style.background='white'; this.style.color='#6b7280';">
+          <button class="chatwidget-global-close-btn" style="background: white; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; border-radius: 50%; padding: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease;" onmouseover="this.style.background='#f9fafb'; this.style.color='#374151';" onmouseout="this.style.background='white'; this.style.color='#6b7280';">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
             </svg>
