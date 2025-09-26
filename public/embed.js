@@ -422,8 +422,7 @@
           // Only load iframe once to preserve chat session
           if (!mobileIframe.src) {
             try {
-              // Build iframe URL with sessionId if provided, otherwise let server generate it
-              // Don't pass sessionId - let each page load generate a fresh session
+              // Build iframe URL - let each page load generate a fresh session
               const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
               let widgetUrl;
@@ -452,8 +451,7 @@
           // Only load iframe once to preserve chat session
           if (!iframe.src) {
             try {
-              // Build iframe URL with sessionId if provided, otherwise let server generate it
-              // Don't pass sessionId - let each page load generate a fresh session
+              // Build iframe URL - let each page load generate a fresh session
               const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
 
               let widgetUrl;
