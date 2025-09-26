@@ -69,7 +69,7 @@ export default function ChatWidget({
     }
   }, [chatbotConfig]);
 
-  // Safe localStorage access that handles sandboxed environments
+  // Safe storage access that handles sandboxed environments
   // Only used in development mode - embedded mode doesn't need localStorage
   const safeLocalStorage = {
     getItem: (key: string): string | null => {
@@ -96,34 +96,74 @@ export default function ChatWidget({
     }
   };
 
-  // Show initial messages with staggered delays on every fresh session
+  // Safe sessionStorage access for initial message caching
+  const safeSessionStorage = {
+    getItem: (key: string): string | null => {
+      if (isEmbedded) return null; // Skip sessionStorage in embedded mode
+      try {
+        if (typeof Storage === "undefined" || typeof sessionStorage === "undefined") {
+          return null;
+        }
+        return sessionStorage.getItem(key);
+      } catch (error) {
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      if (isEmbedded) return; // Skip sessionStorage in embedded mode
+      try {
+        if (typeof Storage === "undefined" || typeof sessionStorage === "undefined") {
+          return;
+        }
+        sessionStorage.setItem(key, value);
+      } catch (error) {
+        // Fail silently
+      }
+    }
+  };
+
+  // Show initial messages with staggered delays only if not shown in this browser session
   useEffect(() => {
     if (initialMessages.length > 0 && !isOpen && !isEmbedded) {
-      const timeouts: NodeJS.Timeout[] = [];
+      // Create a unique cache key based on chatbot config and initial messages
+      const messagesHash = chatbotConfig?.id ? 
+        `${chatbotConfig.id}_${initialMessages.join('|')}` : 
+        initialMessages.join('|');
+      const cacheKey = `chat-initial-messages-shown-${messagesHash}`;
+      
+      // Check if initial messages were already shown in this browser session
+      const alreadyShown = safeSessionStorage.getItem(cacheKey);
+      
+      if (!alreadyShown) {
+        const timeouts: NodeJS.Timeout[] = [];
 
-      initialMessages.forEach((_, index) => {
-        const timeout = setTimeout(() => {
-          setVisibleMessages(prev => [...prev, index]);
-        }, index * 2000); // Show each message 2 seconds apart
+        initialMessages.forEach((_, index) => {
+          const timeout = setTimeout(() => {
+            setVisibleMessages(prev => [...prev, index]);
+          }, index * 2000); // Show each message 2 seconds apart
 
-        timeouts.push(timeout);
-      });
+          timeouts.push(timeout);
+        });
 
-      // Hide all messages together after the last message has been visible for 8 seconds
-      const lastMessageDelay = (initialMessages.length - 1) * 2000;
-      const hideAllTimeout = setTimeout(() => {
-        setVisibleMessages([]);
-      }, lastMessageDelay + 8000);
+        // Hide all messages together after the last message has been visible for 8 seconds
+        const lastMessageDelay = (initialMessages.length - 1) * 2000;
+        const hideAllTimeout = setTimeout(() => {
+          setVisibleMessages([]);
+        }, lastMessageDelay + 8000);
 
-      timeouts.push(hideAllTimeout);
+        timeouts.push(hideAllTimeout);
 
-      messageTimeouts.current = timeouts;
+        // Mark initial messages as shown for this browser session
+        safeSessionStorage.setItem(cacheKey, 'true');
 
-      return () => {
-        timeouts.forEach(timeout => clearTimeout(timeout));
-      };
+        messageTimeouts.current = timeouts;
+
+        return () => {
+          timeouts.forEach(timeout => clearTimeout(timeout));
+        };
+      }
     }
-  }, [initialMessages, isOpen, isEmbedded]);
+  }, [initialMessages, isOpen, isEmbedded, chatbotConfig?.id]);
 
   // Hide all initial messages when chat opens
   useEffect(() => {

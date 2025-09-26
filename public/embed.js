@@ -744,8 +744,31 @@
         return;
       }
 
+      // Create a unique cache key based on chatbot and messages
+      const messagesHash = messages.join('|');
+      const chatbotId = this.config.chatbotConfig?.id || 'default';
+      const cacheKey = `chat-initial-messages-shown-${chatbotId}_${messagesHash}`;
+      
+      // Check if initial messages were already shown in this browser session
+      try {
+        const alreadyShown = sessionStorage.getItem(cacheKey);
+        if (alreadyShown) {
+          this.showDefaultMessage(messageBubble);
+          return;
+        }
+      } catch (error) {
+        // Continue if sessionStorage is not available
+      }
+
       // Hide the default message bubble since we'll create individual ones
       messageBubble.style.display = 'none';
+
+      // Mark initial messages as shown for this browser session
+      try {
+        sessionStorage.setItem(cacheKey, 'true');
+      } catch (error) {
+        // Ignore if sessionStorage is not available
+      }
 
       const container = document.getElementById('chatwidget-container');
 
