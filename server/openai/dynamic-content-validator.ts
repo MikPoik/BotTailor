@@ -128,14 +128,8 @@ function inferExpectationsFromContent(bubbles: any[]): DynamicContentExpectation
     }
     
     // Pattern: Multiple question marks or choice indicators
-    const questionMarks = (content.match(/\?/g) || []).length;
-    if (questionMarks >= 2) {
-      return {
-        expectedQuickReplies: 2,
-        contentIntent: 'multiple_choice',
-        completionRequired: true
-      };
-    }
+    // Note: Removed aggressive expectation setting for multiple questions
+    // Let the AI choose appropriate interaction type (menu vs quickReplies)
     
     // Pattern: Content ending with colon suggests list/menu follows
     if (content.trim().endsWith(':') && content.length > 20) {
