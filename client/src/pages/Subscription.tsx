@@ -8,7 +8,6 @@ import { Check, Loader2, Crown, Zap, Rocket, X, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import ChatWidget from "@/components/chat/chat-widget";
-import { useState, useEffect } from "react";
 
 interface SubscriptionPlan {
   id: number;
