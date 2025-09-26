@@ -593,6 +593,28 @@ export default function ChatWidget({
         </div>
       )}
 
+      {/* Global close button for initial messages */}
+      {!isOpen && visibleMessages.length > 0 && (
+        <div
+          className="absolute animate-fadeIn transition-all duration-300 flex justify-center"
+          style={{
+            [position === 'bottom-right' ? 'right' : 'left']: '0',
+            bottom: `${80 + (visibleMessages.length * 50) + 10}px`,
+            width: '100%',
+            zIndex: 46
+          }}
+        >
+          <button
+            onClick={() => setVisibleMessages([])}
+            className="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition-colors duration-200 flex items-center gap-2 text-xs font-medium"
+            title="Hide all messages"
+          >
+            <X className="w-3 h-3" />
+            Hide all
+          </button>
+        </div>
+      )}
+
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex, bubbleIndex) => {
         const messageBottomOffset = 80 + (bubbleIndex * 50);

@@ -772,6 +772,47 @@
 
       const container = document.getElementById('chatwidget-container');
 
+      // Create global close button for all initial messages
+      if (messages.length > 0) {
+        const globalCloseBtn = document.createElement('div');
+        globalCloseBtn.id = 'chatwidget-global-close';
+        globalCloseBtn.className = 'chatwidget-global-close';
+        globalCloseBtn.style.position = 'absolute';
+        globalCloseBtn.style.bottom = `${80 + (messages.length * 50) + 10}px`;
+        globalCloseBtn.style.width = '100%';
+        globalCloseBtn.style.display = 'flex';
+        globalCloseBtn.style.justifyContent = 'center';
+        globalCloseBtn.style.opacity = '0';
+        globalCloseBtn.style.visibility = 'hidden';
+        globalCloseBtn.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)';
+        globalCloseBtn.style.zIndex = '46';
+
+        globalCloseBtn.innerHTML = `
+          <button class="chatwidget-global-close-btn" style="background: #374151; color: white; border: none; cursor: pointer; border-radius: 50px; padding: 8px 12px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease; hover:background: #4b5563;" title="Hide all messages">
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+            Hide all
+          </button>
+        `;
+
+        // Add click listener to hide all messages
+        const globalCloseBtnElement = globalCloseBtn.querySelector('.chatwidget-global-close-btn');
+        globalCloseBtnElement.addEventListener('click', () => {
+          this.hideAllInitialMessages();
+        });
+
+        container.appendChild(globalCloseBtn);
+
+        // Show global close button after all messages are visible
+        setTimeout(() => {
+          globalCloseBtn.style.opacity = '1';
+          globalCloseBtn.style.visibility = 'visible';
+          globalCloseBtn.style.transform = 'translateY(0) scale(1)';
+          globalCloseBtn.classList.add('visible');
+        }, 3000 + (messages.length * 1000) + 500);
+      }
+
       // Create individual bubbles for each message
       messages.forEach((message, index) => {
         const individualBubble = document.createElement('div');
@@ -897,6 +938,13 @@
         bubble.classList.remove('visible');
         setTimeout(() => bubble.remove(), 300);
       });
+
+      // Also hide the global close button
+      const globalCloseBtn = document.getElementById('chatwidget-global-close');
+      if (globalCloseBtn) {
+        globalCloseBtn.classList.remove('visible');
+        setTimeout(() => globalCloseBtn.remove(), 300);
+      }
     },
 
     // Public API methods
