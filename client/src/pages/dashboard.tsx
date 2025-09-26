@@ -283,7 +283,7 @@ export default function Dashboard() {
             )}
             <Button 
               onClick={() => {
-                console.log("Create Chatbot clicked");
+                //console.log("Create Chatbot clicked");
                 setLocation("/chatbots/new");
               }}
               disabled={currentSubscription && currentSubscription.plan?.maxBots !== -1 && !isAdmin && ((chatbots?.filter(bot => bot.isActive).length || 0) >= currentSubscription.plan?.maxBots)}
