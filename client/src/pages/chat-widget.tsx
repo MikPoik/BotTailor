@@ -40,7 +40,7 @@ export default function ChatWidgetPage() {
     // Check if we have a specific chatbot config from the injected config
     const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     const chatbotConfig = injectedConfig?.chatbotConfig;
-    
+
     // STRICT VALIDATION: No fallback allowed - must have valid chatbot config
     if (!injectedConfig?.embedded || !chatbotConfig?.id) {
       return (
@@ -52,7 +52,7 @@ export default function ChatWidgetPage() {
         </div>
       );
     }
-    
+
     // Check if chatbot is active
     if (!chatbotConfig.isActive) {
       return (
@@ -64,28 +64,28 @@ export default function ChatWidgetPage() {
         </div>
       );
     }
-    
+
     // Read theme colors from URL parameters first, then fallback to injected config, then defaults
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     const theme = {
       primaryColor: urlParams.get('primaryColor') || injectedConfig?.theme?.primaryColor || '#2563eb',
       backgroundColor: urlParams.get('backgroundColor') || injectedConfig?.theme?.backgroundColor || '#ffffff',
       textColor: urlParams.get('textColor') || injectedConfig?.theme?.textColor || '#1f2937'
     };
-    
+
     return (
-      <div 
-        className="w-full h-full" 
-        style={{ 
-          height: '100vh', 
-          margin: 0, 
+      <div
+        className="w-full h-full"
+        style={{
+          height: '100vh',
+          margin: 0,
           padding: 0,
-          backgroundColor: theme.backgroundColor 
+          backgroundColor: theme.backgroundColor
         }}
       >
-        <ChatWidget 
-          sessionId={sessionId} 
+        <ChatWidget
+          sessionId={sessionId}
           primaryColor={theme.primaryColor}
           backgroundColor={theme.backgroundColor}
           textColor={theme.textColor}
@@ -105,11 +105,11 @@ export default function ChatWidgetPage() {
           <p className="text-lg text-neutral-600 mb-8">
             This represents your existing website where the chat widget will be embedded.
           </p>
-          
+
           <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
             <h2 className="text-2xl font-semibold text-neutral-800 mb-4">About Our Service</h2>
             <p className="text-neutral-600 leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
               Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
             </p>
           </div>
@@ -138,7 +138,7 @@ export default function ChatWidgetPage() {
                 </li>
               </ul>
             </div>
-            
+
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-xl font-semibold text-neutral-800 mb-3">Contact</h3>
               <p className="text-neutral-600">

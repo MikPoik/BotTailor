@@ -94,43 +94,34 @@ export default function ChatWidget({
     }
   };
 
-  // Show initial messages with staggered delays - only if not shown before
+  // Show initial messages with staggered delays on every fresh session
   useEffect(() => {
     if (initialMessages.length > 0 && !isOpen && !isEmbedded) {
-      // Check if initial messages have been shown before using safe localStorage
-      const storageKey = `chat-initial-messages-shown-${chatbotConfigId || 'default'}`;
-      const hasShownBefore = safeLocalStorage.getItem(storageKey) === 'true';
+      const timeouts: NodeJS.Timeout[] = [];
 
-      if (!hasShownBefore) {
-        const timeouts: NodeJS.Timeout[] = [];
+      initialMessages.forEach((_, index) => {
+        const timeout = setTimeout(() => {
+          setVisibleMessages(prev => [...prev, index]);
+        }, index * 2000); // Show each message 2 seconds apart
 
-        initialMessages.forEach((_, index) => {
-          const timeout = setTimeout(() => {
-            setVisibleMessages(prev => [...prev, index]);
-          }, index * 2000); // Show each message 2 seconds apart
+        timeouts.push(timeout);
+      });
 
-          timeouts.push(timeout);
-        });
+      // Hide all messages together after the last message has been visible for 8 seconds
+      const lastMessageDelay = (initialMessages.length - 1) * 2000;
+      const hideAllTimeout = setTimeout(() => {
+        setVisibleMessages([]);
+      }, lastMessageDelay + 8000);
 
-        // Hide all messages together after the last message has been visible for 8 seconds
-        const lastMessageDelay = (initialMessages.length - 1) * 2000;
-        const hideAllTimeout = setTimeout(() => {
-          setVisibleMessages([]);
-        }, lastMessageDelay + 8000);
+      timeouts.push(hideAllTimeout);
 
-        timeouts.push(hideAllTimeout);
+      messageTimeouts.current = timeouts;
 
-        messageTimeouts.current = timeouts;
-
-        // Mark as shown in safe localStorage
-        safeLocalStorage.setItem(storageKey, 'true');
-
-        return () => {
-          timeouts.forEach(timeout => clearTimeout(timeout));
-        };
-      }
+      return () => {
+        timeouts.forEach(timeout => clearTimeout(timeout));
+      };
     }
-  }, [initialMessages, isOpen, isEmbedded, chatbotConfigId]);
+  }, [initialMessages, isOpen, isEmbedded]);
 
   // Hide all initial messages when chat opens
   useEffect(() => {
