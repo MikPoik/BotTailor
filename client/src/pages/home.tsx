@@ -56,13 +56,6 @@ export default function Home() {
       const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       console.log('[HOME] Generated fresh session ID:', newSessionId);
       setSessionId(newSessionId);
-      
-      // Clear any previously stored session ID to prevent persistence
-      try {
-        localStorage.removeItem('home_chat_session_id');
-      } catch (error) {
-        console.warn('Could not access localStorage:', error);
-      }
     }
   }, [sessionId]);
 
