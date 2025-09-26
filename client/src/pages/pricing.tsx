@@ -264,7 +264,7 @@ export default function Pricing() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Your chatbot will continue to work but will show upgrade prompts. You can upgrade anytime to restore full functionality.
+                Your chatbot will be temporarily hidden, and ongoing sessions will display a contact form for your users to get in touch. Upgrading will restore full functionality.
               </p>
             </CardContent>
           </Card>
