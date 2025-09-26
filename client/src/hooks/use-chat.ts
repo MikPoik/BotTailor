@@ -13,28 +13,28 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   } | null>(null);
   const queryClient = useQueryClient();
 
-  // Safe localStorage access that handles sandboxed environments
-  const safeLocalStorage = {
+  // Safe sessionStorage access that handles sandboxed environments
+  const safeSessionStorage = {
     getItem: (key: string): string | null => {
       try {
-        return localStorage.getItem(key);
+        return sessionStorage.getItem(key);
       } catch (error) {
-        console.warn('localStorage not accessible, using session-based fallback');
+        console.warn('sessionStorage not accessible, using session-based fallback');
         return null;
       }
     },
     setItem: (key: string, value: string): void => {
       try {
-        localStorage.setItem(key, value);
+        sessionStorage.setItem(key, value);
       } catch (error) {
-        console.warn('localStorage not accessible, skipping storage');
+        console.warn('sessionStorage not accessible, skipping storage');
       }
     },
     removeItem: (key: string): void => {
       try {
-        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
       } catch (error) {
-        console.warn('localStorage not accessible, skipping removal');
+        console.warn('sessionStorage not accessible, skipping removal');
       }
     }
   };
@@ -76,7 +76,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   // Check for existing limit exceeded state on page load
   useEffect(() => {
     const limitKey = `chat-limit-exceeded-${sessionId}`;
-    const limitState = safeLocalStorage.getItem(limitKey);
+    const limitState = safeSessionStorage.getItem(limitKey);
     if (limitState) {
       try {
         const parsed = JSON.parse(limitState);
@@ -89,21 +89,21 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
           });
         }
       } catch (error) {
-        console.warn('Failed to parse limit state from localStorage:', error);
+        console.warn('Failed to parse limit state from sessionStorage:', error);
       }
     }
   }, [sessionId]);
 
-  // Clear read-only state after a reasonable time (1 hour) to allow recovery
+  // Clear read-only state after a reasonable time (30 minutes) to allow recovery
   useEffect(() => {
     if (readOnlyMode) {
       const recoveryTimer = setTimeout(() => {
         const limitKey = `chat-limit-exceeded-${sessionId}`;
-        safeLocalStorage.removeItem(limitKey);
+        safeSessionStorage.removeItem(limitKey);
         setReadOnlyMode(false);
         setLimitExceededInfo(null);
         console.log('[CHAT] Cleared read-only state for potential recovery');
-      }, 60 * 60 * 1000); // 1 hour
+      }, 30 * 60 * 1000); // 30 minutes
 
       return () => clearTimeout(recoveryTimer);
     }
@@ -208,8 +208,8 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
                   showContactForm: data.showContactForm,
                   chatbotConfig: data.chatbotConfig,
                 });
-                // Store in localStorage to persist across page loads
-                safeLocalStorage.setItem(`chat-limit-exceeded-${sessionId}`, JSON.stringify({
+                // Store in sessionStorage for current session only
+                safeSessionStorage.setItem(`chat-limit-exceeded-${sessionId}`, JSON.stringify({
                   exceeded: true,
                   message: data.message,
                   showContactForm: data.showContactForm
