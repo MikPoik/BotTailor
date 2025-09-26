@@ -23,6 +23,7 @@ import SurveyAnalytics from "@/pages/survey-analytics";
 import ChatHistory from "@/pages/chat-history";
 import ChatbotEmbed from "@/pages/chatbot-embed";
 import Docs from "@/pages/docs";
+import Pricing from "@/pages/pricing";
 import Subscription from "@/pages/Subscription";
 import Contact from "@/pages/contact";
 import Privacy from "@/pages/privacy";
@@ -61,6 +62,8 @@ function AuthenticatedRouter() {
       {!isAuthenticated ? (
         <>
           <Route path="/" component={Home} />
+          <Route path="/docs" component={Docs} />
+          <Route path="/pricing" component={Pricing} />
           <Route path="/contact" component={Contact} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
@@ -86,7 +89,7 @@ function AuthenticatedRouter() {
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
           <Route path="/subscription" component={Subscription} />
-          <Route path="/pricing" component={lazy(() => import("./pages/pricing"))} />
+          <Route path="/pricing" component={Pricing} />
           <Route path="/docs" component={Docs} />
           <Route path="/support" component={Docs} />
           <Route component={NotFound} />
