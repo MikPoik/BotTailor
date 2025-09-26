@@ -117,6 +117,55 @@
       return `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     },
 
+    // Safe sessionStorage access that handles sandboxed environments
+    safeSessionStorage: {
+      getItem: function(key) {
+        try {
+          return sessionStorage.getItem(key);
+        } catch (error) {
+          console.warn('sessionStorage not accessible in embed, using session-based fallback');
+          return null;
+        }
+      },
+      setItem: function(key, value) {
+        try {
+          sessionStorage.setItem(key, value);
+        } catch (error) {
+          console.warn('sessionStorage not accessible in embed, skipping storage');
+        }
+      },
+      removeItem: function(key) {
+        try {
+          sessionStorage.removeItem(key);
+        } catch (error) {
+          console.warn('sessionStorage not accessible in embed, skipping removal');
+        }
+      }
+    },
+
+    // Generate or retrieve session ID from sessionStorage
+    getOrCreateSessionId: function() {
+      // If sessionId is provided in config, use it (for server-side injection)
+      if (this.config.sessionId) {
+        return this.config.sessionId;
+      }
+
+      // Try to get existing sessionId from sessionStorage
+      const storageKey = 'embed-session-id';
+      const storedSessionId = this.safeSessionStorage.getItem(storageKey);
+
+      if (storedSessionId) {
+        console.log('[EMBED] Retrieved session ID from storage:', storedSessionId);
+        return storedSessionId;
+      }
+
+      // Generate new sessionId and store it
+      const newSessionId = this.generateSessionId();
+      this.safeSessionStorage.setItem(storageKey, newSessionId);
+      console.log('[EMBED] Generated and stored new session ID:', newSessionId);
+      return newSessionId;
+    },
+
     injectThemeVariables: function() {
       // Inject CSS variables for theme support
       if (!this.config.primaryColor && !this.config.backgroundColor && !this.config.textColor) {
@@ -422,15 +471,16 @@
           // Only load iframe once to preserve chat session
           if (!mobileIframe.src) {
             try {
-              // Build optimized iframe URL - theme colors passed via postMessage after load
+              // Build optimized iframe URL with persistent sessionId - theme colors passed via postMessage after load
+              const sessionId = this.getOrCreateSessionId();
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
                 // Specific widget URL - use as-is with minimal parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}embedded=true&mobile=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}embedded=true&mobile=true&sessionId=${encodeURIComponent(sessionId)}`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?embedded=true&mobile=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?embedded=true&mobile=true&sessionId=${encodeURIComponent(sessionId)}`;
               }
 
               // Force HTTPS for iframe URL
@@ -463,15 +513,16 @@
           // Only load iframe once to preserve chat session
           if (!iframe.src) {
             try {
-              // Build optimized iframe URL - theme colors passed via postMessage after load
+              // Build optimized iframe URL with persistent sessionId - theme colors passed via postMessage after load
+              const sessionId = this.getOrCreateSessionId();
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
                 // Specific widget URL - use as-is with minimal parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}embedded=true&sessionId=${encodeURIComponent(sessionId)}`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?embedded=true&sessionId=${encodeURIComponent(sessionId)}`;
               }
 
               // Force HTTPS for iframe URL
@@ -590,7 +641,13 @@
               if (!mobileIframe.src && iframe.src) {
                 // Transfer the current session to mobile iframe
                 const currentSrc = iframe.src;
-                const mobileUrl = currentSrc.replace('embedded=true', 'embedded=true&mobile=true');
+                let mobileUrl = currentSrc.replace('embedded=true', 'embedded=true&mobile=true');
+                // Ensure sessionId is preserved if not already in URL
+                const sessionId = this.getOrCreateSessionId();
+                if (!mobileUrl.includes('sessionId=')) {
+                  const separator = mobileUrl.includes('?') ? '&' : '?';
+                  mobileUrl = `${mobileUrl}${separator}sessionId=${encodeURIComponent(sessionId)}`;
+                }
                 mobileIframe.src = mobileUrl;
               }
 
@@ -607,7 +664,13 @@
               if (!iframe.src && mobileIframe.src) {
                 // Transfer the current session to desktop iframe
                 const currentSrc = mobileIframe.src;
-                const desktopUrl = currentSrc.replace(/(&|\?)mobile=true/, '$1embedded=true');
+                let desktopUrl = currentSrc.replace(/(&|\?)mobile=true/, '$1embedded=true');
+                // Ensure sessionId is preserved if not already in URL
+                const sessionId = this.getOrCreateSessionId();
+                if (!desktopUrl.includes('sessionId=')) {
+                  const separator = desktopUrl.includes('?') ? '&' : '?';
+                  desktopUrl = `${desktopUrl}${separator}sessionId=${encodeURIComponent(sessionId)}`;
+                }
                 iframe.src = desktopUrl;
               }
 
