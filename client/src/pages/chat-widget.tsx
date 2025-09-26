@@ -4,7 +4,6 @@ import ChatWidget from "@/components/chat/chat-widget";
 export default function ChatWidgetPage() {
   const [sessionId, setSessionId] = useState<string>("");
   const [isEmbedded, setIsEmbedded] = useState<boolean>(false);
-  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   useEffect(() => {
     // Check if we're in embedded mode
@@ -16,39 +15,7 @@ export default function ChatWidgetPage() {
     // This ensures that users get fresh conversations every time
     // Don't use URL sessionId parameter - always create fresh sessions
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log(`[CHAT WIDGET] Generated new session ID: ${newSessionId}`);
-    
-    // Force complete component refresh by updating refresh key
-    setRefreshKey(Date.now());
     setSessionId(newSessionId);
-
-    // Clear React Query cache and any localStorage to ensure fresh chat sessions
-    // This prevents previous conversations from being loaded
-    import('@/lib/queryClient').then(({ queryClient }) => {
-      console.log('[CHAT WIDGET] Clearing all React Query cache for fresh session');
-      queryClient.clear();
-      
-      // Also clear any localStorage that might persist session data
-      try {
-        // Clear specific keys that could persist chat sessions
-        const keysToRemove = [
-          'home_chat_session_id',
-          'chat-initial-messages-shown-4',
-          ...Object.keys(localStorage).filter(key => 
-            key.includes('chat') || key.includes('session') || key.includes('message')
-          )
-        ];
-        
-        keysToRemove.forEach(key => {
-          if (localStorage.getItem(key)) {
-            console.log(`[CHAT WIDGET] Clearing localStorage key: ${key}`);
-            localStorage.removeItem(key);
-          }
-        });
-      } catch (error) {
-        console.warn('[CHAT WIDGET] Could not access localStorage:', error);
-      }
-    });
 
     // Set iframe-friendly styling when embedded
     if (embedded) {
@@ -118,7 +85,6 @@ export default function ChatWidgetPage() {
         }}
       >
         <ChatWidget 
-          key={`${sessionId}-${refreshKey}-embedded`}
           sessionId={sessionId} 
           primaryColor={theme.primaryColor}
           backgroundColor={theme.backgroundColor}
@@ -184,7 +150,7 @@ export default function ChatWidgetPage() {
       </div>
 
       {/* Chat Widget */}
-      <ChatWidget key={`${sessionId}-${refreshKey}`} sessionId={sessionId} />
+      <ChatWidget sessionId={sessionId} />
     </div>
   );
 }
