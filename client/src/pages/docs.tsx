@@ -9,14 +9,27 @@ import { Link } from "wouter";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 
 export default function Docs() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string>("");
   const { isAuthenticated } = useAuth();
+  // Use unified global chat session
+  const { sessionId } = useGlobalChatSession();
 
   // Fetch the site default chatbot for chat widget
-  const { data: defaultChatbot } = useQuery({
+  const { data: defaultChatbot } = useQuery<{
+    id: number;
+    isActive: boolean;
+    homeScreenConfig?: {
+      theme?: {
+        primaryColor?: string;
+        backgroundColor?: string;
+        textColor?: string;
+      };
+    };
+    [key: string]: any;
+  }>({
     queryKey: ['/api/public/default-chatbot'],
     enabled: true,
     retry: false,
@@ -30,13 +43,7 @@ export default function Docs() {
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Complete guide to creating, customizing, and deploying AI chatbots with BotTailor. Learn embedding, configuration, and best practices.');
     }
-
-    // Generate session ID only once per component mount
-    if (!sessionId) {
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setSessionId(newSessionId);
-    }
-  }, [sessionId]);
+  }, []);
 
   const copyToClipboard = (text: string, codeId: string) => {
     navigator.clipboard.writeText(text);
