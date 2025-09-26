@@ -69,34 +69,7 @@ export default function ChatWidget({
     }
   }, [chatbotConfig]);
 
-  // Safe storage access that handles sandboxed environments
-  // Only used in development mode - embedded mode doesn't need localStorage
-  const safeLocalStorage = {
-    getItem: (key: string): string | null => {
-      if (isEmbedded) return null; // Skip localStorage in embedded mode
-      try {
-        if (typeof Storage === "undefined" || typeof localStorage === "undefined") {
-          return null;
-        }
-        return localStorage.getItem(key);
-      } catch (error) {
-        return null;
-      }
-    },
-    setItem: (key: string, value: string): void => {
-      if (isEmbedded) return; // Skip localStorage in embedded mode
-      try {
-        if (typeof Storage === "undefined" || typeof localStorage === "undefined") {
-          return;
-        }
-        localStorage.setItem(key, value);
-      } catch (error) {
-        // Fail silently
-      }
-    }
-  };
-
-  // Safe sessionStorage access for initial message caching
+  // Safe sessionStorage access for initial message persistence
   const safeSessionStorage = {
     getItem: (key: string): string | null => {
       if (isEmbedded) return null; // Skip sessionStorage in embedded mode
@@ -122,19 +95,19 @@ export default function ChatWidget({
     }
   };
 
-  // Show initial messages with staggered delays only if not shown in this browser session
+  // Show initial messages with staggered delays until manually dismissed
   useEffect(() => {
     if (initialMessages.length > 0 && !isOpen && !isEmbedded) {
       // Create a unique cache key based on chatbot config and initial messages
       const messagesHash = chatbotConfig?.id ? 
         `${chatbotConfig.id}_${initialMessages.join('|')}` : 
         initialMessages.join('|');
-      const cacheKey = `chat-initial-messages-shown-${messagesHash}`;
-      
-      // Check if initial messages were already shown in this browser session
-      const alreadyShown = safeSessionStorage.getItem(cacheKey);
-      
-      if (!alreadyShown) {
+      const dismissedKey = `chat-initial-messages-dismissed-${messagesHash}`;
+
+      // Check if initial messages were manually dismissed (default is false/not dismissed)
+      const areDismissed = safeSessionStorage.getItem(dismissedKey) === 'true';
+
+      if (!areDismissed) {
         const timeouts: NodeJS.Timeout[] = [];
 
         initialMessages.forEach((_, index) => {
@@ -147,8 +120,8 @@ export default function ChatWidget({
 
         // Note: Removed auto-hide timeout - users must close messages manually
 
-        // Mark initial messages as shown for this browser session
-        safeSessionStorage.setItem(cacheKey, 'true');
+        // Mark initial messages as shown for this browser session, they will be dismissed on manual close
+        // safeSessionStorage.setItem(messagesHash, 'true'); // This line was removed as it's no longer needed with the new logic.
 
         messageTimeouts.current = timeouts;
 
@@ -197,7 +170,7 @@ export default function ChatWidget({
   useEffect(() => {
     const themeKey = `${resolvedPrimaryColor}-${backgroundColor}-${textColor}`;
     const currentThemeKey = document.documentElement.getAttribute('data-chat-theme-key');
-    
+
     // Skip if same theme is already applied
     if (currentThemeKey === themeKey) {
       return;
@@ -411,7 +384,7 @@ export default function ChatWidget({
         }
       `;
       document.head.appendChild(style);
-      
+
       // Mark the current theme as applied
       document.documentElement.setAttribute('data-chat-theme-key', themeKey);
     };
@@ -445,6 +418,16 @@ export default function ChatWidget({
 
   const dismissMessage = (index: number) => {
     setVisibleMessages(prev => prev.filter(i => i !== index));
+
+    // If all messages are dismissed, mark them as dismissed in sessionStorage
+    const remainingMessages = visibleMessages.filter(i => i !== index);
+    if (remainingMessages.length === 0) {
+      const messagesHash = chatbotConfig?.id ? 
+        `${chatbotConfig.id}_${initialMessages.join('|')}` : 
+        initialInitialMessages.join('|'); // Corrected variable name here to initialInitialMessages
+      const dismissedKey = `chat-initial-messages-dismissed-${messagesHash}`;
+      safeSessionStorage.setItem(dismissedKey, 'true');
+    }
   };
 
   const closeChat = () => {
@@ -605,7 +588,15 @@ export default function ChatWidget({
           }}
         >
           <button
-            onClick={() => setVisibleMessages([])}
+            onClick={() => {
+              setVisibleMessages([]);
+              // Mark messages as dismissed in sessionStorage
+              const messagesHash = chatbotConfig?.id ? 
+                `${chatbotConfig.id}_${initialMessages.join('|')}` : 
+                initialMessages.join('|');
+              const dismissedKey = `chat-initial-messages-dismissed-${messagesHash}`;
+              safeSessionStorage.setItem(dismissedKey, 'true');
+            }}
             className="bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-800 rounded-full p-2 shadow-lg border border-gray-200 transition-colors duration-200"
             title="Hide all messages"
           >
