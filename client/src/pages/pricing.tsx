@@ -41,6 +41,8 @@ export default function Pricing() {
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription/plans"],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   // Fetch the site default chatbot for chat widget
@@ -57,8 +59,10 @@ export default function Pricing() {
     [key: string]: any;
   }>({
     queryKey: ['/api/public/default-chatbot'],
-    enabled: true,
+    enabled: true, // Always load chatbot regardless of authentication
     retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   useEffect(() => {
@@ -297,8 +301,8 @@ export default function Pricing() {
         <p>All plans include unlimited websites • Cancel anytime • No hidden fees</p>
       </div>
 
-      {/* Chat Widget */}
-      {sessionId && defaultChatbot && defaultChatbot.isActive && (
+      {/* Chat Widget - Load after main content */}
+      {!plansLoading && sessionId && defaultChatbot && defaultChatbot.isActive && (
         <ChatWidget 
           sessionId={sessionId}
           position="bottom-right"

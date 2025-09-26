@@ -45,6 +45,9 @@ export const subscriptionRouter = Router();
 // Get all subscription plans
 subscriptionRouter.get("/plans", async (req, res) => {
   try {
+    // Set cache headers for better performance
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300'); // Cache for 5 minutes
+    
     const plans = await storage.getSubscriptionPlans();
     res.json(plans);
   } catch (error) {
