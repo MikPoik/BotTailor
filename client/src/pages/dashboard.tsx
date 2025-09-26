@@ -56,12 +56,12 @@ export default function Dashboard() {
       return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     };
 
-    const storedSessionId = localStorage.getItem('dashboard_chat_session_id');
+    const storedSessionId = sessionStorage.getItem('dashboard_chat_session_id');
     if (storedSessionId) {
       setSessionId(storedSessionId);
     } else {
       const newSessionId = generateSessionId();
-      localStorage.setItem('dashboard_chat_session_id', newSessionId);
+      sessionStorage.setItem('dashboard_chat_session_id', newSessionId);
       setSessionId(newSessionId);
     }
   }, []);
