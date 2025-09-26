@@ -40,7 +40,7 @@ export default function ChatWidget({
   const chatbotConfigId = injectedConfig?.chatbotConfig?.id || chatbotConfig?.id;
 
   // Initialize chat data only when needed
-  const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(sessionId, chatbotConfigId);
+  const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(providedSessionId, chatbotConfigId);
 
   // Don't render widget if chatbot is inactive
   if (chatbotConfig && !chatbotConfig.isActive) {
@@ -68,47 +68,6 @@ export default function ChatWidget({
       setInitialMessages(messages);
     }
   }, [chatbotConfig]);
-
-  // Safe sessionStorage access that handles sandboxed environments
-  const safeSessionStorage = {
-    getItem: (key: string): string | null => {
-      try {
-        return sessionStorage.getItem(key);
-      } catch (error) {
-        console.warn('sessionStorage not accessible, using session-based fallback');
-        return null;
-      }
-    },
-    setItem: (key: string, value: string): void => {
-      try {
-        sessionStorage.setItem(key, value);
-      } catch (error) {
-        console.warn('sessionStorage not accessible, skipping storage');
-      }
-    }
-  };
-
-  // Generate or retrieve session ID from sessionStorage
-  const getSessionId = () => {
-    if (providedSessionId) {
-      return providedSessionId;
-    }
-
-    const storageKey = `chat-session-id-${chatbotConfig?.id || 'default'}`;
-    const storedSessionId = safeSessionStorage.getItem(storageKey);
-
-    if (storedSessionId) {
-      console.log("[CHAT WIDGET] Retrieved session ID from storage:", storedSessionId);
-      return storedSessionId;
-    }
-
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    safeSessionStorage.setItem(storageKey, newSessionId);
-    console.log("[CHAT WIDGET] Generated and stored new session ID:", newSessionId);
-    return newSessionId;
-  };
-
-  const sessionId = getSessionId();
 
   // Safe sessionStorage access for initial message persistence
   const safeSessionStorageForMessages = {
@@ -482,10 +441,10 @@ export default function ChatWidget({
 
   // Initialize session for embedded chat when embedded mode is active and sessionId is available
   useEffect(() => {
-    if (isEmbedded && sessionId) {
+    if (isEmbedded && providedSessionId) {
       initializeSession();
     }
-  }, [isEmbedded, sessionId, initializeSession]);
+  }, [isEmbedded, providedSessionId, initializeSession]);
 
   // Render different interfaces based on conditions but all at the end
   // Mobile full-screen interface
@@ -529,7 +488,7 @@ export default function ChatWidget({
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
             <TabbedChatInterface 
-              sessionId={sessionId} 
+              sessionId={providedSessionId} 
               isMobile={true} 
               isPreloaded={!isSessionLoading && !isMessagesLoading}
               chatbotConfigId={chatbotConfigId}
@@ -582,7 +541,7 @@ export default function ChatWidget({
         {/* Chat content - takes remaining space */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <TabbedChatInterface 
-            sessionId={sessionId} 
+            sessionId={providedSessionId} 
             isMobile={false} 
             isPreloaded={!isSessionLoading && !isMessagesLoading}
             isEmbedded={true}
@@ -649,7 +608,7 @@ export default function ChatWidget({
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex, bubbleIndex) => {
         const messageBottomOffset = 80 + (bubbleIndex * 50);
-        const uniqueKey = `initial-message-${messageIndex}-${bubbleIndex}-${sessionId}`;
+        const uniqueKey = `initial-message-${messageIndex}-${bubbleIndex}-${providedSessionId}`;
         return (
           <div
             key={uniqueKey}
@@ -667,7 +626,7 @@ export default function ChatWidget({
               onClick={() => {
                 setIsOpen(true);
                 setHasNewMessage(false);
-                queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/chat', providedSessionId, 'messages'] });
               }}
             >
               <div className="flex items-start gap-2">
@@ -741,7 +700,7 @@ export default function ChatWidget({
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
             <TabbedChatInterface 
-              sessionId={sessionId} 
+              sessionId={providedSessionId}
               isMobile={isMobile}
               isPreloaded={!isSessionLoading && !isMessagesLoading}
               chatbotConfigId={chatbotConfigId}
