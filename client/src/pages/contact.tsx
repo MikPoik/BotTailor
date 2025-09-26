@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Mail, MessageSquare, Phone, CheckCircle } from "lucide-react";
+import ChatWidget from "@/components/chat/chat-widget";
+import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 
 const contactFormSchema = z.object({
   contactType: z.enum(["sales", "support"], {
@@ -29,6 +31,15 @@ type ContactFormData = z.infer<typeof contactFormSchema>;
 export default function Contact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
+  // Use unified global chat session
+  const { sessionId } = useGlobalChatSession();
+
+  // Fetch the site default chatbot for chat widget
+  const { data: defaultChatbot } = useQuery({
+    queryKey: ['/api/public/default-chatbot'],
+    enabled: true,
+    retry: false,
+  });
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
@@ -322,6 +333,18 @@ export default function Contact() {
           </div>
         </div>
       </div>
+      
+      {/* Chat Widget */}
+      {sessionId && defaultChatbot && defaultChatbot.isActive && (
+        <ChatWidget 
+          sessionId={sessionId}
+          position="bottom-right"
+          primaryColor={defaultChatbot.homeScreenConfig?.theme?.primaryColor || "#3b82f6"}
+          backgroundColor={defaultChatbot.homeScreenConfig?.theme?.backgroundColor || "#ffffff"}
+          textColor={defaultChatbot.homeScreenConfig?.theme?.textColor || "#1f2937"}
+          chatbotConfig={defaultChatbot}
+        />
+      )}
     </div>
   );
 }

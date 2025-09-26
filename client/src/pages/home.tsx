@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bot, MessageSquare, Settings, Zap, Sparkles, Globe, Shield, Clock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import ChatWidget from "@/components/chat/chat-widget";
+import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 
 interface ChatbotConfig {
   id: number;
@@ -30,40 +31,8 @@ interface ChatbotConfig {
 }
 
 export default function Home() {
-  // Safe sessionStorage access that handles sandboxed environments
-  const safeSessionStorage = {
-    getItem: (key: string): string | null => {
-      try {
-        return sessionStorage.getItem(key);
-      } catch (error) {
-        console.warn('sessionStorage not accessible, using session-based fallback');
-        return null;
-      }
-    },
-    setItem: (key: string, value: string): void => {
-      try {
-        sessionStorage.setItem(key, value);
-      } catch (error) {
-        console.warn('sessionStorage not accessible, skipping storage');
-      }
-    }
-  };
-
-  // Generate or retrieve session ID from sessionStorage
-  const [sessionId] = useState(() => {
-    const storageKey = 'chat-session-id-home';
-    const storedSessionId = safeSessionStorage.getItem(storageKey);
-
-    if (storedSessionId) {
-      console.log("[HOME] Retrieved session ID from storage:", storedSessionId);
-      return storedSessionId;
-    }
-
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    safeSessionStorage.setItem(storageKey, newSessionId);
-    console.log("[HOME] Generated and stored new session ID:", newSessionId);
-    return newSessionId;
-  });
+  // Use unified global chat session
+  const { sessionId } = useGlobalChatSession();
   const { isAuthenticated } = useAuth();
 
   // Always fetch the site default chatbot for consistency

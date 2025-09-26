@@ -7,8 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import ChatWidget from "@/components/chat/chat-widget";
+import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle, TrendingUp, ExternalLink, MoreHorizontal } from "lucide-react";
 
 interface ChatbotConfig {
@@ -38,8 +39,9 @@ interface ChatbotConfig {
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  const [sessionId, setSessionId] = useState<string>("");
   const [, setLocation] = useLocation();
+  // Use unified global chat session
+  const { sessionId } = useGlobalChatSession();
 
   // Fetch admin status from a server-side endpoint
   const { data: adminStatusResponse } = useQuery<{ isAdmin: boolean }>({
@@ -49,22 +51,6 @@ export default function Dashboard() {
   });
 
   const isAdmin = adminStatusResponse?.isAdmin || false;
-
-  // Generate session ID for chat widget
-  useEffect(() => {
-    const generateSessionId = () => {
-      return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    };
-
-    const storedSessionId = sessionStorage.getItem('dashboard_chat_session_id');
-    if (storedSessionId) {
-      setSessionId(storedSessionId);
-    } else {
-      const newSessionId = generateSessionId();
-      sessionStorage.setItem('dashboard_chat_session_id', newSessionId);
-      setSessionId(newSessionId);
-    }
-  }, []);
 
   // Redirect to home if not authenticated
   useEffect(() => {
