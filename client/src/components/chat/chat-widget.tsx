@@ -489,12 +489,18 @@ export default function ChatWidget({
       <>
         {/* Mobile overlay */}
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
+            isClosing ? 'bg-opacity-0' : 'bg-opacity-50'
+          }`}
           onClick={closeChat}
         />
 
         {/* Mobile chat interface */}
-        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-slideUp">
+        <div className={`fixed inset-0 z-50 bg-white flex flex-col transition-transform duration-300 ease-out ${
+          isClosing 
+            ? 'transform translate-y-full' 
+            : 'transform translate-y-0 animate-slideUp'
+        }`}>
           {/* Mobile header */}
           <div 
             className="text-white p-2 flex items-center justify-between flex-shrink-0"

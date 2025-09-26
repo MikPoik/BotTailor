@@ -79,7 +79,7 @@
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
   }
-  
+
   html {
     font-size: 16px !important;
     -webkit-text-size-adjust: 100% !important;
@@ -172,15 +172,15 @@
   }
 
   /* High specificity selectors for the exact TabsContent behavior */
-  .chat-interface [role="tabpanel"][data-state="inactive"],
-  .chat-interface-mobile [role="tabpanel"][data-state="inactive"],
+  .chat-interface .role="tabpanel"[data-state="inactive"],
+  .chat-interface-mobile .role="tabpanel"[data-state="inactive"],
   div[role="tabpanel"][data-state="inactive"] {
     display: none !important;
     visibility: hidden !important;
   }
 
-  .chat-interface [role="tabpanel"][data-state="active"],
-  .chat-interface-mobile [role="tabpanel"][data-state="active"],
+  .chat-interface .role="tabpanel"[data-state="active"],
+  .chat-interface-mobile .role="tabpanel"[data-state="active"],
   div[role="tabpanel"][data-state="active"] {
     display: flex !important;
     visibility: visible !important;
@@ -382,7 +382,7 @@
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
   }
-  
+
   .chat-interface-mobile {
     position: fixed;
     top: 0;
@@ -448,5 +448,15 @@
     flex: 1 !important;
     min-height: 0 !important;
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+
+  /* Smooth transitions for mobile chat elements */
+  .chat-interface-mobile * {
+    transition: all 0.2s ease !important;
+  }
+
+  /* Mobile chat specific animations */
+  .chat-interface-mobile.closing {
+    animation: slideDown 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
   }
 }
