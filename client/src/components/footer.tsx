@@ -9,10 +9,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <Bot className="h-6 w-6" />
               <span className="font-bold text-lg">BotTailor</span>
-            </div>
+            </Link>
             <p className="text-sm text-muted-foreground">
               Smart AI chatbots made simple. Create intelligent, customizable chatbots for your website in minutes.
             </p>

@@ -67,9 +67,12 @@ export function Navbar() {
               <Button variant="ghost" asChild>
                 <Link href="/pricing">Pricing</Link>
               </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/contact">Contact us</Link>
+              </Button>
               {isAuthenticated && (
                 <>
-                  <Button variant="ghost" asChild>
+                  <Button asChild>
                     <Link href="/dashboard">Dashboard</Link>
                   </Button>
                   <Button variant="ghost" asChild>
@@ -173,13 +176,14 @@ export function Navbar() {
           <div className="container mx-auto py-4 space-y-3">
             {isAuthenticated ? (
               <>
-                <Link
-                  href="/dashboard"
-                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
-                  onClick={closeMenu}
-                >
-                  Dashboard
-                </Link>
+                <Button asChild className="w-full justify-start mb-2">
+                  <Link
+                    href="/dashboard"
+                    onClick={closeMenu}
+                  >
+                    Dashboard
+                  </Link>
+                </Button>
                 <Link
                   href="/docs"
                   className="block text-sm font-medium transition-colors hover:text-primary py-2"
@@ -247,6 +251,13 @@ export function Navbar() {
                   onClick={closeMenu}
                 >
                   Pricing
+                </Link>
+                <Link
+                  href="/contact"
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Contact us
                 </Link>
                 <a
                   href="/api/login"
