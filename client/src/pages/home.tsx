@@ -41,30 +41,30 @@ export default function Home() {
   });
 
   useEffect(() => {
-    // Set page title and meta description dynamically
-    document.title = "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants";
-    
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', 'Create intelligent, customizable AI chatbots for your website in minutes. Deploy anywhere with our powerful AI platform. No coding required - start free today!');
+    // Set page title and meta description dynamically - only once
+    if (document.title !== "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants") {
+      document.title = "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants";
+      
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', 'Create intelligent, customizable AI chatbots for your website in minutes. Deploy anywhere with our powerful AI platform. No coding required - start free today!');
+      }
     }
 
-    const generateSessionId = () => {
-      return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    };
-
-    // Always generate a fresh session ID for each page visit
-    // This ensures users get fresh conversations every time they reload the page
-    const newSessionId = generateSessionId();
-    setSessionId(newSessionId);
-    
-    // Clear any previously stored session ID to prevent persistence
-    try {
-      localStorage.removeItem('home_chat_session_id');
-    } catch (error) {
-      console.warn('Could not access localStorage:', error);
+    // Generate session ID only once per component mount
+    if (!sessionId) {
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log('[HOME] Generated fresh session ID:', newSessionId);
+      setSessionId(newSessionId);
+      
+      // Clear any previously stored session ID to prevent persistence
+      try {
+        localStorage.removeItem('home_chat_session_id');
+      } catch (error) {
+        console.warn('Could not access localStorage:', error);
+      }
     }
-  }, []);
+  }, [sessionId]);
 
   return (
     <div className="flex flex-col min-h-screen relative">

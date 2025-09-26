@@ -70,26 +70,28 @@ export default function ChatWidget({
   }, [chatbotConfig]);
 
   // Safe localStorage access that handles sandboxed environments
+  // Only used in development mode - embedded mode doesn't need localStorage
   const safeLocalStorage = {
     getItem: (key: string): string | null => {
+      if (isEmbedded) return null; // Skip localStorage in embedded mode
       try {
         if (typeof Storage === "undefined" || typeof localStorage === "undefined") {
           return null;
         }
         return localStorage.getItem(key);
       } catch (error) {
-        // In sandboxed iframe, localStorage may not be accessible
         return null;
       }
     },
     setItem: (key: string, value: string): void => {
+      if (isEmbedded) return; // Skip localStorage in embedded mode
       try {
         if (typeof Storage === "undefined" || typeof localStorage === "undefined") {
           return;
         }
         localStorage.setItem(key, value);
       } catch (error) {
-        // In sandboxed iframe, localStorage may not be accessible - fail silently
+        // Fail silently
       }
     }
   };
@@ -157,8 +159,16 @@ export default function ChatWidget({
     return luminance > 0.5; // Return true if light, false if dark
   };
 
-  // Inject CSS synchronously to prevent FOUC
+  // Inject CSS synchronously to prevent FOUC - memoized to prevent redundant operations
   useEffect(() => {
+    const themeKey = `${resolvedPrimaryColor}-${backgroundColor}-${textColor}`;
+    const currentThemeKey = document.documentElement.getAttribute('data-chat-theme-key');
+    
+    // Skip if same theme is already applied
+    if (currentThemeKey === themeKey) {
+      return;
+    }
+
     const injectThemeStyles = () => {
       let existingStyle = document.getElementById('chat-widget-theme-styles');
       if (existingStyle) {
@@ -367,13 +377,17 @@ export default function ChatWidget({
         }
       `;
       document.head.appendChild(style);
+      
+      // Mark the current theme as applied
+      document.documentElement.setAttribute('data-chat-theme-key', themeKey);
     };
 
-    injectThemeStyles(); // Call the function directly
+    injectThemeStyles();
 
     return () => {
+      // Only remove if we're unmounting completely, not just theme changes
       const existingStyle = document.getElementById('chat-widget-theme-styles');
-      if (existingStyle) {
+      if (existingStyle && !document.documentElement.getAttribute('data-chat-theme-key')) {
         existingStyle.remove();
       }
     };
@@ -408,12 +422,12 @@ export default function ChatWidget({
   };
 
 
-  // Initialize session for embedded chat when embedded mode is active
+  // Initialize session for embedded chat when embedded mode is active and sessionId is available
   useEffect(() => {
-    if (isEmbedded) {
+    if (isEmbedded && sessionId) {
       initializeSession();
     }
-  }, [isEmbedded, initializeSession]);
+  }, [isEmbedded, sessionId, initializeSession]);
 
   // Render different interfaces based on conditions but all at the end
   // Mobile full-screen interface

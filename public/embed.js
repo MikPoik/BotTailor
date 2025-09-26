@@ -422,24 +422,36 @@
           // Only load iframe once to preserve chat session
           if (!mobileIframe.src) {
             try {
-              // Build iframe URL - let each page load generate a fresh session
-              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
-
+              // Build optimized iframe URL - theme colors passed via postMessage after load
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
-                // Specific widget URL - use as-is with query parameters  
+                // Specific widget URL - use as-is with minimal parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${themeParams}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}embedded=true&mobile=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${themeParams}mobile=true&embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?embedded=true&mobile=true`;
               }
 
               // Force HTTPS for iframe URL
               mobileIframe.src = this.forceHttps(widgetUrl);
+
+              // Send theme configuration after iframe loads
+              mobileIframe.onload = () => {
+                if (mobileIframe.contentWindow) {
+                  mobileIframe.contentWindow.postMessage({
+                    type: 'THEME_CONFIG',
+                    theme: {
+                      primaryColor: this.config.primaryColor || '#2563eb',
+                      backgroundColor: this.config.backgroundColor || '#ffffff',
+                      textColor: this.config.textColor || '#1f2937'
+                    }
+                  }, '*');
+                }
+              };
             } catch (error) {
               // Fallback URL construction
-              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}mobile=true&embedded=true`);
+              mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?embedded=true&mobile=true`);
             }
           }
           bubble.style.display = 'none';
@@ -451,24 +463,36 @@
           // Only load iframe once to preserve chat session
           if (!iframe.src) {
             try {
-              // Build iframe URL - let each page load generate a fresh session
-              const themeParams = `primaryColor=${encodeURIComponent(this.config.primaryColor || '#2563eb')}&backgroundColor=${encodeURIComponent(this.config.backgroundColor || '#ffffff')}&textColor=${encodeURIComponent(this.config.textColor || '#1f2937')}&`;
-
+              // Build optimized iframe URL - theme colors passed via postMessage after load
               let widgetUrl;
               if (this.config.apiUrl.includes('/widget/')) {
-                // Specific widget URL - use as-is with query parameters  
+                // Specific widget URL - use as-is with minimal parameters
                 const separator = this.config.apiUrl.includes('?') ? '&' : '?';
-                widgetUrl = `${this.config.apiUrl}${separator}${themeParams}embedded=true`;
+                widgetUrl = `${this.config.apiUrl}${separator}embedded=true`;
               } else {
                 // Base URL - append /chat-widget path
-                widgetUrl = `${this.config.apiUrl}/chat-widget?${themeParams}embedded=true`;
+                widgetUrl = `${this.config.apiUrl}/chat-widget?embedded=true`;
               }
 
               // Force HTTPS for iframe URL
               iframe.src = this.forceHttps(widgetUrl);
+
+              // Send theme configuration after iframe loads
+              iframe.onload = () => {
+                if (iframe.contentWindow) {
+                  iframe.contentWindow.postMessage({
+                    type: 'THEME_CONFIG',
+                    theme: {
+                      primaryColor: this.config.primaryColor || '#2563eb',
+                      backgroundColor: this.config.backgroundColor || '#ffffff',
+                      textColor: this.config.textColor || '#1f2937'
+                    }
+                  }, '*');
+                }
+              };
             } catch (error) {
               // Fallback URL construction
-              iframe.src = this.forceHttps(`${this.config.apiUrl}?${themeParams}embedded=true`);
+              iframe.src = this.forceHttps(`${this.config.apiUrl}?embedded=true`);
             }
           }
           bubble.style.display = 'none';
@@ -566,7 +590,7 @@
               if (!mobileIframe.src && iframe.src) {
                 // Transfer the current session to mobile iframe
                 const currentSrc = iframe.src;
-                const mobileUrl = currentSrc.replace('mobile=false', 'mobile=true');
+                const mobileUrl = currentSrc.replace('embedded=true', 'embedded=true&mobile=true');
                 mobileIframe.src = mobileUrl;
               }
 
@@ -583,7 +607,7 @@
               if (!iframe.src && mobileIframe.src) {
                 // Transfer the current session to desktop iframe
                 const currentSrc = mobileIframe.src;
-                const desktopUrl = currentSrc.replace('mobile=true', 'mobile=false');
+                const desktopUrl = currentSrc.replace(/(&|\?)mobile=true/, '$1embedded=true');
                 iframe.src = desktopUrl;
               }
 
@@ -659,16 +683,16 @@
       try {
         const item = localStorage.getItem(`chatwidget_${key}`);
         if (!item) return null;
-        
+
         const { data, timestamp } = JSON.parse(item);
         const now = Date.now();
         const fiveMinutes = 5 * 60 * 1000;
-        
+
         if (now - timestamp > fiveMinutes) {
           localStorage.removeItem(`chatwidget_${key}`);
           return null;
         }
-        
+
         return data;
       } catch {
         return null;
