@@ -265,6 +265,9 @@
             </svg>
           </button>
         </div>
+
+        <!-- Arrow pointing to chat bubble -->
+        <div class="chatwidget-arrow" style="position: absolute; bottom: -8px; ${this.config.position === 'bottom-right' ? 'right' : 'left'}: 24px; width: 16px; height: 16px; background: #ffffff; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; transform: rotate(45deg);"></div>
       `;
 
       // Create chat bubble
@@ -593,6 +596,11 @@
         if (messageBubble && messageVisible) {
           messageBubble.classList.remove('visible');
           messageVisible = false;
+          
+          // Mark default message as dismissed
+          const chatbotId = this.config.chatbotConfig?.id || 'default';
+          const dismissedKey = `chat-default-message-dismissed-${chatbotId}`;
+          this.safeSessionStorage.setItem(dismissedKey, 'true');
         }
       };
 
@@ -802,6 +810,9 @@
       console.log('Chat widget: Chatbot is active, showing widget');
       this.showWidget();
 
+      // Store chatbot config for dismissal keys
+      this.config.chatbotConfig = data;
+
       if (data.initialMessages && data.initialMessages.length > 0) {
         this.displayInitialMessages(messageBubble, data.initialMessages);
       } else {
@@ -828,13 +839,14 @@
       // Create a unique cache key based on chatbot and messages
       const messagesHash = messages.join('|');
       const chatbotId = this.config.chatbotConfig?.id || 'default';
-      const cacheKey = `chat-initial-messages-shown-${chatbotId}_${messagesHash}`;
+      const dismissedKey = `chat-initial-messages-dismissed-${chatbotId}_${messagesHash}`;
 
-      // Check if initial messages were already shown in this browser session
+      // Check if initial messages were manually dismissed
       try {
-        const alreadyShown = sessionStorage.getItem(cacheKey);
-        if (alreadyShown) {
-          this.showDefaultMessage(messageBubble);
+        const areDismissed = this.safeSessionStorage.getItem(dismissedKey) === 'true';
+        if (areDismissed) {
+          // Messages were dismissed, don't show anything (not even default)
+          messageBubble.style.display = 'none';
           return;
         }
       } catch (error) {
@@ -843,13 +855,6 @@
 
       // Hide the default message bubble since we'll create individual ones
       messageBubble.style.display = 'none';
-
-      // Mark initial messages as shown for this browser session
-      try {
-        sessionStorage.setItem(cacheKey, 'true');
-      } catch (error) {
-        // Ignore if sessionStorage is not available
-      }
 
       const container = document.getElementById('chatwidget-container');
 
@@ -880,6 +885,12 @@
         // Add click listener to hide all messages
         const globalCloseBtnElement = globalCloseBtn.querySelector('.chatwidget-global-close-btn');
         globalCloseBtnElement.addEventListener('click', () => {
+          // Mark initial messages as dismissed
+          const chatbotId = this.config.chatbotConfig?.id || 'default';
+          const messagesHash = messages.join('|');
+          const dismissedKey = `chat-initial-messages-dismissed-${chatbotId}_${messagesHash}`;
+          this.safeSessionStorage.setItem(dismissedKey, 'true');
+          
           this.hideAllInitialMessages();
         });
 
@@ -951,6 +962,20 @@
     },
 
     showDefaultMessage: function(messageBubble) {
+      // Check if default messages were dismissed
+      const chatbotId = this.config.chatbotConfig?.id || 'default';
+      const dismissedKey = `chat-default-message-dismissed-${chatbotId}`;
+      
+      try {
+        const isDefaultDismissed = this.safeSessionStorage.getItem(dismissedKey) === 'true';
+        if (isDefaultDismissed) {
+          messageBubble.style.display = 'none';
+          return;
+        }
+      } catch (error) {
+        // Continue if sessionStorage is not available
+      }
+
       // Show default message bubble after a short delay
       setTimeout(() => {
         messageBubble.style.opacity = '1';
