@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Minimize2 } from "lucide-react";
+import { MessageCircle, X, Minimize2, RefreshCw } from "lucide-react";
 import TabbedChatInterface from "./tabbed-chat-interface";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -438,6 +438,27 @@ export default function ChatWidget({
     }, 400); // Match animation duration
   };
 
+  const refreshSession = () => {
+    // Generate new session ID
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Update sessionStorage with new session ID
+    const storageKey = isEmbedded ? 'embed-session-id' : 'global-chat-session-id';
+    try {
+      sessionStorage.setItem(storageKey, newSessionId);
+      console.log(`[REFRESH] Generated new session ID: ${newSessionId}`);
+    } catch (error) {
+      console.warn('sessionStorage not accessible, session refresh may not persist');
+    }
+    
+    // Clear query cache to force fresh data
+    queryClient.invalidateQueries({ queryKey: ['/api/chat/session'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/chat', providedSessionId, 'messages'] });
+    
+    // Force page reload to reinitialize with new session
+    window.location.reload();
+  };
+
 
   // Initialize session for embedded chat when embedded mode is active and sessionId is available
   useEffect(() => {
@@ -475,14 +496,27 @@ export default function ChatWidget({
                 <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
               </div>
             </div>
-            <button 
-              onClick={closeChat}
-              className="text-white p-1.5 rounded transition-colors"
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center space-x-1">
+              <button 
+                onClick={refreshSession}
+                className="text-white p-1.5 rounded transition-colors"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                title="Start new conversation"
+                data-testid="button-refresh-session"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+              <button 
+                onClick={closeChat}
+                className="text-white p-1.5 rounded transition-colors"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                data-testid="button-close-chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Chat content - takes remaining space */}
@@ -528,14 +562,27 @@ export default function ChatWidget({
               <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
             </div>
           </div>
-          <button 
-            onClick={handleEmbeddedClose}
-            className="text-white p-1.5 rounded transition-colors"
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <Minimize2 className="h-4 w-4" />
-          </button>
+          <div className="flex items-center space-x-1">
+            <button 
+              onClick={refreshSession}
+              className="text-white p-1.5 rounded transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              title="Start new conversation"
+              data-testid="button-refresh-session"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
+            <button 
+              onClick={handleEmbeddedClose}
+              className="text-white p-1.5 rounded transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              data-testid="button-minimize-chat"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Chat content - takes remaining space */}
