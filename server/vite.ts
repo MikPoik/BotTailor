@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
+import { isSSRRoute } from "@shared/route-metadata";
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -77,6 +78,36 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
+
+      // Check if this route should be server-side rendered
+      const pathname = new URL(url, 'http://localhost').pathname;
+      
+      if (isSSRRoute(pathname)) {
+        // Server-side render marketing pages
+        try {
+          const { generateHTML } = await vite.ssrLoadModule("/src/entry-server.tsx");
+          const { html: appHtml, ssrContext } = await generateHTML(pathname, new URL(url, 'http://localhost').search);
+          
+          // Handle redirects
+          if (ssrContext.redirectTo) {
+            return res.redirect(302, ssrContext.redirectTo);
+          }
+          
+          // Replace default meta tags with route-specific ones
+          const { generateMetaTags } = await vite.ssrLoadModule("/src/entry-server.tsx");
+          const metaTags = generateMetaTags(pathname);
+          template = template.replace(
+            /<title>.*?<\/title>[\s\S]*?<script type="application\/ld\+json">[\s\S]*?<\/script>/i,
+            metaTags
+          );
+          
+          // Inject the SSR-rendered content
+          template = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
+        } catch (ssrError) {
+          // Fall back to CSR if SSR fails
+          console.error('SSR Error, falling back to CSR:', ssrError);
+        }
+      }
 
       // Inject chat widget config if available
       if ((req as any).chatWidgetConfig) {
