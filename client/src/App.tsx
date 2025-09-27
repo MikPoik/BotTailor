@@ -31,9 +31,11 @@ import Terms from "@/pages/terms";
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
-  // Check both URL params and injected config
-  const urlEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
-  const configEmbedded = (window as any).__CHAT_WIDGET_CONFIG__?.embedded;
+  // Check both URL params and injected config (SSR-safe)
+  const urlEmbedded = typeof window !== 'undefined' ? 
+    new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
+  const configEmbedded = typeof window !== 'undefined' ? 
+    (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
   const isEmbedded = urlEmbedded || configEmbedded;
 
   if (isEmbedded) {
@@ -102,9 +104,11 @@ function AuthenticatedRouter() {
 
 function Router() {
   // Check if this is an embedded widget context
-  // Check both URL params and injected config
-  const urlEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
-  const configEmbedded = (window as any).__CHAT_WIDGET_CONFIG__?.embedded;
+  // Check both URL params and injected config (SSR-safe)
+  const urlEmbedded = typeof window !== 'undefined' ? 
+    new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
+  const configEmbedded = typeof window !== 'undefined' ? 
+    (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
   const isEmbedded = urlEmbedded || configEmbedded;
 
   if (isEmbedded) {
@@ -139,14 +143,10 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <>
+      <Toaster />
+      <Router />
+    </>
   );
 }
 
