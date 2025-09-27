@@ -1,4 +1,5 @@
 import { renderToPipeableStream } from "react-dom/server";
+import { Writable } from "node:stream";
 import { Router } from "wouter";
 import App from "./App";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -73,9 +74,8 @@ export function generateHTML(url: string, search?: string): Promise<{ html: stri
       {
         onShellReady() {
           // Use a proper Node.js Writable stream
-          const { Writable } = require('stream');
           const chunks: Buffer[] = [];
-          
+
           const writableStream = new Writable({
             write(chunk: any, encoding: any, callback: any) {
               chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));

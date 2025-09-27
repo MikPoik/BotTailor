@@ -80,13 +80,21 @@ export async function setupVite(app: Express, server: Server) {
       );
 
       // Check if this route should be server-side rendered
-      const pathname = new URL(url, 'http://localhost').pathname;
+      const requestUrl = new URL(url, 'http://localhost');
+      const pathname = requestUrl.pathname;
       
       if (isSSRRoute(pathname)) {
         // Server-side render marketing pages
         try {
-          const { generateHTML } = await vite.ssrLoadModule("/src/entry-server.tsx");
-          const { html: appHtml, ssrContext } = await generateHTML(pathname, new URL(url, 'http://localhost').search);
+          const entryServer = await vite.ssrLoadModule("/src/entry-server.tsx");
+          const generateHTML = entryServer.generateHTML as (url: string, search?: string) => Promise<{ html: string; ssrContext: any }>;
+          const generateMetaTags = entryServer.generateMetaTags as (url: string) => string;
+
+          if (typeof generateHTML !== "function" || typeof generateMetaTags !== "function") {
+            throw new Error("SSR entry module did not export generateHTML and generateMetaTags");
+          }
+
+          const { html: appHtml, ssrContext } = await generateHTML(pathname, requestUrl.search);
           
           // Handle redirects
           if (ssrContext.redirectTo) {
@@ -94,12 +102,25 @@ export async function setupVite(app: Express, server: Server) {
           }
           
           // Replace default meta tags with route-specific ones
-          const { generateMetaTags } = await vite.ssrLoadModule("/src/entry-server.tsx");
           const metaTags = generateMetaTags(pathname);
           template = template.replace(
-            /<title>.*?<\/title>[\s\S]*?<script type="application\/ld\+json">[\s\S]*?<\/script>/i,
-            metaTags
+            /<!-- SSR_META_START -->[\s\S]*?<!-- SSR_META_END -->/,
+            () => {
+              const indentedMeta = metaTags
+                .split("\n")
+                .map((line) => (line ? `    ${line}` : ""))
+                .join("\n");
+              return `<!-- SSR_META_START -->\n${indentedMeta}\n    <!-- SSR_META_END -->`;
+            }
           );
+
+          if (!template.includes("data-ssr-styles")) {
+            const styleHref = process.env.NODE_ENV === "development"
+              ? "/src/index.css"
+              : "/assets/index.css";
+            const styleTag = `    <link rel="stylesheet" href="${styleHref}" data-ssr-styles />`;
+            template = template.replace("</head>", `${styleTag}\n  </head>`);
+          }
           
           // Inject the SSR-rendered content
           template = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
