@@ -9,6 +9,20 @@ export interface RouteMetadata {
   structuredData?: Record<string, any>;
 }
 
+export function normalizeRoutePath(path: string): string {
+  if (!path) {
+    return "/";
+  }
+
+  const pathname = path.split("?")[0].split("#")[0];
+  if (!pathname || pathname === "/") {
+    return "/";
+  }
+
+  const trimmed = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  return trimmed || "/";
+}
+
 export const routeMetadata: Record<string, RouteMetadata> = {
   "/": {
     title: "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants",
@@ -87,12 +101,16 @@ export const routeMetadata: Record<string, RouteMetadata> = {
 };
 
 export function getRouteMetadata(path: string): RouteMetadata {
-  return routeMetadata[path] || routeMetadata["/"];
+  const normalized = normalizeRoutePath(path);
+  return routeMetadata[normalized] || routeMetadata["/"];
 }
 
 // Routes that should be server-side rendered
-export const SSR_ROUTES = ["/", "/docs", "/pricing", "/contact", "/privacy", "/terms"];
+export const SSR_ROUTES = ["/", "/docs", "/pricing"] as const;
+
+const SSR_ROUTE_SET = new Set<string>(SSR_ROUTES);
 
 export function isSSRRoute(path: string): boolean {
-  return SSR_ROUTES.includes(path);
+  const normalized = normalizeRoutePath(path);
+  return SSR_ROUTE_SET.has(normalized);
 }

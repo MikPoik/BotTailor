@@ -4,7 +4,59 @@ import fs from "fs";
 import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
+import { pathToFileURL } from "url";
 import { isSSRRoute } from "@shared/route-metadata";
+
+type SSRModule = {
+  generateHTML: (url: string, search?: string) => Promise<{ html: string; ssrContext: { redirectTo?: string } }>;
+  generateMetaTags: (url: string) => string;
+};
+
+interface RenderWithSSROptions {
+  template: string;
+  pathname: string;
+  search?: string;
+  loadModule: () => Promise<SSRModule>;
+  styleHref?: string;
+}
+
+async function renderTemplateWithSSR({
+  template,
+  pathname,
+  search,
+  loadModule,
+  styleHref,
+}: RenderWithSSROptions): Promise<{ html: string; ssrContext: { redirectTo?: string } }> {
+  const entryServer = await loadModule();
+  const { generateHTML, generateMetaTags } = entryServer;
+
+  if (typeof generateHTML !== "function" || typeof generateMetaTags !== "function") {
+    throw new Error("SSR entry module must export generateHTML and generateMetaTags functions");
+  }
+
+  const { html: appHtml, ssrContext } = await generateHTML(pathname, search);
+  const metaTags = generateMetaTags(pathname);
+
+  let html = template.replace(
+    /<!-- SSR_META_START -->[\s\S]*?<!-- SSR_META_END -->/,
+    () => {
+      const indentedMeta = metaTags
+        .split("\n")
+        .map((line) => (line ? `    ${line}` : ""))
+        .join("\n");
+      return `<!-- SSR_META_START -->\n${indentedMeta}\n    <!-- SSR_META_END -->`;
+    },
+  );
+
+  if (styleHref && !html.includes("data-ssr-styles")) {
+    const styleTag = `    <link rel="stylesheet" href="${styleHref}" data-ssr-styles />`;
+    html = html.replace("</head>", `${styleTag}\n  </head>`);
+  }
+
+  html = html.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
+
+  return { html, ssrContext };
+}
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -80,53 +132,30 @@ export async function setupVite(app: Express, server: Server) {
       );
 
       // Check if this route should be server-side rendered
-      const requestUrl = new URL(url, 'http://localhost');
+      const requestUrl = new URL(url, "http://localhost");
       const pathname = requestUrl.pathname;
-      
+      let pageTemplate = template;
+
       if (isSSRRoute(pathname)) {
-        // Server-side render marketing pages
         try {
-          const entryServer = await vite.ssrLoadModule("/src/entry-server.tsx");
-          const generateHTML = entryServer.generateHTML as (url: string, search?: string) => Promise<{ html: string; ssrContext: any }>;
-          const generateMetaTags = entryServer.generateMetaTags as (url: string) => string;
+          const { html, ssrContext } = await renderTemplateWithSSR({
+            template: pageTemplate,
+            pathname,
+            search: requestUrl.search,
+            styleHref: "/src/index.css",
+            loadModule: async () => {
+              const module = await vite.ssrLoadModule("/src/entry-server.tsx");
+              return module as SSRModule;
+            },
+          });
 
-          if (typeof generateHTML !== "function" || typeof generateMetaTags !== "function") {
-            throw new Error("SSR entry module did not export generateHTML and generateMetaTags");
-          }
-
-          const { html: appHtml, ssrContext } = await generateHTML(pathname, requestUrl.search);
-          
-          // Handle redirects
-          if (ssrContext.redirectTo) {
+          if (ssrContext?.redirectTo) {
             return res.redirect(302, ssrContext.redirectTo);
           }
-          
-          // Replace default meta tags with route-specific ones
-          const metaTags = generateMetaTags(pathname);
-          template = template.replace(
-            /<!-- SSR_META_START -->[\s\S]*?<!-- SSR_META_END -->/,
-            () => {
-              const indentedMeta = metaTags
-                .split("\n")
-                .map((line) => (line ? `    ${line}` : ""))
-                .join("\n");
-              return `<!-- SSR_META_START -->\n${indentedMeta}\n    <!-- SSR_META_END -->`;
-            }
-          );
 
-          if (!template.includes("data-ssr-styles")) {
-            const styleHref = process.env.NODE_ENV === "development"
-              ? "/src/index.css"
-              : "/assets/index.css";
-            const styleTag = `    <link rel="stylesheet" href="${styleHref}" data-ssr-styles />`;
-            template = template.replace("</head>", `${styleTag}\n  </head>`);
-          }
-          
-          // Inject the SSR-rendered content
-          template = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
+          pageTemplate = html;
         } catch (ssrError) {
-          // Fall back to CSR if SSR fails
-          console.error('SSR Error, falling back to CSR:', ssrError);
+          console.error("SSR Error, falling back to CSR:", ssrError);
         }
       }
 
@@ -138,10 +167,10 @@ export async function setupVite(app: Express, server: Server) {
             window.__CHAT_WIDGET_CONFIG__ = ${JSON.stringify(config)};
           </script>
         `;
-        template = template.replace('</head>', `${configScript}</head>`);
+        pageTemplate = pageTemplate.replace('</head>', `${configScript}</head>`);
       }
 
-      const page = await vite.transformIndexHtml(url, template);
+      const page = await vite.transformIndexHtml(url, pageTemplate);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
@@ -152,17 +181,77 @@ export async function setupVite(app: Express, server: Server) {
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "public");
+  const indexPath = path.resolve(distPath, "index.html");
 
-  if (!fs.existsSync(distPath)) {
+  if (!fs.existsSync(distPath) || !fs.existsSync(indexPath)) {
     throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
+      `Could not find the build output. Expected client assets at: ${indexPath}`,
     );
   }
 
-  app.use(express.static(distPath));
+  const baseTemplate = fs.readFileSync(indexPath, "utf-8");
+  const ssrEntryPath = path.resolve(import.meta.dirname, "server", "entry-server.js");
+  let ssrModulePromise: Promise<SSRModule> | null = null;
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+  const loadProdSSRModule = async () => {
+    if (!ssrModulePromise) {
+      ssrModulePromise = import(pathToFileURL(ssrEntryPath).href) as Promise<SSRModule>;
+    }
+    return ssrModulePromise;
+  };
+
+  app.use(
+    express.static(distPath, {
+      index: false,
+    }),
+  );
+
+  app.get("*", async (req, res, next) => {
+    if (req.method !== "GET") {
+      return next();
+    }
+
+    try {
+      const originHost = req.get("host") || "localhost";
+      const originProtocol = req.protocol || "http";
+      const origin = `${originProtocol}://${originHost}`;
+      const requestUrl = new URL(req.originalUrl, origin);
+      const pathname = requestUrl.pathname;
+
+      let pageTemplate = baseTemplate;
+
+      if (isSSRRoute(pathname)) {
+        try {
+          const { html, ssrContext } = await renderTemplateWithSSR({
+            template: pageTemplate,
+            pathname,
+            search: requestUrl.search,
+            loadModule: loadProdSSRModule,
+          });
+
+          if (ssrContext?.redirectTo) {
+            return res.redirect(302, ssrContext.redirectTo);
+          }
+
+          pageTemplate = html;
+        } catch (ssrError) {
+          console.error("SSR Error, falling back to CSR:", ssrError);
+        }
+      }
+
+      if ((req as any).chatWidgetConfig) {
+        const config = (req as any).chatWidgetConfig;
+        const configScript = `
+          <script>
+            window.__CHAT_WIDGET_CONFIG__ = ${JSON.stringify(config)};
+          </script>
+        `;
+        pageTemplate = pageTemplate.replace('</head>', `${configScript}</head>`);
+      }
+
+      res.status(200).set({ "Content-Type": "text/html" }).send(pageTemplate);
+    } catch (error) {
+      next(error);
+    }
   });
 }

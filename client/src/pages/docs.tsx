@@ -16,6 +16,11 @@ export default function Docs() {
   const { isAuthenticated } = useAuth();
   // Use unified global chat session
   const { sessionId } = useGlobalChatSession();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Fetch the site default chatbot for chat widget
   const { data: defaultChatbot } = useQuery<{
@@ -31,7 +36,7 @@ export default function Docs() {
     [key: string]: any;
   }>({
     queryKey: ['/api/public/default-chatbot'],
-    enabled: true,
+    enabled: isHydrated,
     retry: false,
   });
 
@@ -426,7 +431,7 @@ export default function Docs() {
       </section>
 
       {/* Chat Widget */}
-      {sessionId && defaultChatbot && defaultChatbot.isActive && (
+      {isHydrated && sessionId && defaultChatbot && defaultChatbot.isActive && (
         <ChatWidget 
           sessionId={sessionId}
           position="bottom-right"

@@ -1,5 +1,18 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+function getEmbeddedConfig(): any {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return (window as any).__CHAT_WIDGET_CONFIG__;
+}
+
+function getBaseUrl(): string {
+  const config = getEmbeddedConfig();
+  return config?.apiUrl || "";
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -13,8 +26,7 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   // Use absolute URL when widget is embedded to avoid CORS issues
-  const config = (window as any).__CHAT_WIDGET_CONFIG__;
-  const baseUrl = config?.apiUrl || '';
+  const baseUrl = getBaseUrl();
   const urlString = String(url);
   const fullUrl = urlString.startsWith('http') ? urlString : `${baseUrl}${urlString}`;
   
@@ -36,8 +48,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     // Use absolute URL when widget is embedded to avoid CORS issues
-    const config = (window as any).__CHAT_WIDGET_CONFIG__;
-    const baseUrl = config?.apiUrl || '';
+    const baseUrl = getBaseUrl();
     const url = queryKey.join("/");
     const urlString = String(url);
     const fullUrl = urlString.startsWith('http') ? urlString : `${baseUrl}${urlString}`;

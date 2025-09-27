@@ -70,6 +70,7 @@ If you need to use OpenAI models, model "gpt-4.1" is the newest model released o
 ## System Architecture
 
 ### Frontend Architecture
+- **Node version**: NodeJs 20
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
 - **UI Library**: shadcn/ui built on Radix UI primitives

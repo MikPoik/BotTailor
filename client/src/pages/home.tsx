@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bot, MessageSquare, Settings, Zap, Sparkles, Globe, Shield, Clock } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import ChatWidget from "@/components/chat/chat-widget";
@@ -34,11 +34,16 @@ export default function Home() {
   // Use unified global chat session
   const { sessionId } = useGlobalChatSession();
   const { isAuthenticated } = useAuth();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Always fetch the site default chatbot for consistency
   const { data: defaultChatbot } = useQuery<ChatbotConfig>({
     queryKey: ['/api/public/default-chatbot'],
-    enabled: true,
+    enabled: isHydrated,
     retry: false,
   });
 
@@ -378,7 +383,7 @@ export default function Home() {
       </section>
 
       {/* Chat Widget */}
-      {sessionId && defaultChatbot && defaultChatbot.isActive && (
+      {isHydrated && sessionId && defaultChatbot && defaultChatbot.isActive && (
         <ChatWidget 
           sessionId={sessionId}
           position="bottom-right"

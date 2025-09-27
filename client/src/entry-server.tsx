@@ -5,7 +5,7 @@ import App from "./App";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/theme-context";
-import { getRouteMetadata } from "@shared/route-metadata";
+import { getRouteMetadata, normalizeRoutePath } from "@shared/route-metadata";
 
 export interface SSRContext {
   redirectTo?: string;
@@ -107,32 +107,50 @@ export function generateHTML(url: string, search?: string): Promise<{ html: stri
   });
 }
 
+const HTML_ESCAPE_LOOKUP: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+function escapeHtml(value?: string): string {
+  if (!value) {
+    return "";
+  }
+
+  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPE_LOOKUP[char] || char);
+}
+
 export function generateMetaTags(url: string): string {
-  const metadata = getRouteMetadata(url);
+  const normalizedPath = normalizeRoutePath(url);
+  const metadata = getRouteMetadata(normalizedPath);
+  const canonicalUrl = metadata.canonical || `https://bottailor.com${normalizedPath === '/' ? '' : normalizedPath}`;
   
   const metaTags = [
-    `<title>${metadata.title}</title>`,
-    `<meta name="description" content="${metadata.description}" />`,
-    metadata.keywords ? `<meta name="keywords" content="${metadata.keywords}" />` : '',
+    `<title>${escapeHtml(metadata.title)}</title>`,
+    `<meta name="description" content="${escapeHtml(metadata.description)}" />`,
+    metadata.keywords ? `<meta name="keywords" content="${escapeHtml(metadata.keywords)}" />` : '',
     `<meta name="author" content="BotTailor" />`,
     `<meta name="robots" content="index, follow" />`,
     '',
     '<!-- Open Graph / Facebook -->',
     `<meta property="og:type" content="website" />`,
-    `<meta property="og:url" content="${metadata.canonical || `https://bottailor.com${url}`}" />`,
-    `<meta property="og:title" content="${metadata.ogTitle || metadata.title}" />`,
-    `<meta property="og:description" content="${metadata.ogDescription || metadata.description}" />`,
-    `<meta property="og:image" content="${metadata.ogImage || 'https://bottailor.com/og-image.jpg'}" />`,
+    `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />`,
+    `<meta property="og:title" content="${escapeHtml(metadata.ogTitle || metadata.title)}" />`,
+    `<meta property="og:description" content="${escapeHtml(metadata.ogDescription || metadata.description)}" />`,
+    `<meta property="og:image" content="${escapeHtml(metadata.ogImage || 'https://bottailor.com/og-image.jpg')}" />`,
     '',
     '<!-- Twitter -->',
     `<meta property="twitter:card" content="summary_large_image" />`,
-    `<meta property="twitter:url" content="${metadata.canonical || `https://bottailor.com${url}`}" />`,
-    `<meta property="twitter:title" content="${metadata.ogTitle || metadata.title}" />`,
-    `<meta property="twitter:description" content="${metadata.ogDescription || metadata.description}" />`,
-    `<meta property="twitter:image" content="${metadata.ogImage || 'https://bottailor.com/og-image.jpg'}" />`,
+    `<meta property="twitter:url" content="${escapeHtml(canonicalUrl)}" />`,
+    `<meta property="twitter:title" content="${escapeHtml(metadata.ogTitle || metadata.title)}" />`,
+    `<meta property="twitter:description" content="${escapeHtml(metadata.ogDescription || metadata.description)}" />`,
+    `<meta property="twitter:image" content="${escapeHtml(metadata.ogImage || 'https://bottailor.com/og-image.jpg')}" />`,
     '',
     '<!-- Canonical URL -->',
-    `<link rel="canonical" href="${metadata.canonical || `https://bottailor.com${url}`}" />`,
+    `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`,
   ].filter(Boolean).join('\n    ');
 
   const structuredData = (metadata as any).structuredData ? 

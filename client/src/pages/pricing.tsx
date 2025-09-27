@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +37,18 @@ export default function Pricing() {
   const { isAuthenticated } = useAuth();
   // Use unified global chat session
   const { sessionId } = useGlobalChatSession();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription/plans"],
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    enabled: isHydrated,
   });
 
   // Fetch the site default chatbot for chat widget
@@ -59,7 +65,7 @@ export default function Pricing() {
     [key: string]: any;
   }>({
     queryKey: ['/api/public/default-chatbot'],
-    enabled: true, // Always load chatbot regardless of authentication
+    enabled: isHydrated, // Always load chatbot after hydration
     retry: false,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
@@ -302,7 +308,7 @@ export default function Pricing() {
       </div>
 
       {/* Chat Widget - Load after main content */}
-      {!plansLoading && sessionId && defaultChatbot && defaultChatbot.isActive && (
+      {isHydrated && !plansLoading && sessionId && defaultChatbot && defaultChatbot.isActive && (
         <ChatWidget 
           sessionId={sessionId}
           position="bottom-right"

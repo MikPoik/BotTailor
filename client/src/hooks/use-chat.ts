@@ -57,7 +57,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     queryKey: ['/api/chat', sessionId, 'messages'],
     queryFn: async () => {
       // Use absolute URL when widget is embedded
-      const config = (window as any).__CHAT_WIDGET_CONFIG__;
+      const config = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__ : undefined;
       const baseUrl = config?.apiUrl || '';
       const url = `/api/chat/${sessionId}/messages`;
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
@@ -139,7 +139,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       });
 
       // Use absolute URL when widget is embedded
-      const config = (window as any).__CHAT_WIDGET_CONFIG__;
+      const config = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__ : undefined;
       const baseUrl = config?.apiUrl || '';
       const url = `/api/chat/${sessionId}/messages/stream`;
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;

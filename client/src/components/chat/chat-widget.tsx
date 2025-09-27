@@ -23,6 +23,7 @@ export default function ChatWidget({
   textColor = '#1f2937',
   chatbotConfig
 }: ChatWidgetProps) {
+  const isClient = typeof window !== 'undefined';
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
@@ -35,7 +36,7 @@ export default function ChatWidget({
 
   // Generate a unique session ID for this chat widget instance
   const isMobile = useIsMobile();
-  const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
+  const injectedConfig = isClient ? (window as any).__CHAT_WIDGET_CONFIG__ : undefined;
   const isEmbedded = injectedConfig?.embedded || false;
 
   // Get chatbot config ID from injected config or props
