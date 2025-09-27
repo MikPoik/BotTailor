@@ -48,7 +48,6 @@ export function render(url: string, search?: string) {
 
 export function generateHTML(url: string, search?: string): Promise<{ html: string; ssrContext: SSRContext }> {
   return new Promise((resolve, reject) => {
-    let html = '';
     const ssrContext: SSRContext = {};
     
     // Create a fresh QueryClient for each SSR request
@@ -73,24 +72,28 @@ export function generateHTML(url: string, search?: string): Promise<{ html: stri
       </QueryClientProvider>,
       {
         onShellReady() {
-          // Simple approach: collect chunks in memory
-          const chunks: string[] = [];
+          // Use a proper Node.js Writable stream
+          const { Writable } = require('stream');
+          const chunks: Buffer[] = [];
           
-          // Create a custom writable that collects chunks
-          const writable = {
-            write(chunk: string) {
-              chunks.push(chunk);
-              return true;
+          const writableStream = new Writable({
+            write(chunk: any, encoding: any, callback: any) {
+              chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+              callback();
             },
-            end() {
-              html = chunks.join('');
+            final(callback: any) {
+              const html = Buffer.concat(chunks).toString('utf8');
               resolve({ html, ssrContext });
+              callback();
             }
-          };
+          });
           
-          // Pipe to our custom writable
+          writableStream.on('error', (error: Error) => {
+            reject(error);
+          });
+          
           try {
-            stream.pipe(writable as any);
+            stream.pipe(writableStream);
           } catch (error) {
             reject(error);
           }
