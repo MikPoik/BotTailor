@@ -48,17 +48,59 @@ export function render(url: string, search?: string) {
 
 export function generateHTML(url: string, search?: string): Promise<{ html: string; ssrContext: SSRContext }> {
   return new Promise((resolve, reject) => {
-    const { stream, ssrContext } = render(url, search);
     let html = '';
+    const ssrContext: SSRContext = {};
+    
+    // Create a fresh QueryClient for each SSR request
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
 
-    stream.pipe({
-      write(chunk: string) {
-        html += chunk;
-      },
-      end() {
-        resolve({ html, ssrContext });
-      },
-    } as any);
+    const stream = renderToPipeableStream(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ThemeProvider>
+            <Router ssrPath={url} ssrSearch={search}>
+              <App />
+            </Router>
+          </ThemeProvider>
+        </TooltipProvider>
+      </QueryClientProvider>,
+      {
+        onShellReady() {
+          // Simple approach: collect chunks in memory
+          const chunks: string[] = [];
+          
+          // Create a custom writable that collects chunks
+          const writable = {
+            write(chunk: string) {
+              chunks.push(chunk);
+              return true;
+            },
+            end() {
+              html = chunks.join('');
+              resolve({ html, ssrContext });
+            }
+          };
+          
+          // Pipe to our custom writable
+          try {
+            stream.pipe(writable as any);
+          } catch (error) {
+            reject(error);
+          }
+        },
+        onError(error) {
+          console.error('SSR Error:', error);
+          reject(error);
+        },
+      }
+    );
   });
 }
 

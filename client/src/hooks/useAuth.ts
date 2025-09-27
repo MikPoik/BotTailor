@@ -3,9 +3,11 @@ import { getQueryFn } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
 export function useAuth() {
-  // Check if we're in embedded mode - if so, skip authentication entirely
-  const urlEmbedded = new URLSearchParams(window.location.search).get('embedded') === 'true';
-  const configEmbedded = (window as any).__CHAT_WIDGET_CONFIG__?.embedded;
+  // Check if we're in embedded mode - if so, skip authentication entirely (SSR-safe)
+  const urlEmbedded = typeof window !== 'undefined' ? 
+    new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
+  const configEmbedded = typeof window !== 'undefined' ? 
+    (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
   const isEmbedded = urlEmbedded || configEmbedded;
 
   const { data: user, isLoading, error } = useQuery<User | null>({
