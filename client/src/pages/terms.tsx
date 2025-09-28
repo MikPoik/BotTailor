@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { RouteDefinition } from "@shared/route-metadata";
 
 export default function Terms() {
   useEffect(() => {
@@ -263,3 +264,18 @@ export default function Terms() {
     </div>
   );
 }
+
+export const route: RouteDefinition = {
+  path: "/terms",
+  metadata: {
+    title: "Terms of Service - BotTailor | Service Agreement",
+    description:
+      "Read our terms of service for using BotTailor AI chatbot platform. Clear guidelines for our service usage.",
+    keywords: "terms of service, service agreement, BotTailor terms, chatbot terms",
+    ogTitle: "Terms of Service - BotTailor",
+    ogDescription:
+      "Read our terms of service for using BotTailor AI chatbot platform.",
+    ogImage: "https://bottailor.com/og-terms.jpg",
+    canonical: "https://bottailor.com/terms",
+  },
+};

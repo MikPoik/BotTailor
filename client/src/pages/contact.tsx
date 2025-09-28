@@ -15,6 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Mail, MessageSquare, Phone, CheckCircle } from "lucide-react";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
+import type { RouteDefinition } from "@shared/route-metadata";
 
 const contactFormSchema = z.object({
   contactType: z.enum(["sales", "support"], {
@@ -359,3 +360,18 @@ export default function Contact() {
     </div>
   );
 }
+
+export const route: RouteDefinition = {
+  path: "/contact",
+  metadata: {
+    title: "Contact Us - BotTailor | Get Help with AI Chatbots",
+    description:
+      "Get in touch with our team for support, questions, or custom chatbot solutions. We're here to help you succeed.",
+    keywords: "contact BotTailor, chatbot support, AI chatbot help, customer service",
+    ogTitle: "Contact Us - BotTailor",
+    ogDescription:
+      "Get in touch with our team for support, questions, or custom chatbot solutions.",
+    ogImage: "https://bottailor.com/og-contact.jpg",
+    canonical: "https://bottailor.com/contact",
+  },
+};

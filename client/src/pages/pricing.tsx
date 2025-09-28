@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useAuth } from "@/hooks/useAuth";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
+import type { RouteDefinition } from "@shared/route-metadata";
 
 interface SubscriptionPlan {
   id: number;
@@ -20,6 +21,22 @@ interface SubscriptionPlan {
   maxMessagesPerMonth: number;
   features: string[];
 }
+
+export const route: RouteDefinition = {
+  path: "/pricing",
+  ssr: true,
+  metadata: {
+    title: "Pricing - BotTailor | Affordable AI Chatbot Plans",
+    description:
+      "Choose the perfect AI chatbot plan for your business. Flexible pricing with powerful features starting free.",
+    keywords: "chatbot pricing, AI chatbot plans, BotTailor cost, chatbot subscription",
+    ogTitle: "Pricing - BotTailor",
+    ogDescription:
+      "Choose the perfect AI chatbot plan for your business. Flexible pricing with powerful features starting free.",
+    ogImage: "https://bottailor.com/og-pricing.jpg",
+    canonical: "https://bottailor.com/pricing",
+  },
+};
 
 const PLAN_ICONS = {
   Basic: Crown,

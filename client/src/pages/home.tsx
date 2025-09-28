@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
+import type { RouteDefinition } from "@shared/route-metadata";
 
 interface ChatbotConfig {
   id: number;
@@ -29,6 +30,43 @@ interface ChatbotConfig {
     };
   };
 }
+
+export const route: RouteDefinition = {
+  path: "/",
+  ssr: true,
+  metadata: {
+    title: "BotTailor - Smart AI Chatbots Made Simple | Create Custom AI Assistants",
+    description:
+      "Create intelligent, customizable AI chatbots for your website in minutes. Deploy anywhere with our powerful AI platform. No coding required - start free today!",
+    keywords:
+      "AI chatbot, custom chatbot, website chatbot, AI assistant, chatbot builder, conversational AI, customer support bot, lead generation chatbot",
+    ogTitle: "BotTailor - Smart AI Chatbots Made Simple",
+    ogDescription:
+      "Create intelligent, customizable AI chatbots for your website in minutes. Deploy anywhere with our powerful AI platform.",
+    ogImage: "https://bottailor.com/og-image.jpg",
+    canonical: "https://bottailor.com/",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "BotTailor",
+      description: "Create intelligent, customizable AI chatbots for your website in minutes",
+      url: "https://bottailor.com",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        description: "Free tier available",
+      },
+      creator: {
+        "@type": "Organization",
+        name: "BotTailor",
+        url: "https://bottailor.com",
+      },
+    },
+  },
+};
 
 export default function Home() {
   // Use unified global chat session

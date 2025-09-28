@@ -10,6 +10,7 @@ import ChatWidget from "@/components/chat/chat-widget";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
+import type { RouteDefinition } from "@shared/route-metadata";
 
 export default function Docs() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -444,3 +445,20 @@ export default function Docs() {
     </div>
   );
 }
+
+export const route: RouteDefinition = {
+  path: "/docs",
+  ssr: true,
+  metadata: {
+    title: "Documentation - BotTailor | Complete Guide to AI Chatbot Creation",
+    description:
+      "Complete guide to creating, customizing, and deploying AI chatbots with BotTailor. Learn embedding, configuration, and best practices.",
+    keywords:
+      "chatbot documentation, AI chatbot guide, BotTailor docs, chatbot setup, embedding guide",
+    ogTitle: "Documentation - BotTailor",
+    ogDescription:
+      "Complete guide to creating, customizing, and deploying AI chatbots with BotTailor.",
+    ogImage: "https://bottailor.com/og-docs.jpg",
+    canonical: "https://bottailor.com/docs",
+  },
+};

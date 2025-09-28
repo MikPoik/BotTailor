@@ -5,7 +5,8 @@ import App from "./App";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/theme-context";
-import { getRouteMetadata, normalizeRoutePath } from "@shared/route-metadata";
+import { normalizeRoutePath } from "@shared/route-metadata";
+import { getRouteMetadata } from "@/routes/registry";
 
 export interface SSRContext {
   redirectTo?: string;
@@ -158,3 +159,5 @@ export function generateMetaTags(url: string): string {
 
   return metaTags + structuredData;
 }
+
+export { shouldSSR } from "@/routes/registry";

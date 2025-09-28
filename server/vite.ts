@@ -5,18 +5,18 @@ import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 import { pathToFileURL } from "url";
-import { isSSRRoute } from "@shared/route-metadata";
 
 type SSRModule = {
   generateHTML: (url: string, search?: string) => Promise<{ html: string; ssrContext: { redirectTo?: string } }>;
   generateMetaTags: (url: string) => string;
+  shouldSSR: (url: string) => boolean;
 };
 
 interface RenderWithSSROptions {
   template: string;
   pathname: string;
   search?: string;
-  loadModule: () => Promise<SSRModule>;
+  ssrModule: SSRModule;
   styleHref?: string;
 }
 
@@ -24,11 +24,10 @@ async function renderTemplateWithSSR({
   template,
   pathname,
   search,
-  loadModule,
+  ssrModule,
   styleHref,
 }: RenderWithSSROptions): Promise<{ html: string; ssrContext: { redirectTo?: string } }> {
-  const entryServer = await loadModule();
-  const { generateHTML, generateMetaTags } = entryServer;
+  const { generateHTML, generateMetaTags } = ssrModule;
 
   if (typeof generateHTML !== "function" || typeof generateMetaTags !== "function") {
     throw new Error("SSR entry module must export generateHTML and generateMetaTags functions");
@@ -136,17 +135,16 @@ export async function setupVite(app: Express, server: Server) {
       const pathname = requestUrl.pathname;
       let pageTemplate = template;
 
-      if (isSSRRoute(pathname)) {
-        try {
+      try {
+        const ssrModule = (await vite.ssrLoadModule("/src/entry-server.tsx")) as SSRModule;
+
+        if (ssrModule.shouldSSR(pathname)) {
           const { html, ssrContext } = await renderTemplateWithSSR({
             template: pageTemplate,
             pathname,
             search: requestUrl.search,
             styleHref: "/src/index.css",
-            loadModule: async () => {
-              const module = await vite.ssrLoadModule("/src/entry-server.tsx");
-              return module as SSRModule;
-            },
+            ssrModule,
           });
 
           if (ssrContext?.redirectTo) {
@@ -154,9 +152,9 @@ export async function setupVite(app: Express, server: Server) {
           }
 
           pageTemplate = html;
-        } catch (ssrError) {
-          console.error("SSR Error, falling back to CSR:", ssrError);
         }
+      } catch (ssrError) {
+        console.error("SSR Error, falling back to CSR:", ssrError);
       }
 
       // Inject chat widget config if available
@@ -220,13 +218,15 @@ export function serveStatic(app: Express) {
 
       let pageTemplate = baseTemplate;
 
-      if (isSSRRoute(pathname)) {
-        try {
+      try {
+        const ssrModule = await loadProdSSRModule();
+
+        if (ssrModule.shouldSSR(pathname)) {
           const { html, ssrContext } = await renderTemplateWithSSR({
             template: pageTemplate,
             pathname,
             search: requestUrl.search,
-            loadModule: loadProdSSRModule,
+            ssrModule,
           });
 
           if (ssrContext?.redirectTo) {
@@ -234,9 +234,9 @@ export function serveStatic(app: Express) {
           }
 
           pageTemplate = html;
-        } catch (ssrError) {
-          console.error("SSR Error, falling back to CSR:", ssrError);
         }
+      } catch (ssrError) {
+        console.error("SSR Error, falling back to CSR:", ssrError);
       }
 
       if ((req as any).chatWidgetConfig) {

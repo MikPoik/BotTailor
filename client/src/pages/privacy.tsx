@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { RouteDefinition } from "@shared/route-metadata";
 
 export default function Privacy() {
   useEffect(() => {
@@ -227,3 +228,18 @@ export default function Privacy() {
     </div>
   );
 }
+
+export const route: RouteDefinition = {
+  path: "/privacy",
+  metadata: {
+    title: "Privacy Policy - BotTailor | Your Data Protection",
+    description:
+      "Learn how BotTailor protects your privacy and handles your data. Transparent privacy practices for AI chatbot services.",
+    keywords: "privacy policy, data protection, BotTailor privacy, chatbot privacy",
+    ogTitle: "Privacy Policy - BotTailor",
+    ogDescription:
+      "Learn how BotTailor protects your privacy and handles your data.",
+    ogImage: "https://bottailor.com/og-privacy.jpg",
+    canonical: "https://bottailor.com/privacy",
+  },
+};
