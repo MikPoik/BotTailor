@@ -172,15 +172,15 @@
   }
 
   /* High specificity selectors for the exact TabsContent behavior */
-  .chat-interface .role="tabpanel"[data-state="inactive"],
-  .chat-interface-mobile .role="tabpanel"[data-state="inactive"],
+  .chat-interface [role="tabpanel"][data-state="inactive"],
+  .chat-interface-mobile [role="tabpanel"][data-state="inactive"],
   div[role="tabpanel"][data-state="inactive"] {
     display: none !important;
     visibility: hidden !important;
   }
 
-  .chat-interface .role="tabpanel"[data-state="active"],
-  .chat-interface-mobile .role="tabpanel"[data-state="active"],
+  .chat-interface [role="tabpanel"][data-state="active"],
+  .chat-interface-mobile [role="tabpanel"][data-state="active"],
   div[role="tabpanel"][data-state="active"] {
     display: flex !important;
     visibility: visible !important;
