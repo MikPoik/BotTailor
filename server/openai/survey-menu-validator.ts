@@ -97,7 +97,6 @@ export async function validateSurveyMenuRequirements(
       };
     }
 
-    console.log(`[SURVEY VALIDATION SUCCESS] Survey Q${currentQuestionIndex + 1} correctly generated and validated ${validationMetadata.expectedMessageType} bubble`);
     return {
       isValid: true,
       validationMetadata,

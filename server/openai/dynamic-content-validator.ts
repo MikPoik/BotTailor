@@ -303,7 +303,7 @@ function hasInteractiveElementAfter(bubbles: any[], afterIndex: number): boolean
  * Log validation results for debugging
  */
 function logValidationResult(result: DynamicContentValidationResult): void {
-  if (!result.isValid || result.warnings.length > 0) {
+  if (!result.isValid) {
     console.log(`[DYNAMIC VALIDATION] Result:`, {
       isValid: result.isValid,
       isComplete: result.isComplete,
