@@ -51,6 +51,23 @@
     }
     </script>
     <!-- SSR_META_END -->
+
+    <script>
+      (function () {
+        try {
+          var storageKey = 'theme';
+          var root = document.documentElement;
+          var stored = localStorage.getItem(storageKey);
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var resolved = stored === 'dark' || (stored !== 'light' && prefersDark) ? 'dark' : 'light';
+          root.classList.remove('light', 'dark');
+          root.classList.add(resolved);
+          root.dataset.theme = resolved;
+        } catch (error) {
+          // ignore
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -13,17 +13,25 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') {
+      return 'system';
+    }
+
     try {
-      const stored = localStorage.getItem('theme') as Theme;
+      const stored = window.localStorage.getItem('theme') as Theme;
       return stored || 'system';
-    } catch (error) {
-      // Fallback for sandboxed environments where localStorage is not available
-      console.warn('localStorage not available, using default theme');
+    } catch {
       return 'system';
     }
   });
 
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document === 'undefined') {
+      return 'light';
+    }
+
+    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -40,6 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setResolvedTheme(newTheme);
       root.classList.remove('light', 'dark');
       root.classList.add(newTheme);
+      root.dataset.theme = newTheme;
     };
 
     updateTheme();
@@ -53,10 +62,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('theme', theme);
-    } catch (error) {
-      // Silently fail in sandboxed environments
-      console.warn('Cannot save theme to localStorage in sandboxed environment');
+      window.localStorage.setItem('theme', theme);
+    } catch {
+      // Ignore storage issues (e.g., private browsing, server environment)
     }
   }, [theme]);
 
