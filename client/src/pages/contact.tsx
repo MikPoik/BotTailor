@@ -363,6 +363,7 @@ export default function Contact() {
 
 export const route: RouteDefinition = {
   path: "/contact",
+  ssr: true,
   metadata: {
     title: "Contact Us - BotTailor | Get Help with AI Chatbots",
     description:

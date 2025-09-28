@@ -7,8 +7,8 @@ const PAGES_DIR = path.join(ROOT_DIR, "client", "src", "pages");
 const PUBLIC_DIR = path.join(ROOT_DIR, "public");
 
 const BASE_URL = (process.env.SITE_URL || "https://bottailor.com").replace(/\/$/, "");
-const DISALLOW_PATHS = ["/api/", "/dashboard/admin/", "/admin/", "/dashboard"];
-const ALLOW_PATHS = [""];
+const DISALLOW_PATHS = ["/api/", "/dashboard/admin/", "/admin/"];
+const ALLOW_PATHS = ["/api/public/"];
 
 function normalizeRoutePath(input) {
   const pathStr = typeof input === "string" ? input : "/";

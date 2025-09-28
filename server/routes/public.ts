@@ -84,6 +84,33 @@ export function setupPublicRoutes(app: Express) {
       res.status(404).send('embed.css not found');
     }
   });
+
+  // Serve SEO assets (robots.txt, sitemap.xml) regardless of environment
+  app.get('/robots.txt', (req: Request, res: Response) => {
+    const robotsPath = findStaticFilePath('robots.txt');
+
+    if (robotsPath) {
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.sendFile(robotsPath);
+    } else {
+      console.warn('robots.txt not found. Ensure generate:seo has been run.');
+      res.status(404).send('robots.txt not found');
+    }
+  });
+
+  app.get('/sitemap.xml', (req: Request, res: Response) => {
+    const sitemapPath = findStaticFilePath('sitemap.xml');
+
+    if (sitemapPath) {
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.sendFile(sitemapPath);
+    } else {
+      console.warn('sitemap.xml not found. Ensure generate:seo has been run.');
+      res.status(404).send('sitemap.xml not found');
+    }
+  });
   // Get default chatbot configuration for public access
   app.get('/api/public/default-chatbot', async (req, res) => {
     try {

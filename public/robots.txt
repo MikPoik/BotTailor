@@ -1,12 +1,12 @@
 User-agent: *
 Allow: /
+Allow: /contact
 Allow: /docs
 Allow: /pricing
-Allow: 
+Allow: /api/public/
 Disallow: /api/
 Disallow: /dashboard/admin/
 Disallow: /admin/
-Disallow: /dashboard
 
-# Generated on 2025-09-28T20:43:33.996Z
+# Generated on 2025-09-28T21:18:07.904Z
 Sitemap: https://bottailor.com/sitemap.xml
