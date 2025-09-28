@@ -268,10 +268,10 @@ function buildValidationMetadata(question: any, questionIndex: number): SurveyVa
       return {
         ...baseMetadata,
         expectedMessageType: 'rating' as const,
-        expectedMinValue: question.minValue || 1,
-        expectedMaxValue: question.maxValue || 5,
-        expectedStep: question.step || 1,
-        expectedRatingType: question.ratingType || 'stars'
+        expectedMinValue: question.metadata?.minValue || question.minValue || 1,
+        expectedMaxValue: question.metadata?.maxValue || question.maxValue || 5,
+        expectedStep: question.metadata?.step || question.step || 1,
+        expectedRatingType: question.metadata?.ratingType || question.ratingType || 'stars'
       };
       
     default:
