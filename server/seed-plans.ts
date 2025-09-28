@@ -50,8 +50,8 @@ async function seedSubscriptionPlans() {
     {
       name: "Premium",
       description: "Advanced features for growing businesses",
-      stripePriceId: process.env.PRICE_SUB_PREMIUM, // Replace with actual Stripe price ID
-      stripeProductId: process.env.PROD_SUB_PREMIUM, // Replace with actual Stripe product ID
+      stripePriceId: process.env.PRICE_SUB_PREMIUM || "price_premium", // Replace with actual Stripe price ID
+      stripeProductId: process.env.PROD_SUB_PREMIUM || "prod_premium", // Replace with actual Stripe product ID
       price: 2999, // $29.99
       currency: "eur",
       billingInterval: "month",
@@ -69,8 +69,8 @@ async function seedSubscriptionPlans() {
     {
       name: "Ultra",
       description: "Complete solution for enterprises and agencies",
-      stripePriceId: process.env.PRICE_SUB_ULTRA, // Replace with actual Stripe price ID
-      stripeProductId: process.env.PROD_SUB_ULTRA, // Replace with actual Stripe product ID
+      stripePriceId: process.env.PRICE_SUB_ULTRA || "price_ultra", // Replace with actual Stripe price ID
+      stripeProductId: process.env.PROD_SUB_ULTRA || "prod_ultra", // Replace with actual Stripe product ID
       price: 9999, // $99.99
       currency: "eur",
       billingInterval: "month",

@@ -213,36 +213,55 @@ function requiresValidation(question: any): boolean {
 /**
  * Build validation metadata for any question type
  */
+function hasFreeChoiceOption(options: any[] | undefined): boolean {
+  if (!options) return false;
+  return options.some((option) => {
+    const text = option?.text?.toLowerCase()?.trim();
+    return option?.id === "q_other" || option?.id === "other" || (text && text.includes("other"));
+  });
+}
+
+function getEffectiveOptionCount(question: any): number {
+  const baseCount = Array.isArray(question?.options) ? question.options.length : 0;
+  if (!question?.allowFreeChoice) {
+    return baseCount;
+  }
+
+  return hasFreeChoiceOption(question.options) ? baseCount : baseCount + 1;
+}
+
 function buildValidationMetadata(question: any, questionIndex: number): SurveyValidationMetadata {
   const baseMetadata = {
     questionIndex,
     questionType: question.type
   };
 
+  const optionCount = getEffectiveOptionCount(question);
+  const normalizedOptions = Array.isArray(question.options)
+    ? question.options.map((opt: any, index: number) => ({
+        id: opt.id || `option${index + 1}`,
+        text: opt.text,
+      }))
+    : [];
+
   switch (question.type) {
     case 'single_choice':
       return {
         ...baseMetadata,
         expectedMessageType: 'menu' as const,
-        expectedOptionCount: question.options.length,
-        expectedOptions: question.options.map((opt: any, index: number) => ({
-          id: opt.id || `option${index + 1}`,
-          text: opt.text
-        }))
+        expectedOptionCount: optionCount,
+        expectedOptions: normalizedOptions,
       };
       
     case 'multiple_choice':
       return {
         ...baseMetadata,
         expectedMessageType: 'multiselect_menu' as const,
-        expectedOptionCount: question.options.length,
-        expectedOptions: question.options.map((opt: any, index: number) => ({
-          id: opt.id || `option${index + 1}`,
-          text: opt.text
-        })),
+        expectedOptionCount: optionCount,
+        expectedOptions: normalizedOptions,
         allowMultiple: true,
         minSelections: question.minSelections || 1,
-        maxSelections: question.maxSelections || question.options.length
+        maxSelections: question.maxSelections || optionCount
       };
       
     case 'rating':
@@ -264,11 +283,12 @@ function buildValidationMetadata(question: any, questionIndex: number): SurveyVa
  * Get description of question for error messages
  */
 function getQuestionDescription(question: any): string {
+  const optionCount = getEffectiveOptionCount(question);
   switch (question.type) {
     case 'single_choice':
-      return `has ${question.options.length} single-choice options`;
+      return `has ${optionCount} single-choice options`;
     case 'multiple_choice':
-      return `has ${question.options.length} multiple-choice options`;
+      return `has ${optionCount} multiple-choice options`;
     case 'rating':
       return `is a rating question (${question.minValue || 1}-${question.maxValue || 5} ${question.ratingType || 'stars'})`;
     default:

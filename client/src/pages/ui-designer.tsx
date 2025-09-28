@@ -195,19 +195,21 @@ export default function UIDesigner() {
       if (topicGridComponent) {
         topicGridComponent.props.titleFontSize = titleFontSize;
         topicGridComponent.props.descriptionFontSize = descriptionFontSize;
+        const { itemStyle: _existingItemStyle, ...restStyle } = topicGridComponent.props.style || {};
         topicGridComponent.props.style = {
-          ...topicGridComponent.props.style,
-          itemStyle: itemStyle
-        };
+          ...restStyle,
+          itemStyle,
+        } as any;
       }
 
       // Update header transparency
       const headerComponent = updatedConfig.components?.find((c: any) => c.type === 'header');
       if (headerComponent) {
+        const { transparentBackground: _existingTransparent, ...restHeaderStyle } = headerComponent.props.style || {};
         headerComponent.props.style = {
-          ...headerComponent.props.style,
-          transparentBackground: headerTransparent
-        };
+          ...restHeaderStyle,
+          transparentBackground: headerTransparent,
+        } as any;
       }
 
       setEditableConfig(JSON.stringify(updatedConfig, null, 2));
@@ -369,7 +371,7 @@ Please consider these colors when generating the UI design to ensure visual cons
           topicGridComponent.props.style = {
             ...topicGridComponent.props.style,
             itemStyle: itemStyle
-          };
+          } as any;
           // Store font sizes in custom props
           topicGridComponent.props.titleFontSize = titleFontSize;
           topicGridComponent.props.descriptionFontSize = descriptionFontSize;
@@ -380,7 +382,7 @@ Please consider these colors when generating the UI design to ensure visual cons
           headerComponent.props.style = {
             ...headerComponent.props.style,
             transparentBackground: headerTransparent
-          };
+          } as any;
         }
 
         // Update currentConfig and editableConfig to reflect the changes
@@ -450,7 +452,7 @@ Please consider these colors when generating the UI design to ensure visual cons
         topicGridComponent.props.style = {
           ...topicGridComponent.props.style,
           itemStyle: itemStyle
-        };
+        } as any;
         // Store font sizes in custom props
         topicGridComponent.props.titleFontSize = titleFontSize;
         topicGridComponent.props.descriptionFontSize = descriptionFontSize;
@@ -461,7 +463,7 @@ Please consider these colors when generating the UI design to ensure visual cons
         headerComponent.props.style = {
           ...headerComponent.props.style,
           transparentBackground: headerTransparent
-        };
+        } as any;
       }
 
       setCurrentConfig(parsedConfig);

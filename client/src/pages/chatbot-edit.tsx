@@ -158,7 +158,7 @@ export default function ChatbotEdit() {
         welcomeMessage: chatbot.welcomeMessage || "",
         fallbackMessage: chatbot.fallbackMessage || "",
         initialMessages: (chatbot.initialMessages as string[]) || [],
-        isActive: chatbot.isActive !== undefined ? chatbot.isActive : true,
+        isActive: chatbot.isActive ?? true,
         formRecipientEmail: chatbot.formRecipientEmail || "",
         formRecipientName: chatbot.formRecipientName || "",
         formConfirmationMessage: chatbot.formConfirmationMessage || "",

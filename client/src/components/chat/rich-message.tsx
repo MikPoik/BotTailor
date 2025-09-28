@@ -91,19 +91,23 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
     const quickMeta = typedMetadata as QuickRepliesMetadata;
     return (
       <div className="flex flex-wrap gap-2">
-        {quickMeta.quickReplies.map((reply: string, index: number) => {
-          const isSkipOption = reply.toLowerCase().includes('skip');
+        {quickMeta.quickReplies.map((replyOption, index: number) => {
+          const label = typeof replyOption === 'string' ? replyOption : replyOption.text;
+          const value = typeof replyOption === 'string'
+            ? replyOption
+            : replyOption.action || replyOption.text;
+          const isSkipOption = label.toLowerCase().includes('skip');
           return (
             <button
-              key={`quickreply-${reply}-${index}`}
-              onClick={() => onQuickReply(reply)}
+              key={`quickreply-${label}-${index}`}
+              onClick={() => onQuickReply(value)}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                isSkipOption 
-                  ? 'bg-neutral-200 text-neutral-600 border border-neutral-300 hover:bg-neutral-300' 
+                isSkipOption
+                  ? 'bg-neutral-200 text-neutral-600 border border-neutral-300 hover:bg-neutral-300'
                   : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
               }`}
             >
-              {reply}
+              {label}
             </button>
           );
         })}

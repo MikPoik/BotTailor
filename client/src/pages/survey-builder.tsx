@@ -84,6 +84,7 @@ export default function SurveyBuilderPage() {
     type: "single_choice",
     options: [],
     required: true,
+    allowFreeChoice: false,
   });
 
   // Local state for editing fields to prevent constant updates
@@ -231,6 +232,7 @@ export default function SurveyBuilderPage() {
         { id: "option2", text: "Option 2" },
       ],
       required: newQuestion.required ?? true,
+      allowFreeChoice: newQuestion.allowFreeChoice ?? false,
     };
 
     const currentConfig = getSurveyConfig(selectedSurvey);
@@ -244,7 +246,7 @@ export default function SurveyBuilderPage() {
       updates: { surveyConfig: updatedConfig },
     });
 
-    setNewQuestion({ text: "", type: "single_choice", options: [], required: true });
+    setNewQuestion({ text: "", type: "single_choice", options: [], required: true, allowFreeChoice: false });
   };
 
   const handleDeleteQuestion = (surveyId: number, questionIndex: number) => {

@@ -139,6 +139,7 @@ export async function setupVite(app: Express, server: Server) {
         const ssrModule = (await vite.ssrLoadModule("/src/entry-server.tsx")) as SSRModule;
 
         if (ssrModule.shouldSSR(pathname)) {
+          log(`SSR render (dev): ${pathname}`, "ssr");
           const { html, ssrContext } = await renderTemplateWithSSR({
             template: pageTemplate,
             pathname,
@@ -222,6 +223,7 @@ export function serveStatic(app: Express) {
         const ssrModule = await loadProdSSRModule();
 
         if (ssrModule.shouldSSR(pathname)) {
+          log(`SSR render (prod): ${pathname}`, "ssr");
           const { html, ssrContext } = await renderTemplateWithSSR({
             template: pageTemplate,
             pathname,

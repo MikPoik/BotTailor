@@ -346,7 +346,13 @@ export const RichMessageSchema = z.object({
       action: z.string(),
       payload: z.any().optional(),
     })).optional(),
-    quickReplies: z.array(z.string()).optional(),
+    quickReplies: z.array(z.union([
+      z.string(),
+      z.object({
+        text: z.string(),
+        action: z.string().optional(),
+      }),
+    ])).optional(),
     formFields: z.array(z.object({
       id: z.string(),
       label: z.string(),
@@ -358,6 +364,7 @@ export const RichMessageSchema = z.object({
     submitButton: z.object({
       id: z.string(),
       text: z.string(),
+      icon: z.string().optional(),
       action: z.string(),
       payload: z.any().optional(),
     }).optional(),
@@ -394,6 +401,8 @@ export const HomeScreenComponentSchema = z.object({
       actionType: z.enum(['message', 'survey', 'custom']).default('message'),
       surveyId: z.number().optional(), // Reference to survey ID for survey topics
     })).optional().default([]), // Ensure topics is always an array
+    titleFontSize: z.string().optional(),
+    descriptionFontSize: z.string().optional(),
     actions: z.array(z.object({
       id: z.string(),
       title: z.string(),
@@ -408,6 +417,7 @@ export const HomeScreenComponentSchema = z.object({
       layout: z.enum(['grid', 'list', 'carousel']).optional(),
       columns: z.number().optional(),
       itemStyle: z.enum(['filled', 'outlined']).optional().default('filled'),
+      transparentBackground: z.boolean().optional(),
     }).optional(),
   }),
   order: z.number(),
@@ -455,6 +465,9 @@ export const SurveyQuestionSchema = z.object({
       condition: z.string(),
       skipTo: z.string(),
     }).optional(),
+    minValue: z.number().optional(),
+    maxValue: z.number().optional(),
+    ratingType: z.enum(['stars', 'numbers', 'scale']).optional(),
   }).optional(),
 });
 
@@ -490,7 +503,13 @@ export const messageSchema = z.object({
     imageUrl: z.string().optional(),
     buttons: z.any().optional(),
     options: z.any().optional(),
-    quickReplies: z.array(z.string()).optional(),
+    quickReplies: z.array(z.union([
+      z.string(),
+      z.object({
+        text: z.string(),
+        action: z.string().optional(),
+      }),
+    ])).optional(),
     formFields: z.array(z.object({
       id: z.string(),
       label: z.string(),
@@ -502,6 +521,7 @@ export const messageSchema = z.object({
     submitButton: z.object({
       id: z.string(),
       text: z.string(),
+      icon: z.string().optional(),
       action: z.string(),
       payload: z.any().optional(),
     }).optional(),

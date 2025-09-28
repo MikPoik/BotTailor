@@ -68,6 +68,7 @@ export interface FormMetadata {
   submitButton?: {
     id: string;
     text: string;
+    icon?: string;
     action?: string;
     payload?: any;
   };
