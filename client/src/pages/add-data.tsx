@@ -791,13 +791,5 @@ export default function AddData() {
 
 export const route: RouteDefinition = {
   path: "/add-data/:guid",
-  metadata: {
-    title: "Add Data - BotTailor | Train Your Chatbot",
-    description: "Add content sources to train your AI chatbot. Upload files, add website URLs, or input text content to improve your bot's knowledge base.",
-    keywords: "chatbot training data, AI bot content, website scanning, file upload, chatbot knowledge base",
-    ogTitle: "Add Data - BotTailor",
-    ogDescription: "Add content sources to train your AI chatbot with website data, files, and text content.",
-    ogImage: "https://bottailor.com/og-add-data.jpg",
-    canonical: "https://bottailor.com/add-data",
-  },
+  ssr: false
 };
