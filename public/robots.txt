@@ -3,10 +3,11 @@ Allow: /
 Allow: /contact
 Allow: /docs
 Allow: /pricing
-Allow: /api/public/
+Allow: 
 Disallow: /api/
 Disallow: /dashboard/admin/
 Disallow: /admin/
+Disallow: /dashboard
 
-# Generated on 2025-09-28T21:18:07.904Z
+# Generated on 2025-09-29T06:08:26.504Z
 Sitemap: https://bottailor.com/sitemap.xml
