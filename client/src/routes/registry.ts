@@ -5,15 +5,26 @@ import {
   type RouteMetadata,
 } from "@shared/route-metadata";
 
-const routeModules = import.meta.glob<RouteDefinition | undefined>(
+const routeModules = import.meta.glob<{ route?: RouteDefinition }>(
   "../pages/**/*.tsx",
-  { eager: true, import: "route" },
+  { eager: true },
 );
 
 const routeRegistry = new Map<string, RouteDefinition>();
 
-for (const [filePath, routeExport] of Object.entries(routeModules)) {
+for (const [filePath, module] of Object.entries(routeModules)) {
   let routeDefinition: RouteDefinition;
+
+  // Handle potential import errors gracefully
+  let routeExport: RouteDefinition | undefined;
+  try {
+    routeExport = module?.route;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn(`[routes] Failed to access route export from ${filePath}:`, error);
+    }
+    routeExport = undefined;
+  }
 
   if (!routeExport) {
     // Create default route definition for pages without route export
