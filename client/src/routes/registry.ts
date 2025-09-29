@@ -13,20 +13,39 @@ const routeModules = import.meta.glob<RouteDefinition | undefined>(
 const routeRegistry = new Map<string, RouteDefinition>();
 
 for (const [filePath, routeExport] of Object.entries(routeModules)) {
-  if (!routeExport) {
-    continue;
-  }
+  let routeDefinition: RouteDefinition;
 
-  if (!routeExport.path) {
+  if (!routeExport) {
+    // Create default route definition for pages without route export
+    const pathFromFile = filePath
+      .replace("../pages/", "/")
+      .replace(/\.tsx$/, "")
+      .replace(/\/index$/, "")
+      .replace(/\[([^\]]+)\]/g, ":$1"); // Convert [param] to :param
+
+    routeDefinition = {
+      path: pathFromFile === "" ? "/" : pathFromFile,
+      ssr: false, // Default to client-side rendering
+    };
+
     if (import.meta.env.DEV) {
       console.warn(
-        `[routes] Missing path in route export from ${filePath}. Ignoring this entry.`,
+        `[routes] No route export found in ${filePath}. Using default route definition with ssr: false.`,
       );
     }
-    continue;
+  } else {
+    if (!routeExport.path) {
+      if (import.meta.env.DEV) {
+        console.warn(
+          `[routes] Missing path in route export from ${filePath}. Ignoring this entry.`,
+        );
+      }
+      continue;
+    }
+    routeDefinition = routeExport;
   }
 
-  const normalizedPath = normalizeRoutePath(routeExport.path);
+  const normalizedPath = normalizeRoutePath(routeDefinition.path);
 
   if (routeRegistry.has(normalizedPath) && import.meta.env.DEV) {
     console.warn(
@@ -34,7 +53,7 @@ for (const [filePath, routeExport] of Object.entries(routeModules)) {
     );
   }
 
-  routeRegistry.set(normalizedPath, { ...routeExport, path: normalizedPath });
+  routeRegistry.set(normalizedPath, { ...routeDefinition, path: normalizedPath });
 }
 
 function getDefaultMetadata(): RouteMetadata {
