@@ -14,6 +14,8 @@ import { Bot, LogOut, Settings, User, Menu, X, CreditCard } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { normalizeRoutePath } from "@shared/route-metadata";
+import { shouldSSR } from "@/routes/registry";
 
 export function Navbar() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -24,7 +26,11 @@ export function Navbar() {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
 
-  if (isLoading) {
+  const currentPath = location ?? '/';
+  const normalizedPath = normalizeRoutePath(currentPath);
+  const isPublicRoute = shouldSSR(normalizedPath);
+
+  if (isLoading && !isPublicRoute) {
     return (
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center">

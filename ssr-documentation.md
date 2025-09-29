@@ -95,17 +95,32 @@ Key points:
 `client/src/routes/registry.ts` is responsible for turning scattered exports into a single source of truth.
 
 ```ts
-const routeModules = import.meta.glob<RouteDefinition | undefined>(
+const routeModules = import.meta.glob<{ route?: RouteDefinition }>(
   "../pages/**/*.tsx",
-  { eager: true, import: "route" },
+  { eager: true },
 );
+
+function inferPathFromFile(filePath: string) {
+  return filePath
+    .replace("../pages", "")
+    .replace(/index\.tsx$/, "/")
+    .replace(/\.tsx$/, "")
+    .replace(/\/$/, "") || "/";
+}
 
 const routeRegistry = new Map<string, RouteDefinition>();
 
-for (const [filePath, routeExport] of Object.entries(routeModules)) {
-  if (!routeExport?.path) continue;
-  const normalized = normalizeRoutePath(routeExport.path);
-  routeRegistry.set(normalized, { ...routeExport, path: normalized });
+for (const [filePath, module] of Object.entries(routeModules)) {
+  const explicit = module?.route;
+  const definition: RouteDefinition | undefined = explicit ?? {
+    path: inferPathFromFile(filePath),
+    ssr: false,
+  };
+
+  if (!definition?.path) continue;
+
+  const normalized = normalizeRoutePath(definition.path);
+  routeRegistry.set(normalized, { ...definition, path: normalized });
 }
 ```
 
@@ -116,6 +131,8 @@ Exported helpers:
 - `shouldSSR(path)` – return the boolean flag consumed by the server tier.
 - `listRegisteredRoutes()` – useful for diagnostics or sitemap generation.
 
+Because the registry executes in both SSR and browser contexts, client code can also call `shouldSSR()` at runtime to mirror server decisions (e.g. skipping an auth-loading spinner on marketing pages).
+
 Because `import.meta.glob` runs both in the browser and within Vite’s SSR context, the manifest is available everywhere without manual bookkeeping.
 
 ### Porting Tips
@@ -123,6 +140,7 @@ Because `import.meta.glob` runs both in the browser and within Vite’s SSR cont
 1. **Adjust the glob if your pages sit elsewhere** (e.g. `"./routes/**/*.tsx"`).
 2. **Keep the helper module side-effectful** (build the registry at import time) so server code can call `shouldSSR()` synchronously.
 3. **Guard dev-only warnings** behind `import.meta.env.DEV` to avoid noisy logs in production bundles.
+4. **Default to client rendering when a route lacks metadata** – the example above registers a fallback with `ssr: false`, so missing exports never surprise the server.
 
 ---
 
@@ -221,6 +239,7 @@ Guidelines when porting:
 - Use the presence of pre-rendered HTML inside `#root` as the hydration check.
 - Reuse the exact provider tree configured in `entry-server.tsx` so the client and server agree on context state.
 - Keep this file free of manifest logic—SSR decisions already happened on the server.
+- Ensure client-only data fetches (auth checks, personalization requests, etc.) return deterministic defaults during SSR and only refetch after mount so the streamed HTML matches the first client render.
 
 ---
 
