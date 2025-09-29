@@ -9,5 +9,5 @@ Disallow: /dashboard/admin/
 Disallow: /admin/
 Disallow: /dashboard
 
-# Generated on 2025-09-29T06:08:26.504Z
+# Generated on 2025-09-29T07:01:58.648Z
 Sitemap: https://bottailor.com/sitemap.xml
