@@ -788,8 +788,3 @@ export default function AddData() {
     </div>
   );
 }
-
-export const route: RouteDefinition = {
-  path: "/add-data/:guid",
-  ssr: false
-};

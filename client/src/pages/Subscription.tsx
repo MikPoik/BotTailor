@@ -462,8 +462,3 @@ export default function Subscription() {
     </div>
   );
 }
-
-export const route: RouteDefinition = {
-  path: "/subscription",
-  ssr: false
-};
