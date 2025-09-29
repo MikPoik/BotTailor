@@ -241,6 +241,13 @@ Guidelines when porting:
 - Keep this file free of manifest logic—SSR decisions already happened on the server.
 - Ensure client-only data fetches (auth checks, personalization requests, etc.) return deterministic defaults during SSR and only refetch after mount so the streamed HTML matches the first client render.
 
+Navbar example
+```ts
+const currentPath = location ?? '/';
+const normalizedPath = normalizeRoutePath(currentPath);
+const isPublicRoute = shouldSSR(normalizedPath);
+```
+
 ---
 
 ## 8. Metadata & SEO Handling
