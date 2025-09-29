@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
+import type { RouteDefinition } from "@shared/route-metadata";
 
 interface SubscriptionPlan {
   id: number;
@@ -461,3 +462,17 @@ export default function Subscription() {
     </div>
   );
 }
+
+export const route: RouteDefinition = {
+  path: "/subscription",
+  ssr: true,
+  metadata: {
+    title: "Subscription - BotTailor | Manage Your Plan",
+    description: "Manage your BotTailor subscription, upgrade or downgrade plans, and view your usage statistics.",
+    keywords: "subscription management, upgrade plan, chatbot billing, BotTailor pricing",
+    ogTitle: "Subscription - BotTailor",
+    ogDescription: "Manage your BotTailor subscription and billing preferences.",
+    ogImage: "https://bottailor.com/og-subscription.jpg",
+    canonical: "https://bottailor.com/subscription",
+  },
+};
