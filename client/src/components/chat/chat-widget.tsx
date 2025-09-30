@@ -641,7 +641,7 @@ export default function ChatWidget({
             className="w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
             style={{ backgroundColor: resolvedPrimaryColor, border: `1px solid ${resolvedPrimaryColor}80`}}
           >
-            <MessageCircleMore className="w-8 h-8 text-white" strokeWidth={1.3}/>
+            <MessageCircleMore className="w-7 h-7 text-white" strokeWidth={1.5}/>
           </button>
 
           {hasNewMessage && (

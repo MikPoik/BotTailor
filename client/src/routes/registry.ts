@@ -39,11 +39,6 @@ for (const [filePath, module] of Object.entries(routeModules)) {
       ssr: false, // Default to client-side rendering
     };
 
-    if (import.meta.env.DEV) {
-      console.warn(
-        `[routes] No route export found in ${filePath}. Using default route definition with ssr: false.`,
-      );
-    }
   } else {
     if (!routeExport.path) {
       if (import.meta.env.DEV) {

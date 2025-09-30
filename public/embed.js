@@ -807,7 +807,7 @@
       }
 
       // Chatbot is active, show the widget
-      console.log('Chat widget: Chatbot is active, showing widget');
+      //console.log('Chat widget: Chatbot is active, showing widget');
       this.showWidget();
 
       // Store chatbot config for dismissal keys
