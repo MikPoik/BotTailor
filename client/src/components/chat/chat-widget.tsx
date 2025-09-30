@@ -651,7 +651,7 @@ export default function ChatWidget({
           className="absolute animate-fadeIn transition-all duration-300 flex justify-center"
           style={{
             [position === 'bottom-right' ? 'right' : 'left']: '0',
-            bottom: `${65 + (visibleMessages.length * 65) + 15}px`,
+            bottom: `${80 + (visibleMessages.length * 70) + 20}px`,
             width: '100%',
             zIndex: 46,
           }}
@@ -676,7 +676,7 @@ export default function ChatWidget({
 
       {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.map((messageIndex, bubbleIndex) => {
-        const messageBottomOffset = 80 + (bubbleIndex * 55);
+        const messageBottomOffset = 80 + (bubbleIndex * 70);
         const uniqueKey = `initial-message-${messageIndex}-${bubbleIndex}-${currentSessionId}`;
         return (
           <div
