@@ -285,11 +285,11 @@
       bubble.style.justifyContent = 'center';
       bubble.style.cursor = 'pointer';
       bubble.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12)';
-      bubble.style.border = '1px solid white';
+      bubble.style.border = `1px solid ${this.config.primaryColor || '#2563eb'}cc`;
       bubble.style.transition = 'all 0.3s ease';
 
       bubble.innerHTML = `
-        <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+        <svg width="28" height="28" fill="white" viewBox="0 0 24 24">
           <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.24 0-2.43-.18-3.53-.5L3 21l1.5-5.47C4.18 14.43 4 13.24 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8z"/>
           <circle cx="8" cy="12" r="1"/>
           <circle cx="12" cy="12" r="1"/>
@@ -858,106 +858,182 @@
 
       const container = document.getElementById('chatwidget-container');
 
-      // Create global close button for all initial messages
-      if (messages.length > 0) {
-        const globalCloseBtn = document.createElement('div');
-        globalCloseBtn.id = 'chatwidget-global-close';
-        globalCloseBtn.className = 'chatwidget-global-close';
-        globalCloseBtn.style.position = 'absolute';
-        globalCloseBtn.style.bottom = `${80 + (messages.length * 50) + 10}px`;
-        globalCloseBtn.style.width = '100%';
-        globalCloseBtn.style.display = 'flex';
-        globalCloseBtn.style.justifyContent = 'center';
-        globalCloseBtn.style.opacity = '0';
-        globalCloseBtn.style.visibility = 'hidden';
-        globalCloseBtn.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)';
-        globalCloseBtn.style.zIndex = '1002';
-        globalCloseBtn.style.pointerEvents = 'none';
-
-        globalCloseBtn.innerHTML = `
-          <button class="chatwidget-global-close-btn" style="background: white; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; border-radius: 50%; padding: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s ease; pointer-events: auto;" onmouseover="this.style.background='#f9fafb'; this.style.color='#374151';" onmouseout="this.style.background='white'; this.style.color='#6b7280';">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
-        `;
-
-        // Add click listener to hide all messages
-        const globalCloseBtnElement = globalCloseBtn.querySelector('.chatwidget-global-close-btn');
-        globalCloseBtnElement.addEventListener('click', () => {
-          // Mark initial messages as dismissed
-          const chatbotId = this.config.chatbotConfig?.id || 'default';
-          const messagesHash = messages.join('|');
-          const dismissedKey = `chat-initial-messages-dismissed-${chatbotId}_${messagesHash}`;
-          this.safeSessionStorage.setItem(dismissedKey, 'true');
-          
-          this.hideAllInitialMessages();
-        });
-
-        container.appendChild(globalCloseBtn);
-
-        // Show global close button after all messages are visible
-        setTimeout(() => {
-          globalCloseBtn.style.opacity = '1';
-          globalCloseBtn.style.visibility = 'visible';
-          globalCloseBtn.style.transform = 'translateY(0) scale(1)';
-          globalCloseBtn.classList.add('visible');
-        }, 3000 + (messages.length * 1000) + 500);
+      // Remove any previously rendered initial stack to avoid duplicates
+      const existingStack = document.getElementById('chatwidget-initial-message-stack');
+      if (existingStack) {
+        existingStack.remove();
       }
+
+      const stackWrapper = document.createElement('div');
+      stackWrapper.id = 'chatwidget-initial-message-stack';
+      stackWrapper.style.position = 'absolute';
+      stackWrapper.style.bottom = '68px';
+      stackWrapper.style.zIndex = '1002';
+      stackWrapper.style.display = 'flex';
+      stackWrapper.style.flexDirection = 'column';
+      stackWrapper.style.alignItems = this.config.position === 'bottom-right' ? 'flex-end' : 'flex-start';
+      stackWrapper.style.gap = '10px';
+      stackWrapper.style.width = 'max-content';
+      stackWrapper.style.maxWidth = '380px';
+      if (this.config.position === 'bottom-right') {
+        stackWrapper.style.right = '0';
+        stackWrapper.style.left = 'auto';
+      } else {
+        stackWrapper.style.left = '0';
+        stackWrapper.style.right = 'auto';
+      }
+
+      // Global close button (always visible when stack is shown)
+      const closeWrapper = document.createElement('div');
+      closeWrapper.style.display = 'flex';
+      closeWrapper.style.width = '100%';
+      closeWrapper.style.justifyContent = this.config.position === 'bottom-right' ? 'flex-end' : 'flex-start';
+      closeWrapper.style.opacity = '0';
+      closeWrapper.style.transform = 'translateY(6px)';
+      closeWrapper.style.transition = 'all 0.25s ease';
+      closeWrapper.style.pointerEvents = 'none';
+
+      const globalCloseBtn = document.createElement('button');
+      globalCloseBtn.id = 'chatwidget-global-close';
+      globalCloseBtn.className = 'chatwidget-global-close-btn';
+      globalCloseBtn.style.background = '#ffffff';
+      globalCloseBtn.style.color = '#6b7280';
+      globalCloseBtn.style.border = '1px solid #e5e7eb';
+      globalCloseBtn.style.cursor = 'pointer';
+      globalCloseBtn.style.borderRadius = '9999px';
+      globalCloseBtn.style.padding = '8px';
+      globalCloseBtn.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.12)';
+      globalCloseBtn.style.transition = 'all 0.2s ease';
+      globalCloseBtn.style.display = 'flex';
+      globalCloseBtn.style.alignItems = 'center';
+      globalCloseBtn.style.justifyContent = 'center';
+
+      globalCloseBtn.innerHTML = `
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      `;
+
+      globalCloseBtn.addEventListener('mouseenter', () => {
+        globalCloseBtn.style.background = '#f9fafb';
+        globalCloseBtn.style.color = '#374151';
+      });
+
+      globalCloseBtn.addEventListener('mouseleave', () => {
+        globalCloseBtn.style.background = '#ffffff';
+        globalCloseBtn.style.color = '#6b7280';
+      });
+
+      globalCloseBtn.addEventListener('click', () => {
+        const chatbotId = this.config.chatbotConfig?.id || 'default';
+        const messagesHash = messages.join('|');
+        const dismissedKey = `chat-initial-messages-dismissed-${chatbotId}_${messagesHash}`;
+        this.safeSessionStorage.setItem(dismissedKey, 'true');
+        this.hideAllInitialMessages();
+      });
+
+      closeWrapper.appendChild(globalCloseBtn);
+      stackWrapper.appendChild(closeWrapper);
+
+      const messagesContainer = document.createElement('div');
+      messagesContainer.className = 'chatwidget-initial-message-stack';
+      messagesContainer.style.display = 'flex';
+      messagesContainer.style.flexDirection = 'column';
+      messagesContainer.style.alignItems = this.config.position === 'bottom-right' ? 'flex-end' : 'flex-start';
+      messagesContainer.style.gap = '14px';
+      messagesContainer.style.width = 'max-content';
+      stackWrapper.appendChild(messagesContainer);
+
+      container.appendChild(stackWrapper);
 
       // Create individual bubbles for each message
       messages.forEach((message, index) => {
-        const individualBubble = document.createElement('div');
-        individualBubble.className = 'chatwidget-initial-message-bubble';
-        individualBubble.setAttribute('data-index', index);
+        const revealDelay = 3000 + (index * 1500);
 
-        // Add initial styles to prevent FOUC
-        individualBubble.style.position = 'absolute';
-        individualBubble.style.maxWidth = '350px';
-        individualBubble.style.background = 'transparent';
-        individualBubble.style.borderRadius = '16px';
-        individualBubble.style.padding = '8px';
-        individualBubble.style.transform = 'translateY(10px) scale(0.95)';
-        individualBubble.style.opacity = '0';
-        individualBubble.style.visibility = 'hidden';
-        individualBubble.style.transition = 'all 0.3s cubic-bezier(0.23, 1, 0.32, 1)';
-        individualBubble.style.cursor = 'pointer';
-        if (this.config.position === 'bottom-right') {
-          individualBubble.style.right = '0';
-        } else {
-          individualBubble.style.left = '0';
-        }
-
-        individualBubble.innerHTML = `
-          <div class="chatwidget-message-content" style="display: flex; align-items: flex-start; gap: 12px;">
-            <div class="chatwidget-speech-bubble" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; position: relative; min-width: 200px; max-width: 280px; word-wrap: break-word;">
-              <p class="chatwidget-message-main" style="margin: 0; color: #333; line-height: 1.4;">${message.content || message}</p>
-            </div>
-          </div>
-        `;
-
-        // Calculate position for this bubble (stack them above the chat bubble)
-        const bottomOffset = 80 + (index * 50); // 80px base + 50px per bubble
-        individualBubble.style.bottom = `${bottomOffset}px`;
-        individualBubble.style.zIndex = '1001';
-
-        // Make the bubble clickable to open chat
-        individualBubble.addEventListener('click', (e) => {
-          const bubble = document.getElementById('chatwidget-bubble');
-          if (bubble) bubble.click();
-        });
-
-        container.appendChild(individualBubble);
-
-        // Show bubble with delay based on index
         setTimeout(() => {
+          if (!document.body.contains(stackWrapper)) {
+            return;
+          }
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'chatwidget-initial-message-item';
+          wrapper.setAttribute('data-index', index);
+          const isBottomRight = this.config.position === 'bottom-right';
+          wrapper.style.display = 'block';
+          wrapper.style.alignSelf = isBottomRight ? 'flex-end' : 'flex-start';
+          wrapper.style.width = 'auto';
+          wrapper.style.maxWidth = '380px';
+          wrapper.style.minWidth = '280px';
+          wrapper.style.opacity = '0';
+          wrapper.style.transform = 'translateY(10px)';
+          wrapper.style.transition = 'all 0.35s cubic-bezier(0.23, 1, 0.32, 1)';
+
+          const individualBubble = document.createElement('div');
+          individualBubble.className = 'chatwidget-initial-message-bubble';
+          individualBubble.style.position = 'relative';
+          individualBubble.style.background = '#ffffff';
+          individualBubble.style.border = '1px solid #e2e8f0';
+          individualBubble.style.borderRadius = '16px';
+          individualBubble.style.padding = '10px 14px';
+          individualBubble.style.boxShadow = '0 10px 25px rgba(15, 23, 42, 0.12)';
+          individualBubble.style.cursor = 'pointer';
           individualBubble.style.opacity = '1';
           individualBubble.style.visibility = 'visible';
-          individualBubble.style.transform = 'translateY(0) scale(1)';
-          individualBubble.classList.add('visible');
-        }, 3000 + (index * 1000));
+          individualBubble.style.transform = 'none';
 
-        // Note: Removed auto-hide timeout - users must close messages manually
+          const content = document.createElement('p');
+          content.className = 'chatwidget-message-main';
+          content.style.margin = '0';
+          content.style.color = '#1f2937';
+          content.style.lineHeight = '1.4';
+          content.style.padding = '5px';
+          content.textContent = message.content || message;
+
+          individualBubble.appendChild(content);
+
+          const arrow = document.createElement('div');
+          arrow.className = 'chatwidget-initial-message-arrow';
+          arrow.style.position = 'absolute';
+          arrow.style.width = '16px';
+          arrow.style.height = '16px';
+          arrow.style.background = '#ffffff';
+          arrow.style.borderRight = '1px solid #e2e8f0';
+          arrow.style.borderBottom = '1px solid #e2e8f0';
+          arrow.style.transform = 'rotate(45deg)';
+          arrow.style.bottom = '-8px';
+          if (this.config.position === 'bottom-right') {
+            arrow.style.right = '16px';
+          } else {
+            arrow.style.left = '16px';
+          }
+          individualBubble.appendChild(arrow);
+
+          // Make the bubble clickable to open chat
+          individualBubble.addEventListener('click', () => {
+            const bubble = document.getElementById('chatwidget-bubble');
+            if (bubble) bubble.click();
+          });
+
+          wrapper.appendChild(individualBubble);
+
+          const firstChild = messagesContainer.firstChild;
+          if (firstChild) {
+            messagesContainer.insertBefore(wrapper, firstChild);
+          } else {
+            messagesContainer.appendChild(wrapper);
+          }
+
+          const measuredWidth = Math.max(individualBubble.getBoundingClientRect().width, 280);
+          wrapper.style.width = `${measuredWidth}px`;
+
+          requestAnimationFrame(() => {
+            wrapper.style.opacity = '1';
+            wrapper.style.transform = 'translateY(0)';
+            closeWrapper.style.opacity = '1';
+            closeWrapper.style.transform = 'translateY(0)';
+            closeWrapper.style.pointerEvents = 'auto';
+          });
+        }, revealDelay);
       });
     },
 
@@ -991,10 +1067,20 @@
     hideInitialMessage: function(index) {
       if (index !== undefined) {
         // Hide specific individual bubble
-        const bubble = document.querySelector(`.chatwidget-initial-message-bubble[data-index="${index}"]`);
-        if (bubble) {
-          bubble.classList.remove('visible');
-          setTimeout(() => bubble.remove(), 300);
+        const bubbleWrapper = document.querySelector(`.chatwidget-initial-message-item[data-index="${index}"]`);
+        if (bubbleWrapper) {
+          bubbleWrapper.style.opacity = '0';
+          bubbleWrapper.style.transform = 'translateY(10px)';
+          setTimeout(() => {
+            bubbleWrapper.remove();
+            const stack = document.getElementById('chatwidget-initial-message-stack');
+            if (stack) {
+              const messageItems = stack.querySelectorAll('.chatwidget-initial-message-item');
+              if (messageItems.length === 0) {
+                stack.remove();
+              }
+            }
+          }, 300);
         }
       } else {
         // Hide default message bubble (legacy method)
@@ -1026,18 +1112,24 @@
 
     // Helper method to hide all initial messages
     hideAllInitialMessages: function() {
-      const allBubbles = document.querySelectorAll('.chatwidget-initial-message-bubble');
+      const stack = document.getElementById('chatwidget-initial-message-stack');
+      if (!stack) return;
+
+      const allBubbles = stack.querySelectorAll('.chatwidget-initial-message-item');
       allBubbles.forEach(bubble => {
-        bubble.classList.remove('visible');
-        setTimeout(() => bubble.remove(), 300);
+        bubble.style.opacity = '0';
+        bubble.style.transform = 'translateY(10px)';
       });
 
-      // Also hide the global close button
-      const globalCloseBtn = document.getElementById('chatwidget-global-close');
+      const globalCloseBtn = stack.querySelector('#chatwidget-global-close');
       if (globalCloseBtn) {
-        globalCloseBtn.classList.remove('visible');
-        setTimeout(() => globalCloseBtn.remove(), 300);
+        globalCloseBtn.style.opacity = '0';
+        globalCloseBtn.style.transform = 'scale(0.9)';
       }
+
+      setTimeout(() => {
+        stack.remove();
+      }, 300);
     },
 
     // Public API methods

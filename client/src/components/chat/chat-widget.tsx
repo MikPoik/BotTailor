@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Minimize2, RefreshCw } from "lucide-react";
+import { MessageCircle, MessageCircleMore , X, Minimize2, RefreshCw } from "lucide-react";
 import TabbedChatInterface from "./tabbed-chat-interface";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -639,9 +639,9 @@ export default function ChatWidget({
           <button
             onClick={toggleChat}
             className="w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
-            style={{ backgroundColor: resolvedPrimaryColor, border: '1px solid white' }}
+            style={{ backgroundColor: resolvedPrimaryColor, border: `1px solid ${resolvedPrimaryColor}80`}}
           >
-            <MessageCircle className="w-5 h-5 text-white" />
+            <MessageCircleMore className="w-8 h-8 text-white" strokeWidth={1.3}/>
           </button>
 
           {hasNewMessage && (
@@ -685,7 +685,7 @@ export default function ChatWidget({
 
           <div
             className={cn(
-              "flex flex-col gap-2",
+              "flex flex-col gap-4",
               position === 'bottom-right' ? 'items-end' : 'items-start'
             )}
           >
@@ -729,7 +729,7 @@ export default function ChatWidget({
                       <div 
                         className="absolute w-4 h-4 bg-white border-r border-b border-gray-200 transform rotate-45"
                         style={{
-                          [position === 'bottom-right' ? 'right' : 'left']: '24px',
+                          [position === 'bottom-right' ? 'right' : 'left']: '16px',
                           bottom: '-8px',
                         }}
                       />
