@@ -32,6 +32,7 @@ export default function ChatWidget({
   // Reactive session ID state that can be updated on refresh
   const [currentSessionId, setCurrentSessionId] = useState(providedSessionId);
   const messageTimeouts = useRef<NodeJS.Timeout[]>([]);
+  const renderedInitialMessages = useRef<Set<number>>(new Set());
   const queryClient = useQueryClient();
 
   // Generate a unique session ID for this chat widget instance
@@ -150,6 +151,12 @@ export default function ChatWidget({
       messageTimeouts.current.forEach(timeout => clearTimeout(timeout));
     };
   }, []);
+
+  useEffect(() => {
+    if (visibleMessages.length === 0) {
+      renderedInitialMessages.current.clear();
+    }
+  }, [visibleMessages.length]);
 
   // Helper function to determine if a color is light or dark
   const isLightColor = (color: string): boolean => {
@@ -645,14 +652,19 @@ export default function ChatWidget({
         </div>
       )}
 
-      {/* Global close button for initial messages - positioned relative to last message */}
+      {/* Initial Message Bubbles */}
       {!isOpen && visibleMessages.length > 0 && (
         <div
-          className="absolute animate-fadeIn transition-all duration-300"
+          className={cn(
+            "absolute flex flex-col gap-2 transition-all duration-300",
+            position === 'bottom-right' ? 'items-end' : 'items-start'
+          )}
           style={{
-            [position === 'bottom-right' ? 'right' : 'left']: '280px', // Position next to message bubbles
-            bottom: `${80 + ((visibleMessages.length - 1) * 70) + 15}px`, // Align with last message bubble
+            [position === 'bottom-right' ? 'right' : 'left']: '0',
+            bottom: '68px',
             zIndex: 46,
+            maxWidth: '380px',
+            width: 'max-content'
           }}
         >
           <button
@@ -670,53 +682,64 @@ export default function ChatWidget({
           >
             <X className="w-4 h-4" />
           </button>
+
+          <div
+            className={cn(
+              "flex flex-col gap-2",
+              position === 'bottom-right' ? 'items-end' : 'items-start'
+            )}
+          >
+            {visibleMessages
+              .slice()
+              .reverse()
+              .map((messageIndex) => {
+                const uniqueKey = `initial-message-${messageIndex}-${currentSessionId}`;
+                const isNewMessage = !renderedInitialMessages.current.has(messageIndex);
+
+                if (isNewMessage) {
+                  renderedInitialMessages.current.add(messageIndex);
+                }
+
+                return (
+                  <div
+                    key={uniqueKey}
+                    className={cn(
+                      "relative",
+                      isNewMessage && "animate-fadeIn"
+                    )}
+                    style={{ maxWidth: '380px', minWidth: '280px' }}
+                  >
+                    <div 
+                      className="bg-white rounded-2xl shadow-xl border border-gray-300 px-3 py-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
+                      onClick={() => {
+                        setIsOpen(true);
+                        setHasNewMessage(false);
+                        queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
+                      }}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <p className="text-gray-800 text-sm leading-relaxed font-normal">
+                            {initialMessages[messageIndex]}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Arrow pointing to chat bubble */}
+                      <div 
+                        className="absolute w-4 h-4 bg-white border-r border-b border-gray-200 transform rotate-45"
+                        style={{
+                          [position === 'bottom-right' ? 'right' : 'left']: '24px',
+                          bottom: '-8px',
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </div>
       )}
-
-      {/* Initial Message Bubbles */}
-      {!isOpen && visibleMessages.map((messageIndex, bubbleIndex) => {
-        const messageBottomOffset = 80 + (bubbleIndex * 70);
-        const uniqueKey = `initial-message-${messageIndex}-${bubbleIndex}-${currentSessionId}`;
-        return (
-          <div
-            key={uniqueKey}
-            className="absolute animate-fadeIn transition-all duration-300"
-            style={{
-              [position === 'bottom-right' ? 'right' : 'left']: '0',
-              bottom: `${messageBottomOffset}px`,
-              maxWidth: '380px',
-              minWidth: '280px',
-              zIndex: 45
-            }}
-          >
-            <div 
-              className="bg-white rounded-2xl shadow-xl border border-gray-300 px-3 py-2 mx-0 my-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
-              onClick={() => {
-                setIsOpen(true);
-                setHasNewMessage(false);
-                queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
-              }}
-            >
-              <div className="flex items-start gap-2">
-                <div className="flex-1">
-                  <p className="text-gray-800 text-sm leading-relaxed font-normal">
-                    {initialMessages[messageIndex]}
-                  </p>
-                </div>
-              </div>
-
-              {/* Arrow pointing to chat bubble */}
-              <div 
-                className="absolute w-4 h-4 bg-white border-r border-b border-gray-200 transform rotate-45"
-                style={{
-                  [position === 'bottom-right' ? 'right' : 'left']: '24px',
-                  bottom: '-8px',
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
 
       {/* Chat Interface */}
       {(isOpen || isClosing) && (
