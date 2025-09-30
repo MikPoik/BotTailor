@@ -651,7 +651,7 @@ export default function ChatWidget({
           className="absolute animate-fadeIn transition-all duration-300 flex justify-center"
           style={{
             [position === 'bottom-right' ? 'right' : 'left']: '0',
-            bottom: `${80 + (visibleMessages.length * 55) +10}px`,
+            bottom: `${65 + (visibleMessages.length * 65) + 15}px`,
             width: '100%',
             zIndex: 46,
           }}
