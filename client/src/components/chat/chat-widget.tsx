@@ -645,14 +645,13 @@ export default function ChatWidget({
         </div>
       )}
 
-      {/* Global close button for initial messages */}
+      {/* Global close button for initial messages - positioned relative to last message */}
       {!isOpen && visibleMessages.length > 0 && (
         <div
-          className="absolute animate-fadeIn transition-all duration-300 flex justify-center"
+          className="absolute animate-fadeIn transition-all duration-300"
           style={{
-            [position === 'bottom-right' ? 'right' : 'left']: '0',
-            bottom: `${80 + (visibleMessages.length * 70) + 20 }px`,
-            width: '100%',
+            [position === 'bottom-right' ? 'right' : 'left']: '280px', // Position next to message bubbles
+            bottom: `${80 + ((visibleMessages.length - 1) * 70) + 15}px`, // Align with last message bubble
             zIndex: 46,
           }}
         >
@@ -712,7 +711,6 @@ export default function ChatWidget({
                 style={{
                   [position === 'bottom-right' ? 'right' : 'left']: '24px',
                   bottom: '-8px',
-                  right:'14px',
                 }}
               />
             </div>
