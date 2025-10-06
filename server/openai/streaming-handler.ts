@@ -337,8 +337,8 @@ export async function* generateStreamingResponse(
     const { systemPrompt } = await buildCompleteSystemPrompt(
       chatbotConfig, 
       sessionId, 
-      // Use last 4 messages for better context in streaming
-      conversationHistory.slice(-6).map(msg => msg.content).join("\n") || userMessage
+      // Use last 10 messages for better context in streaming
+      conversationHistory.slice(-10).map(msg => msg.content).join("\n") || userMessage
     );
     
     // Extract configuration
