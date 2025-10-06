@@ -986,7 +986,7 @@
           content.style.margin = '0';
           content.style.color = '#1f2937';
           content.style.lineHeight = '1.4';
-          content.style.padding = '5px';
+          content.style.padding = '3px';
           content.textContent = message.content || message;
 
           individualBubble.appendChild(content);
@@ -1008,10 +1008,28 @@
           }
           individualBubble.appendChild(arrow);
 
-          // Make the bubble clickable to open chat
+          // Make the bubble clickable to open chat and mark initial messages dismissed
           individualBubble.addEventListener('click', () => {
+            try {
+              // Use the same dismissal key as the global close button so the stack won't reappear
+              const chatbotIdLocal = this.config.chatbotConfig?.id || 'default';
+              const messagesHashLocal = messages.join('|');
+              const dismissedKeyLocal = `chat-initial-messages-dismissed-${chatbotIdLocal}_${messagesHashLocal}`;
+              this.safeSessionStorage.setItem(dismissedKeyLocal, 'true');
+            } catch (e) {
+              // ignore storage failures
+            }
+
+            // Open the chat UI
             const bubble = document.getElementById('chatwidget-bubble');
             if (bubble) bubble.click();
+
+            // Hide the initial messages stack proactively
+            try {
+              this.hideAllInitialMessages();
+            } catch (e) {
+              // ignore
+            }
           });
 
           wrapper.appendChild(individualBubble);
