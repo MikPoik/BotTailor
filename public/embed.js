@@ -883,15 +883,15 @@
         stackWrapper.style.right = 'auto';
       }
 
-      // Global close button (always visible when stack is shown)
+  // Global close button (will be revealed after the last message appears)
       const closeWrapper = document.createElement('div');
       closeWrapper.style.display = 'flex';
       closeWrapper.style.width = '100%';
       closeWrapper.style.justifyContent = this.config.position === 'bottom-right' ? 'flex-end' : 'flex-start';
-      closeWrapper.style.opacity = '0';
-      closeWrapper.style.transform = 'translateY(6px)';
-      closeWrapper.style.transition = 'all 0.25s ease';
-      closeWrapper.style.pointerEvents = 'none';
+  closeWrapper.style.opacity = '0';
+  closeWrapper.style.transform = 'translateY(6px)';
+  closeWrapper.style.transition = 'all 0.25s ease';
+  closeWrapper.style.pointerEvents = 'none';
 
       const globalCloseBtn = document.createElement('button');
       globalCloseBtn.id = 'chatwidget-global-close';
@@ -1047,10 +1047,24 @@
           requestAnimationFrame(() => {
             wrapper.style.opacity = '1';
             wrapper.style.transform = 'translateY(0)';
-            closeWrapper.style.opacity = '1';
-            closeWrapper.style.transform = 'translateY(0)';
-            closeWrapper.style.pointerEvents = 'auto';
           });
+
+          // If this is the last message, reveal the global close after the same timing
+          if (index === messages.length - 1) {
+            // Ensure the stack still exists when the timeout fires
+            const showClose = () => {
+              if (!document.body.contains(stackWrapper)) return;
+              closeWrapper.style.opacity = '1';
+              closeWrapper.style.transform = 'translateY(0)';
+              closeWrapper.style.pointerEvents = 'auto';
+            };
+
+            // Calculate when the last message finished its reveal animation
+            // Use the same revealDelay for the last message, then schedule showing the close immediately after
+            setTimeout(() => {
+              showClose();
+            }, 1500); // wait one message interval after the last bubble (match spacing)
+          }
         }, revealDelay);
       });
     },

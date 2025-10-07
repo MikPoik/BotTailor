@@ -114,7 +114,7 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
             style={{ 
               color: headerTextColor, 
               opacity: useTransparentBackground ? 1 : 0.9,
-              textShadow: useTransparentBackground ? '1px 1px 1px rgba(0,0,0,0.2)' : undefined
+              textShadow: useTransparentBackground ? '1px 1px 1px rgba(0,0,0,0.1)' : undefined
             }}
           >
             {subtitle}
@@ -211,7 +211,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
       borderColor: itemStyle === 'outlined' 
         ? `${primaryColor}${Math.round(255 * 0.6).toString(16).padStart(2, '0')}` // Use primary color for border
         : 'transparent',
-      textShadow: hasBackgroundImage && itemStyle === 'outlined' ? '1px 1px 1px rgba(0,0,0,0.1)' : undefined,
+      textShadow: hasBackgroundImage && itemStyle === 'outlined' ? '0px 0px 1px rgba(0,0,0,0.1)' : undefined,
       backdropFilter: hasBackgroundImage ? 'blur(8px)' : undefined
     };
   };
