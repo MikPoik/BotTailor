@@ -11,6 +11,19 @@ import { useEffect } from "react";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle, TrendingUp, ExternalLink, MoreHorizontal } from "lucide-react";
+import React from "react";
+import type { RouteDefinition } from "@shared/route-metadata";
+
+export const route: RouteDefinition = {
+  path: "/dashboard",
+  ssr: false,
+  metadata: {
+    title: "Dashboard - BotTailor",
+    description: "Manage your AI chatbots, view analytics, and configure settings from your dashboard.",
+    ogTitle: "Dashboard - BotTailor",
+    ogDescription: "Manage your AI chatbots and view analytics.",
+  },
+};
 
 interface ChatbotConfig {
   id: number;
@@ -39,9 +52,18 @@ interface ChatbotConfig {
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   // Use unified global chat session
   const { sessionId } = useGlobalChatSession();
+
+  // Update metadata on client side for CSR page
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("@/lib/client-metadata").then(({ updateClientMetadata }) => {
+        updateClientMetadata(location);
+      });
+    }
+  }, [location]);
 
   // Fetch admin status from a server-side endpoint
   const { data: adminStatusResponse } = useQuery<{ isAdmin: boolean }>({
@@ -99,7 +121,7 @@ export default function Dashboard() {
       if (!chatbots || chatbots.length === 0) {
         return { totalSurveys: 0, totalResponses: 0, completionRate: 0, averageCompletionTime: 0 };
       }
-      
+
       // Aggregate analytics from all user chatbots
       const analyticsPromises = chatbots.map(async (chatbot) => {
         const response = await fetch(`/api/chatbots/${chatbot.id}/surveys/analytics`);
@@ -108,9 +130,9 @@ export default function Dashboard() {
         }
         return { totalSurveys: 0, totalResponses: 0, completionRate: 0, averageCompletionTime: 0 };
       });
-      
+
       const allAnalytics = await Promise.all(analyticsPromises);
-      
+
       // Aggregate totals
       return allAnalytics.reduce(
         (acc, analytics) => ({

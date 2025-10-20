@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import React from 'react'; // Import React
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,17 @@ import { ToastAction } from "@/components/ui/toast";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 import type { RouteDefinition } from "@shared/route-metadata";
+
+export const route: RouteDefinition = {
+  path: "/subscription",
+  ssr: false,
+  metadata: {
+    title: "Subscription - BotTailor",
+    description: "Manage your BotTailor subscription and billing.",
+    ogTitle: "Subscription - BotTailor",
+    ogDescription: "Manage your subscription.",
+  },
+};
 
 interface SubscriptionPlan {
   id: number;
@@ -49,6 +61,7 @@ export default function Subscription() {
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
   // Use unified global chat session
   const { sessionId } = useGlobalChatSession();
+  const [location, setLocation] = useState(""); // Initialize location state
 
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
@@ -77,6 +90,15 @@ export default function Subscription() {
     enabled: true,
     retry: false,
   });
+
+  // Update metadata on client side for CSR page
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("@/lib/client-metadata").then(({ updateClientMetadata }) => {
+        updateClientMetadata(window.location.pathname); // Use window.location.pathname directly
+      });
+    }
+  }, [location]); // Dependency on location state
 
   // Create checkout session mutation
   const createCheckoutMutation = useMutation({

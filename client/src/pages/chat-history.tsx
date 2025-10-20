@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MessageCircle, Clock, Calendar, Download, Trash2, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -30,6 +30,19 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import RichMessage from "@/components/chat/rich-message";
 import { Message as SharedMessage } from "@shared/schema";
+import React from "react";
+import type { RouteDefinition } from "@shared/route-metadata";
+
+export const route: RouteDefinition = {
+  path: "/chat-history/:id",
+  ssr: false,
+  metadata: {
+    title: "Chat History - BotTailor",
+    description: "View conversation history and analytics for your chatbot.",
+    ogTitle: "Chat History - BotTailor",
+    ogDescription: "View chatbot conversation history.",
+  },
+};
 
 interface ChatSession {
   id: number;
@@ -74,6 +87,16 @@ export default function ChatHistory() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const { toast } = useToast();
+
+  // Update metadata on client side for CSR page
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("@/lib/client-metadata").then(({ updateClientMetadata }) => {
+        updateClientMetadata(window.location.pathname);
+      });
+    }
+  }, [window.location.pathname]);
+
 
   // Fetch chat sessions for this chatbot
   const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useQuery<SessionsResponse>({
@@ -208,7 +231,7 @@ export default function ChatHistory() {
             {deleteSessionMutation.isPending ? "Deleting..." : "Delete Session"}
           </Button>
         </div>
-        
+
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -450,7 +473,7 @@ export default function ChatHistory() {
           ))}
         </div>
       )}
-      
+
       {/* Pagination Controls */}
       {sessionsData?.pagination && sessionsData.pagination.totalPages > 1 && (
         <div className="mt-6">
@@ -464,7 +487,7 @@ export default function ChatHistory() {
                   />
                 </PaginationItem>
               )}
-              
+
               {Array.from({ length: Math.min(5, sessionsData.pagination.totalPages) }, (_, i) => {
                 const page = i + 1;
                 return (
@@ -479,7 +502,7 @@ export default function ChatHistory() {
                   </PaginationItem>
                 );
               })}
-              
+
               {sessionsData.pagination.hasNextPage && (
                 <PaginationItem>
                   <PaginationNext 

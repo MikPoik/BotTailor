@@ -65,6 +65,19 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useState } from "react";
 import type { ChatbotConfig } from "@shared/schema";
 import PromptAssistantChatbox from "@/components/chat/prompt-assistant-chatbox";
+import React from "react";
+import type { RouteDefinition } from "@shared/route-metadata";
+
+export const route: RouteDefinition = {
+  path: "/chatbots/:guid",
+  ssr: false,
+  metadata: {
+    title: "Edit Chatbot - BotTailor",
+    description: "Configure and customize your AI chatbot settings.",
+    ogTitle: "Edit Chatbot - BotTailor",
+    ogDescription: "Configure your AI chatbot.",
+  },
+};
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -165,6 +178,15 @@ export default function ChatbotEdit() {
       });
     }
   }, [chatbot, form]);
+
+  // Update metadata on client side for CSR page
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("@/lib/client-metadata").then(({ updateClientMetadata }) => {
+        updateClientMetadata(location);
+      });
+    }
+  }, [location]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {

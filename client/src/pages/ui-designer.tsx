@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,18 @@ import {
 } from "lucide-react";
 import { BackgroundImageUpload } from "@/components/ui/background-image-upload";
 import type { HomeScreenConfig, ChatbotConfig } from "@shared/schema";
+import type { RouteDefinition } from "@shared/route-metadata";
+
+export const route: RouteDefinition = {
+  path: "/ui-designer/:id",
+  ssr: false,
+  metadata: {
+    title: "UI Designer - BotTailor",
+    description: "Design and customize your chatbot's user interface.",
+    ogTitle: "UI Designer - BotTailor",
+    ogDescription: "Customize your chatbot UI.",
+  },
+};
 
 // Default configuration fallback
 const getDefaultConfig = (): HomeScreenConfig => ({
@@ -92,6 +104,16 @@ export default function UIDesigner() {
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
+
+  // Update metadata on client side for CSR page
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("@/lib/client-metadata").then(({ updateClientMetadata }) => {
+        updateClientMetadata(location);
+      });
+    }
+  }, [location]);
 
   const [prompt, setPrompt] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -852,7 +874,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                         <p className="text-xs text-muted-foreground">
                           Make the header background transparent to show the background image behind it
                         </p>
-                        
+
                         <div className="space-y-2">
                           <Label htmlFor="background-transparency">
                             Background Image Transparency: {backgroundImageTransparency}%
