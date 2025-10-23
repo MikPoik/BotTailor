@@ -31,14 +31,14 @@ function optimizeSearchQuery(query: string): string {
   // Join and ensure it's within 60-160 character range
   let optimizedQuery = optimizedWords.join(' ');
   
-  // If still too long, truncate to 160 chars
-  if (optimizedQuery.length > 160) {
-    optimizedQuery = optimizedQuery.substring(0, 160).trim();
-  }
-  
   // If too short, use more of original (min 60 chars for good context)
   if (optimizedQuery.length < 60 && query.length > 60) {
     optimizedQuery = query.substring(0, 160).trim();
+  }
+  
+  // Always cap at 160 chars maximum
+  if (optimizedQuery.length > 160) {
+    optimizedQuery = optimizedQuery.substring(0, 160).trim();
   }
   
   console.log(`[VECTOR_SEARCH] Original query length: ${query.length} chars`);
@@ -73,7 +73,9 @@ export async function buildWebsiteContext(
         .join(' ');
       
       if (contextMessages.length > 0) {
-        contextualQuery = `${contextMessages} ${searchQuery}`;
+        // Combine and ensure we don't exceed 160 chars before optimization
+        const combined = `${contextMessages} ${searchQuery}`;
+        contextualQuery = combined.length > 160 ? combined.substring(0, 160).trim() : combined;
         console.log(`[VECTOR_SEARCH] Short query detected, added conversation context`);
       }
     }
