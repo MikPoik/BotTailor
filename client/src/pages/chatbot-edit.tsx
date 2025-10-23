@@ -183,12 +183,10 @@ export default function ChatbotEdit() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       import("@/lib/client-metadata").then(({ updateClientMetadata }) => {
-        updateClientMetadata(location);
-
-
+        updateClientMetadata(window.location.pathname);
       });
     }
-  }, [location]);
+  }, []);
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
