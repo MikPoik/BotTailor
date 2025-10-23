@@ -54,11 +54,32 @@ function optimizeSearchQuery(query: string): string {
 export async function buildWebsiteContext(
   chatbotConfigId: number,
   searchQuery: string,
+  conversationHistory: Array<{ role: string; content: string }> = [],
   maxContentLength: number = 500
 ): Promise<string> {
   try {
+    // Build contextual query by including recent conversation history
+    let contextualQuery = searchQuery;
+    
+    // If the user message is very short (< 20 chars), add context from recent messages
+    if (searchQuery.length < 20 && conversationHistory.length > 0) {
+      // Get last 3 messages for context (exclude the current user message)
+      const recentMessages = conversationHistory.slice(-4, -1);
+      
+      // Combine recent assistant messages with current query for better context
+      const contextMessages = recentMessages
+        .filter(msg => msg.content && msg.content.length > 10)
+        .map(msg => msg.content)
+        .join(' ');
+      
+      if (contextMessages.length > 0) {
+        contextualQuery = `${contextMessages} ${searchQuery}`;
+        console.log(`[VECTOR_SEARCH] Short query detected, added conversation context`);
+      }
+    }
+    
     // Optimize the search query for better vector search performance
-    const optimizedQuery = optimizeSearchQuery(searchQuery);
+    const optimizedQuery = optimizeSearchQuery(contextualQuery);
     
     const relevantContent = await storage.searchSimilarContent(
       chatbotConfigId,
@@ -165,7 +186,8 @@ export async function buildActiveSurveyContext(sessionId: string, chatbotConfig?
 export async function buildCompleteSystemPrompt(
   chatbotConfig: any,
   sessionId: string,
-  searchQuery: string
+  searchQuery: string,
+  conversationHistory: Array<{ role: string; content: string }> = []
 ): Promise<{ 
   systemPrompt: string; 
   surveyInfo: { hasMenuRequired: boolean; questionIndex: number } 
@@ -177,9 +199,13 @@ export async function buildCompleteSystemPrompt(
   // Base system prompt with survey context
   let systemPrompt = buildSystemPrompt(chatbotConfig, surveyContext, isSurveyActive);
   
-  // Add website context if available
+  // Add website context if available, including conversation history for better context
   if (chatbotConfig?.id) {
-    const websiteContext = await buildWebsiteContext(chatbotConfig.id, searchQuery);
+    const websiteContext = await buildWebsiteContext(
+      chatbotConfig.id, 
+      searchQuery,
+      conversationHistory
+    );
     systemPrompt += websiteContext;
   }
   

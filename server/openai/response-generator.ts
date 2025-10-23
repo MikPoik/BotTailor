@@ -314,11 +314,12 @@ export async function generateMultiBubbleResponse(
   try {
     const openai = getOpenAIClient();
 
-    // Build complete system prompt with all contexts
-    const { systemPrompt } = await buildCompleteSystemPrompt(
+    // Build complete system prompt with all contexts, including conversation history for better vector search
+    const { systemPrompt, surveyInfo } = await buildCompleteSystemPrompt(
       chatbotConfig,
       sessionId,
       userMessage,
+      conversationHistory
     );
 
     // Extract configuration
