@@ -184,6 +184,8 @@ export default function ChatbotEdit() {
     if (typeof window !== "undefined") {
       import("@/lib/client-metadata").then(({ updateClientMetadata }) => {
         updateClientMetadata(location);
+
+
       });
     }
   }, [location]);
