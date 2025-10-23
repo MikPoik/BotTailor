@@ -2,6 +2,53 @@ import { storage } from "../storage";
 import { buildSystemPrompt, buildSurveyContext } from "../ai-response-schema";
 
 /**
+ * Optimize search query to 15-40 tokens (60-160 chars) for better vector search
+ */
+function optimizeSearchQuery(query: string): string {
+  // Remove common filler words and keep key concepts
+  const fillerWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'from', 'about', 'as', 'into', 'like', 'through',
+    'after', 'over', 'between', 'out', 'against', 'during', 'without',
+    'before', 'under', 'around', 'among', 'please', 'can', 'you', 'i',
+    'want', 'need', 'would', 'could', 'should', 'tell', 'me', 'what',
+    'how', 'when', 'where', 'why', 'who', 'which', 'is', 'are', 'was',
+    'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
+    'did', 'will', 'would', 'shall', 'should', 'may', 'might', 'must',
+    'can', 'could'
+  ]);
+
+  // Split into words and filter
+  const words = query
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ') // Remove punctuation
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !fillerWords.has(word));
+
+  // Take first 6-8 meaningful words (typically 15-40 tokens when embedded)
+  const optimizedWords = words.slice(0, 8);
+  
+  // Join and ensure it's within 60-160 character range
+  let optimizedQuery = optimizedWords.join(' ');
+  
+  // If still too long, truncate to 160 chars
+  if (optimizedQuery.length > 160) {
+    optimizedQuery = optimizedQuery.substring(0, 160).trim();
+  }
+  
+  // If too short, use more of original (min 60 chars for good context)
+  if (optimizedQuery.length < 60 && query.length > 60) {
+    optimizedQuery = query.substring(0, 160).trim();
+  }
+  
+  console.log(`[VECTOR_SEARCH] Original query length: ${query.length} chars`);
+  console.log(`[VECTOR_SEARCH] Optimized query length: ${optimizedQuery.length} chars`);
+  console.log(`[VECTOR_SEARCH] Optimized query: "${optimizedQuery}"`);
+  
+  return optimizedQuery || query.substring(0, 160);
+}
+
+/**
  * Build website context from similar content search
  */
 export async function buildWebsiteContext(
@@ -10,9 +57,12 @@ export async function buildWebsiteContext(
   maxContentLength: number = 500
 ): Promise<string> {
   try {
+    // Optimize the search query for better vector search performance
+    const optimizedQuery = optimizeSearchQuery(searchQuery);
+    
     const relevantContent = await storage.searchSimilarContent(
       chatbotConfigId,
-      searchQuery,
+      optimizedQuery,
       3,
     );
 
