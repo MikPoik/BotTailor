@@ -3,49 +3,47 @@ import { buildSystemPrompt, buildSurveyContext } from "../ai-response-schema";
 
 /**
  * Optimize search query to 15-40 tokens (60-160 chars) for better vector search
+ * Language-agnostic approach that works across all languages
  */
 function optimizeSearchQuery(query: string): string {
-  // Remove common filler words and keep key concepts
-  const fillerWords = new Set([
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-    'of', 'with', 'by', 'from', 'about', 'as', 'into', 'like', 'through',
-    'after', 'over', 'between', 'out', 'against', 'during', 'without',
-    'before', 'under', 'around', 'among', 'please', 'can', 'you', 'i',
-    'want', 'need', 'would', 'could', 'should', 'tell', 'me', 'what',
-    'how', 'when', 'where', 'why', 'who', 'which', 'is', 'are', 'was',
-    'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
-    'did', 'will', 'would', 'shall', 'should', 'may', 'might', 'must',
-    'can', 'could'
-  ]);
-
-  // Split into words and filter
-  const words = query
-    .toLowerCase()
-    .replace(/[^\w\s]/g, ' ') // Remove punctuation
-    .split(/\s+/)
-    .filter(word => word.length > 2 && !fillerWords.has(word));
-
-  // Take first 6-8 meaningful words (typically 15-40 tokens when embedded)
-  const optimizedWords = words.slice(0, 8);
+  // Normalize whitespace and trim
+  let optimizedQuery = query.trim().replace(/\s+/g, ' ');
   
-  // Join and ensure it's within 60-160 character range
-  let optimizedQuery = optimizedWords.join(' ');
-  
-  // If too short, use more of original (min 60 chars for good context)
-  if (optimizedQuery.length < 60 && query.length > 60) {
-    optimizedQuery = query.substring(0, 160).trim();
+  // If query is within optimal range (60-160 chars), use as-is
+  if (optimizedQuery.length >= 60 && optimizedQuery.length <= 160) {
+    console.log(`[VECTOR_SEARCH] Query already optimal: ${optimizedQuery.length} chars`);
+    return optimizedQuery;
   }
   
-  // Always cap at 160 chars maximum
+  // If too long, intelligently truncate at sentence/phrase boundaries
   if (optimizedQuery.length > 160) {
-    optimizedQuery = optimizedQuery.substring(0, 160).trim();
+    // Try to cut at sentence boundaries first (. ! ? ,)
+    const truncated = optimizedQuery.substring(0, 160);
+    const lastPunctuation = Math.max(
+      truncated.lastIndexOf('.'),
+      truncated.lastIndexOf('!'),
+      truncated.lastIndexOf('?'),
+      truncated.lastIndexOf(',')
+    );
+    
+    // If we found punctuation in the last 40 chars, cut there
+    if (lastPunctuation > 120) {
+      optimizedQuery = truncated.substring(0, lastPunctuation + 1).trim();
+    } else {
+      // Otherwise, try to cut at last word boundary
+      const lastSpace = truncated.lastIndexOf(' ');
+      optimizedQuery = lastSpace > 120 ? truncated.substring(0, lastSpace).trim() : truncated.trim();
+    }
   }
+  
+  // If too short (< 60 chars), keep as-is - short queries can still be meaningful
+  // No artificial padding needed
   
   console.log(`[VECTOR_SEARCH] Original query length: ${query.length} chars`);
   console.log(`[VECTOR_SEARCH] Optimized query length: ${optimizedQuery.length} chars`);
   console.log(`[VECTOR_SEARCH] Optimized query: "${optimizedQuery}"`);
   
-  return optimizedQuery || query.substring(0, 160);
+  return optimizedQuery;
 }
 
 /**
