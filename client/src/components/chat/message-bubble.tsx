@@ -18,16 +18,24 @@ interface MessageBubbleProps {
 const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
   
-  // Safe date formatting with validation
-  const getTimeAgo = (dateString: string | undefined) => {
+  // Calculate timestamp once based on message creation time - no live updates
+  const getStaticTimeAgo = (dateString: string | undefined) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    return formatDistanceToNow(date, { addSuffix: true });
+    const messageDate = new Date(dateString);
+    if (isNaN(messageDate.getTime())) return '';
+    
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - messageDate.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds} s`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} h`;
+    return `${Math.floor(diffInSeconds / 86400)} d`;
   };
-  const timeAgo = getTimeAgo(
+  
+  const timeAgo = getStaticTimeAgo(
     (typeof message.createdAt === 'string' ? message.createdAt : message.createdAt?.toISOString?.())
-  ).replace(' ago', '').replace('minutes', 'min');
+  );
   if (isUser) {
     return (
       <div className="flex justify-end animate-fadeIn">
@@ -35,9 +43,11 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
           <div className="chat-message-user">
             <p dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
           </div>
-          {!(message.metadata as MessageMetadata)?.isFollowUp && timeAgo && (<span className="text-xs text-neutral-500 mt-1 block text-right">
-            {timeAgo.includes('less') ? `${Math.floor(new Date().getSeconds())} s` : timeAgo}
-          </span>)}
+          {!(message.metadata as MessageMetadata)?.isFollowUp && timeAgo && (
+            <span className="text-xs text-neutral-500 mt-1 block text-right">
+              {timeAgo}
+            </span>
+          )}
         </div>
       </div>
     );
