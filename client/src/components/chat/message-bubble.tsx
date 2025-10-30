@@ -18,22 +18,18 @@ interface MessageBubbleProps {
 const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
   
-  // Calculate timestamp once based on message creation time - no live updates
-  const getStaticTimeAgo = (dateString: string | undefined) => {
+  // Format timestamp as HH:MM
+  const getTimestamp = (dateString: string | undefined) => {
     if (!dateString) return '';
     const messageDate = new Date(dateString);
     if (isNaN(messageDate.getTime())) return '';
     
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - messageDate.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return `${diffInSeconds} s`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} h`;
-    return `${Math.floor(diffInSeconds / 86400)} d`;
+    const hours = messageDate.getHours().toString().padStart(2, '0');
+    const minutes = messageDate.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
   };
   
-  const timeAgo = getStaticTimeAgo(
+  const timeAgo = getTimestamp(
     (typeof message.createdAt === 'string' ? message.createdAt : message.createdAt?.toISOString?.())
   );
   if (isUser) {
