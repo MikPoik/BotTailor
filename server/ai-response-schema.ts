@@ -128,9 +128,13 @@ You respond with multiple message bubbles in a single turn to create natural, hu
 Message Types Available:
 ${messageTypes.join("\n")}
 
-${isSurveyActive ? `**SURVEY MODE ACTIVE:**
+${
+  isSurveyActive
+    ? `**SURVEY MODE ACTIVE:**
 - Follow the ACTIVE SURVEY CONTEXT section for specific question details and format requirements
-- Use exact option texts provided in survey context (never modify or invent options)` : ''}
+- Use exact option texts provided in survey context (never modify or invent options)`
+    : ""
+}
 
 For natural conversations, adapt your bubble strategy based on the content type:
 
@@ -239,7 +243,7 @@ For follow-up responses:
 🔴 **CRITICAL**: Put expectation metadata in the QUESTION TEXT bubble, NOT the menu bubble!
 This ensures validation catches missing menus even if AI stops generating before the menu bubble.
 
-${isSurveyActive ? `⚠️ **SURVEY VALIDATION**: This metadata enables validation that ensures ALL intended menu options are generated and prevents truncation!`: ''}
+${isSurveyActive ? `⚠️ **SURVEY VALIDATION**: This metadata enables validation that ensures ALL intended menu options are generated and prevents truncation!` : ""}
 
 Use multiple shorter bubbles to create natural dialogue flow.
 
@@ -308,7 +312,11 @@ When users ask to contact you or leave their information, explain that contact f
 }
 
 // Function to build survey context for AI when a survey is active
-export function buildSurveyContext(survey: any, surveySession: any, chatbotConfig?: any): string {
+export function buildSurveyContext(
+  survey: any,
+  surveySession: any,
+  chatbotConfig?: any,
+): string {
   const config = survey.surveyConfig;
   const currentQuestionIndex = surveySession.currentQuestionIndex || 0;
   const responses = surveySession.responses || {};
@@ -330,17 +338,29 @@ Previous conversations about other surveys are irrelevant to this new survey.
         // Try indexed ID first (question_0, question_1, etc.), then fallback to question.id
         const indexedId = `question_${index}`;
         const qKey = `q${index}`;
-        let response = responses[indexedId] || responses[question.id] || responses[qKey] || "No response";
+        let response =
+          responses[indexedId] ||
+          responses[question.id] ||
+          responses[qKey] ||
+          "No response";
 
         // Format complex response objects properly
-        if (typeof response === 'object' && response !== null) {
+        if (typeof response === "object" && response !== null) {
           if (response.rating) {
             response = `Rating: ${response.rating}`;
-          } else if (response.selected_options_with_text && Array.isArray(response.selected_options_with_text)) {
+          } else if (
+            response.selected_options_with_text &&
+            Array.isArray(response.selected_options_with_text)
+          ) {
             // Extract text from each object in the array
-            response = response.selected_options_with_text.map((item: any) => item.text || item).join(', ');
-          } else if (response.selected_options && Array.isArray(response.selected_options)) {
-            response = response.selected_options.join(', ');
+            response = response.selected_options_with_text
+              .map((item: any) => item.text || item)
+              .join(", ");
+          } else if (
+            response.selected_options &&
+            Array.isArray(response.selected_options)
+          ) {
+            response = response.selected_options.join(", ");
           } else {
             response = JSON.stringify(response);
           }
@@ -366,11 +386,13 @@ ${qaContext}
 
 2. **Personalized Summary**: Based on the responses above, provide a personalized summary and recommendation about which services would be most suitable. Analyze the user's answers and give specific guidance.
 
-3. **Next Steps**: ${chatbotConfig?.formRecipientEmail ? 'Present the contact form using the format below' : 'Suggest alternative contact methods like phone or email'}
+3. **Next Steps**: ${chatbotConfig?.formRecipientEmail ? "Present the contact form using the format below and a booking calendar link if available" : "Suggest alternative contact methods like phone or email or booking calendar"}
 
-🔴 **MANDATORY**: Use all three elements above in sequence - acknowledgment, personalized summary, and contact form.
+🔴 **MANDATORY**: Use all three elements above in sequence - acknowledgment, personalized summary, possible booking calendar link and contact form.
 
-${chatbotConfig?.formRecipientEmail ? `
+${
+  chatbotConfig?.formRecipientEmail
+    ? `
 **🔴 MANDATORY CONTACT FORM FORMAT:**
 After providing the personalized summary, present the contact form using this structure but translating content:
 
@@ -395,7 +417,9 @@ After providing the personalized summary, present the contact form using this st
 - Replace [YOUR PERSONALIZED SUMMARY...] with actual analysis of user's responses
 - Provide specific service recommendations based on their answers
 - Use the same language as the survey questions for all text
-- Include the contact form as the final step` : ''}
+- Include the contact form as the final step`
+    : ""
+}
 
 **🔴 COMPLETION CONTEXT REMINDER:**
 This is a COMPLETED survey. Do not ask more questions. Focus on:
@@ -440,24 +464,35 @@ ${getQuestionTypeInstructions(currentQuestion)}
 1. Brief acknowledgment and validation of user's response (1 sentence max), adjust to current survey context. Example: "Thank you for your response, I understand your situation." 
 2. IMMEDIATELY present Question ${currentQuestionIndex + 1} with the appropriate ${currentQuestion.type} bubble
 3. 🔴 **CRITICAL VALIDATION**: Include expectation metadata in the QUESTION TEXT bubble (NOT the menu): expectedMenuOptions: ${(() => {
-  if (!currentQuestion.options) return 0;
-  if (!currentQuestion.allowFreeChoice) return currentQuestion.options.length;
-  // Check if there's already an "Other" option
-  const hasExistingOther = currentQuestion.options.some((option: any) => 
-    option.text?.toLowerCase().trim() === 'other' ||
-    option.text?.toLowerCase().includes('other')
-  );
-  // If no existing "Other", add one (+1). If existing "Other", replace it (same count)
-  return hasExistingOther ? currentQuestion.options.length : currentQuestion.options.length + 1;
-})()}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
-${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: ${(() => {
-  if (!currentQuestion.options) return 'Add an "Other" option with id="q_other"';
-  const hasExistingOther = currentQuestion.options.some((option: any) => 
-    option.text?.toLowerCase().trim() === 'other' ||
-    option.text?.toLowerCase().includes('other')
-  );
-  return hasExistingOther ? 'REPLACE existing "Other" option with id="q_other"' : 'ADD new "Other" option with id="q_other"';
-})()}. Translate the visible text to match survey language naturally.` : ''}
+    if (!currentQuestion.options) return 0;
+    if (!currentQuestion.allowFreeChoice) return currentQuestion.options.length;
+    // Check if there's already an "Other" option
+    const hasExistingOther = currentQuestion.options.some(
+      (option: any) =>
+        option.text?.toLowerCase().trim() === "other" ||
+        option.text?.toLowerCase().includes("other"),
+    );
+    // If no existing "Other", add one (+1). If existing "Other", replace it (same count)
+    return hasExistingOther
+      ? currentQuestion.options.length
+      : currentQuestion.options.length + 1;
+  })()}, contentIntent: "survey_question_${currentQuestionIndex + 1}", completionRequired: true
+${
+  currentQuestion.allowFreeChoice
+    ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: ${(() => {
+        if (!currentQuestion.options)
+          return 'Add an "Other" option with id="q_other"';
+        const hasExistingOther = currentQuestion.options.some(
+          (option: any) =>
+            option.text?.toLowerCase().trim() === "other" ||
+            option.text?.toLowerCase().includes("other"),
+        );
+        return hasExistingOther
+          ? 'REPLACE existing "Other" option with id="q_other"'
+          : 'ADD new "Other" option with id="q_other"';
+      })()}. Translate the visible text to match survey language naturally.`
+    : ""
+}
 `;
 
   if (currentQuestion.options && currentQuestion.options.length > 0) {
@@ -470,9 +505,10 @@ ${currentQuestion.allowFreeChoice ? `4. 🌍 **LANGUAGE-AWARE FREE CHOICE**: ${(
 
     if (currentQuestion.allowFreeChoice) {
       // Check if there's already an "Other" option (by text)
-      hasExistingOther = effectiveOptions.some(option => 
-        option.text?.toLowerCase().trim() === 'other' ||
-        option.text?.toLowerCase().includes('other')
+      hasExistingOther = effectiveOptions.some(
+        (option) =>
+          option.text?.toLowerCase().trim() === "other" ||
+          option.text?.toLowerCase().includes("other"),
       );
 
       // If no existing "Other" option, we'll add one (so +1 to count)
@@ -509,15 +545,19 @@ ${menuExample}
 3. Never omit any options!
 4. Copy the JSON format exactly as shown above
 5. 🔴 **CRITICAL VALIDATION METADATA**: Add expectation metadata to the QUESTION TEXT bubble (NOT the menu): {"expectedMenuOptions": ${finalOptionCount}, "contentIntent": "survey_question_${currentQuestionIndex + 1}", "completionRequired": true}
-${currentQuestion.allowFreeChoice ? (hasExistingOther ? 
-`6. 🌍 **REPLACE EXISTING "OTHER"**: There's already an "Other" option in the predefined options. REPLACE it with id="q_other" and translate the text to match the survey language naturally (e.g., "Muu" for Finnish, "Other" for English, etc.). Do NOT add an additional "Other" option.` : 
-`6. 🌍 **ADD "OTHER" OPTION**: Add a localized "Other" option with id="q_other". Translate the visible text to match the survey language naturally (e.g., "Muu" for Finnish, "Andet" for Danish, "Other" for English, etc.)`) : ''}
+${
+  currentQuestion.allowFreeChoice
+    ? hasExistingOther
+      ? `6. 🌍 **REPLACE EXISTING "OTHER"**: There's already an "Other" option in the predefined options. REPLACE it with id="q_other" and translate the text to match the survey language naturally (e.g., "Muu" for Finnish, "Other" for English, etc.). Do NOT add an additional "Other" option.`
+      : `6. 🌍 **ADD "OTHER" OPTION**: Add a localized "Other" option with id="q_other". Translate the visible text to match the survey language naturally (e.g., "Muu" for Finnish, "Andet" for Danish, "Other" for English, etc.)`
+    : ""
+}
 
-The predefined option texts you MUST use are: ${effectiveOptions.map((opt: any) => `"${opt.text}"`).join(", ")}${currentQuestion.allowFreeChoice ? (hasExistingOther ? ` (replace any "Other" with localized version and id="q_other")` : ` + localized "Other" option`) : ''}
+The predefined option texts you MUST use are: ${effectiveOptions.map((opt: any) => `"${opt.text}"`).join(", ")}${currentQuestion.allowFreeChoice ? (hasExistingOther ? ` (replace any "Other" with localized version and id="q_other")` : ` + localized "Other" option`) : ""}
 `;
-  } else if (currentQuestion.type === 'rating') {
+  } else if (currentQuestion.type === "rating") {
     context += generateRatingExample(currentQuestion);
-  } else if (currentQuestion.type === 'text') {
+  } else if (currentQuestion.type === "text") {
     // Add skip option for non-required text questions
     if (!currentQuestion.required) {
       context += `
@@ -554,15 +594,23 @@ This is a required text question. Present it as a text bubble and wait for user 
     Object.entries(responses).forEach(([qId, answer]) => {
       // Format complex response objects properly
       let formattedAnswer = answer;
-      if (typeof answer === 'object' && answer !== null) {
+      if (typeof answer === "object" && answer !== null) {
         const responseObj = answer as any;
         if (responseObj.rating) {
           formattedAnswer = `Rating: ${responseObj.rating}`;
-        } else if (responseObj.selected_options_with_text && Array.isArray(responseObj.selected_options_with_text)) {
+        } else if (
+          responseObj.selected_options_with_text &&
+          Array.isArray(responseObj.selected_options_with_text)
+        ) {
           // Extract text from each object in the array
-          formattedAnswer = responseObj.selected_options_with_text.map((item: any) => item.text || item).join(', ');
-        } else if (responseObj.selected_options && Array.isArray(responseObj.selected_options)) {
-          formattedAnswer = responseObj.selected_options.join(', ');
+          formattedAnswer = responseObj.selected_options_with_text
+            .map((item: any) => item.text || item)
+            .join(", ");
+        } else if (
+          responseObj.selected_options &&
+          Array.isArray(responseObj.selected_options)
+        ) {
+          formattedAnswer = responseObj.selected_options.join(", ");
         } else {
           formattedAnswer = JSON.stringify(answer);
         }
@@ -644,35 +692,37 @@ CRITICAL: Focus only on THIS survey. Ignore any previous survey content in chat 
 
 // Helper function to get question type specific instructions
 function getQuestionTypeInstructions(question: any): string {
-  const requiredText = question.required ? 'REQUIRED' : 'OPTIONAL';
+  const requiredText = question.required ? "REQUIRED" : "OPTIONAL";
   switch (question.type) {
-    case 'single_choice':
+    case "single_choice":
       return `This is a ${requiredText} SINGLE CHOICE question. Use MENU messageType (allows only one selection).`;
-    case 'multiple_choice':
+    case "multiple_choice":
       return `This is a ${requiredText} MULTIPLE CHOICE question. Use MULTISELECT_MENU messageType (allows multiple selections). 🚨 CRITICAL: Use EXACT option texts from survey - DO NOT use "Option 1", "Option 2"!`;
-    case 'text':
-      const skipText = question.required ? '' : ' If optional, provide a skip option using quickReplies.';
+    case "text":
+      const skipText = question.required
+        ? ""
+        : " If optional, provide a skip option using quickReplies.";
       return `This is a ${requiredText} TEXT question. Use TEXT messageType and prompt for free-form text input.${skipText}`;
-    case 'rating':
+    case "rating":
       return `This is a ${requiredText} RATING question. Use RATING messageType with appropriate scale (1-5 stars, 1-10 numbers, etc.).`;
-    case 'conditional':
+    case "conditional":
       return `This is a ${requiredText} CONDITIONAL question. Use appropriate messageType based on the question structure.`;
     default:
-      return 'Use appropriate messageType based on question content.';
+      return "Use appropriate messageType based on question content.";
   }
 }
 
 // Helper function to determine menu type for question
 function getMenuTypeForQuestion(question: any): string {
   switch (question.type) {
-    case 'single_choice':
-      return 'menu';
-    case 'multiple_choice':
-      return 'multiselect_menu';
-    case 'conditional':
-      return 'menu'; // Default to single choice for conditional
+    case "single_choice":
+      return "menu";
+    case "multiple_choice":
+      return "multiselect_menu";
+    case "conditional":
+      return "menu"; // Default to single choice for conditional
     default:
-      return 'menu';
+      return "menu";
   }
 }
 
@@ -681,9 +731,11 @@ function generateMenuExample(question: any, optionsForExample: string): string {
   const menuType = getMenuTypeForQuestion(question);
   // Calculate effective option count including "Other" if allowFreeChoice is enabled
   const baseOptionCount = question.options?.length || 0;
-  const optionCount = question.allowFreeChoice ? baseOptionCount + 1 : baseOptionCount;
+  const optionCount = question.allowFreeChoice
+    ? baseOptionCount + 1
+    : baseOptionCount;
 
-  if (menuType === 'multiselect_menu') {
+  if (menuType === "multiselect_menu") {
     return `🚨 CRITICAL MULTISELECT FORMAT - COPY EXACTLY:
 {
   "bubbles": [
@@ -728,7 +780,7 @@ function generateRatingExample(question: any): string {
   const metadata = question.metadata || {};
   const minValue = metadata.minValue || 1;
   const maxValue = metadata.maxValue || 5;
-  const ratingType = metadata.ratingType || 'stars';
+  const ratingType = metadata.ratingType || "stars";
 
   return `
 **RATING FORMAT REQUIRED**:
