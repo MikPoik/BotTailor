@@ -38,7 +38,7 @@ export const RatingMessage = memo(function RatingMessage({
               >
                 <Star 
                   className={`w-6 h-6 ${
-                    isActive ? 'text-yellow-400 fill-yellow-400' : 'text-neutral-300'
+                    isActive ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'
                   }`}
                 />
               </button>
@@ -46,7 +46,7 @@ export const RatingMessage = memo(function RatingMessage({
           })}
         </div>
         {selectedRating && (
-          <p className="text-sm text-neutral-600">{selectedRating} / {maxValue}</p>
+          <p className="text-sm text-muted-foreground">{selectedRating} / {maxValue}</p>
         )}
       </div>
     );
@@ -64,7 +64,7 @@ export const RatingMessage = memo(function RatingMessage({
                 className={`px-3 py-2 rounded-lg border transition-colors ${
                   isSelected 
                     ? 'bg-primary text-white border-primary' 
-                    : 'border-neutral-200 hover:bg-neutral-50'
+                    : 'border-border bg-muted hover:bg-accent text-foreground'
                 }`}
               >
                 {rating}
@@ -72,12 +72,12 @@ export const RatingMessage = memo(function RatingMessage({
             );
           })}
         </div>
-        <div className="flex justify-between text-xs text-neutral-500">
+        <div className="flex justify-between text-xs text-muted-foreground">
           <span>{minValue}</span>
           <span>{maxValue}</span>
         </div>
         {selectedRating && (
-          <p className="text-sm text-neutral-600">You rated: {selectedRating} out of {maxValue}</p>
+          <p className="text-sm text-muted-foreground">You rated: {selectedRating} out of {maxValue}</p>
         )}
       </div>
     );

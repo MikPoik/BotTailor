@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -124,7 +125,7 @@ export default function Dashboard() {
 
       // Aggregate analytics from all user chatbots
       const analyticsPromises = chatbots.map(async (chatbot) => {
-        const response = await fetch(`/api/chatbots/${chatbot.id}/surveys/analytics`);
+        const response = await apiRequest("GET", `/api/chatbots/${chatbot.id}/surveys/analytics`);
         if (response.ok) {
           return await response.json();
         }
@@ -135,14 +136,14 @@ export default function Dashboard() {
 
       // Aggregate totals
       return allAnalytics.reduce(
-        (acc, analytics) => ({
+        (acc: { totalSurveys: number; totalResponses: number; completionRate: number; averageCompletionTime: number }, analytics: any) => ({
           totalSurveys: acc.totalSurveys + analytics.totalSurveys,
           totalResponses: acc.totalResponses + analytics.totalResponses,
           completionRate: allAnalytics.length > 0 
-            ? allAnalytics.reduce((sum, a) => sum + a.completionRate, 0) / allAnalytics.length
+            ? allAnalytics.reduce((sum: number, a: any) => sum + a.completionRate, 0) / allAnalytics.length
             : 0,
           averageCompletionTime: allAnalytics.length > 0
-            ? allAnalytics.reduce((sum, a) => sum + a.averageCompletionTime, 0) / allAnalytics.length
+            ? allAnalytics.reduce((sum: number, a: any) => sum + a.averageCompletionTime, 0) / allAnalytics.length
             : 0,
         }),
         { totalSurveys: 0, totalResponses: 0, completionRate: 0, averageCompletionTime: 0 }

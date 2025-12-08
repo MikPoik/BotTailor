@@ -227,7 +227,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
   return (
     <>
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -244,9 +244,9 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
       </div>
 
       {/* Input area */}
-      <div className="border-t border-neutral-200 px-4 py-1 bg-white">
+      <div className="border-t border-border px-4 py-1 bg-background">
         <div className="flex items-center space-x-3">
-          <button className="text-neutral-500 hover:text-neutral-700 transition-colors">
+          <button className="text-muted-foreground hover:text-foreground transition-colors">
             <Paperclip className="h-5 w-5" />
           </button>
 
@@ -257,7 +257,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="rounded-full pr-12 border-neutral-300 focus:ring-2 focus:border-transparent send-input"
+              className="rounded-full pr-12 focus:ring-2 focus:border-transparent send-input"
               style={{
                 '--tw-ring-color': 'var(--chat-primary-color, var(--primary))',
                 fontSize: '14px'

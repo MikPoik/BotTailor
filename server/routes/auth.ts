@@ -7,6 +7,16 @@ import { eq } from "drizzle-orm";
 
 // Authentication routes for Neon Auth
 export async function setupAuthRoutes(app: Express) {
+  // Helper to fetch Neon Auth user profile
+  async function fetchNeonAuthUser(userId: string) {
+    const [neonAuthUser] = await db
+      .select()
+      .from(neonAuthUsers)
+      .where(eq(neonAuthUsers.id, userId))
+      .limit(1);
+    return neonAuthUser;
+  }
+
   // Get current user - lazy creation on first access
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -18,11 +28,7 @@ export async function setupAuthRoutes(app: Express) {
       // If user doesn't exist, create them from Neon Auth data
       if (!user) {
         // Query neon_auth.users_sync for profile data
-        const [neonAuthUser] = await db
-          .select()
-          .from(neonAuthUsers)
-          .where(eq(neonAuthUsers.id, userId))
-          .limit(1);
+        const neonAuthUser = await fetchNeonAuthUser(userId);
         
         if (!neonAuthUser) {
           return res.status(404).json({ message: "User not found in Neon Auth" });
@@ -57,11 +63,7 @@ export async function setupAuthRoutes(app: Express) {
       
       // If user doesn't exist, create them
       if (!user) {
-        const [neonAuthUser] = await db
-          .select()
-          .from(neonAuthUsers)
-          .where(eq(neonAuthUsers.id, userId))
-          .limit(1);
+        const neonAuthUser = await fetchNeonAuthUser(userId);
         
         if (!neonAuthUser) {
           return res.status(404).json({ message: "User not found in Neon Auth" });

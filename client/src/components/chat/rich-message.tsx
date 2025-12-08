@@ -72,7 +72,7 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
   if (messageType === 'image' && (typedMetadata as ImageMetadata)?.imageUrl) {
     const imageMeta = typedMetadata as ImageMetadata;
     return (
-      <div className="bg-white rounded-lg rounded-tl-none shadow-sm overflow-hidden border">
+      <div className="bg-white rounded-lg rounded-tl-none shadow-sm overflow-hidden border dark:bg-slate-800 dark:border-slate-700">
         <img 
           src={imageMeta.imageUrl} 
           alt={imageMeta.title || "Message image"} 
@@ -80,7 +80,7 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
         />
         {content && (
           <div className="p-2">
-            <p className="text-neutral-800">{content}</p>
+            <p className="text-foreground">{content}</p>
           </div>
         )}
       </div>
@@ -103,8 +103,8 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
               onClick={() => onQuickReply(value)}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 isSkipOption
-                  ? 'bg-neutral-200 text-neutral-600 border border-neutral-300 hover:bg-neutral-300'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                  ? 'bg-muted text-muted-foreground border border-border hover:bg-accent'
+                  : 'bg-muted text-foreground hover:bg-accent'
               }`}
             >
               {label}

@@ -97,15 +97,15 @@ export const FormMessage = memo(function FormMessage({
   );
 
   return (
-    <div className="bg-white rounded-lg rounded-tl-none shadow-sm border overflow-hidden">
+    <div className="bg-card rounded-lg rounded-tl-none shadow-sm border border-border overflow-hidden">
       <div className="p-4">
         {metadata.title && (
-          <h4 className="font-semibold text-neutral-800 mb-3">{metadata.title}</h4>
+          <h4 className="font-semibold text-foreground mb-3">{metadata.title}</h4>
         )}
 
         {content && (
           <p 
-            className="text-neutral-600 mb-4" 
+            className="text-muted-foreground mb-4" 
             dangerouslySetInnerHTML={{ __html: parseMarkdown(content) }}
           />
         )}
@@ -115,7 +115,7 @@ export const FormMessage = memo(function FormMessage({
             <div key={`${field.id}-${index}`} className="space-y-2">
               <label 
                 htmlFor={field.id} 
-                className="block text-sm font-medium text-neutral-700"
+                className="block text-sm font-medium text-foreground"
               >
                 {field.label}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -131,7 +131,7 @@ export const FormMessage = memo(function FormMessage({
                   onChange={(e) => handleInputChange(field.id, e.target.value)}
                   rows={3}
                   disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50 placeholder:text-muted-foreground"
                 />
               ) : (
                 <input
@@ -143,7 +143,7 @@ export const FormMessage = memo(function FormMessage({
                   value={formValues[field.id] || ''}
                   onChange={(e) => handleInputChange(field.id, e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 placeholder:text-muted-foreground"
                 />
               )}
             </div>

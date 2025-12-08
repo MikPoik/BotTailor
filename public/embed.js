@@ -210,6 +210,30 @@
       document.head.appendChild(style);
     },
 
+    injectIframeThemeVariables: function() {
+      // This injects CSS variables into the iframe document for Tailwind utility classes
+      // This is called after the iframe loads
+      if (!this.config.primaryColor && !this.config.backgroundColor && !this.config.textColor) {
+        return;
+      }
+
+      const backgroundColor = this.config.backgroundColor || '#ffffff';
+      const isDarkBackground = backgroundColor !== '#ffffff' && backgroundColor !== '#fff';
+      const mutedColor = isDarkBackground ? '#2a2a2a' : '#f1f5f9';
+      const mutedForegroundColor = isDarkBackground ? '#a1a1aa' : '#64748b';
+      const borderColor = isDarkBackground ? '#404040' : '#e2e8f0';
+      const inputColor = isDarkBackground ? '#262626' : '#ffffff';
+
+      return {
+        '--background': backgroundColor,
+        '--foreground': this.config.textColor || '#1f2937',
+        '--muted': mutedColor,
+        '--muted-foreground': mutedForegroundColor,
+        '--border': borderColor,
+        '--input': inputColor
+      };
+    },
+
     createWidget: function() {
       // Inject CSS variables for theme support
       this.injectThemeVariables();

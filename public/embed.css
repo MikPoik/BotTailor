@@ -371,6 +371,18 @@
   color: var(--chat-text, #1f2937) !important;
 }
 
+/* Ensure messages area uses proper colors */
+.chatwidget-iframe .flex-1.overflow-y-auto {
+  background-color: var(--chat-background, #ffffff) !important;
+  color: var(--chat-text, #1f2937) !important;
+}
+
+/* Input area styling */
+.chatwidget-iframe .border-t {
+  border-top-color: var(--chat-border, #e2e8f0) !important;
+  background-color: var(--chat-background, #ffffff) !important;
+}
+
 .chatwidget-iframe .chat-message-bot {
   background-color: var(--chat-muted, #f1f5f9) !important;
   color: var(--chat-text, #1f2937) !important;
@@ -393,6 +405,11 @@
   background-color: var(--chat-input, #ffffff) !important;
   color: var(--chat-text, #1f2937) !important;
   border-color: var(--chat-border, #e2e8f0) !important;
+}
+
+.chatwidget-iframe input::placeholder,
+.chatwidget-iframe textarea::placeholder {
+  color: var(--chat-muted-foreground, #64748b) !important;
 }
 
 /* All default variant buttons in embedded widgets */
@@ -441,9 +458,46 @@
   color: var(--chat-primary-color, #2563eb) !important;
 }
 
+.chatwidget-iframe .menu-option-button {
+  background-color: var(--chat-muted, #f1f5f9) !important;
+  border-color: var(--chat-border, #e2e8f0) !important;
+  color: var(--chat-text, #1f2937) !important;
+  transition: all 0.2s ease !important;
+}
+
 .chatwidget-iframe .menu-option-button:hover {
   background-color: var(--chat-primary-color, #2563eb) !important;
   color: white !important;
+}
+
+/* CSS Variable based classes for consistency */
+.chatwidget-iframe .bg-muted {
+  background-color: var(--chat-muted, #f1f5f9) !important;
+}
+
+.chatwidget-iframe .bg-accent {
+  background-color: var(--chat-accent, #f1f5f9) !important;
+}
+
+.chatwidget-iframe .text-muted-foreground {
+  color: var(--chat-muted-foreground, #64748b) !important;
+}
+
+.chatwidget-iframe .text-foreground {
+  color: var(--chat-text, #1f2937) !important;
+}
+
+.chatwidget-iframe .border-border {
+  border-color: var(--chat-border, #e2e8f0) !important;
+}
+
+.chatwidget-iframe .bg-background {
+  background-color: var(--chat-background, #ffffff) !important;
+}
+
+.chatwidget-iframe .bg-card {
+  background-color: var(--chat-background, #ffffff) !important;
+  color: var(--chat-text, #1f2937) !important;
 }
 
 /* Progress indicators */

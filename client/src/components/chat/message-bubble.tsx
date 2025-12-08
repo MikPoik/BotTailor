@@ -74,7 +74,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
         ) : message.messageType === 'text' ? (
           <div className="chat-message-bot">
             <p 
-              className="text-neutral-800" 
+              className="text-foreground" 
               dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }}
             />
           </div>
@@ -110,7 +110,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
                       onQuickReply(replyText);
                     }
                   }}
-                  className="px-3 py-1 text-sm bg-neutral-100 text-neutral-700 rounded-full hover:bg-neutral-200 transition-colors"
+                  className="px-3 py-1 text-sm bg-muted text-foreground rounded-full hover:bg-accent transition-colors"
                 >
                   {replyText}
                 </button>
@@ -121,7 +121,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
 
         {/* Timestamp (only for non-streaming messages) */}
         {!isStreamingMetadata(message.metadata) && !(message.metadata as MessageMetadata)?.isFollowUp && timeAgo && (
-          <span className="text-xs text-neutral-500 mt-1 block">
+          <span className="text-xs text-muted-foreground mt-1 block">
             {timeAgo}
           </span>
         )}

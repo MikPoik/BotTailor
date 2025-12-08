@@ -106,6 +106,19 @@
   .dark .chat-interface-mobile {
     background-color: hsl(240, 10%, 3.9%);
   }
+
+  /* Input styling for dark mode */
+  .dark input,
+  .dark textarea {
+    background-color: hsl(240, 3.7%, 15.9%);
+    color: hsl(0, 0%, 98%);
+    border-color: hsl(240, 3.7%, 25%);
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: hsl(240, 5%, 64.9%);
+  }
 }
 
 @layer components {
@@ -306,7 +319,7 @@
 
   .chat-typing-dots {
     @apply w-2 h-2 rounded-full animate-bounce;
-    background-color: var(--neutral-400);
+    background-color: var(--neutral-600);
   }
 
   .chat-typing-dots:nth-child(2) {
@@ -326,6 +339,18 @@
 
   .menu-option-button:hover {
     background-color: var(--chat-primary-color, var(--primary)) !important;
+    color: white !important;
+  }
+
+  /* Dark mode for menu option button */
+  .dark .menu-option-button {
+    background-color: hsl(240, 3.7%, 25%);
+    color: hsl(0, 0%, 98%);
+    border-color: hsl(240, 3.7%, 35%);
+  }
+
+  .dark .menu-option-button:hover {
+    background-color: var(--chat-primary-color, hsl(213, 93%, 54%)) !important;
     color: white !important;
   }
 }

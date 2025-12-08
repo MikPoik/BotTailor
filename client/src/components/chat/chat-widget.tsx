@@ -56,11 +56,25 @@ export default function ChatWidget({
     'bottom-left': 'bottom-2 left-2'
   };
 
-  // Resolve primary color for use in dynamic styles
-  // In embedded mode, prioritize URL parameter color over chatbot config theme
-  const resolvedPrimaryColor = isEmbedded 
-    ? primaryColor || chatbotConfig?.theme?.chat?.primary
-    : chatbotConfig?.theme?.chat?.primary || primaryColor;
+  // Resolve theme colors - prioritize props, then chatbot config theme
+  // Support both theme.chat.primary (old) and homeScreenConfig.theme.primaryColor (new)
+  const resolvedPrimaryColor = primaryColor || 
+    chatbotConfig?.homeScreenConfig?.theme?.primaryColor ||
+    chatbotConfig?.theme?.primaryColor ||
+    chatbotConfig?.theme?.chat?.primary ||
+    '#2563eb';
+  
+  const resolvedBackgroundColor = backgroundColor ||
+    chatbotConfig?.homeScreenConfig?.theme?.backgroundColor ||
+    chatbotConfig?.theme?.backgroundColor ||
+    chatbotConfig?.theme?.chat?.background ||
+    '#ffffff';
+    
+  const resolvedTextColor = textColor ||
+    chatbotConfig?.homeScreenConfig?.theme?.textColor ||
+    chatbotConfig?.theme?.textColor ||
+    chatbotConfig?.theme?.chat?.text ||
+    '#1f2937';
 
 
   // Load initial messages from chatbot config
@@ -178,7 +192,7 @@ export default function ChatWidget({
 
   // Inject CSS synchronously to prevent FOUC - memoized to prevent redundant operations
   useEffect(() => {
-    const themeKey = `${resolvedPrimaryColor}-${backgroundColor}-${textColor}`;
+    const themeKey = `${resolvedPrimaryColor}-${resolvedBackgroundColor}-${resolvedTextColor}`;
     const currentThemeKey = document.documentElement.getAttribute('data-chat-theme-key');
 
     // Skip if same theme is already applied
@@ -203,8 +217,14 @@ export default function ChatWidget({
         :root {
           --chat-primary: ${resolvedPrimaryColor};
           --chat-primary-color: ${resolvedPrimaryColor};
-          --chat-background: ${backgroundColor};
-          --chat-text: ${textColor};
+          --chat-background: ${resolvedBackgroundColor};
+          --chat-text: ${resolvedTextColor};
+          --foreground: ${resolvedTextColor};
+          --background: ${resolvedBackgroundColor};
+          --border: ${isLightBackground ? '#e2e8f0' : '#404040'};
+          --input: ${isLightBackground ? '#ffffff' : '#262626'};
+          --muted: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'};
+          --muted-foreground: ${isLightBackground ? '#64748b' : '#a1a1aa'};
         }
 
         /* Chat widget specific styling with complete theme */
@@ -215,32 +235,32 @@ export default function ChatWidget({
           --chat-bubble-bg: ${resolvedPrimaryColor};
           --chat-user-bg: ${resolvedPrimaryColor};
           --chat-hover: ${resolvedPrimaryColor};
-          --background: ${backgroundColor};
-          --foreground: ${textColor};
-          --card: ${backgroundColor};
-          --card-foreground: ${textColor};
-          --popover: ${backgroundColor};
-          --popover-foreground: ${textColor};
+          --background: ${resolvedBackgroundColor};
+          --foreground: ${resolvedTextColor};
+          --card: ${resolvedBackgroundColor};
+          --card-foreground: ${resolvedTextColor};
+          --popover: ${resolvedBackgroundColor};
+          --popover-foreground: ${resolvedTextColor};
           --muted: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'};
           --muted-foreground: ${isLightBackground ? '#64748b' : '#a1a1aa'};
           --border: ${isLightBackground ? '#e2e8f0' : '#404040'};
           --input: ${isLightBackground ? '#ffffff' : '#262626'};
           --accent: ${isLightBackground ? '#f1f5f9' : '#262626'};
-          --accent-foreground: ${textColor};
+          --accent-foreground: ${resolvedTextColor};
         }
 
         /* Main chat interface background and text */
         .chat-widget-container .chat-interface,
         .chat-widget-container .chat-interface-mobile {
-          background-color: ${backgroundColor} !important;
-          color: ${textColor} !important;
+          background-color: ${resolvedBackgroundColor} !important;
+          color: ${resolvedTextColor} !important;
         }
 
         /* Bot message bubbles - use white background - multiple selectors for embedded vs development */
         .chat-widget-container .chat-message-bot,
         .chat-message-bot {
           background-color: ${isLightBackground ? '#ffffff' : '#2a2a2a'} !important;
-          color: ${textColor} !important;
+          color: ${resolvedTextColor} !important;
           border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
@@ -279,8 +299,14 @@ export default function ChatWidget({
         .chat-widget-container input,
         .chat-widget-container textarea {
           background-color: ${isLightBackground ? '#ffffff' : '#262626'} !important;
-          color: ${textColor} !important;
+          color: ${resolvedTextColor} !important;
           border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
+        }
+
+        /* Input placeholder text */
+        .chat-widget-container input::placeholder,
+        .chat-widget-container textarea::placeholder {
+          color: ${isLightBackground ? '#9ca3af' : '#6b7280'} !important;
         }
 
         /* Input focus ring */
@@ -292,9 +318,19 @@ export default function ChatWidget({
           box-shadow: 0 0 0 2px ${resolvedPrimaryColor}40 !important;
         }
 
+        /* Send input specific styling */
+        .chat-widget-container .send-input {
+          background-color: ${isLightBackground ? '#ffffff' : '#262626'} !important;
+          color: ${resolvedTextColor} !important;
+        }
+
+        .chat-widget-container .send-input::placeholder {
+          color: ${isLightBackground ? '#9ca3af' : '#6b7280'} !important;
+        }
+
         /* Tab navigation background and text */
         .chat-widget-container [data-radix-tabs-list] {
-          background: ${backgroundColor} !important;
+          background: ${resolvedBackgroundColor} !important;
           border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
@@ -314,22 +350,73 @@ export default function ChatWidget({
           color: ${resolvedPrimaryColor} !important;
         }
 
+        /* Text color for muted foreground elements */
+        .chat-widget-container .text-muted-foreground,
+        .chat-widget-container [class*="muted-foreground"] {
+          color: ${isLightBackground ? '#64748b' : '#a1a1aa'} !important;
+        }
+
+        .chat-widget-container .text-foreground,
+        .chat-widget-container [class*="foreground"] {
+          color: ${resolvedTextColor} !important;
+        }
+
+        /* Disabled state for buttons and inputs */
+        .chat-widget-container button:disabled,
+        .chat-widget-container input:disabled,
+        .chat-widget-container textarea:disabled {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+        }
+
         /* Card backgrounds */
         .chat-widget-container .bg-card {
-          background-color: ${backgroundColor} !important;
-          color: ${textColor} !important;
+          background-color: ${resolvedBackgroundColor} !important;
+          color: ${resolvedTextColor} !important;
         }
 
         /* Quick reply buttons */
         .chat-widget-container .quick-reply-button {
           background-color: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'} !important;
-          color: ${textColor} !important;
+          color: ${resolvedTextColor} !important;
           border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
         }
 
         .chat-widget-container .quick-reply-button:hover {
           background-color: ${resolvedPrimaryColor} !important;
           color: white !important;
+        }
+
+        /* Menu option buttons base styling */
+        .chat-widget-container .menu-option-button,
+        .chat-widget-container button[class*="option"],
+        .chat-widget-container button[class*="menu"] {
+          background-color: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'} !important;
+          color: ${resolvedTextColor} !important;
+          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
+          transition: all 0.2s ease !important;
+        }
+
+        .chat-widget-container .menu-option-button:hover,
+        .chat-widget-container button[class*="option"]:hover,
+        .chat-widget-container button[class*="menu"]:hover {
+          background-color: ${resolvedPrimaryColor} !important;
+          color: white !important;
+        }
+
+        /* Neutral text color for default buttons */
+        .chat-widget-container button[class*="neutral"],
+        .chat-widget-container .text-neutral {
+          color: ${resolvedTextColor} !important;
+        }
+
+        .chat-widget-container button[class*="bg-neutral"] {
+          background-color: ${isLightBackground ? '#f3f4f6' : '#2a2a2a'} !important;
+          color: ${resolvedTextColor} !important;
+        }
+
+        .chat-widget-container button[class*="bg-neutral"]:hover {
+          background-color: ${isLightBackground ? '#e5e7eb' : '#3a3a3a'} !important;
         }
 
         /* Progress indicators */
@@ -345,6 +432,50 @@ export default function ChatWidget({
         /* Interactive hover states */
         .chat-widget-container .hover\\:text-primary:hover {
           color: ${resolvedPrimaryColor} !important;
+        }
+
+        /* CSS variable based element colors */
+        .chat-widget-container .bg-muted {
+          background-color: var(--muted) !important;
+        }
+
+        .chat-widget-container .bg-accent {
+          background-color: var(--accent) !important;
+        }
+
+        .chat-widget-container .text-muted-foreground {
+          color: var(--muted-foreground) !important;
+        }
+
+        .chat-widget-container .text-foreground {
+          color: var(--foreground) !important;
+        }
+
+        .chat-widget-container .border-border {
+          border-color: var(--border) !important;
+        }
+
+        .chat-widget-container .bg-background {
+          background-color: var(--background) !important;
+        }
+
+        .chat-widget-container .bg-card {
+          background-color: var(--card) !important;
+          color: var(--card-foreground) !important;
+        }
+
+        /* Ensure all neutral classes use CSS variables */
+        .chat-widget-container [class*="border-neutral"] {
+          border-color: var(--border) !important;
+        }
+
+        .chat-widget-container [class*="bg-neutral"] {
+          background-color: var(--muted) !important;
+          color: var(--foreground) !important;
+        }
+
+        .chat-widget-container [class*="text-neutral"] {
+          color: var(--foreground) !important;
         }
 
         /* Form controls focus states */
@@ -408,7 +539,7 @@ export default function ChatWidget({
         existingStyle.remove();
       }
     };
-  }, [resolvedPrimaryColor, backgroundColor, textColor]);
+  }, [resolvedPrimaryColor, resolvedBackgroundColor, resolvedTextColor]);
 
   const toggleChat = () => {
     if (isOpen) {

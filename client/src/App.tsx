@@ -10,11 +10,12 @@ import { Footer } from "@/components/footer";
 import { ClientOnly } from "@/components/client-only";
 import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { normalizeRoutePath } from "@shared/route-metadata";
 import { shouldSSR } from "@/routes/registry";
-import { StackProvider, StackHandler, StackTheme } from '@stackframe/react';
+import { StackProvider, StackHandler, StackTheme, useUser } from '@stackframe/react';
 import { stackClientApp } from '@/lib/stack';
+import { apiRequest } from "@/lib/queryClient";
 
 import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
@@ -49,6 +50,18 @@ function AuthenticatedRouter() {
   const configEmbedded = typeof window !== 'undefined' ? 
     (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
   const isEmbedded = urlEmbedded || configEmbedded;
+
+  // Sync user to database on login (right after Stack Auth authentication)
+  const stackUser = useUser();
+  useEffect(() => {
+    if (stackUser && !isEmbedded) {
+      // Call /api/ensure-user to sync/create user in app database
+      apiRequest("POST", "/api/ensure-user").catch((error) => {
+        console.warn("[USER SYNC] Failed to sync user to database:", error);
+        // Don't throw - user will still be able to use the app, just without sync
+      });
+    }
+  }, [stackUser?.id, isEmbedded]);
 
   if (isEmbedded) {
     // For embedded widgets, skip authentication entirely

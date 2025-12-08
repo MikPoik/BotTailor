@@ -14,7 +14,7 @@ export const CardMessage = memo(function CardMessage({
   onOptionSelect 
 }: CardMessageProps) {
   return (
-    <div className="bg-white rounded-lg rounded-tl-none shadow-sm overflow-hidden border">
+    <div className="bg-card rounded-lg rounded-tl-none shadow-sm overflow-hidden border border-border">
       {metadata.imageUrl && (
         <img 
           src={metadata.imageUrl} 
@@ -25,15 +25,15 @@ export const CardMessage = memo(function CardMessage({
 
       <div className="p-3">
         {metadata.title && (
-          <h4 className="font-semibold text-neutral-800 mb-2">{metadata.title}</h4>
+          <h4 className="font-semibold text-foreground mb-2">{metadata.title}</h4>
         )}
 
         {metadata.description && (
-          <p className="text-sm text-neutral-600 mb-3">{metadata.description}</p>
+          <p className="text-sm text-muted-foreground mb-3">{metadata.description}</p>
         )}
 
         {content && content !== metadata.title && (
-          <p className="text-neutral-800 mb-3">{content}</p>
+          <p className="text-foreground mb-3">{content}</p>
         )}
 
         {metadata.buttons && (

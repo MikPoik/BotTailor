@@ -72,8 +72,8 @@ export const MenuMessage = memo(function MenuMessage({
             <div key={`${option.id}-${index}`}>
               <button
                 onClick={() => handleOptionClick(option)}
-                className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 menu-option-button hover:bg-neutral-50 ${
-                  isOtherSelected ? 'border-primary bg-primary/5' : 'border-neutral-200'
+                className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 menu-option-button ${
+                  isOtherSelected ? 'border-primary bg-primary/5 text-foreground' : 'border-border bg-muted hover:bg-accent text-foreground'
                 }`}
                 disabled={isOtherSelected}
               >

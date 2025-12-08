@@ -119,12 +119,12 @@ export const MultiselectMessage = memo(function MultiselectMessage({
                 className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 ${
                   isSelected 
                     ? 'bg-primary/10 border-primary text-primary' 
-                    : 'border-neutral-200 hover:bg-neutral-50'
+                    : 'border-border bg-muted hover:bg-accent text-foreground'
                 }`}
                 data-testid={`option-${option.id}`}
               >
                 <div className={`w-4 h-4 border rounded flex items-center justify-center ${
-                  isSelected ? 'bg-primary border-primary' : 'border-neutral-300'
+                  isSelected ? 'bg-primary border-primary' : 'border-border'
                 }`}>
                   {isSelected && <Check className="w-3 h-3 text-white" />}
                 </div>
@@ -153,7 +153,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
         })}
       </div>
 
-      <div className="flex items-center justify-between text-sm text-neutral-600">
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{selectedOptions.length} / {maxSelections} </span>
         <Button
           type="submit"

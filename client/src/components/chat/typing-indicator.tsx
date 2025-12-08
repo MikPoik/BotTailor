@@ -12,7 +12,7 @@ export default function TypingIndicator({ chatbotConfig }: TypingIndicatorProps)
         alt="Bot avatar" 
         className="w-8 h-8 rounded-full"
       />
-      <div className="bg-white rounded-lg rounded-tl-none p-3 shadow-sm border">
+      <div className="chat-message-bot">
         <div className="flex space-x-1">
           <div className="chat-typing-dots w-1 h-1"></div>
           <div className="chat-typing-dots w-1 h-1"></div>
