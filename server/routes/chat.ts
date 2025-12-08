@@ -5,7 +5,7 @@ import { z } from "zod";
 import { generateStreamingResponse } from "../openai";
 import { buildSurveyContext } from "../ai-response-schema";
 import { brevoEmailService, FormSubmissionData } from "../email-service";
-import { isAuthenticated } from "../replitAuth";
+import { isAuthenticated } from "../neonAuth";
 
 
 // Chat-related routes
@@ -158,10 +158,7 @@ export function setupChatRoutes(app: Express) {
     isAuthenticated,
     async (req: any, res) => {
       try {
-        const fullUserId = req.user.claims.sub;
-        const userId = fullUserId.includes("|")
-          ? fullUserId.split("|")[1]
-          : fullUserId;
+        const userId = req.neonUser.id;
         const conversationCount = await storage.getConversationCount(userId);
         res.json(conversationCount);
       } catch (error) {
@@ -183,10 +180,7 @@ export function setupChatRoutes(app: Express) {
         const limitNum = parseInt(limit as string) || 10;
         const offset = (pageNum - 1) * limitNum;
 
-        const fullUserId = req.user.claims.sub;
-        const userId = fullUserId.includes("|")
-          ? fullUserId.split("|")[1]
-          : fullUserId;
+        const userId = req.neonUser.id;
 
         // Verify the chatbot belongs to the authenticated user
         const chatbotConfig = await storage.getChatbotConfigByGuid(
@@ -275,10 +269,7 @@ export function setupChatRoutes(app: Express) {
   app.delete("/api/chat/:sessionId", isAuthenticated, async (req: any, res) => {
     try {
       const { sessionId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes("|")
-        ? fullUserId.split("|")[1]
-        : fullUserId;
+      const userId = req.neonUser.id;
 
       // Verify the session exists and belongs to a chatbot owned by the user
       const session = await storage.getChatSession(sessionId);
@@ -310,10 +301,7 @@ export function setupChatRoutes(app: Express) {
     async (req: any, res) => {
       try {
         const { guid } = req.params;
-        const fullUserId = req.user.claims.sub;
-        const userId = fullUserId.includes("|")
-          ? fullUserId.split("|")[1]
-          : fullUserId;
+        const userId = req.neonUser.id;
 
         // Verify the chatbot belongs to the authenticated user
         const chatbotConfig = await storage.getChatbotConfigByGuid(

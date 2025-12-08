@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setupNeonAuth } from "./neonAuth";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -20,26 +21,12 @@ app.use(express.urlencoded({ extended: false }));
 // Enable trust proxy for proper IP forwarding
 app.set('trust proxy', true);
 
-// Redirect fly.dev development domain to production APP_URL in production
-if (process.env.NODE_ENV === 'production' && process.env.APP_URL) {
-  app.use((req, res, next) => {
-    const host = req.get('Host');
-    if (host && host.includes('fly.dev')) {
-      const redirectUrl = process.env.APP_URL + req.originalUrl;
-      return res.redirect(301, redirectUrl);
-    }
-    next();
-  });
-}
-
-// Serve static files from public directory - this will be handled by public routes
-
 // Configure CORS to allow cross-origin requests for the embed widget
 app.use(cors({
   origin: true, // Allow all origins for embed script
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Stack-User-Id', 'x-stack-user-id']
 }));
 
 app.use((req, res, next) => {
@@ -73,6 +60,21 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Setup Neon Auth middleware
+  await setupNeonAuth(app);
+
+  // Redirect fly.dev development domain to production APP_URL in production
+  if (process.env.NODE_ENV === 'production' && process.env.APP_URL) {
+    app.use((req, res, next) => {
+      const host = req.get('Host');
+      if (host && host.includes('fly.dev')) {
+        const redirectUrl = process.env.APP_URL + req.originalUrl;
+        return res.redirect(301, redirectUrl);
+      }
+      next();
+    });
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

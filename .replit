@@ -3,7 +3,7 @@ run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -47,4 +47,7 @@ defaultBucketID = "replit-objstore-42bfe332-3543-42c6-8322-bbddc297d322"
 
 [agent]
 expertMode = true
-integrations = ["javascript_log_in_with_replit:1.0.0", "javascript_stripe:1.0.0"]
+integrations = [
+    "javascript_log_in_with_replit:1.0.0",
+    "javascript_stripe:1.0.0",
+]

@@ -56,7 +56,7 @@ export default function ChatbotForm() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/handler/sign-in";
       }, 500);
       return;
     }
@@ -89,18 +89,15 @@ export default function ChatbotForm() {
     mutationFn: async (data: FormData) => {
       const dataWithGuid = {
         ...data,
-        guid: uuidv4()
+        guid: uuidv4(),
       };
-      const response = await fetch("/api/chatbots", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataWithGuid),
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
+      // Use shared API helper to include Stack auth headers + credentials
+      const response = await apiRequest(
+        "POST",
+        "/api/chatbots",
+        dataWithGuid,
+      );
 
       return response.json();
     },
@@ -125,7 +122,7 @@ export default function ChatbotForm() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/handler/sign-in";
         }, 500);
         return;
       }

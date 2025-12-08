@@ -42,7 +42,7 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation, useRoute } from "wouter";
 import { useEffect } from "react";
@@ -121,7 +121,7 @@ export default function ChatbotEdit() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/handler/sign-in";
       }, 500);
       return;
     }
@@ -191,16 +191,11 @@ export default function ChatbotEdit() {
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
       //console.log("Updating chatbot with values:", data); // Debug log
-      const response = await fetch(`/api/chatbots/${chatbotGuid}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
+      const response = await apiRequest(
+        "PUT",
+        `/api/chatbots/${chatbotGuid}`,
+        data,
+      );
 
       return response.json();
     },
@@ -223,7 +218,7 @@ export default function ChatbotEdit() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/handler/sign-in";
         }, 500);
         return;
       }
@@ -238,15 +233,7 @@ export default function ChatbotEdit() {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/chatbots/${chatbotGuid}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
+      const response = await apiRequest("DELETE", `/api/chatbots/${chatbotGuid}`);
       return response.json();
     },
     onSuccess: () => {
@@ -265,7 +252,7 @@ export default function ChatbotEdit() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/handler/sign-in";
         }, 500);
         return;
       }

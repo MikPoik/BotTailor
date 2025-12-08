@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, User, Link as LinkIcon, Image } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getAuthHeaders } from "@/lib/queryClient";
 
 interface AvatarUploadProps {
   value?: string;
@@ -54,10 +55,14 @@ export function AvatarUpload({ value, onValueChange, disabled }: AvatarUploadPro
       const formData = new FormData();
       formData.append('avatar', file);
 
+      const headers = await getAuthHeaders();
+
       const response = await fetch("/api/upload/avatar", {
         method: "POST",
         body: formData,
         credentials: "include",
+        headers,
+        cache: "no-store",
       });
 
       if (!response.ok) {

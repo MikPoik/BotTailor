@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { stackClientApp } from "./stack";
 
 function getEmbeddedConfig(): any {
   if (typeof window === "undefined") {
@@ -20,6 +21,28 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Cache-Control": "no-cache",
+  };
+
+  // Only attempt to resolve Stack user on the client
+  if (typeof window === "undefined") {
+    return headers;
+  }
+
+  try {
+    const user = await stackClientApp.getUser();
+    if (user) {
+      headers["x-stack-user-id"] = user.id;
+    }
+  } catch (_error) {
+    // User not authenticated; proceed without header
+  }
+
+  return headers;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -29,10 +52,16 @@ export async function apiRequest(
   const baseUrl = getBaseUrl();
   const urlString = String(url);
   const fullUrl = urlString.startsWith('http') ? urlString : `${baseUrl}${urlString}`;
-  
+
+  const headers = await getAuthHeaders();
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
+    cache: "no-store",
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -52,9 +81,12 @@ export const getQueryFn: <T>(options: {
     const url = queryKey.join("/");
     const urlString = String(url);
     const fullUrl = urlString.startsWith('http') ? urlString : `${baseUrl}${urlString}`;
+    const headers = await getAuthHeaders();
     
     const res = await fetch(fullUrl, {
       credentials: "include",
+      cache: "no-store",
+      headers,
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -71,7 +103,8 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      gcTime: 10 * 60 * 1000, // garbage collection time
       retry: false,
     },
     mutations: {

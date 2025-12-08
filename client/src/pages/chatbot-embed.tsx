@@ -56,7 +56,7 @@ export default function ChatbotEmbed() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/handler/sign-in";
       }, 500);
       return;
     }

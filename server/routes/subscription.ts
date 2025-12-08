@@ -6,7 +6,7 @@ import {
   insertSubscriptionPlanSchema,
   insertSubscriptionSchema,
 } from "@shared/schema";
-import { isAuthenticated } from "../replitAuth";
+import { isAuthenticated } from "../neonAuth";
 
 // Initialize Stripe with secret key
 let stripe: Stripe | null = null;
@@ -59,12 +59,7 @@ subscriptionRouter.get("/plans", async (req, res) => {
 // Get current user subscription
 subscriptionRouter.get("/current", isAuthenticated, async (req: any, res) => {
   try {
-    if (!req.user?.claims?.sub) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const fullUserId = req.user.claims.sub;
-    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+    const userId = req.neonUser.id;
     const subscription = await storage.getUserSubscriptionWithPlan(userId);
 
 
@@ -82,10 +77,6 @@ subscriptionRouter.post(
   isAuthenticated,
   async (req: any, res) => {
     try {
-      if (!req.user?.claims?.sub) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
       const { planId } = createCheckoutSessionSchema.parse(req.body);
 
       // Get the subscription plan
@@ -97,8 +88,7 @@ subscriptionRouter.post(
       // Handle Free plan special case - no Stripe integration needed
       if (plan.price === 0 || plan.stripePriceId === "price_free") {
         // Check if user has existing subscription
-        const fullUserId = req.user.claims.sub;
-        const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+        const userId = req.neonUser.id;
         const existingSubscription = await storage.getUserSubscription(
           userId,
         );
@@ -131,8 +121,7 @@ subscriptionRouter.post(
 
       // Check if user already has a Stripe customer ID
       let customerId: string | undefined;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const existingSubscription = await storage.getUserSubscription(
         userId,
       );
@@ -142,7 +131,7 @@ subscriptionRouter.post(
       } else {
         // Create new Stripe customer
         const customer = await stripeClient.customers.create({
-          email: req.user.claims?.email || undefined,
+          email: req.neonUser.email || undefined,
           metadata: {
             userId: userId,
           },
@@ -180,15 +169,10 @@ subscriptionRouter.post(
 // Modify existing subscription (upgrade/downgrade)
 subscriptionRouter.post("/modify", isAuthenticated, async (req: any, res) => {
   try {
-    if (!req.user?.claims?.sub) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const { planId } = modifySubscriptionSchema.parse(req.body);
 
     // Get current subscription
-    const fullUserId = req.user.claims.sub;
-    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+    const userId = req.neonUser.id;
     const currentSubscription = await storage.getUserSubscription(
       userId,
     );
@@ -297,13 +281,8 @@ subscriptionRouter.post("/modify", isAuthenticated, async (req: any, res) => {
 // Cancel subscription
 subscriptionRouter.post("/cancel", isAuthenticated, async (req: any, res) => {
   try {
-    if (!req.user?.claims?.sub) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     // Get current subscription
-    const fullUserId = req.user.claims.sub;
-    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+    const userId = req.neonUser.id;
     const currentSubscription = await storage.getUserSubscription(
       userId,
     );
@@ -351,12 +330,7 @@ subscriptionRouter.post("/cancel", isAuthenticated, async (req: any, res) => {
 // Resume subscription
 subscriptionRouter.post("/resume", isAuthenticated, async (req: any, res) => {
   try {
-    if (!req.user?.claims?.sub) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const fullUserId = req.user.claims.sub;
-    const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+    const userId = req.neonUser.id;
 
     // Get current subscription
     const currentSubscription = await storage.getUserSubscription(userId);

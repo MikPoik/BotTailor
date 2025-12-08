@@ -4,7 +4,7 @@ import { storage } from "../storage";
 import { insertChatbotConfigSchema, HomeScreenConfigSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { isAuthenticated } from "../replitAuth";
+import { isAuthenticated } from "../neonAuth";
 import { generatePromptAssistance, generateSurveyAssistance } from "../openai";
 
 // Chatbot management routes
@@ -12,8 +12,7 @@ export function setupChatbotRoutes(app: Express) {
   // Get all chatbots for authenticated user
   app.get('/api/chatbots', isAuthenticated, async (req: any, res) => {
     try {
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const chatbots = await storage.getChatbotConfigs(userId);
       res.json(chatbots);
     } catch (error) {
@@ -26,8 +25,7 @@ export function setupChatbotRoutes(app: Express) {
   app.get('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       
       const chatbot = await storage.getChatbotConfigByGuid(userId, guid);
       
@@ -45,8 +43,7 @@ export function setupChatbotRoutes(app: Express) {
   // Create new chatbot
   app.post('/api/chatbots', isAuthenticated, async (req: any, res) => {
     try {
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const body = req.body;
       
       // Check bot limit before creating
@@ -94,8 +91,7 @@ export function setupChatbotRoutes(app: Express) {
   app.put('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const body = req.body;
 
       // Verify ownership and get chatbot
@@ -122,8 +118,7 @@ export function setupChatbotRoutes(app: Express) {
   app.delete('/api/chatbots/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
 
       // Verify ownership and get chatbot
       const existingChatbot = await storage.getChatbotConfigByGuid(userId, guid);
@@ -143,8 +138,7 @@ export function setupChatbotRoutes(app: Express) {
   app.put('/api/chatbots/:guid/home-screen', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const { homeScreenConfig } = req.body;
 
       // Verify ownership and get chatbot
@@ -175,8 +169,7 @@ export function setupChatbotRoutes(app: Express) {
   app.patch('/api/chatbots/guid/:guid', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const body = req.body;
 
       // Verify ownership and get chatbot
@@ -204,8 +197,7 @@ export function setupChatbotRoutes(app: Express) {
   app.post('/api/chatbots/:guid/prompt-assistant', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const { action, context, userMessage } = req.body;
 
       let chatbotConfig;
@@ -258,8 +250,7 @@ export function setupChatbotRoutes(app: Express) {
   app.post('/api/chatbots/:guid/survey-assistant', isAuthenticated, async (req: any, res) => {
     try {
       const { guid } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const { action, context, userMessage } = req.body;
 
       // Verify ownership and get existing chatbot

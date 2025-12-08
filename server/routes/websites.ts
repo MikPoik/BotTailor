@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { insertWebsiteSourceSchema, type WebsiteSource } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { isAuthenticated } from "../replitAuth";
+import { isAuthenticated } from "../neonAuth";
 import { WebsiteScanner } from "../website-scanner";
 import { uploadTextFile } from "../upload-service";
 
@@ -13,8 +13,7 @@ export function setupWebsiteRoutes(app: Express) {
   app.get('/api/chatbots/:chatbotId/website-sources', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -34,8 +33,7 @@ export function setupWebsiteRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/website-sources', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const { sourceType = 'website', url, title, description, textContent, fileName, maxPages } = req.body;
 
       // Verify chatbot ownership
@@ -95,8 +93,7 @@ export function setupWebsiteRoutes(app: Express) {
   app.delete('/api/chatbots/:chatbotId/website-sources/:sourceId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, sourceId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -122,8 +119,7 @@ export function setupWebsiteRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/website-sources/:sourceId/rescan', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, sourceId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -174,8 +170,7 @@ export function setupWebsiteRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/upload-text-file', isAuthenticated, uploadTextFile.single('file'), async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const file = req.file;
       const { title, description } = req.body;
 

@@ -7,11 +7,14 @@ import { ThemeProvider } from "@/contexts/theme-context";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { ClientOnly } from "@/components/client-only";
 import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
 import { Suspense } from "react";
 import { normalizeRoutePath } from "@shared/route-metadata";
 import { shouldSSR } from "@/routes/registry";
+import { StackProvider, StackHandler, StackTheme } from '@stackframe/react';
+import { stackClientApp } from '@/lib/stack';
 
 import Dashboard from "@/pages/dashboard";
 import Home from "@/pages/home";
@@ -30,6 +33,13 @@ import Subscription from "@/pages/Subscription";
 import Contact from "@/pages/contact";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
+
+function HandlerRoutes() {
+  const [location] = useLocation();
+  return (
+    <StackHandler app={stackClientApp} location={location} fullPage />
+  );
+}
 
 function AuthenticatedRouter() {
   // Check if this is an embedded widget context
@@ -51,6 +61,19 @@ function AuthenticatedRouter() {
     );
   }
 
+  // Wrap auth-dependent routing in ClientOnly to avoid hydration issues
+  return (
+    <ClientOnly fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <AuthenticatedRouterContent />
+    </ClientOnly>
+  );
+}
+
+function AuthenticatedRouterContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const [location] = useLocation();
   const currentPath = location ?? '/';
@@ -69,6 +92,7 @@ function AuthenticatedRouter() {
     <Switch>
       {!isAuthenticated ? (
         <>
+          <Route path="/handler/*" component={HandlerRoutes} />
           <Route path="/" component={Home} />
           <Route path="/docs" component={Docs} />
           <Route path="/pricing" component={Pricing} />
@@ -80,6 +104,7 @@ function AuthenticatedRouter() {
         </>
       ) : (
         <>
+          <Route path="/handler/*" component={HandlerRoutes} />
           <Route path="/" component={Home} />
           <Route path="/contact" component={Contact} />
           <Route path="/privacy" component={Privacy} />
@@ -137,7 +162,11 @@ function Router() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       }>
-        <Navbar />
+        <ClientOnly fallback={
+          <div className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" />
+        }>
+          <Navbar />
+        </ClientOnly>
         <main className="flex-1">
           <AuthenticatedRouter />
         </main>
@@ -149,10 +178,18 @@ function Router() {
 
 function App() {
   return (
-    <>
-      <Toaster />
-      <Router />
-    </>
+    <ClientOnly fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <StackProvider app={stackClientApp}>
+        <StackTheme>
+          <Toaster />
+          <Router />
+        </StackTheme>
+      </StackProvider>
+    </ClientOnly>
   );
 }
 

@@ -10,27 +10,28 @@ import {
   boolean,
   real,
   vector,
+  pgSchema,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
-// Session storage table for Replit Auth (required)
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
+// Neon Auth managed schema - reference only, not for migrations
+export const neonAuthSchema = pgSchema("neon_auth");
+export const neonAuthUsers = neonAuthSchema.table("users_sync", {
+  id: text("id").primaryKey(),
+  rawJson: jsonb("raw_json"),
+  name: text("name"),
+  email: text("email"),
+  createdAt: timestamp("created_at"),
+  deletedAt: timestamp("deleted_at"),
+  updatedAt: timestamp("updated_at"),
+});
 
-// User storage table for Replit Auth (required)
+// App-specific user data (references Neon Auth users by ID)
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(), // Clean ID without provider prefix
-  provider: varchar("provider"), // Auth provider (google-oauth2, auth0, etc.)
-  email: varchar("email").unique(),
+  id: text("id").primaryKey().notNull(), // References neon_auth.users_sync.id
+  email: varchar("email"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -180,10 +181,9 @@ export const subscriptions = pgTable("subscriptions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Replit Auth user upsert schema
+// User upsert schema for Neon Auth
 export const upsertUserSchema = createInsertSchema(users).pick({
   id: true,
-  provider: true,
   email: true,
   firstName: true,
   lastName: true,

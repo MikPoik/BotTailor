@@ -1,5 +1,6 @@
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+// ...existing code...
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -102,7 +103,10 @@ export default function ChatHistory() {
   const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useQuery<SessionsResponse>({
     queryKey: [`/api/chatbots/${guid}/sessions`, currentPage, pageSize],
     queryFn: async () => {
-      const response = await fetch(`/api/chatbots/${guid}/sessions?page=${currentPage}&limit=${pageSize}`);
+      const response = await apiRequest(
+        "GET",
+        `/api/chatbots/${guid}/sessions?page=${currentPage}&limit=${pageSize}`,
+      );
       if (!response.ok) throw new Error('Failed to fetch sessions');
       return response.json();
     },

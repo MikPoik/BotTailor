@@ -59,7 +59,7 @@ export default function ChatbotTest() {
   // Redirect to dashboard if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      window.location.href = "/api/login";
+      window.location.href = "/handler/sign-in";
       return;
     }
   }, [isAuthenticated, isLoading]);

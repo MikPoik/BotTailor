@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { insertSurveySchema, SurveyConfigSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { isAuthenticated } from "../replitAuth";
+import { isAuthenticated } from "../neonAuth";
 
 // Survey management routes
 export function setupSurveyRoutes(app: Express) {
@@ -11,8 +11,7 @@ export function setupSurveyRoutes(app: Express) {
   app.get('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -32,8 +31,7 @@ export function setupSurveyRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const body = req.body;
 
       // Verify chatbot ownership
@@ -63,8 +61,7 @@ export function setupSurveyRoutes(app: Express) {
   app.put('/api/chatbots/:chatbotId/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, surveyId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const body = req.body;
 
       // Verify chatbot ownership
@@ -97,8 +94,7 @@ export function setupSurveyRoutes(app: Express) {
   app.patch('/api/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { surveyId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const body = req.body;
 
       // Get the existing survey first
@@ -131,8 +127,7 @@ export function setupSurveyRoutes(app: Express) {
   app.delete('/api/chatbots/:chatbotId/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, surveyId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
@@ -265,8 +260,7 @@ export function setupSurveyRoutes(app: Express) {
   app.get('/api/chatbots/:chatbotId/surveys/analytics', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
 
       // Verify chatbot ownership
       const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));

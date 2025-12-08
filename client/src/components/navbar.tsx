@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { normalizeRoutePath } from "@shared/route-metadata";
 import { shouldSSR } from "@/routes/registry";
+import { stackClientApp } from "@/lib/stack";
 
 export function Navbar() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -98,7 +99,7 @@ export function Navbar() {
             <ThemeToggle />
             {!isAuthenticated ? (
               <Button asChild>
-                <a href="/api/login">Log In</a>
+                <Link href="/handler/sign-in">Log In</Link>
               </Button>
             ) : (
               <DropdownMenu>
@@ -139,11 +140,15 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout" className="cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </a>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={async () => {
+                      await stackClientApp.signOut();
+                      window.location.href = '/';
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -171,7 +176,7 @@ export function Navbar() {
               </Avatar>
             ) : (
               <Button asChild>
-                <a href="/api/login">Log In</a>
+                <Link href="/handler/sign-in">Log In</Link>
               </Button>
             )}
           </div>
@@ -228,14 +233,17 @@ export function Navbar() {
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Link>
-                  <a
-                    href="/api/logout"
-                    className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
-                    onClick={closeMenu}
+                  <button
+                    onClick={async () => {
+                      await stackClientApp.signOut();
+                      window.location.href = '/';
+                      closeMenu();
+                    }}
+                    className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2 w-full text-left"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
-                  </a>
+                  </button>
                   <div className="pt-2">
                     <ThemeToggle />
                   </div>
@@ -271,13 +279,13 @@ export function Navbar() {
                 >
                   Contact us
                 </Link>
-                <a
-                  href="/api/login"
+                <Link
+                  href="/handler/sign-in"
                   className="block text-sm font-medium transition-colors hover:text-primary py-2"
                   onClick={closeMenu}
                 >
                   Log In
-                </a>
+                </Link>
                 <div className="pt-2">
                   <ThemeToggle />
                 </div>

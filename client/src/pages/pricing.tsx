@@ -187,7 +187,7 @@ export default function Pricing() {
                     </Button>
                   ) : (
                     <Button className="w-full" variant="outline" asChild>
-                      <a href="/api/login">Get Started Free</a>
+                      <a href="/handler/sign-in">Get Started Free</a>
                     </Button>
                   )
                 ) : (
@@ -205,7 +205,7 @@ export default function Pricing() {
                       variant={isPremium ? "default" : "outline"}
                       asChild
                     >
-                      <a href="/api/login">Get Started</a>
+                      <a href="/handler/sign-in">Get Started</a>
                     </Button>
                   )
                 )}
@@ -314,7 +314,7 @@ export default function Pricing() {
           </Button>
         ) : (
           <Button size="lg" asChild>
-            <a href="/api/login">Start Building for Free</a>
+            <a href="/handler/sign-in">Start Building for Free</a>
           </Button>
         )}
       </div>

@@ -93,7 +93,7 @@ export default function Docs() {
                 </Button>
               ) : (
                 <Button size="sm" asChild>
-                  <a href="/api/login">Sign In to Create</a>
+                  <a href="/handler/sign-in">Sign In to Create</a>
                 </Button>
               )}
             </CardContent>
@@ -116,7 +116,7 @@ export default function Docs() {
                 </Button>
               ) : (
                 <Button size="sm" variant="outline" asChild>
-                  <a href="/api/login">Sign In to Access</a>
+                  <a href="/handler/sign-in">Sign In to Access</a>
                 </Button>
               )}
             </CardContent>

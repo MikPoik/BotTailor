@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { isAuthenticated } from "../replitAuth";
+import { isAuthenticated } from "../neonAuth";
 import { generateHomeScreenConfig, modifyHomeScreenConfig } from "../ui-designer-service";
 import { HomeScreenConfigSchema } from "@shared/schema";
 import { z } from "zod";
@@ -20,8 +20,7 @@ export function setupUIDesignerRoutes(app: Express) {
   // POST /api/ui-designer/generate - Generate new home screen config
   app.post('/api/ui-designer/generate', isAuthenticated, async (req: any, res) => {
     try {
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const validatedData = GenerateRequestSchema.parse(req.body);
       
       console.log(`[UI DESIGNER] Generating new config for user: ${userId}`);
@@ -55,8 +54,7 @@ export function setupUIDesignerRoutes(app: Express) {
   // POST /api/ui-designer/modify - Modify existing home screen config
   app.post('/api/ui-designer/modify', isAuthenticated, async (req: any, res) => {
     try {
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       
       // Pre-validate and sanitize the current config before schema validation
       let { currentConfig } = req.body;

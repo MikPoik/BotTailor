@@ -133,7 +133,7 @@ export default function Home() {
             ) : (
               <>
                 <Button size="lg" asChild>
-                  <a href="/api/login">Get Started Free</a>
+                  <a href="/handler/sign-in">Get Started Free</a>
                 </Button>
 
               </>
@@ -409,7 +409,7 @@ export default function Home() {
             ) : (
               <>
                 <Button size="lg" asChild>
-                  <a href="/api/login">Start Building Free</a>
+                  <a href="/handler/sign-in">Start Building Free</a>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
                   <a href="/contact">Contact Sales</a>

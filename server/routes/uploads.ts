@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { upload, uploadAvatar, uploadBackgroundImage, getFileFromStorage } from "../upload-service";
-import { isAuthenticated } from "../replitAuth";
+import { isAuthenticated } from "../neonAuth";
 
 // File upload routes
 export function setupUploadRoutes(app: Express) {
@@ -11,8 +11,7 @@ export function setupUploadRoutes(app: Express) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const result = await uploadAvatar(req.file, userId);
 
       if (!result.success) {
@@ -33,8 +32,7 @@ export function setupUploadRoutes(app: Express) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const result = await uploadBackgroundImage(req.file, userId);
 
       if (!result.success) {

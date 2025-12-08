@@ -1,38 +1,43 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { setupAuth, isAuthenticated } from "../replitAuth";
-import passport from "passport";
+import { isAuthenticated } from "../neonAuth";
+import { db } from "../db";
+import { neonAuthUsers } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
-// Authentication routes
+// Authentication routes for Neon Auth
 export async function setupAuthRoutes(app: Express) {
-  // Set up authentication middleware
-  await setupAuth(app);
-
-  // Get current user
+  // Get current user - lazy creation on first access
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const fullUserId = req.user.claims.sub;
-      // Extract clean ID (remove provider prefix if present)
-      const cleanUserId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       
-      // Try to get existing user
-      let user = await storage.getUser(cleanUserId);
+      // Try to get existing user from app database
+      let user = await storage.getUser(userId);
       
-      // If user doesn't exist, create them with clean ID format
+      // If user doesn't exist, create them from Neon Auth data
       if (!user) {
-        const provider = fullUserId.includes('|') ? fullUserId.split('|')[0] : 'unknown';
-        const userProfile = req.user.claims;
+        // Query neon_auth.users_sync for profile data
+        const [neonAuthUser] = await db
+          .select()
+          .from(neonAuthUsers)
+          .where(eq(neonAuthUsers.id, userId))
+          .limit(1);
         
+        if (!neonAuthUser) {
+          return res.status(404).json({ message: "User not found in Neon Auth" });
+        }
+
+        // Create user in app database
         user = await storage.upsertUser({
-          id: cleanUserId,
-          provider: provider,
-          firstName: userProfile.given_name || userProfile.name || userProfile.nickname || 'Unknown',
-          lastName: userProfile.family_name || '',
-          email: userProfile.email || '',
-          profileImageUrl: userProfile.picture || ''
+          id: userId,
+          email: neonAuthUser.email || null,
+          firstName: neonAuthUser.name || null,
+          lastName: null,
+          profileImageUrl: null,
         });
         
-        console.log(`[AUTH] Created new user: ${cleanUserId} (provider: ${provider})`);
+        console.log(`[NEON AUTH] Created new user: ${userId}`);
       }
       
       res.json(user);
@@ -42,41 +47,46 @@ export async function setupAuthRoutes(app: Express) {
     }
   });
 
-  // Login route
-  app.post('/api/auth/login', passport.authenticate('local'), (req: any, res) => {
-    res.json({ message: "Login successful", user: req.user });
-  });
+  // Ensure user exists endpoint (called on client initialization)
+  app.post('/api/ensure-user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.neonUser.id;
+      
+      // Try to get existing user
+      let user = await storage.getUser(userId);
+      
+      // If user doesn't exist, create them
+      if (!user) {
+        const [neonAuthUser] = await db
+          .select()
+          .from(neonAuthUsers)
+          .where(eq(neonAuthUsers.id, userId))
+          .limit(1);
+        
+        if (!neonAuthUser) {
+          return res.status(404).json({ message: "User not found in Neon Auth" });
+        }
 
-  // Logout route
-  app.post('/api/auth/logout', (req, res) => {
-    req.logout((err: any) => {
-      if (err) {
-        console.error("Error logging out:", err);
-        return res.status(500).json({ message: "Failed to logout" });
+        user = await storage.upsertUser({
+          id: userId,
+          email: neonAuthUser.email || null,
+          firstName: neonAuthUser.name || null,
+          lastName: null,
+          profileImageUrl: null,
+        });
       }
-      res.json({ message: "Logout successful" });
-    });
-  });
-
-  // Auth callback route (for OAuth providers)
-  app.get('/api/auth/callback', 
-    passport.authenticate('replit-auth', { failureRedirect: '/api/auth/failure' }),
-    (req, res) => {
-      // Successful authentication
-      res.redirect('/');
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error ensuring user:", error);
+      res.status(500).json({ message: "Failed to ensure user" });
     }
-  );
-
-  // Auth failure route
-  app.get('/api/auth/failure', (req, res) => {
-    res.status(401).json({ message: "Authentication failed" });
   });
 
   // Check if current user is admin
   app.get('/api/auth/admin-status', isAuthenticated, async (req: any, res) => {
     try {
-      const fullUserId = req.user.claims.sub;
-      const userId = fullUserId.includes('|') ? fullUserId.split('|')[1] : fullUserId;
+      const userId = req.neonUser.id;
       const adminUserId = process.env.DEFAULT_SITE_ADMIN_USER_ID;
       
       const isAdmin = adminUserId && userId === adminUserId;
