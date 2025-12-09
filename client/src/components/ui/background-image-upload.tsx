@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getAuthHeaders } from "@/lib/queryClient";
 
 interface BackgroundImageUploadProps {
   value?: string;
@@ -54,10 +55,14 @@ export function BackgroundImageUpload({ value, onValueChange, disabled }: Backgr
       const formData = new FormData();
       formData.append('background', file);
 
+      const headers = await getAuthHeaders();
+
       const response = await fetch("/api/upload/background", {
         method: "POST",
         body: formData,
         credentials: "include",
+        headers,
+        cache: "no-store",
       });
 
       if (!response.ok) {
