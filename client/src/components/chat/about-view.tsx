@@ -41,12 +41,7 @@ export default function AboutView({
       >
         {/* BotTailor Logo/Branding */}
         <div className="mb-6">
-          <div 
-            className="w-16 h-16 rounded-lg flex items-center justify-center mb-4 text-white text-2xl font-bold"
-            style={{ backgroundColor: primaryColor }}
-          >
-            🤖
-          </div>
+
           <h3 className="text-2xl font-bold mb-2" style={{ color: primaryColor }}>
             BotTailor
           </h3>
