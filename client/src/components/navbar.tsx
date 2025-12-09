@@ -31,11 +31,7 @@ export function Navbar() {
   const normalizedPath = normalizeRoutePath(currentPath);
   const isPublicRoute = shouldSSR(normalizedPath);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setLocation('/');
-    }
-  }, [isAuthenticated, setLocation]);
+  // Removed auto-redirect on unauthenticated state to fix login flow
 
   if (isLoading && !isPublicRoute) {
     return (
@@ -105,7 +101,7 @@ export function Navbar() {
             <ThemeToggle />
             {!isAuthenticated ? (
               <>
-                <Button variant="ghost" asChild>
+                <Button variant="outline" asChild>
                   <Link href="/handler/sign-up">Sign Up</Link>
                 </Button>
                 <Button asChild>
@@ -137,19 +133,6 @@ export function Navbar() {
                       </p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="cursor-pointer"
@@ -186,14 +169,14 @@ export function Navbar() {
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <div className="flex items-center space-x-1">
-                <Button variant="ghost" size="sm" asChild>
+              <>
+                <Button variant="outline" size="sm" asChild>
                   <Link href="/handler/sign-up">Sign Up</Link>
                 </Button>
                 <Button size="sm" asChild>
                   <Link href="/handler/sign-in">Log In</Link>
                 </Button>
-              </div>
+              </>
             )}
           </div>
         )}
@@ -233,22 +216,6 @@ export function Navbar() {
                   Subscription
                 </Link>
                 <div className="border-t pt-3 space-y-3">
-                  <Link
-                    href="/profile"
-                    className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
-                    onClick={closeMenu}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                  <Link
-                    href="/settings"
-                    className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2"
-                    onClick={closeMenu}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
                   <button
                     onClick={async () => {
                       closeMenu();
