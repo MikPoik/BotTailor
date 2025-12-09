@@ -102,7 +102,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen relative">
       {/* Hero Section */}
-      <section className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 md:py-24" role="banner">
+      <section className="home-hero flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 md:py-24 relative" role="banner">
         <div className="container max-w-6xl mx-auto text-center">
           <header className="mb-8">
             <div className="flex justify-center mb-6">
@@ -158,12 +158,12 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-16 md:py-24 bg-muted/30 px-4 sm:px-6 lg:px-8" itemScope itemType="https://schema.org/ItemList">
+      <section id="features" className="features-section py-16 md:py-24 px-4 sm:px-6 lg:px-8" itemScope itemType="https://schema.org/ItemList">
         <div className="container max-w-6xl mx-auto">
           <header className="text-center mb-16">
-            <Badge variant="outline" className="mb-4">
+            <div className="section-badge mb-4">
               Powerful Features
-            </Badge>
+            </div>
             <h2 className="text-3xl font-bold tracking-tight md:text-5xl mb-4" itemProp="name">
               Everything you need for intelligent conversations
             </h2>
@@ -173,10 +173,10 @@ export default function Home() {
           </header>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto">
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="feature-card shadow-sm">
               <CardHeader>
-                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <Sparkles className="h-6 w-6 text-primary" />
+                <div className="feature-icon-wrapper h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+                  <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <CardTitle className="text-xl">AI-Powered Intelligence</CardTitle>
                 <CardDescription>
@@ -191,10 +191,10 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="feature-card shadow-sm">
               <CardHeader>
-                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <MessageSquare className="h-6 w-6 text-primary" />
+                <div className="feature-icon-wrapper h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+                  <MessageSquare className="h-6 w-6 text-white" />
                 </div>
                 <CardTitle className="text-xl">Rich Conversations</CardTitle>
                 <CardDescription>
@@ -209,10 +209,10 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="feature-card shadow-sm">
               <CardHeader>
-                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <Zap className="h-6 w-6 text-primary" />
+                <div className="feature-icon-wrapper h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-white" />
                 </div>
                 <CardTitle className="text-xl">Deploy Anywhere</CardTitle>
                 <CardDescription>
@@ -227,10 +227,10 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="feature-card shadow-sm">
               <CardHeader>
-                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <Settings className="h-6 w-6 text-primary" />
+                <div className="feature-icon-wrapper h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+                  <Settings className="h-6 w-6 text-white" />
                 </div>
                 <CardTitle className="text-xl">Easy Customization</CardTitle>
                 <CardDescription>
@@ -245,10 +245,10 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="feature-card shadow-sm">
               <CardHeader>
-                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <Globe className="h-6 w-6 text-primary" />
+                <div className="feature-icon-wrapper h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+                  <Globe className="h-6 w-6 text-white" />
                 </div>
                 <CardTitle className="text-xl">Smart Website Integration</CardTitle>
                 <CardDescription>
@@ -263,10 +263,10 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="feature-card shadow-sm">
               <CardHeader>
-                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-primary" />
+                <div className="feature-icon-wrapper h-12 w-12 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-white" />
                 </div>
                 <CardTitle className="text-xl">Enterprise Ready</CardTitle>
                 <CardDescription>
@@ -285,11 +285,11 @@ export default function Home() {
       </section>
 
       {/* Demo Section */}
-      <section id="demo" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
+      <section id="demo" className="demo-section py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="container max-w-4xl mx-auto text-center">
-          <Badge variant="outline" className="mb-4">
+          <div className="section-badge mb-4">
             Try It Now
-          </Badge>
+          </div>
           <h2 className="text-3xl font-bold tracking-tight md:text-5xl mb-4">
             Experience the difference
           </h2>
@@ -393,12 +393,12 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-primary/5 px-4 sm:px-6 lg:px-8">
+      <section className="cta-section py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="container max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl mb-4">
+          <h2 className="text-3xl font-bold tracking-tight md:text-5xl mb-4 text-white">
             Ready to transform your customer support?
           </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
             Join thousands of businesses using AI chatbots to provide better customer experiences
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
