@@ -7,6 +7,7 @@ import TypingIndicator from "./typing-indicator";
 import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
+import { computeToneAdjustedColor, resolveThemeColors } from "./color-utils";
 
 interface ChatInterfaceProps {
   sessionId: string;
@@ -31,6 +32,13 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
     isLoading,
     isSessionLoading 
   } = useChat(sessionId);
+
+  const colors = resolveThemeColors(chatbotConfig);
+  const inputBackground = computeToneAdjustedColor(
+    colors.backgroundColor,
+    colors.textColor,
+    colors.botBubbleMode
+  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -259,7 +267,10 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
               onKeyPress={handleKeyPress}
               className="rounded-full pr-12 focus:ring-2 focus:border-transparent send-input"
               style={{
-                '--tw-ring-color': 'var(--chat-primary-color, var(--primary))',
+                backgroundColor: inputBackground,
+                color: colors.textColor,
+                borderColor: colors.textColor + '40',
+                '--tw-ring-color': colors.primaryColor,
                 fontSize: '14px'
               } as React.CSSProperties}
               disabled={isLoading}
@@ -270,8 +281,9 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
               size="sm"
               className="send-button absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
               style={{
-                backgroundColor: 'var(--chat-primary-color, var(--primary))',
-                borderColor: 'var(--chat-primary-color, var(--primary))'
+                backgroundColor: colors.primaryColor,
+                borderColor: colors.primaryColor,
+                color: 'white'
               }}
             >
               <Send className="h-4 w-4" />

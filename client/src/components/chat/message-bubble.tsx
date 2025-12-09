@@ -1,68 +1,23 @@
 import { memo } from "react";
-import { formatDistanceToNow } from "date-fns";
 import { Message } from "@shared/schema";
-import { Button } from "@/components/ui/button";
 import RichMessage from "./rich-message";
 import StreamingMessage from "./streaming-message";
 import { parseMarkdown } from "@/lib/markdown-utils";
 import { isStreamingMetadata, MessageMetadata } from "@/types/message-metadata";
-
-// Helper function to lighten or darken a color for better contrast
-function adjustColorBrightness(color: string, percent: number): string {
-  // For HSL colors
-  const hslMatch = color.match(/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
-  if (hslMatch) {
-    const h = hslMatch[1];
-    const s = hslMatch[2];
-    const l = parseFloat(hslMatch[3]);
-    const newL = Math.min(100, Math.max(0, l + percent));
-    return `hsl(${h}, ${s}%, ${newL}%)`;
-  }
-  
-  // For hex colors
-  const hexMatch = color.match(/^#([A-Fa-f0-9]{6})$/);
-  if (hexMatch) {
-    const num = parseInt(hexMatch[1], 16);
-    const amt = Math.round(2.55 * percent);
-    const R = Math.min(255, Math.max(0, (num >> 16) + amt));
-    const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
-    const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
-    return `#${(0x1000000 + (R * 0x10000) + (G * 0x100) + B).toString(16).slice(1)}`;
-  }
-  
-  // Fallback: return original color with opacity
-  return color;
-}
+import { computeToneAdjustedColor, resolveThemeColors } from "./color-utils";
 
 // Color resolution function that prioritizes embed parameters over UI Designer theme
 function resolveColors(chatbotConfig?: any) {
-  // Get CSS variables from the embed parameters (these take priority)
-  const embedPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary-color').trim();
-  const embedBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-background').trim();
-  const embedTextColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-text').trim();
+  const themeColors = resolveThemeColors(chatbotConfig);
 
-  // Helper function to check if a color value is valid (not empty and not just fallback CSS var)
-  const isValidColor = (color: string) => {
-    return color && color !== '' && !color.startsWith('var(--') && color !== 'var(--primary)' && color !== 'var(--background)' && color !== 'var(--foreground)';
+  return {
+    ...themeColors,
+    messageBubbleBg: computeToneAdjustedColor(
+      themeColors.backgroundColor,
+      themeColors.textColor,
+      themeColors.botBubbleMode
+    )
   };
-
-  // Resolve final colors with embed parameters taking priority, then chatbot config, then CSS variables
-  const backgroundColor = (isValidColor(embedBackgroundColor) ? embedBackgroundColor : 
-                     chatbotConfig?.homeScreenConfig?.theme?.backgroundColor || 
-                     chatbotConfig?.theme?.backgroundColor) || 'hsl(0, 0%, 100%)';
-  
-  const resolvedColors = {
-    primaryColor: (isValidColor(embedPrimaryColor) ? embedPrimaryColor : 
-                   chatbotConfig?.homeScreenConfig?.theme?.primaryColor || 
-                   chatbotConfig?.theme?.primaryColor) || 'hsl(213, 93%, 54%)',
-    backgroundColor: backgroundColor,
-    textColor: (isValidColor(embedTextColor) ? embedTextColor : 
-               chatbotConfig?.homeScreenConfig?.theme?.textColor || 
-               chatbotConfig?.theme?.textColor) || 'hsl(20, 14.3%, 4.1%)',
-    messageBubbleBg: adjustColorBrightness(backgroundColor, backgroundColor.includes('hsl') && parseFloat(backgroundColor.match(/([\d.]+)%\)$/)?.[1] || '50') < 50 ? 8 : -2)
-  };
-
-  return resolvedColors;
 }
 
 interface MessageBubbleProps {

@@ -132,13 +132,15 @@ function inferExpectationsFromContent(bubbles: any[]): DynamicContentExpectation
     // Let the AI choose appropriate interaction type (menu vs quickReplies)
     
     // Pattern: Content ending with colon suggests list/menu follows
-    if (content.trim().endsWith(':') && content.length > 20) {
-      return {
-        expectedMenuOptions: 4,
-        contentIntent: 'list_menu',
-        completionRequired: true
-      };
-    }
+    // DISABLED: Too aggressive, causes false positives
+    // Only infer expectations when AI explicitly sets metadata
+    // if (content.trim().endsWith(':') && content.length > 20) {
+    //   return {
+    //     expectedMenuOptions: 4,
+    //     contentIntent: 'list_menu',
+    //     completionRequired: true
+    //   };
+    // }
   }
   
   return null;

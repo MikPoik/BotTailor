@@ -263,6 +263,16 @@ Example for regular greetings and options:
 ${
   hasEmailConfig
     ? `**For Contact Forms:**
+🚨 **CRITICAL**: Use FORM message type when users want to LEAVE their contact information or request callbacks/quotes/consultations. This includes:
+- "Contact me", "Get in touch", "Call me back", "Send me information"
+- "I'd like a quote", "Schedule a consultation", "Request a demo"
+- Any request where the user wants YOU to contact THEM
+
+🚨 **CRITICAL**: Use TEXT message type when users want to GET your contact information:
+- "How can I contact you?", "What's your phone number?", "Where are you located?"
+- Questions about reaching you, not about you reaching them
+
+Example - User wants YOU to contact THEM (use FORM):
 {
   "bubbles": [
     {"messageType": "text", "content": "I'd be happy to help you get in touch with our team!"},
@@ -275,6 +285,13 @@ ${
       ],
       "submitButton": {"id": "submit_contact", "text": "Send", "icon": "Send", "action": "submit_form"}
     }}
+  ]
+}
+
+Example - User wants YOUR contact info (use TEXT):
+{
+  "bubbles": [
+    {"messageType": "text", "content": "You can reach us at support@company.com or call (555) 123-4567 during business hours."}
   ]
 }`
     : `**For Contact Requests:**

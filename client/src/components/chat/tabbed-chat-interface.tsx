@@ -9,35 +9,7 @@ import HomeTab from "./home-tab";
 import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
-
-// Color resolution function that prioritizes embed parameters over UI Designer theme
-function resolveColors(chatbotConfig?: any) {
-  // Get CSS variables from the embed parameters (these take priority)
-  const embedPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary-color').trim();
-  const embedBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-background').trim();
-  const embedTextColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-text').trim();
-
-  // Helper function to check if a color value is valid (not empty and not just fallback CSS var)
-  const isValidColor = (color: string) => {
-    return color && color !== '' && !color.startsWith('var(--') && color !== 'var(--primary)' && color !== 'var(--background)' && color !== 'var(--foreground)';
-  };
-
-
-  // Resolve final colors with embed parameters taking priority, then chatbot config, then CSS variables
-  const resolvedColors = {
-    primaryColor: (isValidColor(embedPrimaryColor) ? embedPrimaryColor : 
-                   chatbotConfig?.homeScreenConfig?.theme?.primaryColor || 
-                   chatbotConfig?.theme?.primaryColor) || 'var(--primary)',
-    backgroundColor: (isValidColor(embedBackgroundColor) ? embedBackgroundColor : 
-                     chatbotConfig?.homeScreenConfig?.theme?.backgroundColor || 
-                     chatbotConfig?.theme?.backgroundColor) || 'var(--background)',
-    textColor: (isValidColor(embedTextColor) ? embedTextColor : 
-               chatbotConfig?.homeScreenConfig?.theme?.textColor || 
-               chatbotConfig?.theme?.textColor) || 'var(--foreground)'
-  };
-
-  return resolvedColors;
-}
+import { computeToneAdjustedColor, resolveThemeColors } from "./color-utils";
 
 interface TabbedChatInterfaceProps {
   sessionId: string;
@@ -621,7 +593,12 @@ export default function TabbedChatInterface({
   };
 
   // Resolve colors with embed parameters taking priority, then chatbot config
-  const colors = resolveColors(chatbotConfig);
+  const colors = resolveThemeColors(chatbotConfig);
+  const inputBackground = computeToneAdjustedColor(
+    colors.backgroundColor,
+    colors.textColor,
+    colors.botBubbleMode
+  );
 
   if (isSessionLoading) {
     return (
@@ -855,7 +832,7 @@ export default function TabbedChatInterface({
                   onKeyPress={handleKeyPress}
                   className="send-input rounded-full pr-12 focus:ring-2 focus:border-transparent"
                   style={{
-                    backgroundColor: colors.backgroundColor,
+                    backgroundColor: inputBackground,
                     color: colors.textColor,
                     borderColor: colors.textColor + '40',
                     '--tw-ring-color': colors.primaryColor,
