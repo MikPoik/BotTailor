@@ -241,9 +241,9 @@ export function Navbar() {
                   </Link>
                   <button
                     onClick={async () => {
-                      await stackClientApp.signOut();
-                      setLocation('/');
                       closeMenu();
+                      setLocation('/');
+                      await stackClientApp.signOut();
                     }}
                     className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2 w-full text-left"
                   >
