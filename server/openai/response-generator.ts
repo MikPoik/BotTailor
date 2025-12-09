@@ -145,7 +145,7 @@ If this request involves generating or modifying surveys, return a valid JSON re
 
     // Create request with JSON response format
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1",
+      model: "gpt-5.1",
       messages,
       response_format: { type: "json_object" },
       temperature: 0.7,
@@ -266,7 +266,7 @@ IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
 
     // Create request with JSON schema
     const stream = await openai.chat.completions.create({
-      model: "gpt-4.1",
+      model: "gpt-5.1",
       messages,
       stream: true,
       response_format: {
@@ -323,7 +323,7 @@ export async function generateMultiBubbleResponse(
     );
 
     // Extract configuration
-    const model = chatbotConfig?.model || "gpt-4.1";
+    const model = chatbotConfig?.model || "gpt-5.1";
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10
       : 0.7;

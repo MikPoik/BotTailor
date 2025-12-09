@@ -82,6 +82,7 @@ export default function Dashboard() {
     queryKey: ["/api/chatbots"],
     enabled: !!stackUser,
     retry: false,
+    refetchOnMount: 'always', // Always refetch when component mounts to ensure fresh data
   });
 
   // Fetch conversation count for user's chatbots

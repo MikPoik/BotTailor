@@ -1,4 +1,6 @@
+import React, { Suspense, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
+import { CookieConsentModal, CookieConsentStatus } from "@/components/cookie-consent-modal";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,7 +12,6 @@ import { Footer } from "@/components/footer";
 import { ClientOnly } from "@/components/client-only";
 import NotFound from "@/pages/not-found";
 import ChatWidget from "@/pages/chat-widget";
-import { Suspense, useEffect } from "react";
 import { normalizeRoutePath } from "@shared/route-metadata";
 import { shouldSSR } from "@/routes/registry";
 import { StackProvider, StackHandler, StackTheme, useUser } from '@stackframe/react';
@@ -190,6 +191,45 @@ function Router() {
 }
 
 function App() {
+  // Cookie consent logic
+  const [consent, setConsent] = React.useState<CookieConsentStatus>(null);
+  const [gaLoaded, setGaLoaded] = React.useState(false);
+  React.useEffect(() => {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('cookie_consent') : null;
+    if (stored === 'accepted') {
+      setConsent('accepted');
+    } else if (stored === 'declined') {
+      setConsent('declined');
+    }
+  }, []);
+
+  // Only load GA if consent is accepted and not embedded widget
+  React.useEffect(() => {
+    const urlEmbedded = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
+    const configEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
+    const isEmbedded = urlEmbedded || configEmbedded;
+    if (consent === 'accepted' && !gaLoaded && !isEmbedded) {
+      const gaId = import.meta.env.VITE_GA_ID;
+      if (gaId) {
+        // Inject GA script
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+        document.head.appendChild(script);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){window.dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', gaId);
+        setGaLoaded(true);
+      }
+    }
+  }, [consent, gaLoaded]);
+
+  // Only show modal if not embedded widget and consent not given
+  const urlEmbedded = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
+  const configEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
+  const isEmbedded = urlEmbedded || configEmbedded;
+
   return (
     <ClientOnly fallback={
       <div className="flex items-center justify-center min-h-screen">
@@ -200,6 +240,9 @@ function App() {
         <StackTheme>
           <Toaster />
           <Router />
+          {!isEmbedded && consent === null && (
+            <CookieConsentModal onConsent={setConsent} />
+          )}
         </StackTheme>
       </StackProvider>
     </ClientOnly>

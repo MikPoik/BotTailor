@@ -65,6 +65,7 @@ export default function ChatbotEmbed() {
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
     queryKey: [`/api/chatbots/${guid}`],
     enabled: isAuthenticated && !!guid,
+    refetchOnMount: 'always', // Always refetch when component mounts to ensure fresh data
     retry: false,
   });
 

@@ -54,6 +54,7 @@ export default function ChatbotTest() {
     queryKey: [`/api/chatbots/${guid}`],
     enabled: isAuthenticated && !!guid,
     retry: false,
+    refetchOnMount: 'always', // Always refetch when component mounts to ensure fresh data
   });
 
   // Redirect to dashboard if not authenticated

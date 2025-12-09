@@ -115,7 +115,7 @@ async function regenerateResponseWithDynamicValidation(
     ];
     
     // Extract configuration (same as original request)
-    const model = chatbotConfig?.model || "gpt-4.1";
+    const model = chatbotConfig?.model || "gpt-5.1";
     const temperature = chatbotConfig?.temperature ? chatbotConfig.temperature / 10 : 0.7;
     const maxTokens = chatbotConfig?.maxTokens || 2000;
     
@@ -259,7 +259,7 @@ async function regenerateResponseWithValidation(
     ];
     
     // Extract configuration (same as original request)
-    const model = chatbotConfig?.model || "gpt-4.1";
+    const model = chatbotConfig?.model || "gpt-5.1";
     const temperature = chatbotConfig?.temperature ? chatbotConfig.temperature / 10 : 0.7;
     const maxTokens = chatbotConfig?.maxTokens || 2000;
     
@@ -342,7 +342,7 @@ export async function* generateStreamingResponse(
     );
     
     // Extract configuration
-    const model = chatbotConfig?.model || "gpt-4.1";
+    const model = chatbotConfig?.model || "gpt-5.1";
     const temperature = chatbotConfig?.temperature
       ? chatbotConfig.temperature / 10
       : 0.7;

@@ -70,7 +70,7 @@ export default function ChatbotForm() {
       description: "",
       avatarUrl: "",
       systemPrompt: "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
-      model: "gpt-4.1",
+      model: "gpt-5.1",
       temperature: 7,
       maxTokens: 1000,
       welcomeMessage: "Hello! How can I help you today?",
@@ -101,7 +101,7 @@ export default function ChatbotForm() {
 
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast({
         title: "Success",
         description: "Chatbot configuration created successfully!",
@@ -111,7 +111,7 @@ export default function ChatbotForm() {
           </div>
         ),
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
       setLocation("/dashboard");
     },
     onError: (error) => {
@@ -316,6 +316,7 @@ export default function ChatbotForm() {
                         <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cost-effective)</SelectItem>
                         <SelectItem value="gpt-4o">GPT-4o (Advanced Performance)</SelectItem>
                         <SelectItem value="gpt-4.1">GPT-4.1 (Advanced Performance)</SelectItem>
+                        <SelectItem value="gpt-5.1">GPT-5.1 (Latest Advanced Model)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>

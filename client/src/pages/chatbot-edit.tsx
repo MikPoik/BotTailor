@@ -120,6 +120,7 @@ export default function ChatbotEdit() {
     queryKey: [`/api/chatbots/${chatbotGuid}`],
     enabled: !!stackUser && !!chatbotGuid,
     retry: false,
+    refetchOnMount: 'always', // Always refetch when component mounts to ensure fresh data
   });
 
   const form = useForm<FormData>({
@@ -131,7 +132,7 @@ export default function ChatbotEdit() {
       avatarUrl: "",
       systemPrompt:
         "You are a helpful AI assistant. Provide clear, accurate, and friendly responses to user questions.",
-      model: "gpt-4.1",
+      model: "gpt-5.1",
       temperature: 7,
       maxTokens: 1000,
       welcomeMessage: "Hello! How can I help you today?",
@@ -187,13 +188,14 @@ export default function ChatbotEdit() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "Chatbot configuration updated successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] }); // Refresh dashboard list
-      queryClient.invalidateQueries({
+      // Await cache invalidation to ensure fresh data on next mount
+      await queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] }); // Refresh dashboard list
+      await queryClient.invalidateQueries({
         queryKey: [`/api/chatbots/${chatbotGuid}`],
       });
       setLocation("/dashboard");
@@ -224,12 +226,12 @@ export default function ChatbotEdit() {
       const response = await apiRequest("DELETE", `/api/chatbots/${chatbotGuid}`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "Chatbot deleted successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/chatbots"] });
       setLocation("/dashboard");
     },
     onError: (error) => {

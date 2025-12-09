@@ -144,7 +144,7 @@ export async function generateHomeScreenConfig(
     console.log(`[UI Designer] Found ${availableSurveys.length} available surveys for chatbot ${chatbotId}`);
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1", // the newest OpenAI model is "gpt-4.1" which was released May 13, 2025. do not change this unless explicitly requested by the user
+      model: "gpt-5.1", // the newest OpenAI model is "gpt-4.1" which was released May 13, 2025. do not change this unless explicitly requested by the user
       messages: [
         {
           role: "system",
@@ -307,7 +307,7 @@ export async function modifyHomeScreenConfig(
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1", // the newest OpenAI model is "gpt-4.1" which was released May 13, 2025. do not change this unless explicitly requested by the user
+      model: "gpt-5.1", // the newest OpenAI model is "gpt-4.1" which was released May 13, 2025. do not change this unless explicitly requested by the user
       messages: [
         {
           role: "system",

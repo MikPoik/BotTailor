@@ -11,7 +11,9 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV="production"
-
+ENV VITE_STACK_PROJECT_ID="3af54189-cb07-4978-ac64-43f0e5d4362c"
+ENV VITE_STACK_PUBLISHABLE_CLIENT_KEY="pck_42gq7vrb4kgzbcgeh87fxa72np5z6xkfgqanzevggt4wr"
+ENV VITE_GA_ID="G-08JSZHJK9F"
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
