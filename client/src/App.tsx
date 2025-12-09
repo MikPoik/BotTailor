@@ -115,6 +115,7 @@ function AuthenticatedRouterContent() {
           <Route path="/terms" component={Terms} />
           <Route path="/widget" component={ChatWidget} />
           <Route path="/chat-widget" component={ChatWidget} />
+          <Route component={NotFound} />
         </>
       ) : (
         <>
@@ -142,7 +143,6 @@ function AuthenticatedRouterContent() {
           <Route component={NotFound} />
         </>
       )}
-      <Route component={NotFound} />
     </Switch>
   );
 }

@@ -15,7 +15,7 @@ export default defineConfig(async () => {
   }
 
   const root = path.resolve(import.meta.dirname, "client");
-  const isServerBuild = process.argv.includes("--ssr");
+  const isServerBuild = Boolean(process.argv.includes("--ssr"));
 
   return {
     plugins,

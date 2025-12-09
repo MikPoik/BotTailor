@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bot, LogOut, Settings, User, Menu, X, CreditCard } from "lucide-react";
-import { Link, useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { normalizeRoutePath } from "@shared/route-metadata";
@@ -21,7 +21,7 @@ import { stackClientApp } from "@/lib/stack";
 export function Navbar() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const isMobile = useIsMobile();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -30,6 +30,12 @@ export function Navbar() {
   const currentPath = location ?? '/';
   const normalizedPath = normalizeRoutePath(currentPath);
   const isPublicRoute = shouldSSR(normalizedPath);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLocation('/');
+    }
+  }, [isAuthenticated, setLocation]);
 
   if (isLoading && !isPublicRoute) {
     return (
@@ -143,8 +149,8 @@ export function Navbar() {
                   <DropdownMenuItem
                     className="cursor-pointer"
                     onClick={async () => {
+                      setLocation('/');
                       await stackClientApp.signOut();
-                      window.location.href = '/';
                     }}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -236,7 +242,7 @@ export function Navbar() {
                   <button
                     onClick={async () => {
                       await stackClientApp.signOut();
-                      window.location.href = '/';
+                      setLocation('/');
                       closeMenu();
                     }}
                     className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2 w-full text-left"
