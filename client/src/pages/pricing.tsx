@@ -218,7 +218,7 @@ export default function Pricing() {
       {/* Features Comparison */}
       <div className="mt-16 max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold text-center mb-8">What's Included</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -249,20 +249,7 @@ export default function Pricing() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Rocket className="h-5 w-5 text-orange-500" />
-                Enterprise Ready
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">• Priority support</p>
-              <p className="text-sm text-muted-foreground">• White-label options</p>
-              <p className="text-sm text-muted-foreground">• API access</p>
-              <p className="text-sm text-muted-foreground">• Custom integrations</p>
-            </CardContent>
-          </Card>
+
         </div>
       </div>
 
@@ -298,7 +285,7 @@ export default function Pricing() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Yes! Our Free plan lets you try all core features with 1 chatbot and 100 messages per month. No credit card required.
+                Yes! Our Free plan lets you try all core features with 1 chatbot and 100 messages. No credit card required.
               </p>
             </CardContent>
           </Card>
