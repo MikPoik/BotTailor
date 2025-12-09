@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useUser } from '@stackframe/react';
 import {
   Card,
   CardContent,
@@ -104,7 +105,9 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export default function ChatbotEdit() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  // Protect page with Stack Auth's built-in redirect
+  const stackUser = useUser({ or: "redirect" });
+  const { user, isLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/chatbots/:guid");
@@ -112,25 +115,10 @@ export default function ChatbotEdit() {
 
   const chatbotGuid = params?.guid || null;
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/handler/sign-in";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
-
   // Fetch chatbot configuration
   const { data: chatbot, isLoading: chatbotLoading } = useQuery<ChatbotConfig>({
     queryKey: [`/api/chatbots/${chatbotGuid}`],
-    enabled: isAuthenticated && !!chatbotGuid,
+    enabled: !!stackUser && !!chatbotGuid,
     retry: false,
   });
 
@@ -445,6 +433,9 @@ export default function ChatbotEdit() {
                         </SelectItem>
                         <SelectItem value="gpt-4.1">
                           GPT-4.1 (Most Accurate Performance)
+                        </SelectItem>
+                        <SelectItem value="gpt-5.1">
+                          GPT-5.1 (Latest Advanced Model)
                         </SelectItem>
                       </SelectContent>
                     </Select>

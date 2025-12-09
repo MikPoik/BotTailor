@@ -14,6 +14,7 @@ import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle, TrendingUp, ExternalLink, MoreHorizontal } from "lucide-react";
 import React from "react";
 import type { RouteDefinition } from "@shared/route-metadata";
+import { useUser } from '@stackframe/react';
 
 export const route: RouteDefinition = {
   path: "/dashboard",
@@ -51,7 +52,9 @@ interface ChatbotConfig {
 }
 
 export default function Dashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  // Protect page with Stack Auth's built-in redirect
+  const stackUser = useUser({ or: "redirect" });
+  const { user } = useAuth();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   // Use unified global chat session
@@ -69,44 +72,29 @@ export default function Dashboard() {
   // Fetch admin status from a server-side endpoint
   const { data: adminStatusResponse } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/auth/admin-status"],
-    enabled: isAuthenticated,
+    enabled: !!stackUser,
     retry: false,
   });
 
   const isAdmin = adminStatusResponse?.isAdmin || false;
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/handler/sign-in";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
-
   const { data: chatbots, isLoading: chatbotsLoading } = useQuery<ChatbotConfig[]>({
     queryKey: ["/api/chatbots"],
-    enabled: isAuthenticated,
+    enabled: !!stackUser,
     retry: false,
   });
 
   // Fetch conversation count for user's chatbots
   const { data: conversationCount = 0 } = useQuery<number>({
     queryKey: ["/api/chat/conversations/count"],
-    enabled: isAuthenticated,
+    enabled: !!stackUser,
     retry: false,
   });
 
   // Fetch current user subscription for usage display
   const { data: currentSubscription } = useQuery<any>({
     queryKey: ["/api/subscription/current"],
-    enabled: isAuthenticated,
+    enabled: !!stackUser,
     retry: false,
   });
 
@@ -149,7 +137,7 @@ export default function Dashboard() {
         { totalSurveys: 0, totalResponses: 0, completionRate: 0, averageCompletionTime: 0 }
       );
     },
-    enabled: isAuthenticated && !!chatbots && chatbots.length > 0,
+    enabled: !!stackUser && !!chatbots && chatbots.length > 0,
     retry: false,
   });
 
@@ -179,7 +167,7 @@ export default function Dashboard() {
 
   const selectedChatbot = getSelectedChatbot();
 
-  if (isLoading || !isAuthenticated) {
+  if (!stackUser) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

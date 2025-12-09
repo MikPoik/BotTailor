@@ -7,6 +7,12 @@ import { Send } from "lucide-react";
 interface MenuMessageProps {
   metadata: MenuMetadata;
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
+  themeColors?: {
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    messageBubbleBg: string;
+  };
 }
 
 // Helper function to detect if an option is the "Other" option
@@ -19,8 +25,17 @@ const isOtherOption = (option: any): boolean => {
 
 export const MenuMessage = memo(function MenuMessage({ 
   metadata, 
-  onOptionSelect 
+  onOptionSelect,
+  themeColors
 }: MenuMessageProps) {
+  // Default colors if not provided
+  const defaultColors = {
+    primaryColor: 'hsl(213, 93%, 54%)',
+    backgroundColor: 'hsl(0, 0%, 100%)',
+    textColor: 'hsl(20, 14.3%, 4.1%)',
+    messageBubbleBg: 'hsl(0, 0%, 95%)'
+  };
+  const colors = themeColors || defaultColors;
   // Normalize options to an array defensively (handles object-shaped payloads)
   const rawOptions: any = (metadata && (metadata as any).options) || [];
   const options = Array.isArray(rawOptions)
@@ -72,15 +87,31 @@ export const MenuMessage = memo(function MenuMessage({
             <div key={`${option.id}-${index}`}>
               <button
                 onClick={() => handleOptionClick(option)}
-                className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 menu-option-button ${
-                  isOtherSelected ? 'border-primary bg-primary/5 text-foreground' : 'border-border bg-muted hover:bg-accent text-foreground'
-                }`}
+                className="w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2"
+                style={{
+                  backgroundColor: isOtherSelected ? colors.primaryColor + '10' : colors.messageBubbleBg,
+                  color: colors.textColor,
+                  borderColor: isOtherSelected ? colors.primaryColor : colors.textColor + '40',
+                  fontSize: '0.9rem'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isOtherSelected) {
+                    e.currentTarget.style.backgroundColor = colors.primaryColor;
+                    e.currentTarget.style.color = 'white';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isOtherSelected) {
+                    e.currentTarget.style.backgroundColor = colors.messageBubbleBg;
+                    e.currentTarget.style.color = colors.textColor;
+                  }
+                }}
                 disabled={isOtherSelected}
               >
                 {option.icon && (
-                  <i className={`${option.icon} text-primary`}></i>
+                  <i className={`${option.icon}`} style={{ color: colors.primaryColor }}></i>
                 )}
-                <span className="rich-message-text">{option.text}</span>
+                <span>{option.text}</span>
               </button>
               
               {isCurrentOptionOther && isOtherSelected && (

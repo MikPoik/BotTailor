@@ -7,6 +7,12 @@ import { MultiselectMenuMetadata } from "@/types/message-metadata";
 interface MultiselectMessageProps {
   metadata: MultiselectMenuMetadata;
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
+  themeColors?: {
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    messageBubbleBg: string;
+  };
 }
 
 // Helper function to detect if an option is the "Other" option
@@ -19,8 +25,17 @@ const isOtherOption = (option: any): boolean => {
 
 export const MultiselectMessage = memo(function MultiselectMessage({ 
   metadata, 
-  onOptionSelect 
+  onOptionSelect,
+  themeColors
 }: MultiselectMessageProps) {
+  // Default colors if not provided
+  const defaultColors = {
+    primaryColor: 'hsl(213, 93%, 54%)',
+    backgroundColor: 'hsl(0, 0%, 100%)',
+    textColor: 'hsl(20, 14.3%, 4.1%)',
+    messageBubbleBg: 'hsl(0, 0%, 95%)'
+  };
+  const colors = themeColors || defaultColors;
   // Normalize options defensively
   const rawOptions: any = (metadata && (metadata as any).options) || [];
   const options = Array.isArray(rawOptions)
@@ -116,22 +131,38 @@ export const MultiselectMessage = memo(function MultiselectMessage({
             <div key={`${option.id}-${index}`}>
               <button
                 onClick={() => handleOptionToggle(option.id, option.text)}
-                className={`w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2 ${
-                  isSelected 
-                    ? 'bg-primary/10 border-primary text-primary' 
-                    : 'border-border bg-muted hover:bg-accent text-foreground'
-                }`}
+                className="w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2"
+                style={{
+                  backgroundColor: isSelected ? colors.primaryColor + '10' : colors.messageBubbleBg,
+                  color: isSelected ? colors.primaryColor : colors.textColor,
+                  borderColor: isSelected ? colors.primaryColor : colors.textColor + '40',
+                  fontSize: '0.9rem'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.backgroundColor = colors.primaryColor + '20';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.backgroundColor = colors.messageBubbleBg;
+                  }
+                }}
                 data-testid={`option-${option.id}`}
               >
-                <div className={`w-4 h-4 border rounded flex items-center justify-center ${
-                  isSelected ? 'bg-primary border-primary' : 'border-border'
-                }`}>
+                <div 
+                  className="w-4 h-4 border rounded flex items-center justify-center"
+                  style={{
+                    backgroundColor: isSelected ? colors.primaryColor : 'transparent',
+                    borderColor: isSelected ? colors.primaryColor : colors.textColor + '40'
+                  }}
+                >
                   {isSelected && <Check className="w-3 h-3 text-white" />}
                 </div>
                 {option.icon && (
-                  <i className={`${option.icon} ${isSelected ? 'text-primary' : ''}`}></i>
+                  <i className={`${option.icon}`} style={{ color: isSelected ? colors.primaryColor : colors.textColor }}></i>
                 )}
-                <span className="rich-message-text" title={option.text || 'No text'}>
+                <span title={option.text || 'No text'}>
                   {option.text || `[EMPTY OPTION ${index}]`}
                 </span>
               </button>

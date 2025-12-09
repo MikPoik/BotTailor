@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, MessageCircleMore , X, Minimize2, RefreshCw } from "lucide-react";
+import { MessageCircle, MessageCircleMore , X, Minimize2, RefreshCw, HelpCircle } from "lucide-react";
 import TabbedChatInterface from "./tabbed-chat-interface";
+import AboutView from "./about-view";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -29,6 +30,7 @@ export default function ChatWidget({
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [initialMessages, setInitialMessages] = useState<string[]>([]);
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
+  const [showAbout, setShowAbout] = useState(false);
   // Reactive session ID state that can be updated on refresh
   const [currentSessionId, setCurrentSessionId] = useState(providedSessionId);
   const messageTimeouts = useRef<NodeJS.Timeout[]>([]);
@@ -214,7 +216,7 @@ export default function ChatWidget({
 
 
       style.textContent = `
-        :root {
+        .chat-widget-container {
           --chat-primary: ${resolvedPrimaryColor};
           --chat-primary-color: ${resolvedPrimaryColor};
           --chat-background: ${resolvedBackgroundColor};
@@ -658,6 +660,16 @@ export default function ChatWidget({
             </div>
             <div className="flex items-center space-x-3">
               <button 
+                onClick={() => setShowAbout(true)}
+                className="text-white p-1.5 rounded transition-colors"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                title="About BotTailor"
+                data-testid="button-about"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+              <button 
                 onClick={refreshSession}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -681,14 +693,23 @@ export default function ChatWidget({
 
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
-            <TabbedChatInterface 
-              sessionId={currentSessionId} 
-              isMobile={true} 
-              isPreloaded={!isSessionLoading && !isMessagesLoading}
-              chatbotConfigId={chatbotConfigId}
-              chatbotConfig={chatbotConfig}
-              onSessionInitialize={initializeSession}
-            />
+            {showAbout ? (
+              <AboutView 
+                onClose={() => setShowAbout(false)}
+                primaryColor={resolvedPrimaryColor}
+                backgroundColor={resolvedBackgroundColor}
+                textColor={resolvedTextColor}
+              />
+            ) : (
+              <TabbedChatInterface 
+                sessionId={currentSessionId} 
+                isMobile={true} 
+                isPreloaded={!isSessionLoading && !isMessagesLoading}
+                chatbotConfigId={chatbotConfigId}
+                chatbotConfig={chatbotConfig}
+                onSessionInitialize={initializeSession}
+              />
+            )}
           </div>
         </div>
       </>
@@ -724,6 +745,16 @@ export default function ChatWidget({
           </div>
           <div className="flex items-center space-x-3">
             <button 
+              onClick={() => setShowAbout(true)}
+              className="text-white p-1.5 rounded transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              title="About BotTailor"
+              data-testid="button-about"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </button>
+            <button 
               onClick={refreshSession}
               className="text-white p-1.5 rounded transition-colors"
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -747,14 +778,23 @@ export default function ChatWidget({
 
         {/* Chat content - takes remaining space */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <TabbedChatInterface 
-            sessionId={currentSessionId} 
-            isMobile={false} 
-            isPreloaded={!isSessionLoading && !isMessagesLoading}
-            isEmbedded={true}
-            chatbotConfigId={chatbotConfigId}
-            chatbotConfig={chatbotConfig}
-          />
+          {showAbout ? (
+            <AboutView 
+              onClose={() => setShowAbout(false)}
+              primaryColor={resolvedPrimaryColor}
+              backgroundColor={resolvedBackgroundColor}
+              textColor={resolvedTextColor}
+            />
+          ) : (
+            <TabbedChatInterface 
+              sessionId={currentSessionId} 
+              isMobile={false} 
+              isPreloaded={!isSessionLoading && !isMessagesLoading}
+              isEmbedded={true}
+              chatbotConfigId={chatbotConfigId}
+              chatbotConfig={chatbotConfig}
+            />
+          )}
         </div>
       </div>
     );
@@ -911,6 +951,16 @@ export default function ChatWidget({
             </div>
             <div className="flex items-center space-x-3">
               <button 
+                onClick={() => setShowAbout(true)}
+                className="text-white p-1.5 rounded transition-colors"
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                title="About BotTailor"
+                data-testid="button-about"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+              <button 
                 onClick={refreshSession}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -934,13 +984,22 @@ export default function ChatWidget({
 
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
-            <TabbedChatInterface 
-              sessionId={currentSessionId}
-              isMobile={isMobile}
-              isPreloaded={!isSessionLoading && !isMessagesLoading}
-              chatbotConfigId={chatbotConfigId}
-              chatbotConfig={chatbotConfig}
-            />
+            {showAbout ? (
+              <AboutView 
+                onClose={() => setShowAbout(false)}
+                primaryColor={resolvedPrimaryColor}
+                backgroundColor={resolvedBackgroundColor}
+                textColor={resolvedTextColor}
+              />
+            ) : (
+              <TabbedChatInterface 
+                sessionId={currentSessionId}
+                isMobile={isMobile}
+                isPreloaded={!isSessionLoading && !isMessagesLoading}
+                chatbotConfigId={chatbotConfigId}
+                chatbotConfig={chatbotConfig}
+              />
+            )}
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { isAuthenticated } from "../neonAuth";
 import { db } from "../db";
 import { neonAuthUsers } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 
 // Authentication routes for Neon Auth
 export async function setupAuthRoutes(app: Express) {
@@ -12,7 +12,12 @@ export async function setupAuthRoutes(app: Express) {
     const [neonAuthUser] = await db
       .select()
       .from(neonAuthUsers)
-      .where(eq(neonAuthUsers.id, userId))
+      .where(
+        and(
+          eq(neonAuthUsers.id, userId),
+          isNull(neonAuthUsers.deletedAt)
+        )
+      )
       .limit(1);
     return neonAuthUser;
   }

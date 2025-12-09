@@ -7,6 +7,64 @@ import StreamingMessage from "./streaming-message";
 import { parseMarkdown } from "@/lib/markdown-utils";
 import { isStreamingMetadata, MessageMetadata } from "@/types/message-metadata";
 
+// Helper function to lighten or darken a color for better contrast
+function adjustColorBrightness(color: string, percent: number): string {
+  // For HSL colors
+  const hslMatch = color.match(/hsl\((\d+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
+  if (hslMatch) {
+    const h = hslMatch[1];
+    const s = hslMatch[2];
+    const l = parseFloat(hslMatch[3]);
+    const newL = Math.min(100, Math.max(0, l + percent));
+    return `hsl(${h}, ${s}%, ${newL}%)`;
+  }
+  
+  // For hex colors
+  const hexMatch = color.match(/^#([A-Fa-f0-9]{6})$/);
+  if (hexMatch) {
+    const num = parseInt(hexMatch[1], 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+    const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+    const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+    return `#${(0x1000000 + (R * 0x10000) + (G * 0x100) + B).toString(16).slice(1)}`;
+  }
+  
+  // Fallback: return original color with opacity
+  return color;
+}
+
+// Color resolution function that prioritizes embed parameters over UI Designer theme
+function resolveColors(chatbotConfig?: any) {
+  // Get CSS variables from the embed parameters (these take priority)
+  const embedPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary-color').trim();
+  const embedBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-background').trim();
+  const embedTextColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-text').trim();
+
+  // Helper function to check if a color value is valid (not empty and not just fallback CSS var)
+  const isValidColor = (color: string) => {
+    return color && color !== '' && !color.startsWith('var(--') && color !== 'var(--primary)' && color !== 'var(--background)' && color !== 'var(--foreground)';
+  };
+
+  // Resolve final colors with embed parameters taking priority, then chatbot config, then CSS variables
+  const backgroundColor = (isValidColor(embedBackgroundColor) ? embedBackgroundColor : 
+                     chatbotConfig?.homeScreenConfig?.theme?.backgroundColor || 
+                     chatbotConfig?.theme?.backgroundColor) || 'hsl(0, 0%, 100%)';
+  
+  const resolvedColors = {
+    primaryColor: (isValidColor(embedPrimaryColor) ? embedPrimaryColor : 
+                   chatbotConfig?.homeScreenConfig?.theme?.primaryColor || 
+                   chatbotConfig?.theme?.primaryColor) || 'hsl(213, 93%, 54%)',
+    backgroundColor: backgroundColor,
+    textColor: (isValidColor(embedTextColor) ? embedTextColor : 
+               chatbotConfig?.homeScreenConfig?.theme?.textColor || 
+               chatbotConfig?.theme?.textColor) || 'hsl(20, 14.3%, 4.1%)',
+    messageBubbleBg: adjustColorBrightness(backgroundColor, backgroundColor.includes('hsl') && parseFloat(backgroundColor.match(/([\d.]+)%\)$/)?.[1] || '50') < 50 ? 8 : -5)
+  };
+
+  return resolvedColors;
+}
+
 interface MessageBubbleProps {
   message: Message;
   onOptionSelect: (optionId: string, payload?: any, optionText?: string) => void;
@@ -17,6 +75,7 @@ interface MessageBubbleProps {
 
 const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
+  const colors = resolveColors(chatbotConfig);
   
   // Format timestamp as HH:MM
   const getTimestamp = (dateString: string | undefined) => {
@@ -70,11 +129,22 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
             onQuickReply={onQuickReply}
             chatbotConfig={chatbotConfig}
             sessionId={sessionId}
+            themeColors={colors}
           />
         ) : message.messageType === 'text' ? (
-          <div className="chat-message-bot">
+          <div 
+            className="rounded-lg rounded-tl-none px-2 py-2 shadow-sm max-w-sm"
+            style={{
+              backgroundColor: colors.messageBubbleBg,
+              color: colors.textColor,
+              borderColor: colors.textColor + '20',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              fontSize: '0.9rem'
+            }}
+          >
             <p 
-              className="text-foreground" 
+              style={{ color: colors.textColor }}
               dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }}
             />
           </div>
@@ -85,6 +155,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
             onQuickReply={onQuickReply}
             chatbotConfig={chatbotConfig}
             sessionId={sessionId}
+            themeColors={colors}
           />
         )}
 
@@ -110,7 +181,20 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
                       onQuickReply(replyText);
                     }
                   }}
-                  className="px-3 py-1 text-sm bg-muted text-foreground rounded-full hover:bg-accent transition-colors"
+                  className="px-3 py-1 text-sm rounded-full transition-colors"
+                  style={{
+                    backgroundColor: colors.messageBubbleBg,
+                    color: colors.textColor,
+                    border: `1px solid ${colors.textColor}40`
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.primaryColor;
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.messageBubbleBg;
+                    e.currentTarget.style.color = colors.textColor;
+                  }}
                 >
                   {replyText}
                 </button>

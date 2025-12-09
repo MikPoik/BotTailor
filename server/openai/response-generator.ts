@@ -149,7 +149,7 @@ If this request involves generating or modifying surveys, return a valid JSON re
       messages,
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 2000,
+      max_completion_tokens: 2000,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -274,7 +274,7 @@ IMPORTANT FORMATTING: Provide your response as exactly 2 message bubbles:
         json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
       },
       temperature: 0.7,
-      max_tokens: 2000,
+      max_completion_tokens: 2000,
     });
 
     // Collect response
@@ -350,7 +350,7 @@ export async function generateMultiBubbleResponse(
         json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
       },
       temperature,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
     });
 
     // Collect response

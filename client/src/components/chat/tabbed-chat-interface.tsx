@@ -11,7 +11,7 @@ import { Message } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Color resolution function that prioritizes embed parameters over UI Designer theme
-function resolveColors() {
+function resolveColors(chatbotConfig?: any) {
   // Get CSS variables from the embed parameters (these take priority)
   const embedPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary-color').trim();
   const embedBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--chat-background').trim();
@@ -23,11 +23,17 @@ function resolveColors() {
   };
 
 
-  // Resolve final colors with embed parameters taking priority
+  // Resolve final colors with embed parameters taking priority, then chatbot config, then CSS variables
   const resolvedColors = {
-    primaryColor: isValidColor(embedPrimaryColor) ? embedPrimaryColor : 'var(--primary)',
-    backgroundColor: isValidColor(embedBackgroundColor) ? embedBackgroundColor : 'var(--background)',
-    textColor: isValidColor(embedTextColor) ? embedTextColor : 'var(--foreground)'
+    primaryColor: (isValidColor(embedPrimaryColor) ? embedPrimaryColor : 
+                   chatbotConfig?.homeScreenConfig?.theme?.primaryColor || 
+                   chatbotConfig?.theme?.primaryColor) || 'var(--primary)',
+    backgroundColor: (isValidColor(embedBackgroundColor) ? embedBackgroundColor : 
+                     chatbotConfig?.homeScreenConfig?.theme?.backgroundColor || 
+                     chatbotConfig?.theme?.backgroundColor) || 'var(--background)',
+    textColor: (isValidColor(embedTextColor) ? embedTextColor : 
+               chatbotConfig?.homeScreenConfig?.theme?.textColor || 
+               chatbotConfig?.theme?.textColor) || 'var(--foreground)'
   };
 
   return resolvedColors;
@@ -614,8 +620,8 @@ export default function TabbedChatInterface({
     }
   };
 
-  // Resolve colors with embed parameters taking priority
-  const colors = resolveColors();
+  // Resolve colors with embed parameters taking priority, then chatbot config
+  const colors = resolveColors(chatbotConfig);
 
   if (isSessionLoading) {
     return (

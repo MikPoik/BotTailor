@@ -26,9 +26,15 @@ interface RichMessageProps {
   onQuickReply: (reply: string) => void;
   chatbotConfig?: any;
   sessionId?: string;
+  themeColors?: {
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    messageBubbleBg: string;
+  };
 }
 
-const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: RichMessageProps) {
+const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId, themeColors }: RichMessageProps) {
   const { messageType, content, metadata } = message;
   const typedMetadata = metadata as MessageMetadata;
 
@@ -47,6 +53,7 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
       <MenuMessage 
         metadata={typedMetadata as MenuMetadata}
         onOptionSelect={onOptionSelect}
+        themeColors={themeColors}
       />
     );
   }
@@ -56,6 +63,7 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
       <MultiselectMessage 
         metadata={typedMetadata as MultiselectMenuMetadata}
         onOptionSelect={onOptionSelect}
+        themeColors={themeColors}
       />
     );
   }
@@ -89,6 +97,13 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
 
   if (messageType === 'quickReplies' && (typedMetadata as QuickRepliesMetadata)?.quickReplies) {
     const quickMeta = typedMetadata as QuickRepliesMetadata;
+    const defaultColors = {
+      primaryColor: 'hsl(213, 93%, 54%)',
+      backgroundColor: 'hsl(0, 0%, 100%)',
+      textColor: 'hsl(20, 14.3%, 4.1%)',
+      messageBubbleBg: 'hsl(0, 0%, 95%)'
+    };
+    const colors = themeColors || defaultColors;
     return (
       <div className="flex flex-wrap gap-2">
         {quickMeta.quickReplies.map((replyOption, index: number) => {
@@ -101,11 +116,20 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
             <button
               key={`quickreply-${label}-${index}`}
               onClick={() => onQuickReply(value)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                isSkipOption
-                  ? 'bg-muted text-muted-foreground border border-border hover:bg-accent'
-                  : 'bg-muted text-foreground hover:bg-accent'
-              }`}
+              className="px-3 py-1 text-sm rounded-full transition-colors"
+              style={{
+                backgroundColor: colors.messageBubbleBg,
+                color: colors.textColor,
+                border: `1px solid ${colors.textColor}40`
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.primaryColor;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = colors.messageBubbleBg;
+                e.currentTarget.style.color = colors.textColor;
+              }}
             >
               {label}
             </button>

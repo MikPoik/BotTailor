@@ -11,6 +11,12 @@ interface StreamingMessageProps {
   onQuickReply: (reply: string) => void;
   chatbotConfig?: any;
   sessionId?: string;
+  themeColors?: {
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    messageBubbleBg: string;
+  };
 }
 
 const StreamingMessage = memo(function StreamingMessage({ 
@@ -18,7 +24,8 @@ const StreamingMessage = memo(function StreamingMessage({
   onOptionSelect, 
   onQuickReply,
   chatbotConfig,
-  sessionId
+  sessionId,
+  themeColors
 }: StreamingMessageProps) {
   const [visibleChunks, setVisibleChunks] = useState<MessageChunk[]>([]);
   const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
@@ -77,6 +84,7 @@ const StreamingMessage = memo(function StreamingMessage({
         onQuickReply={onQuickReply}
         chatbotConfig={chatbotConfig}
         sessionId={sessionId}
+        themeColors={themeColors}
       />
     );
   }
@@ -99,6 +107,7 @@ const StreamingMessage = memo(function StreamingMessage({
               onQuickReply={onQuickReply}
               chatbotConfig={chatbotConfig}
               sessionId={sessionId}
+              themeColors={themeColors}
             />
           </div>
         ))}

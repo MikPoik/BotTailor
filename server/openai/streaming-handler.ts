@@ -131,7 +131,7 @@ async function regenerateResponseWithDynamicValidation(
         json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
       },
       temperature,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
     });
     
     const content = completion.choices[0]?.message?.content;
@@ -275,7 +275,7 @@ async function regenerateResponseWithValidation(
         json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
       },
       temperature,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
     });
     
     const content = completion.choices[0]?.message?.content;
@@ -375,7 +375,7 @@ export async function* generateStreamingResponse(
             json_schema: MULTI_BUBBLE_RESPONSE_SCHEMA,
           },
           temperature,
-          max_tokens: maxTokens,
+          max_completion_tokens: maxTokens,
         });
         break; // Success, exit retry loop
       } catch (apiError) {
