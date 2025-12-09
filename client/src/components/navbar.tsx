@@ -104,9 +104,14 @@ export function Navbar() {
           <div className="flex items-center space-x-2">
             <ThemeToggle />
             {!isAuthenticated ? (
-              <Button asChild>
-                <Link href="/handler/sign-in">Log In</Link>
-              </Button>
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/handler/sign-up">Sign Up</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/handler/sign-in">Log In</Link>
+                </Button>
+              </>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -181,9 +186,14 @@ export function Navbar() {
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <Button asChild>
-                <Link href="/handler/sign-in">Log In</Link>
-              </Button>
+              <div className="flex items-center space-x-1">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/handler/sign-up">Sign Up</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/handler/sign-in">Log In</Link>
+                </Button>
+              </div>
             )}
           </div>
         )}
@@ -284,6 +294,13 @@ export function Navbar() {
                   onClick={closeMenu}
                 >
                   Contact us
+                </Link>
+                <Link
+                  href="/handler/sign-up"
+                  className="block text-sm font-medium transition-colors hover:text-primary py-2"
+                  onClick={closeMenu}
+                >
+                  Sign Up
                 </Link>
                 <Link
                   href="/handler/sign-in"

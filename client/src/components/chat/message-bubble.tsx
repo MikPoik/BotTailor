@@ -59,7 +59,7 @@ function resolveColors(chatbotConfig?: any) {
     textColor: (isValidColor(embedTextColor) ? embedTextColor : 
                chatbotConfig?.homeScreenConfig?.theme?.textColor || 
                chatbotConfig?.theme?.textColor) || 'hsl(20, 14.3%, 4.1%)',
-    messageBubbleBg: adjustColorBrightness(backgroundColor, backgroundColor.includes('hsl') && parseFloat(backgroundColor.match(/([\d.]+)%\)$/)?.[1] || '50') < 50 ? 8 : -5)
+    messageBubbleBg: adjustColorBrightness(backgroundColor, backgroundColor.includes('hsl') && parseFloat(backgroundColor.match(/([\d.]+)%\)$/)?.[1] || '50') < 50 ? 8 : -2)
   };
 
   return resolvedColors;
