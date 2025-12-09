@@ -103,21 +103,24 @@ export default function Home() {
     <div className="flex flex-col min-h-screen relative">
       {/* Hero Section */}
       <section className="home-hero flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 md:py-24 relative" role="banner">
-        <div className="container max-w-6xl mx-auto text-center">
+        <div className="home-hero-accent"></div>
+        <div className="container max-w-6xl mx-auto text-center relative z-10">
           <header className="mb-8">
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <Bot className="h-20 w-20 text-primary" aria-hidden="true" />
-                <Sparkles className="h-6 w-6 text-yellow-500 absolute -top-1 -right-1 animate-pulse" aria-hidden="true" />
+            <div className="flex justify-center mb-8">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-300"></div>
+                <Bot className="h-24 w-24 text-primary relative drop-shadow-lg group-hover:scale-110 transition-transform duration-300" aria-hidden="true" />
+                <Sparkles className="h-7 w-7 text-secondary absolute -top-2 -right-2 animate-pulse drop-shadow-lg" aria-hidden="true" />
               </div>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl mb-6">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 bg-gradient-to-r from-primary via-primary to-secondary bg-clip-text text-transparent">
               Smart AI Chatbots
-              <br />
-              <span className="text-primary">Made Simple</span>
             </h1>
+            <p className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+              Made <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">Simple</span>
+            </p>
           </header>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
             Create intelligent, customizable chatbots that understand your business. 
             Deploy anywhere in minutes with our powerful AI platform.
           </p>
@@ -125,14 +128,14 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             {isAuthenticated ? (
               <>
-                <Button size="lg" asChild>
+                <Button size="lg" asChild className="hero-button">
                   <a href="/dashboard">Go to Dashboard</a>
                 </Button>
 
               </>
             ) : (
               <>
-                <Button size="lg" asChild>
+                <Button size="lg" asChild className="hero-button">
                   <a href="/handler/sign-in">Get Started Free</a>
                 </Button>
 
