@@ -104,26 +104,25 @@ function AuthenticatedRouterContent() {
 
   return (
     <Switch>
-      {!isAuthenticated ? (
+      {/* Handler routes - available to all */}
+      <Route path="/handler/*" component={HandlerRoutes} />
+      
+      {/* Public routes - available to all */}
+      <Route path="/" component={Home} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/docs" component={Docs} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/widget" component={ChatWidget} />
+      <Route path="/chat-widget" component={ChatWidget} />
+      
+      {/* Support route alias */}
+      <Route path="/support" component={Docs} />
+      
+      {/* Authenticated routes - rendered conditionally at component level */}
+      {isAuthenticated && (
         <>
-          <Route path="/handler/*" component={HandlerRoutes} />
-          <Route path="/" component={Home} />
-          <Route path="/docs" component={Docs} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/privacy" component={Privacy} />
-          <Route path="/terms" component={Terms} />
-          <Route path="/widget" component={ChatWidget} />
-          <Route path="/chat-widget" component={ChatWidget} />
-          <Route component={NotFound} />
-        </>
-      ) : (
-        <>
-          <Route path="/handler/*" component={HandlerRoutes} />
-          <Route path="/" component={Home} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/privacy" component={Privacy} />
-          <Route path="/terms" component={Terms} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/chatbots/new" component={ChatbotForm} />
           <Route path="/chatbots/:guid/add-data" component={AddData} />
@@ -134,15 +133,12 @@ function AuthenticatedRouterContent() {
           <Route path="/chatbots/:guid/surveys" component={SurveyBuilder} />
           <Route path="/chatbots/:guid/embed" component={ChatbotEmbed} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
-          <Route path="/widget" component={ChatWidget} />
-          <Route path="/chat-widget" component={ChatWidget} />
           <Route path="/subscription" component={Subscription} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/docs" component={Docs} />
-          <Route path="/support" component={Docs} />
-          <Route component={NotFound} />
         </>
       )}
+      
+      {/* Catch-all 404 route - must be last */}
+      <Route component={NotFound} />
     </Switch>
   );
 }

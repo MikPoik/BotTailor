@@ -137,7 +137,6 @@ export function Navbar() {
                   <DropdownMenuItem
                     className="cursor-pointer"
                     onClick={async () => {
-                      setLocation('/');
                       await stackClientApp.signOut();
                     }}
                   >
@@ -219,7 +218,6 @@ export function Navbar() {
                   <button
                     onClick={async () => {
                       closeMenu();
-                      setLocation('/');
                       await stackClientApp.signOut();
                     }}
                     className="flex items-center text-sm font-medium transition-colors hover:text-primary py-2 w-full text-left"
