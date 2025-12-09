@@ -4,25 +4,25 @@
 
 :root {
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --foreground: hsl(243, 30%, 20%);
+  --muted: hsl(243, 20%, 94%);
+  --muted-foreground: hsl(243, 15%, 45%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(243, 30%, 20%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(213, 93%, 54%);
-  --primary-light: hsl(213, 93%, 97%); /* Example lighter shade */
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
+  --card-foreground: hsl(243, 30%, 20%);
+  --border: hsl(243, 25%, 88%);
+  --input: hsl(243, 20%, 94%);
+  --primary: hsl(243, 70%, 45%);
+  --primary-light: hsl(243, 70%, 95%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(38, 92%, 50%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(12, 88%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --ring: hsl(243, 70%, 45%);
   --radius: 0.5rem;
   --chat-bubble-bg: hsl(213, 93%, 54%);
   --chat-user-bg: hsl(213, 93%, 54%);
@@ -41,25 +41,25 @@
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(213, 93%, 54%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
+  --background: hsl(243, 30%, 10%);
+  --foreground: hsl(0, 0%, 95%);
+  --muted: hsl(243, 25%, 20%);
+  --muted-foreground: hsl(243, 15%, 60%);
+  --popover: hsl(243, 30%, 10%);
+  --popover-foreground: hsl(0, 0%, 95%);
+  --card: hsl(243, 25%, 15%);
+  --card-foreground: hsl(0, 0%, 95%);
+  --border: hsl(243, 20%, 25%);
+  --input: hsl(243, 25%, 20%);
+  --primary: hsl(243, 70%, 60%);
+  --primary-foreground: hsl(243, 30%, 10%);
+  --secondary: hsl(38, 92%, 60%);
+  --secondary-foreground: hsl(243, 30%, 10%);
+  --accent: hsl(12, 88%, 65%);
+  --accent-foreground: hsl(243, 30%, 10%);
   --destructive: hsl(0, 62.8%, 30.6%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
+  --ring: hsl(243, 70%, 60%);
   --radius: 0.5rem;
   --chat-bubble-bg: hsl(213, 93%, 54%);
   --chat-user-bg: hsl(213, 93%, 54%);
