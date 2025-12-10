@@ -1,4 +1,5 @@
 
+
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="botGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -7,11 +8,11 @@
     </linearGradient>
   </defs>
   
-  <!-- Main chat bubble body -->
-  <path d="M 12 18 Q 12 12 18 12 L 46 12 Q 52 12 52 18 L 52 40 Q 52 46 46 46 L 26 46 L 18 54 L 22 46 L 18 46 Q 12 46 12 40 Z" fill="url(#botGradient)" />
+  <!-- Main chat bubble body - scaled up to fill more space -->
+  <path d="M 8 14 Q 8 8 14 8 L 50 8 Q 56 8 56 14 L 56 42 Q 56 48 50 48 L 26 48 L 16 58 L 20 48 L 14 48 Q 8 48 8 42 Z" fill="url(#botGradient)" />
   
   <!-- Dot indicators (typing animation effect) -->
-  <circle cx="24" cy="29" r="3" fill="white" opacity="0.9" />
-  <circle cx="32" cy="29" r="3" fill="white" opacity="0.9" />
-  <circle cx="40" cy="29" r="3" fill="white" opacity="0.9" />
+  <circle cx="22" cy="28" r="3.5" fill="white" opacity="0.9" />
+  <circle cx="32" cy="28" r="3.5" fill="white" opacity="0.9" />
+  <circle cx="42" cy="28" r="3.5" fill="white" opacity="0.9" />
 </svg>
