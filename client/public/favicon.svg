@@ -1,4 +1,5 @@
-<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="botGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
@@ -10,7 +11,7 @@
   <path d="M 30 50 Q 30 30 50 30 L 150 30 Q 170 30 170 50 L 170 120 Q 170 140 150 140 L 70 140 L 50 160 L 60 140 L 50 140 Q 30 140 30 120 Z" fill="url(#botGradient)" />
   
   <!-- Dot indicators (typing animation effect) -->
-  <circle cx="55" cy="85" r="5" fill="white" opacity="0.8" />
-  <circle cx="75" cy="85" r="5" fill="white" opacity="0.8" />
-  <circle cx="95" cy="85" r="5" fill="white" opacity="0.8" />
+  <circle cx="70" cy="85" r="8" fill="white" opacity="0.9" />
+  <circle cx="100" cy="85" r="8" fill="white" opacity="0.9" />
+  <circle cx="130" cy="85" r="8" fill="white" opacity="0.9" />
 </svg>
