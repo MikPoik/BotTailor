@@ -150,7 +150,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              <span>Enterprise secure</span>
+              <span>Secure</span>
             </div>
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
