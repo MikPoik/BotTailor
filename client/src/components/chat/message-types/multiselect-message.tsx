@@ -53,6 +53,9 @@ export const MultiselectMessage = memo(function MultiselectMessage({
   const maxSelections = metadata.maxSelections || options.length || 999;
 
   const handleOptionToggle = (optionId: string, optionText: string) => {
+    if ((window as any)?.localStorage?.getItem?.('chat_debug') === '1') {
+      console.log('[CHAT_DEBUG] multiselect toggle', optionId, optionText);
+    }
     setSelectedOptions(prev => {
       if (prev.includes(optionId)) {
         return prev.filter(id => id !== optionId);
@@ -80,6 +83,9 @@ export const MultiselectMessage = memo(function MultiselectMessage({
     setIsSubmitting(true);
 
     try {
+      if ((window as any)?.localStorage?.getItem?.('chat_debug') === '1') {
+        console.log('[CHAT_DEBUG] multiselect submit', { selectedOptions, otherText });
+      }
       // Get the text descriptions for selected options
       const selectedOptionsWithText = selectedOptions.map(optionId => {
         const option = options.find((opt: any) => opt.id === optionId);
@@ -130,7 +136,12 @@ export const MultiselectMessage = memo(function MultiselectMessage({
           return (
             <div key={`${option.id}-${index}`}>
               <button
-                onClick={() => handleOptionToggle(option.id, option.text)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleOptionToggle(option.id, option.text);
+                }}
                 className="w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2"
                 style={{
                   backgroundColor: isSelected ? colors.primaryColor + '10' : colors.messageBubbleBg,
@@ -187,7 +198,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{selectedOptions.length} / {maxSelections} </span>
         <Button
-          type="submit"
+          type="button"
           onClick={handleMultiselectSubmit}
           disabled={selectedOptions.length === 0 || isSubmitting || isSubmitted || isOtherTextRequired}
           className="w-40 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"

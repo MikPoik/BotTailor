@@ -123,8 +123,11 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
               
               return (
                 <button
+                  type="button"
                   key={`msg-quickreply-${message.id}-${replyText}-${index}`}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (replyAction === 'skip_question') {
                       // Handle skip with metadata
                       onQuickReply(JSON.stringify({
@@ -166,6 +169,13 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
         )}
       </div>
     </div>
+  );
+}, (prevProps, nextProps) => {
+  // Only re-render if message content changed - ignore parent state changes
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.sessionId === nextProps.sessionId
   );
 });
 

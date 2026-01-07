@@ -135,7 +135,7 @@ export default function DynamicHomeScreen({
       <div className="relative z-10 flex flex-col h-full min-h-full">
         <div className="flex-1 overflow-y-auto">
           {sortedComponents
-          .filter((component) => component.visible !== false && component.type !== 'footer')
+          .filter((component) => component.visible !== false && component.type !== 'footer' && component.type !== 'category_tabs')
           .map((component) =>
             renderComponent(component, onTopicClick, onActionClick, colors)
           )}

@@ -407,9 +407,11 @@ export const HomeScreenComponentSchema = z.object({
       id: z.string(),
       title: z.string(),
       description: z.string(),
+      icon: z.string().optional(),
       action: z.string(),
       actionType: z.enum(['message', 'survey', 'custom']).default('message'),
       surveyId: z.number().optional(), // Reference to survey ID for survey actions
+      itemStyle: z.enum(['filled', 'outlined']).optional(), // Override for individual action styling
     })).optional(),
     style: z.object({
       backgroundColor: z.string().optional(),

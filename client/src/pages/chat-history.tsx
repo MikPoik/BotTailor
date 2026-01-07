@@ -35,7 +35,7 @@ import React from "react";
 import type { RouteDefinition } from "@shared/route-metadata";
 
 export const route: RouteDefinition = {
-  path: "/chat-history/:id",
+  path: "/chat-history/:guid",
   ssr: false,
   metadata: {
     title: "Chat History - BotTailor",
@@ -122,7 +122,7 @@ export default function ChatHistory() {
   // Delete individual chat session mutation
   const deleteSessionMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      const response = await apiRequest(`/api/chat/${sessionId}`, 'DELETE');
+      const response = await apiRequest('DELETE', `/api/chat/${sessionId}`);
       return response;
     },
     onSuccess: () => {
@@ -145,7 +145,7 @@ export default function ChatHistory() {
   // Delete all chat sessions mutation
   const deleteAllSessionsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/chatbots/${guid}/sessions`, 'DELETE');
+      const response = await apiRequest('DELETE', `/api/chatbots/${guid}/sessions`);
       return response;
     },
     onSuccess: () => {
@@ -165,8 +165,8 @@ export default function ChatHistory() {
     },
   });
 
-  const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteSession = (sessionId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     deleteSessionMutation.mutate(sessionId);
   };
 
@@ -227,7 +227,7 @@ export default function ChatHistory() {
           <Button 
             variant="destructive" 
             size="sm"
-            onClick={() => handleDeleteSession(selectedSession, {} as React.MouseEvent)}
+            onClick={() => handleDeleteSession(selectedSession)}
             disabled={deleteSessionMutation.isPending}
             data-testid="button-delete-session"
           >

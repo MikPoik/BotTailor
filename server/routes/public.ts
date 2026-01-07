@@ -221,9 +221,27 @@ export function setupPublicRoutes(app: Express) {
     <title>Chat Widget</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      :root {
+        --background: hsl(0, 0%, 100%);
+        --foreground: hsl(243, 30%, 20%);
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background-color: var(--background);
+      }
+      #chat-widget-container {
+        height: 100vh;
+        width: 100%;
+        background-color: var(--background);
+      }
+    </style>
 </head>
-<body style="margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <div id="chat-widget-container" style="height: 100vh;"></div>
+<body>
+    <div id="chat-widget-container"></div>
     <script src="/embed.js${guid ? `?guid=${guid}` : ''}"></script>
 </body>
 </html>`;
@@ -353,6 +371,20 @@ export function setupPublicRoutes(app: Express) {
 
         // Inject session data and chatbot config into the HTML
         const sessionData = `
+          <style>
+            :root {
+              --background: ${theme.backgroundColor};
+              --foreground: ${theme.textColor};
+              --primary: ${theme.primaryColor};
+              --chat-background: ${theme.backgroundColor};
+              --chat-text: ${theme.textColor};
+              --chat-primary-color: ${theme.primaryColor};
+            }
+            html, body, #root {
+              background-color: ${theme.backgroundColor};
+              color: ${theme.textColor};
+            }
+          </style>
           <script>
             window.__CHAT_WIDGET_CONFIG__ = {
               sessionId: "${sessionId}",

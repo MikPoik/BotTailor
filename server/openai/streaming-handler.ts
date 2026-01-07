@@ -399,7 +399,7 @@ export async function* generateStreamingResponse(
 
     // Streaming state
     let accumulatedContent = "";
-    let processedBubbles = 0;
+    let yieldedBubbleIndices = new Set<number>(); // Track which bubbles have been yielded
     let lastBubbleTime = 0;
     const BUBBLE_DELAY_MS = 1000; // Delay between bubbles
 
@@ -408,7 +408,7 @@ export async function* generateStreamingResponse(
       const now = Date.now();
       const timeSinceLastBubble = now - lastBubbleTime;
 
-      if (processedBubbles > 0 && timeSinceLastBubble < BUBBLE_DELAY_MS) {
+      if (yieldedBubbleIndices.size > 0 && timeSinceLastBubble < BUBBLE_DELAY_MS) {
         const remainingDelay = BUBBLE_DELAY_MS - timeSinceLastBubble;
         await new Promise((resolve) => setTimeout(resolve, remainingDelay));
       }
@@ -421,17 +421,25 @@ export async function* generateStreamingResponse(
       const delta = chunk.choices[0]?.delta?.content || "";
       if (delta) {
         accumulatedContent += delta;
+        //console.log(`[OpenAI STREAM] Received chunk, accumulated: ${accumulatedContent.length} chars`);
         const jsonEnded = detectJsonBoundary(delta, accumulatedContent);
 
         // Try to parse and yield complete bubbles
         if (jsonEnded) {
+          console.log(`[OpenAI STREAM] JSON boundary detected, parsing bubbles...`);
           const parseResult = parseStreamingContent(accumulatedContent);
           
           if (parseResult.success && parseResult.bubbles) {
             const bubbles = parseResult.bubbles;
+            console.log(`[OpenAI STREAM] Parsed ${bubbles.length} total bubbles, ${yieldedBubbleIndices.size} already yielded`);
 
-            // Process new complete bubbles
-            for (let i = processedBubbles; i < bubbles.length; i++) {
+            // Process all complete bubbles, yielding non-menu ones immediately
+            for (let i = 0; i < bubbles.length; i++) {
+              // Skip if already yielded
+              if (yieldedBubbleIndices.has(i)) {
+                continue;
+              }
+              
               const bubble = bubbles[i];
               
               // Skip menu and multiselect_menu bubbles during streaming
@@ -446,7 +454,7 @@ export async function* generateStreamingResponse(
                 
                 await applyBubbleDelay();
                 yield { type: "bubble", bubble };
-                processedBubbles = i + 1;
+                yieldedBubbleIndices.add(i);
               }
             }
           }
@@ -567,11 +575,17 @@ export async function* generateStreamingResponse(
       }
 
       // Yield any remaining bubbles that weren't processed during streaming
-      for (let i = processedBubbles; i < validated.bubbles.length; i++) {
+      // This includes menu/multiselect bubbles that were skipped
+      for (let i = 0; i < validated.bubbles.length; i++) {
+        // Skip if this bubble was already yielded during streaming
+        if (yieldedBubbleIndices.has(i)) {
+          continue;
+        }
+        
         const bubble = validated.bubbles[i];
         console.log(`[OpenAI] Final bubble ${i + 1}: ${bubble.messageType}`);
 
-        if (i > processedBubbles) {
+        if (yieldedBubbleIndices.size > 0) {
           await new Promise((resolve) => setTimeout(resolve, BUBBLE_DELAY_MS));
         }
 
@@ -592,7 +606,12 @@ export async function* generateStreamingResponse(
       // Try to salvage the response
       const salvaged = attemptResponseSalvage(accumulatedContent);
       if (salvaged) {
-        for (let i = processedBubbles; i < salvaged.bubbles.length; i++) {
+        for (let i = 0; i < salvaged.bubbles.length; i++) {
+          // Skip already yielded bubbles
+          if (yieldedBubbleIndices.has(i)) {
+            continue;
+          }
+          
           const bubble = salvaged.bubbles[i];
           console.log(`[OpenAI] Salvaged bubble ${i + 1}: ${bubble.messageType}`);
           yield { type: "bubble", bubble };

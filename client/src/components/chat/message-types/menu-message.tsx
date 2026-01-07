@@ -67,6 +67,14 @@ export const MenuMessage = memo(function MenuMessage({
   };
 
   const handleOptionClick = (option: any) => {
+    if ((window as any)?.localStorage?.getItem?.('chat_debug') === '1') {
+      const container = document.querySelector('.chat-widget-embedded') || document.querySelector('.chat-widget-container');
+      const style = container ? window.getComputedStyle(container as Element) : null;
+      console.log('[CHAT_DEBUG] menu option click', option.id, { isOther: isOtherOption(option),
+        containerDisplay: style?.display, containerVisibility: style?.visibility, containerOpacity: style?.opacity,
+        time: Date.now()
+      });
+    }
     if (isOtherOption(option)) {
       setSelectedOtherOption(option.id);
       // Don't submit immediately, wait for user to enter text
@@ -86,7 +94,12 @@ export const MenuMessage = memo(function MenuMessage({
           return (
             <div key={`${option.id}-${index}`}>
               <button
-                onClick={() => handleOptionClick(option)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleOptionClick(option);
+                }}
                 className="w-full text-left py-2 px-3 border rounded-lg transition-colors flex items-center space-x-2"
                 style={{
                   backgroundColor: isOtherSelected ? colors.primaryColor + '10' : colors.messageBubbleBg,

@@ -160,7 +160,7 @@ export function CategoryTabsComponent({ component, resolvedColors }: ComponentRe
 
 // Topic Grid Component
 export function TopicGridComponent({ component, onTopicClick, resolvedColors }: ComponentRegistryProps) {
-  const { topics, style } = component.props;
+  const { topics, style, title } = component.props;
 
   // Use resolved colors
   const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
@@ -221,13 +221,18 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
   if (!topics || topics.length === 0) return null;
 
   return (
-    <div className="p-6 space-y-4" style={{ backgroundColor: hasBackgroundImage ? 'transparent' : backgroundColor, color: textColor }}>
+    <div className="p-4 space-y-3" style={{ backgroundColor: hasBackgroundImage ? 'transparent' : backgroundColor, color: textColor }}>
+      {title && (
+        <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
+          {title}
+        </h3>
+      )}
       <div className="grid gap-3">
         {topics.map((topic: any) => (
           <button
             key={topic.id}
             onClick={() => onTopicClick?.(topic)}
-            className={`w-full p-2 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] ${
+            className={`w-full p-2 rounded-lg text-left ${
               itemStyle === 'filled' 
                 ? 'shadow-md hover:shadow-lg' 
                 : 'border-2 shadow-sm hover:shadow-md'
@@ -238,6 +243,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
               borderColor: overlayColors.borderColor,
               textShadow: overlayColors.textShadow,
               backdropFilter: overlayColors.backdropFilter,
+              transition: 'box-shadow 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
             }}
           >
             <div className="flex items-center gap-3">
@@ -247,26 +253,27 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h3 
-                  className="font-semibold mb-1 truncate"
+                <div 
+                  className="line-clamp-1"
                   style={{ 
+                    color: overlayColors.textColor,
+                    fontWeight: 500,
                     fontSize: titleFontSize,
-                    color: overlayColors.textColor
                   }}
                 >
                   {topic.title}
-                </h3>
+                </div>
                 {topic.description && (
-                  <p 
-                    className="opacity-90 line-clamp-2"
+                  <div 
+                    className="line-clamp-2"
                     style={{
-                      fontSize: descriptionFontSize,
                       color: overlayColors.textColor,
-                      opacity: 0.8
+                      opacity: 0.8,
+                      fontSize: descriptionFontSize,
                     }}
                   >
                     {topic.description}
-                  </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -279,7 +286,7 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
 
 // Quick Actions Component
 export function QuickActionsComponent({ component, onActionClick, resolvedColors }: ComponentRegistryProps) {
-  const { actions, style } = component.props;
+  const { actions, style, title } = component.props;
 
   if (!actions || actions.length === 0) return null;
 
@@ -287,34 +294,100 @@ export function QuickActionsComponent({ component, onActionClick, resolvedColors
   const backgroundColor = resolvedColors?.backgroundColor || style?.backgroundColor || 'white';
   const textColor = resolvedColors?.textColor || style?.textColor || 'inherit';
   const primaryColor = resolvedColors?.primaryColor || 'var(--primary)';
+  
+  // Get the itemStyle from component style (same as topic grid)
+  const itemStyle = style?.itemStyle || 'filled';
+
+  // Check if there's a background image
+  const hasBackgroundImage = resolvedColors?.backgroundImageUrl;
+
+  // Helper function to determine if a color is light or dark
+  const isLightColor = (color: string) => {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return brightness > 127;
+  };
+
+  // Generate colors with opacity like topic grid
+  const getActionColors = (actionStyle: string) => {
+    if (!hasBackgroundImage) {
+      const overlayOpacity = '0.85'; // Same as topic grid
+      const isPrimaryLight = isLightColor(primaryColor);
+      
+      return {
+        backgroundColor: actionStyle === 'filled' 
+          ? `${primaryColor}${Math.round(255 * parseFloat(overlayOpacity)).toString(16).padStart(2, '0')}`
+          : backgroundColor,
+        textColor: actionStyle === 'filled'
+          ? (isPrimaryLight ? '#000000' : '#ffffff')
+          : textColor,
+        borderColor: actionStyle === 'outlined' ? primaryColor : 'transparent',
+      };
+    }
+
+    // When there's a background image, use same logic as topic grid
+    const isPrimaryLight = isLightColor(primaryColor);
+    const overlayOpacity = actionStyle === 'filled' ? '0.85' : '0.5';
+    
+    return {
+      backgroundColor: actionStyle === 'filled' 
+        ? `${primaryColor}${Math.round(255 * parseFloat(overlayOpacity)).toString(16).padStart(2, '0')}`
+        : `${backgroundColor}${Math.round(255 * parseFloat(overlayOpacity)).toString(16).padStart(2, '0')}`,
+      textColor: actionStyle === 'filled'
+        ? (isPrimaryLight ? '#000000' : '#ffffff')
+        : textColor,
+      borderColor: actionStyle === 'outlined' 
+        ? `${primaryColor}${Math.round(255 * 0.6).toString(16).padStart(2, '0')}`
+        : 'transparent',
+      backdropFilter: hasBackgroundImage ? 'blur(8px)' : undefined
+    };
+  };
 
   return (
     <div className="p-4 space-y-3">
-      <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
-        Quick Actions
-      </h3>
+      {title && (
+        <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
+          {title}
+        </h3>
+      )}
       <div className="grid grid-cols-1 gap-3">
-        {actions.map((action, index) => (
-          <Button
-            key={action.id}
-            variant={index === 0 ? "default" : "outline"}
-            className="h-auto p-4 justify-start shadow-sm"
-            onClick={() => onActionClick?.(action)}
-            style={{
-              backgroundColor: index === 0 ? primaryColor : backgroundColor,
-              color: index === 0 ? 'white' : textColor,
-              borderColor: index === 0 ? primaryColor : textColor,
-            }}
-          >
-            {getIcon('MessageCircle')}
-            <div className="text-left ml-3">
-              <div className="font-medium">{action.title}</div>
-              <div className="text-xs" style={{ opacity: 0.8 }}>
-                {action.description}
+        {actions.map((action: any) => {
+          // Check if action has its own itemStyle override
+          const actionStyle = action.itemStyle || itemStyle;
+          const actionColors = getActionColors(actionStyle);
+          
+          return (
+            <Button
+              key={action.id}
+              className={`h-auto p-4 justify-start ${
+                actionStyle === 'filled' 
+                  ? 'shadow-md hover:shadow-lg' 
+                  : 'border-2 shadow-sm hover:shadow-md'
+              }`}
+              onClick={() => onActionClick?.(action)}
+              style={{
+                backgroundColor: actionColors.backgroundColor,
+                color: actionColors.textColor,
+                borderColor: actionColors.borderColor,
+                backdropFilter: actionColors.backdropFilter,
+                transition: 'box-shadow 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+              }}
+            >
+              <div className="flex-shrink-0">
+                {getIcon(action.icon || 'MessageCircle')}
               </div>
-            </div>
-          </Button>
-        ))}
+              <div className="text-left ml-3">
+                <div className="font-medium">{action.title}</div>
+                <div className="text-xs font-normal" style={{ opacity: 0.8 }}>
+                  {action.description}
+                </div>
+              </div>
+            </Button>
+          );
+        })}
       </div>
     </div>
   );

@@ -154,15 +154,8 @@ function Router() {
 
   if (isEmbedded) {
     // For embedded widgets, bypass authentication and navbar entirely
-    return (
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      }>
-        <AuthenticatedRouter />
-      </Suspense>
-    );
+    // NO SUSPENSE: Avoid spinner flash during re-renders from menu interactions
+    return <AuthenticatedRouter />;
   }
 
   return (
@@ -227,11 +220,22 @@ function App() {
   const configEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
   const isEmbedded = urlEmbedded || configEmbedded;
 
+  // Use a ref to prevent showing fallback after first render
+  const hasRenderedRef = React.useRef(false);
+  React.useEffect(() => {
+    hasRenderedRef.current = true;
+  }, []);
+
+  // Don't show spinner fallback if we've already rendered once or if embedded
+  const shouldShowFallback = !hasRenderedRef.current && !isEmbedded;
+
   return (
     <ClientOnly fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      shouldShowFallback ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : null
     }>
       <StackProvider app={stackClientApp}>
         <StackTheme>

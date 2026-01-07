@@ -74,7 +74,7 @@ When creating survey launchers, use:
 ## Response Format:
 Return a JSON object containing two keys: "config" and "explanation".
 - "config": A valid JSON object that matches the HomeScreenConfig schema.
-- "explanation": A natural language explanation of the generated UI, detailing the choices made and how it addresses the user's prompt.
+- "explanation": A short condensed natural language explanation of the generated UI.
 No additional text or explanation outside of these keys.
 
 **CRITICAL REQUIREMENTS:**

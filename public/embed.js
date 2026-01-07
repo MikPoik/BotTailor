@@ -3,6 +3,8 @@
 
   // Chatbot Widget Embedder
   const ChatWidget = {
+    _debugEnabled: false,
+
     config: {
       apiUrl: null, // Must be provided
       sessionId: null,
@@ -15,6 +17,10 @@
     _initialized: false,
 
     init: function(options = {}) {
+      try {
+        this._debugEnabled = localStorage.getItem('chat_debug') === '1';
+      } catch {}
+
       // Prevent multiple initializations (unless we're resetting)
       if (this._initialized && !options._forceReinit) {
         return;
@@ -48,6 +54,12 @@
         });
       } else {
         this.loadStylesAndCreateWidget();
+      }
+    },
+
+    logDebug: function(...args) {
+      if (this._debugEnabled) {
+        console.log('[EMBED_DEBUG]', ...args);
       }
     },
 
@@ -478,11 +490,14 @@
 
       let isOpen = false;
       let messageVisible = true;
+      let currentLayoutIsMobile = false; // Track current layout to detect changes
 
       const isMobile = () => window.innerWidth < 1024;
 
       const openChat = () => {
         isOpen = true;
+        currentLayoutIsMobile = isMobile();
+        ChatWidget.logDebug('openChat');
         badge.style.display = 'none';
 
         // Hide message bubble when chat opens
@@ -515,6 +530,7 @@
 
               // Send theme configuration after iframe loads
               mobileIframe.onload = () => {
+                ChatWidget.logDebug('mobile iframe load', { src: mobileIframe.src });
                 if (mobileIframe.contentWindow) {
                   mobileIframe.contentWindow.postMessage({
                     type: 'THEME_CONFIG',
@@ -531,6 +547,7 @@
               mobileIframe.src = this.forceHttps(`${this.config.apiUrl}?embedded=true&mobile=true`);
             }
           }
+          ChatWidget.logDebug('show mobile iframe');
           bubble.style.display = 'none';
           overlay.style.display = 'block';
           mobileIframe.style.visibility = 'visible';
@@ -557,6 +574,7 @@
 
               // Send theme configuration after iframe loads
               iframe.onload = () => {
+                ChatWidget.logDebug('desktop iframe load', { src: iframe.src });
                 if (iframe.contentWindow) {
                   iframe.contentWindow.postMessage({
                     type: 'THEME_CONFIG',
@@ -573,6 +591,7 @@
               iframe.src = this.forceHttps(`${this.config.apiUrl}?embedded=true`);
             }
           }
+          ChatWidget.logDebug('show desktop iframe');
           bubble.style.display = 'none';
           iframe.style.visibility = 'visible';
           iframe.style.display = 'block';
@@ -582,6 +601,8 @@
 
       const closeChat = () => {
         isOpen = false;
+        currentLayoutIsMobile = isMobile();
+        ChatWidget.logDebug('closeChat');
 
         if (isMobile()) {
           // Send close message to iframe for internal animation handling
@@ -593,6 +614,7 @@
           mobileIframe.classList.add('closing');
           mobileIframe.classList.remove('show');
           setTimeout(() => {
+            ChatWidget.logDebug('hide mobile iframe');
             overlay.style.display = 'none';
             mobileIframe.style.visibility = 'hidden';
             mobileIframe.classList.remove('closing');
@@ -607,6 +629,7 @@
           iframe.classList.add('closing');
           iframe.classList.remove('show');
           setTimeout(() => {
+            ChatWidget.logDebug('hide desktop iframe');
             iframe.style.visibility = 'hidden';
             iframe.classList.remove('closing');
           }, 800); // Match animation duration
@@ -661,10 +684,17 @@
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
           const nowMobile = isMobile();
+          if (nowMobile === currentLayoutIsMobile) {
+            // No layout change; skip toggling to avoid flicker
+            return;
+          }
+
+          ChatWidget.logDebug('resize handler (layout change)', { nowMobile, isOpen, overlayDisplay: overlay.style.display, iframeVisible: iframe.style.visibility, mobileVisible: mobileIframe.style.visibility });
 
           if (isOpen) {
             if (nowMobile && overlay.style.display === 'none') {
               // Switch from desktop to mobile view
+              ChatWidget.logDebug('switch to mobile view');
               iframe.classList.remove('show');
               iframe.style.visibility = 'hidden';
               bubble.style.display = 'flex';
@@ -688,6 +718,7 @@
               mobileIframe.classList.add('show');
             } else if (!nowMobile && overlay.style.display !== 'none') {
               // Switch from mobile to desktop view
+              ChatWidget.logDebug('switch to desktop view');
               overlay.style.display = 'none';
               mobileIframe.classList.remove('show');
               mobileIframe.style.visibility = 'hidden';
@@ -711,6 +742,8 @@
               iframe.classList.add('show');
             }
           }
+
+          currentLayoutIsMobile = nowMobile;
         }, 150); // Debounce resize events
       });
     },

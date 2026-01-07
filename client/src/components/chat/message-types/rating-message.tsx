@@ -18,6 +18,9 @@ export const RatingMessage = memo(function RatingMessage({
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
 
   const handleRatingSelect = (rating: number) => {
+    if ((window as any)?.localStorage?.getItem?.('chat_debug') === '1') {
+      console.log('[CHAT_DEBUG] rating select', rating);
+    }
     setSelectedRating(rating);
     onOptionSelect('rating_submit', { rating }, `${rating}/${maxValue}`);
   };
@@ -30,12 +33,17 @@ export const RatingMessage = memo(function RatingMessage({
             const isActive = hoveredRating ? rating <= hoveredRating : selectedRating ? rating <= selectedRating : false;
             return (
               <button
-                key={rating}
-                onClick={() => handleRatingSelect(rating)}
-                onMouseEnter={() => setHoveredRating(rating)}
-                onMouseLeave={() => setHoveredRating(null)}
-                className="p-1 transition-colors"
-              >
+                 type="button"
+                 key={rating}
+                 onClick={(e) => {
+                   e.preventDefault();
+                   e.stopPropagation();
+                   handleRatingSelect(rating);
+                 }}
+                 onMouseEnter={() => setHoveredRating(rating)}
+                 onMouseLeave={() => setHoveredRating(null)}
+                 className="p-1 transition-colors"
+               >
                 <Star 
                   className={`w-6 h-6 ${
                     isActive ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'
@@ -59,14 +67,19 @@ export const RatingMessage = memo(function RatingMessage({
             const isSelected = selectedRating === rating;
             return (
               <button
-                key={rating}
-                onClick={() => handleRatingSelect(rating)}
-                className={`px-3 py-2 rounded-lg border transition-colors ${
-                  isSelected 
-                    ? 'bg-primary text-white border-primary' 
-                    : 'border-border bg-muted hover:bg-accent text-foreground'
-                }`}
-              >
+                 type="button"
+                 key={rating}
+                 onClick={(e) => {
+                   e.preventDefault();
+                   e.stopPropagation();
+                   handleRatingSelect(rating);
+                 }}
+                 className={`px-3 py-2 rounded-lg border transition-colors ${
+                   isSelected 
+                     ? 'bg-primary text-white border-primary' 
+                     : 'border-border bg-muted hover:bg-accent text-foreground'
+                 }`}
+               >
                 {rating}
               </button>
             );

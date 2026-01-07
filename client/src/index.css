@@ -78,17 +78,23 @@
     line-height: 1.5 !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
+    background-color: var(--background) !important;
+    transition: none !important;
   }
 
   html {
     font-size: 16px !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
+    background-color: var(--background) !important;
+    transition: none !important;
   }
 
-  /* Theme transition */
-  html {
-    transition: background-color 0.2s ease, color 0.2s ease;
+  /* Prevent white flash during React re-renders */
+  html, body, #root {
+    background-color: var(--background) !important;
+    will-change: contents;
+    contain: layout style;
   }
 
   /* Ensure proper dark mode for chat elements */
@@ -280,6 +286,17 @@
   .embedded-messages-area {
     flex: 1 !important;
     overflow-y: auto !important;
+    contain: layout style paint !important;
+    background-color: inherit !important;
+    will-change: scroll-position !important;
+    transform: translateZ(0) !important;
+  }
+
+  /* Messages container - prevent flash during updates */
+  .flex-1.overflow-y-auto.p-4.space-y-4 {
+    background-color: inherit !important;
+    contain: layout style !important;
+    transform: translateZ(0) !important;
   }
 
   /* Embedded tabs container */
@@ -389,7 +406,8 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.4s ease-out forwards;
+  will-change: opacity, transform;
 }
 
 .animate-slideUp {
@@ -701,9 +719,11 @@
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
   }
 
-  /* Smooth transitions for mobile chat elements */
-  .chat-interface-mobile * {
-    transition: all 0.2s ease !important;
+  /* Smooth transitions for mobile chat interactive elements only */
+  .chat-interface-mobile button,
+  .chat-interface-mobile input,
+  .chat-interface-mobile a {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
   }
 
   /* Mobile chat specific animations */

@@ -1,7 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Message, ChatSession } from "@shared/schema";
+
+const chatDebug = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('chat_debug') === '1';
+  } catch {
+    return false;
+  }
+};
+
+const logDebug = (...args: any[]) => {
+  if (chatDebug()) {
+    console.log('[CHAT_DEBUG]', ...args);
+  }
+};
 
 export function useChat(sessionId: string, chatbotConfigId?: number) {
   const [isTyping, setIsTyping] = useState(false);
@@ -12,6 +27,12 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     chatbotConfig?: any;
   } | null>(null);
   const queryClient = useQueryClient();
+  const initializedSessionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Reset initialization guard when session changes
+    initializedSessionRef.current = null;
+  }, [sessionId]);
 
   // Safe sessionStorage access that handles sandboxed environments
   const safeSessionStorage = {
@@ -43,6 +64,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
     queryFn: async () => {
+      logDebug('fetch session', { sessionId, chatbotConfigId });
       const response = await apiRequest('POST', '/api/chat/session', {
         sessionId,
         chatbotConfigId: chatbotConfigId || null
@@ -50,6 +72,9 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       return response.json();
     },
     enabled: false, // Don't auto-create session on widget load
+    staleTime: Infinity, // Session data is stable, never auto-refetch
+    refetchOnWindowFocus: false, // Prevent refetch on iframe focus changes
+    refetchOnMount: false, // Prevent refetch on component remounts
   });
 
   // Get messages
@@ -62,16 +87,23 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       const url = `/api/chat/${sessionId}/messages`;
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
 
+      logDebug('fetch messages', fullUrl);
       const response = await fetch(fullUrl);
       if (!response.ok) throw new Error('Failed to fetch messages');
       return response.json();
     },
     enabled: !!sessionId && !!session,
-    staleTime: 0, // Always refetch to ensure we get welcome message
+    staleTime: Infinity, // Messages are managed via optimistic updates, never auto-refetch
+    refetchOnWindowFocus: false, // Prevent refetch on iframe focus changes (causes flash)
+    refetchOnMount: false, // Prevent refetch on component remounts
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
   });
 
-  const messages: Message[] = (messagesData?.messages || [])
-    .filter((msg: Message) => msg.messageType !== 'system'); // Filter out system messages from UI
+  // Memoize filtered messages to prevent unnecessary re-renders
+  const messages: Message[] = useMemo(() => {
+    return (messagesData?.messages || [])
+      .filter((msg: Message) => msg.messageType !== 'system'); // Filter out system messages from UI
+  }, [messagesData?.messages]);
 
   // Check for existing limit exceeded state on page load
   useEffect(() => {
@@ -115,28 +147,32 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     onBubbleReceived?: (message: Message) => void,
     onAllComplete?: (messages: Message[]) => void,
     onError?: (error: string) => void,
-    internalMessage?: string
+    internalMessage?: string,
+    skipOptimisticMessage?: boolean
   ) => {
     try {
       setIsTyping(true);
+      logDebug('sendStreamingMessage start', { userDisplayText, sessionId, chatbotConfigId });
 
-      // Add optimistic user message to messages array
-      const optimisticUserMessage: Message = {
-        id: Date.now(), // Use number for consistency with schema
-        sessionId,
-        content: userDisplayText,
-        sender: 'user',
-        messageType: 'text',
-        metadata: {},
-        createdAt: new Date(), // Use Date object for schema consistency
-      };
+      // Add optimistic user message to messages array (unless skipped)
+      if (!skipOptimisticMessage) {
+        const optimisticUserMessage: Message = {
+          id: Date.now(), // Use number for consistency with schema
+          sessionId,
+          content: userDisplayText,
+          sender: 'user',
+          messageType: 'text',
+          metadata: {},
+          createdAt: new Date(), // Use Date object for schema consistency
+        };
 
-      // Get current data without refetching to preserve optimistic updates
+        // Get current data without refetching to preserve optimistic updates
 
-      queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-        if (!old) return { messages: [optimisticUserMessage] };
-        return { messages: [...old.messages, optimisticUserMessage] };
-      });
+        queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+          if (!old) return { messages: [optimisticUserMessage] };
+          return { messages: [...old.messages, optimisticUserMessage] };
+        });
+      }
 
       // Use absolute URL when widget is embedded
       const config = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__ : undefined;
@@ -158,6 +194,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       });
 
       if (!response.ok) {
+        logDebug('stream request failed', response.status);
         throw new Error('Stream request failed');
       }
 
@@ -195,9 +232,12 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
               const data = JSON.parse(jsonData);
 
               if (data.type === 'bubble' && data.message) {
+                const receiveTime = new Date().toISOString();
+                logDebug(`${receiveTime} stream bubble`, data.message.id);
                 // A complete bubble has arrived - show it immediately
                 onBubbleReceived?.(data.message);
               } else if (data.type === 'complete') {
+                logDebug('stream complete');
                 setIsTyping(false);
                 onAllComplete?.(data.messages);
               } else if (data.type === 'limit_exceeded') {
@@ -240,6 +280,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     } catch (error) {
       setIsTyping(false);
       console.error('Streaming error:', error);
+      logDebug('stream error', error);
       onError?.('Failed to send message');
     }
   };
@@ -285,12 +326,14 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   const selectOptionMutation = useMutation({
     mutationFn: async ({ optionId, payload, optionText }: { optionId: string; payload?: any; optionText?: string }) => {
       // Don't create optimistic user message here - streaming will handle it
+      logDebug('selectOption start', { optionId, optionText, sessionId });
       const response = await apiRequest('POST', `/api/chat/${sessionId}/select-option`, {
         optionId,
         payload,
         optionText
       });
       const result = await response.json();
+      logDebug('selectOption response', result);
 
       return result;
     },
@@ -306,7 +349,13 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   };
 
   // Function to manually initialize session when chat is opened
-  const initializeSession = async () => {
+  const initializeSession = useCallback(async () => {
+    if (initializedSessionRef.current === sessionId) {
+      logDebug('initializeSession skip (already initialized)', { sessionId });
+      return session;
+    }
+
+    logDebug('initializeSession');
     // Enable and execute session creation immediately
     queryClient.setQueryDefaults(['/api/chat/session', sessionId, chatbotConfigId], { enabled: true });
     const sessionResult = await queryClient.fetchQuery({
@@ -320,9 +369,11 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
       },
     });
 
+    initializedSessionRef.current = sessionId;
+
     // Session initialized - no need to invalidate queries for optimistic UI
     return sessionResult;
-  };
+  }, [chatbotConfigId, queryClient, sessionId, session]);
 
   return {
     messages,
@@ -330,7 +381,9 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     sendStreamingMessage,
     selectOption,
     initializeSession,
-    isLoading: sendMessageMutation.isPending || selectOptionMutation.isPending,
+    // Only use sendMessageMutation for isLoading - selectOption is handled by isStreaming
+    // Including selectOptionMutation.isPending causes unnecessary re-renders/flash
+    isLoading: sendMessageMutation.isPending,
     isTyping,
     isSessionLoading,
     isMessagesLoading,

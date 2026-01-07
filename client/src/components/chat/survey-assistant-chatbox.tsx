@@ -177,6 +177,7 @@ export default function SurveyAssistantChatbox({
       <div className="p-4 border-b bg-muted/30">
         <div className="grid grid-cols-2 gap-2">
           <Button 
+            type="button"
             variant="outline" 
             size="sm"
             onClick={() => handleQuickAction('generate_customer_satisfaction', 'Generate Customer Satisfaction Survey')}
@@ -187,6 +188,7 @@ export default function SurveyAssistantChatbox({
             Customer Satisfaction
           </Button>
           <Button 
+            type="button"
             variant="outline" 
             size="sm"
             onClick={() => handleQuickAction('generate_feedback', 'Generate Feedback Survey')}
@@ -200,6 +202,7 @@ export default function SurveyAssistantChatbox({
         {currentSurvey && (
           <div className="grid grid-cols-2 gap-2 mt-2">
             <Button 
+              type="button"
               variant="outline" 
               size="sm"
               onClick={() => handleQuickAction('improve_questions', 'Improve Current Questions')}
@@ -210,6 +213,7 @@ export default function SurveyAssistantChatbox({
               Improve Questions
             </Button>
             <Button 
+              type="button"
               variant="outline" 
               size="sm"
               onClick={() => handleQuickAction('add_questions', 'Add More Questions')}
@@ -258,6 +262,7 @@ export default function SurveyAssistantChatbox({
                 {message.surveyConfig && message.sender === 'assistant' && (
                   <div className="mt-3 pt-3 border-t border-border/20">
                     <Button 
+                      type="button"
                       size="sm" 
                       onClick={() => handleApplySurvey(message.surveyConfig!)}
                       data-testid="button-apply-survey"
@@ -296,6 +301,7 @@ export default function SurveyAssistantChatbox({
             data-testid="input-survey-message"
           />
           <Button
+            type="button"
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || surveyAssistantMutation.isPending}
             data-testid="button-send-survey-message"

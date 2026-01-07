@@ -9,9 +9,38 @@ function getEmbeddedConfig(): any {
   return (window as any).__CHAT_WIDGET_CONFIG__;
 }
 
+function normalizeBaseUrl(raw?: string): { baseUrl: string; warned: boolean } {
+  if (!raw) return { baseUrl: "", warned: false };
+
+  // When embed.js passes the full widget URL (e.g. https://host/widget/uid/guid),
+  // strip the path back to the origin so API calls don't hit /widget/.../api/.
+  try {
+    const url = new URL(raw);
+    if (url.pathname.includes("/widget/")) {
+      console.warn(
+        "[CHAT_WIDGET] apiUrl contained /widget/ path; normalizing to origin for API calls",
+        raw
+      );
+      return { baseUrl: url.origin, warned: true };
+    }
+    return { baseUrl: url.origin, warned: false };
+  } catch (_err) {
+    // Fallback to the raw string; add a warning so we can see misconfigurations
+    if (raw.includes("/widget/")) {
+      console.warn(
+        "[CHAT_WIDGET] apiUrl looks like a widget URL but could not be parsed; using raw value",
+        raw
+      );
+      return { baseUrl: raw, warned: true };
+    }
+    return { baseUrl: raw, warned: false };
+  }
+}
+
 function getBaseUrl(): string {
   const config = getEmbeddedConfig();
-  return config?.apiUrl || "";
+  const { baseUrl } = normalizeBaseUrl(config?.apiUrl);
+  return baseUrl;
 }
 
 async function throwIfResNotOk(res: Response) {

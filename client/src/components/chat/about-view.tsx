@@ -90,7 +90,8 @@ export default function AboutView({
           <p className="text-xs mb-4" style={{ color: textColor, opacity: 0.7 }}>
             Want to add a chat widget to your website?
           </p>
-          <Button 
+          <button
+            type="button"
             onClick={() => window.open('https://bottailor.com', '_blank')}
             style={{ 
               backgroundColor: primaryColor,
@@ -99,7 +100,7 @@ export default function AboutView({
             className="w-full hover:opacity-90 transition-opacity"
           >
             Learn More on BotTailor
-          </Button>
+          </button>
         </div>
 
         {/* Footer */}

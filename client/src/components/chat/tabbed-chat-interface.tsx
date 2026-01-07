@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, startTransition } from "react";
 import { Send, Paperclip, Home, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,21 @@ import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
 import { computeToneAdjustedColor, resolveThemeColors } from "./color-utils";
+
+const tabDebug = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('chat_debug') === '1';
+  } catch {
+    return false;
+  }
+};
+
+const debugLog = (...args: any[]) => {
+  if (tabDebug()) {
+    console.log('[CHAT_DEBUG]', ...args);
+  }
+};
 
 interface TabbedChatInterfaceProps {
   sessionId: string;
@@ -38,10 +53,17 @@ export default function TabbedChatInterface({
   const [isStreaming, setIsStreaming] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
+  const [isDocumentHidden, setIsDocumentHidden] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const streamingBubblesRef = useRef<any[]>([]);
   const prevMessageCountRef = useRef(0);
+  // Ref to track streaming state for callbacks without causing re-renders
+  const isStreamingRef = useRef(false);
+  // Ref to track which message IDs have been rendered (to prevent re-animation)
+  const renderedMessageIdsRef = useRef<Set<string | number>>(new Set());
+  // Ref to track if we've ever had content loaded (to prevent showing spinner on refetches)
+  const hasLoadedContentRef = useRef(false);
   const queryClient = useQueryClient();
 
   const {
@@ -53,9 +75,34 @@ export default function TabbedChatInterface({
     isLoading,
     isTyping: chatIsTyping,
     isSessionLoading,
+    session,
     readOnlyMode,
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
+
+  useEffect(() => {
+    if (!tabDebug()) return;
+    debugLog('TabbedChatInterface mount', { sessionId, chatbotConfigId, isEmbedded, isMobile });
+    const visibility = () => {
+      const isHidden = document.hidden;
+      setIsDocumentHidden(isHidden);
+      debugLog('TabbedChatInterface visibility', {
+        state: document.visibilityState,
+        hidden: isHidden,
+        time: Date.now()
+      });
+    };
+    document.addEventListener('visibilitychange', visibility);
+    return () => {
+      debugLog('TabbedChatInterface unmount', { sessionId });
+      document.removeEventListener('visibilitychange', visibility);
+    };
+  }, [sessionId, chatbotConfigId, isEmbedded, isMobile]);
+
+  useEffect(() => {
+    if (!tabDebug()) return;
+    debugLog('TabbedChatInterface messages length', messages.length);
+  }, [messages.length]);
 
   // Initialize session when component mounts if needed
   useEffect(() => {
@@ -68,6 +115,28 @@ export default function TabbedChatInterface({
     }
   }, [forceInitialize, isEmbedded, onSessionInitialize, initializeSession]);
 
+  // Keep ref in sync with isStreaming state for use in memoized callbacks
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
+
+  // Track if we've ever loaded content to prevent showing spinner on refetches
+  useEffect(() => {
+    if (messages.length > 0 || chatbotConfig) {
+      hasLoadedContentRef.current = true;
+    }
+  }, [messages.length, chatbotConfig]);
+
+  // Log session loading state changes to debug spinner flash
+  useEffect(() => {
+    console.log('[TABBED_CHAT] Session loading state changed', {
+      isSessionLoading,
+      messagesCount: messages.length,
+      hasSession: !!session,
+      hasLoadedContent: hasLoadedContentRef.current,
+      time: new Date().toISOString()
+    });
+  }, [isSessionLoading, messages.length, session]);
 
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -85,6 +154,7 @@ export default function TabbedChatInterface({
   });
 
   const scrollToBottom = () => {
+    // Use smooth scroll behavior for all modes - looks better
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -112,8 +182,8 @@ export default function TabbedChatInterface({
         isUserNearBottom();
 
       if (shouldScroll) {
-        // Longer delay to ensure DOM is fully updated
-        setTimeout(scrollToBottom, 150);
+        // Small delay to ensure DOM is updated, but fast enough to feel responsive
+        setTimeout(scrollToBottom, 50);
       }
     }
 
@@ -157,13 +227,18 @@ export default function TabbedChatInterface({
           };
 
           // Add bubble directly to main messages query cache
-          queryClient.setQueryData(
-            ["/api/chat", sessionId, "messages"],
-            (old: any) => {
-              if (!old) return { messages: [bubbleWithFlag] };
-              return { messages: [...old.messages, bubbleWithFlag] };
-            },
-          );
+          // Use flushSync to force immediate rendering and avoid React 18 batching
+          import('react-dom').then(({ flushSync }) => {
+            flushSync(() => {
+              queryClient.setQueryData(
+                ["/api/chat", sessionId, "messages"],
+                (old: any) => {
+                  if (!old) return { messages: [bubbleWithFlag] };
+                  return { messages: [...old.messages, bubbleWithFlag] };
+                },
+              );
+            });
+          });
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
@@ -281,17 +356,57 @@ export default function TabbedChatInterface({
     }
   };
 
-  const handleOptionSelect = async (
+  const handleOptionSelect = useCallback(async (
     optionId: string,
     payload?: any,
     optionText?: string,
   ) => {
-    if (isLoading || isStreaming || readOnlyMode) return;
+    // Use refs to avoid stale closures - check current state via refs
+    if (readOnlyMode || isStreamingRef.current) return;
 
+    console.log('[TABBED_CHAT] Menu option clicked', {
+      optionId,
+      optionText,
+      messagesCount: messages.length,
+      isSessionLoading,
+      time: new Date().toISOString()
+    });
 
+    if (tabDebug()) {
+      const messagesEl = messagesContainerRef.current;
+      const style = messagesEl ? window.getComputedStyle(messagesEl) : null;
+      debugLog('TabbedChatInterface option click pre-select', {
+        optionId,
+        display: style?.display,
+        visibility: style?.visibility,
+        opacity: style?.opacity,
+        width: messagesEl?.clientWidth,
+        height: messagesEl?.clientHeight,
+        time: Date.now()
+      });
+    }
+
+    // Add optimistic user message IMMEDIATELY (synchronously) to prevent flash
+    const optimisticUserMessage: Message = {
+      id: Date.now(),
+      sessionId: sessionId,
+      content: optionText || optionId,
+      sender: 'user',
+      messageType: 'text',
+      createdAt: new Date(),
+      metadata: {},
+    };
+
+    queryClient.setQueryData(
+      ["/api/chat", sessionId, "messages"],
+      (old: any) => {
+        if (!old) return { messages: [optimisticUserMessage] };
+        return { messages: [...old.messages, optimisticUserMessage] };
+      },
+    );
 
     try {
-      // First, record the option selection in the backend (this updates survey sessions)
+      // Record the option selection in the backend (this updates survey sessions)
       await selectOption(optionId, payload, optionText);
 
       // Then trigger streaming response with the updated survey context
@@ -303,7 +418,10 @@ export default function TabbedChatInterface({
           : "") +
         ". Provide a helpful response.";
 
-      setIsStreaming(true);
+      // Use startTransition to prevent UI flash during state update
+      startTransition(() => {
+        setIsStreaming(true);
+      });
       streamingBubblesRef.current = [];
 
       await sendStreamingMessage(
@@ -322,41 +440,54 @@ export default function TabbedChatInterface({
           };
 
           // Add bubble directly to main messages query cache
-          queryClient.setQueryData(
-            ["/api/chat", sessionId, "messages"],
-            (old: any) => {
-              if (!old) return { messages: [bubbleWithFlag] };
-              return { messages: [...old.messages, bubbleWithFlag] };
-            },
-          );
+          // Use flushSync to force immediate rendering and avoid React 18 batching
+          import('react-dom').then(({ flushSync }) => {
+            flushSync(() => {
+              queryClient.setQueryData(
+                ["/api/chat", sessionId, "messages"],
+                (old: any) => {
+                  if (!old) return { messages: [bubbleWithFlag] };
+                  return { messages: [...old.messages, bubbleWithFlag] };
+                },
+              );
+            });
+          });
 
           // Keep track of streaming bubbles for counting
           streamingBubblesRef.current.push(bubbleWithFlag);
         },
         // onAllComplete: Streaming finished, just set streaming state to false
         (messages: Message[]) => {
-          setIsStreaming(false);
+          startTransition(() => {
+            setIsStreaming(false);
+          });
           // Clear the tracking ref since streaming is complete
           streamingBubblesRef.current = [];
         },
         // onError: Handle errors
         (error: string) => {
-          setIsStreaming(false);
+          startTransition(() => {
+            setIsStreaming(false);
+          });
           streamingBubblesRef.current = [];
           console.error("Option select streaming error:", error);
         },
         // Pass contextMessage as the internal message for AI processing
         contextMessage,
+        true // skipOptimisticMessage - we already added it above
       );
     } catch (error) {
-      setIsStreaming(false);
+      startTransition(() => {
+        setIsStreaming(false);
+      });
       streamingBubblesRef.current = [];
       console.error("Option select error:", error);
     }
-  };
+  }, [readOnlyMode, selectOption, sendStreamingMessage, queryClient, sessionId]);
 
-  const handleQuickReply = async (reply: string) => {
-    if (isLoading || isStreaming || readOnlyMode) return;
+  const handleQuickReply = useCallback(async (reply: string) => {
+    // Use refs to avoid stale closures - check current state via refs
+    if (readOnlyMode || isStreamingRef.current) return;
 
     setIsStreaming(true);
     streamingBubblesRef.current = [];
@@ -406,7 +537,7 @@ export default function TabbedChatInterface({
       setIsStreaming(false);
       streamingBubblesRef.current = [];
     }
-  };
+  }, [readOnlyMode, sendStreamingMessage, queryClient, sessionId]);
 
   const handleStartChat = async (
     topic: string,
@@ -600,7 +731,55 @@ export default function TabbedChatInterface({
     colors.botBubbleMode
   );
 
-  if (isSessionLoading) {
+  // Memoize transformed messages to prevent unnecessary re-renders
+  // Generate stable unique IDs for messages that don't have one
+  // Track which messages are new (for animation) vs already rendered
+  const transformedMessages = useMemo(() => {
+    return messages.map((message, index) => {
+      // Create a stable ID: prefer message.id, fallback to a hash of content + index for stability
+      const stableId = message.id !== undefined && message.id !== null 
+        ? (typeof message.id === 'string' ? parseInt((message.id as string).replace('initial-', ''), 10) || index : message.id)
+        : `fallback-${index}-${message.content?.slice(0, 20) || 'empty'}`;
+      
+      // Check if this message has been rendered before
+      const stableKey = `message-${stableId}`;
+      const isNewMessage = !renderedMessageIdsRef.current.has(stableKey);
+      
+      // Mark as rendered (will take effect after this render)
+      if (isNewMessage) {
+        renderedMessageIdsRef.current.add(stableKey);
+      }
+      
+      return {
+        ...message,
+        id: stableId as number,
+        _stableKey: stableKey, // Store stable key for rendering
+        _isNew: isNewMessage, // Track if this is a new message for animation
+        createdAt: typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt,
+        metadata: message.metadata || {},
+        sender: message.sender as 'user' | 'assistant' | 'bot',
+        messageType: message.messageType as 'text' | 'card' | 'menu' | 'form' | 'quickReplies' | 'image' | 'multiselect_menu' | 'rating' | 'form_submission' | 'system'
+      };
+    });
+  }, [messages]);
+
+  // Only show loading spinner on very first load - never after we have any content
+  // This prevents the flash when clicking menu options or during any state updates
+  // Skip loading if: 1) we have messages, 2) we have a session, OR 3) ref shows we've loaded before
+  const shouldShowSpinner = isSessionLoading && !hasLoadedContentRef.current && messages.length === 0 && !session;
+  
+  // Log when spinner would show to debug flash issues
+  if (shouldShowSpinner) {
+    console.log('[TABBED_CHAT] SHOWING SPINNER', {
+      isSessionLoading,
+      hasLoadedContent: hasLoadedContentRef.current,
+      messagesCount: messages.length,
+      hasSession: !!session,
+      time: new Date().toISOString()
+    });
+  }
+  
+  if (shouldShowSpinner) {
     return (
       <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: colors.backgroundColor, color: colors.textColor }}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.primaryColor }}></div>
@@ -656,9 +835,10 @@ export default function TabbedChatInterface({
             style={{
               backgroundColor: colors.backgroundColor,
               color: colors.textColor,
+              willChange: 'contents',
             }}
           >
-            {messages.length === 0 ? (
+            {transformedMessages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
                   <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
@@ -666,17 +846,10 @@ export default function TabbedChatInterface({
                 </div>
               </div>
             ) : (
-              messages.map((message, index) => (
+              transformedMessages.map((message) => (
                 <MessageBubble
-                  key={`message-${message.id}-${index}`}
-                  message={{
-                    ...message,
-                    id: typeof message.id === 'string' ? parseInt((message.id as string).replace('initial-', ''), 10) || 0 : message.id,
-                    createdAt: typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt,
-                    metadata: message.metadata || {},
-                    sender: message.sender as 'user' | 'assistant' | 'bot',
-                    messageType: message.messageType as 'text' | 'card' | 'menu' | 'form' | 'quickReplies' | 'image' | 'multiselect_menu' | 'rating' | 'form_submission' | 'system'
-                  }}
+                  key={(message as any)._stableKey || `message-${message.id}`}
+                  message={message}
                   onOptionSelect={handleOptionSelect}
                   onQuickReply={handleQuickReply}
                   chatbotConfig={chatbotConfig}
@@ -775,6 +948,7 @@ export default function TabbedChatInterface({
                           )}
 
                           <button 
+                            type="button"
                             className="w-full px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md transition-colors flex items-center justify-center"
                             onClick={handleContactFormSubmit}
                             disabled={isSubmittingContact || !isContactFormValid()}
@@ -813,6 +987,7 @@ export default function TabbedChatInterface({
           >
             <div className="flex items-center space-x-3">
               <button 
+                type="button"
                 className="transition-colors"
                 style={{ 
                   color: colors.textColor + '80', // Semi-transparent
@@ -841,6 +1016,7 @@ export default function TabbedChatInterface({
                   disabled={isLoading || readOnlyMode}
                 />
                 <Button
+                  type="button"
                   onClick={() => handleSendMessage(inputMessage)}
                   disabled={!inputMessage.trim() || isLoading || readOnlyMode}
                   size="sm"

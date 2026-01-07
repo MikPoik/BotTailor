@@ -224,6 +224,7 @@ export default function HomeTab({
           </h3>
           <div className="grid grid-cols-1 gap-3">
             <Button
+              type="button"
               onClick={() => onStartChat("Free Chat")}
               className="h-auto p-4 justify-start bg-primary hover:bg-primary/90 text-white"
             >
@@ -234,6 +235,7 @@ export default function HomeTab({
               </div>
             </Button>
             <Button
+              type="button"
               onClick={() =>
                 onStartChat(
                   "Live Agent",
@@ -299,6 +301,7 @@ export default function HomeTab({
             {(["all", "support", "sales", "billing"] as const).map(
               (category) => (
                 <Button
+                  type="button"
                   key={category}
                   variant={
                     selectedCategory === category ? "default" : "outline"

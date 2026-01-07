@@ -174,8 +174,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
     }
   };
 
-  const handleQuickReply = async (reply: string) => {
-    if (isLoading || isStreaming) return;
+  const handleQuickReply = async (reply: string) => {    if (isLoading || isStreaming) return;
 
     setIsStreaming(true);
     streamingBubblesRef.current = [];
@@ -254,7 +253,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
       {/* Input area */}
       <div className="border-t border-border px-4 py-1 bg-background">
         <div className="flex items-center space-x-3">
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
             <Paperclip className="h-5 w-5" />
           </button>
 
@@ -276,6 +275,7 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
               disabled={isLoading}
             />
             <Button
+              type="button"
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
               size="sm"

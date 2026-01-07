@@ -7,6 +7,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/hooks/use-chat";
 
+const widgetDebug = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem('chat_debug') === '1';
+  } catch {
+    return false;
+  }
+};
+
+const debugLog = (...args: any[]) => {
+  if (widgetDebug()) {
+    console.log('[CHAT_DEBUG]', ...args);
+  }
+};
+
 interface ChatWidgetProps {
   sessionId: string;
   position?: 'bottom-right' | 'bottom-left';
@@ -24,6 +39,7 @@ export default function ChatWidget({
   textColor = '#1f2937',
   chatbotConfig
 }: ChatWidgetProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const isClient = typeof window !== 'undefined';
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -47,6 +63,58 @@ export default function ChatWidget({
 
   // Initialize chat data only when needed
   const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(currentSessionId, chatbotConfigId);
+
+  useEffect(() => {
+    if (!widgetDebug()) return;
+    debugLog('ChatWidget mount', { sessionId: currentSessionId, embedded: isEmbedded });
+    const beforeUnload = () => debugLog('ChatWidget beforeunload');
+    const unload = () => debugLog('ChatWidget unload');
+    const visibility = () => debugLog('ChatWidget visibility', {
+      state: document.visibilityState,
+      hidden: document.hidden,
+      time: Date.now()
+    });
+    const pageHide = (e: PageTransitionEvent) => debugLog('ChatWidget pagehide', { persisted: e.persisted });
+    const pageShow = (e: PageTransitionEvent) => debugLog('ChatWidget pageshow', { persisted: e.persisted });
+    const blur = () => debugLog('ChatWidget window blur');
+    const focus = () => debugLog('ChatWidget window focus');
+    window.addEventListener('pagehide', pageHide);
+    window.addEventListener('pageshow', pageShow);
+    window.addEventListener('blur', blur);
+    window.addEventListener('focus', focus);
+    window.addEventListener('beforeunload', beforeUnload);
+    window.addEventListener('unload', unload);
+    document.addEventListener('visibilitychange', visibility);
+
+    // Observe container visibility/display changes to catch unexpected toggles
+    let observer: MutationObserver | null = null;
+    if (containerRef.current) {
+      observer = new MutationObserver(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const style = window.getComputedStyle(el);
+        debugLog('ChatWidget container mutation', {
+          display: style.display,
+          visibility: style.visibility,
+          opacity: style.opacity,
+          className: el.className
+        });
+      });
+      observer.observe(containerRef.current, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
+    return () => {
+      debugLog('ChatWidget unmount');
+      window.removeEventListener('pagehide', pageHide);
+      window.removeEventListener('pageshow', pageShow);
+      window.removeEventListener('blur', blur);
+      window.removeEventListener('focus', focus);
+      window.removeEventListener('beforeunload', beforeUnload);
+      window.removeEventListener('unload', unload);
+      document.removeEventListener('visibilitychange', visibility);
+      if (observer) observer.disconnect();
+    };
+  }, [currentSessionId, isEmbedded]);
 
   // Don't render widget if chatbot is inactive
   if (chatbotConfig && !chatbotConfig.isActive) {
@@ -77,6 +145,22 @@ export default function ChatWidget({
     chatbotConfig?.theme?.textColor ||
     chatbotConfig?.theme?.chat?.text ||
     '#1f2937';
+
+  // Keep the iframe/background from flashing white by applying theme colors to document
+  useEffect(() => {
+    if (!isClient) return;
+    const prevBodyBg = document.body.style.backgroundColor;
+    const prevHtmlBg = document.documentElement.style.backgroundColor;
+    document.body.style.backgroundColor = resolvedBackgroundColor;
+    document.documentElement.style.backgroundColor = resolvedBackgroundColor;
+    document.body.style.color = resolvedTextColor;
+    document.documentElement.style.color = resolvedTextColor;
+
+    return () => {
+      document.body.style.backgroundColor = prevBodyBg;
+      document.documentElement.style.backgroundColor = prevHtmlBg;
+    };
+  }, [isClient, resolvedBackgroundColor, resolvedTextColor]);
 
 
   // Load initial messages from chatbot config
@@ -490,24 +574,15 @@ export default function ChatWidget({
           background-color: ${resolvedPrimaryColor}40 !important;
         }
 
-        /* Embedded widget animations */
+        /* Embedded widget - NO animation since it's always visible in iframe */
+        /* Animation would replay on re-renders causing flash */
         .chat-widget-embedded {
-          animation: chatWidgetEmbedOpen 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+          opacity: 1 !important;
+          transform: none !important;
         }
 
         .chat-widget-embedded.closing {
           animation: chatWidgetEmbedClose 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
-        }
-
-        @keyframes chatWidgetEmbedOpen {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
         }
 
         @keyframes chatWidgetEmbedClose {
@@ -521,9 +596,11 @@ export default function ChatWidget({
           }
         }
 
-        /* Smooth transitions for all embedded elements */
-        .chat-widget-embedded * {
-          transition: all 0.2s ease !important;
+        /* Smooth transitions for interactive elements only - NOT all elements */
+        .chat-widget-embedded button,
+        .chat-widget-embedded input,
+        .chat-widget-embedded a {
+          transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         }
       `;
       document.head.appendChild(style);
@@ -581,7 +658,8 @@ export default function ChatWidget({
     }, 400); // Match animation duration
   };
 
-  const refreshSession = () => {
+  const refreshSession = (reason: string = 'manual') => {
+    debugLog('refreshSession', { reason, currentSessionId });
     // Generate new session ID
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -627,7 +705,7 @@ export default function ChatWidget({
   // Mobile full-screen interface
   if (isMobile && isOpen) {
     return (
-      <>
+      <div ref={containerRef}>
         {/* Mobile overlay */}
         <div 
           className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
@@ -660,6 +738,7 @@ export default function ChatWidget({
             </div>
             <div className="flex items-center space-x-3">
               <button 
+                type="button"
                 onClick={() => setShowAbout(true)}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -670,7 +749,8 @@ export default function ChatWidget({
                 <HelpCircle className="h-4 w-4" />
               </button>
               <button 
-                onClick={refreshSession}
+                type="button"
+                onClick={() => refreshSession('mobile-header-button')}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -680,6 +760,7 @@ export default function ChatWidget({
                 <RefreshCw className="h-4 w-4" />
               </button>
               <button 
+                type="button"
                 onClick={closeChat}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -702,6 +783,7 @@ export default function ChatWidget({
               />
             ) : (
               <TabbedChatInterface 
+                key={`chat-${currentSessionId}`}
                 sessionId={currentSessionId} 
                 isMobile={true} 
                 isPreloaded={!isSessionLoading && !isMessagesLoading}
@@ -712,7 +794,7 @@ export default function ChatWidget({
             )}
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -726,7 +808,7 @@ export default function ChatWidget({
     };
 
     return (
-      <div className="chat-widget-embedded">
+      <div className="chat-widget-embedded" ref={containerRef}>
         {/* Desktop header - sticky at top */}
         <div 
           className="chat-header text-white p-2 flex items-center justify-between"
@@ -745,6 +827,7 @@ export default function ChatWidget({
           </div>
           <div className="flex items-center space-x-3">
             <button 
+              type="button"
               onClick={() => setShowAbout(true)}
               className="text-white p-1.5 rounded transition-colors"
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -755,7 +838,8 @@ export default function ChatWidget({
               <HelpCircle className="h-4 w-4" />
             </button>
             <button 
-              onClick={refreshSession}
+              type="button"
+              onClick={() => refreshSession('embedded-header-button')}
               className="text-white p-1.5 rounded transition-colors"
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -765,6 +849,7 @@ export default function ChatWidget({
               <RefreshCw className="h-4 w-4" />
             </button>
             <button 
+              type="button"
               onClick={handleEmbeddedClose}
               className="text-white p-1.5 rounded transition-colors"
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -803,11 +888,12 @@ export default function ChatWidget({
 
   // For non-embedded (development page), show floating widget
   return (
-    <div className={`fixed ${positionClasses[position]} z-50 font-sans`}>
+    <div className={`fixed ${positionClasses[position]} z-50 font-sans`} ref={containerRef}>
       {/* Chat Bubble */}
       {!isOpen && (
         <div className="relative">
           <button
+            type="button"
             onClick={toggleChat}
             className="w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
             style={{ backgroundColor: resolvedPrimaryColor, border: `1px solid ${resolvedPrimaryColor}80`}}
@@ -839,6 +925,7 @@ export default function ChatWidget({
           }}
         >
           <button
+            type="button"
             onClick={() => {
               setVisibleMessages([]);
               // Mark messages as dismissed in sessionStorage
@@ -951,6 +1038,7 @@ export default function ChatWidget({
             </div>
             <div className="flex items-center space-x-3">
               <button 
+                type="button"
                 onClick={() => setShowAbout(true)}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -961,7 +1049,8 @@ export default function ChatWidget({
                 <HelpCircle className="h-4 w-4" />
               </button>
               <button 
-                onClick={refreshSession}
+                type="button"
+                onClick={() => refreshSession('floating-header-button')}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -971,6 +1060,7 @@ export default function ChatWidget({
                 <RefreshCw className="h-4 w-4" />
               </button>
               <button 
+                type="button"
                 onClick={toggleChat}
                 className="text-white p-1.5 rounded transition-colors"
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
@@ -993,6 +1083,7 @@ export default function ChatWidget({
               />
             ) : (
               <TabbedChatInterface 
+                key={`chat-${currentSessionId}`}
                 sessionId={currentSessionId}
                 isMobile={isMobile}
                 isPreloaded={!isSessionLoading && !isMessagesLoading}

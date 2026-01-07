@@ -114,14 +114,19 @@ const RichMessage = memo(function RichMessage({ message, onOptionSelect, onQuick
           const isSkipOption = label.toLowerCase().includes('skip');
           return (
             <button
-              key={`quickreply-${label}-${index}`}
-              onClick={() => onQuickReply(value)}
-              className="px-3 py-1 text-sm rounded-full transition-colors"
-              style={{
-                backgroundColor: colors.messageBubbleBg,
-                color: colors.textColor,
-                border: `1px solid ${colors.textColor}40`
-              }}
+               type="button"
+               key={`quickreply-${label}-${index}`}
+               onClick={(e) => {
+                 e.preventDefault();
+                 e.stopPropagation();
+                 onQuickReply(value);
+               }}
+               className="px-3 py-1 text-sm rounded-full transition-colors"
+               style={{
+                 backgroundColor: colors.messageBubbleBg,
+                 color: colors.textColor,
+                 border: `1px solid ${colors.textColor}40`
+               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = colors.primaryColor;
                 e.currentTarget.style.color = 'white';

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ChatWidget from "@/components/chat/chat-widget";
 
 export default function ChatWidgetPage() {
   const [sessionId, setSessionId] = useState<string>("");
   const [isEmbedded, setIsEmbedded] = useState<boolean>(false);
+  const hasInitializedRef = useRef(false);
 
   // Safe sessionStorage access that handles sandboxed environments
   const safeSessionStorage = {
@@ -54,6 +55,7 @@ export default function ChatWidgetPage() {
     }
     
     setSessionId(newSessionId);
+    hasInitializedRef.current = true;
 
     // Set iframe-friendly styling when embedded
     if (embedded) {
@@ -65,7 +67,18 @@ export default function ChatWidgetPage() {
     }
   }, []);
 
-  if (!sessionId) {
+  // Only show spinner on very first load - never show it again after initialization
+  const shouldShowPageSpinner = !sessionId && !hasInitializedRef.current;
+  
+  if (shouldShowPageSpinner) {
+    console.log('[CHAT-WIDGET-PAGE] ⚠️ SHOWING PAGE-LEVEL SPINNER ⚠️', {
+      sessionId,
+      hasInitialized: hasInitializedRef.current,
+      time: new Date().toISOString()
+    });
+  }
+  
+  if (shouldShowPageSpinner) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

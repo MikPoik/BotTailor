@@ -368,6 +368,11 @@ export function setupChatRoutes(app: Express) {
       res.setHeader("Connection", "keep-alive");
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Headers", "Cache-Control");
+      res.setHeader("X-Accel-Buffering", "no"); // Disable buffering in nginx/proxies
+      res.setHeader("Content-Encoding", "none"); // Prevent compression
+      
+      // Flush headers immediately to establish SSE connection
+      res.flushHeaders();
 
       // Ensure session exists and handle default chatbot resolution
       let session = await storage.getChatSession(sessionId);
@@ -852,10 +857,11 @@ async function handleStreamingResponse(
     // Process the stream
     for await (const chunk of responseStream) {
       if (chunk.type === "bubble" && chunk.bubble) {
-        console.log(`[STREAMING] Sending bubble: ${chunk.bubble.messageType}`);
+        const sendTime = new Date().toISOString();
+        console.log(`[STREAMING] ${sendTime} Sending bubble: ${chunk.bubble.messageType}`);
 
-        // Store the bot message in database
-        await storage.createMessage({
+        // Store the bot message in database and get the created message with ID
+        const createdMessage = await storage.createMessage({
           sessionId,
           content: chunk.bubble.content,
           sender: "bot",
@@ -863,13 +869,25 @@ async function handleStreamingResponse(
           metadata: chunk.bubble.metadata || {},
         });
 
-        // Send to client
+        // Send to client with the database-generated ID
         res.write(
           `data: ${JSON.stringify({
             type: "bubble",
-            message: chunk.bubble,
+            message: {
+              ...chunk.bubble,
+              id: createdMessage.id,
+              sessionId: createdMessage.sessionId,
+              createdAt: createdMessage.createdAt,
+            },
           })}\n\n`,
         );
+        
+        // Explicitly flush the response to ensure immediate delivery
+        if (typeof (res as any).flush === 'function') {
+          (res as any).flush();
+        }
+        
+        console.log(`[STREAMING] ${sendTime} Bubble sent and flushed`);
       } else if (chunk.type === "complete") {
         console.log(`[STREAMING] Streaming complete for session: ${sessionId}`);
         res.write(

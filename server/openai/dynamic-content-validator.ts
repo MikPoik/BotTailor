@@ -120,9 +120,11 @@ function inferExpectationsFromContent(bubbles: any[]): DynamicContentExpectation
     
     // Pattern: Question ending with colon (suggests options coming)
     if (content.includes('?') && content.trim().endsWith(':')) {
+      // Be flexible about the interactive modality: menu, quick replies, or form.
+      // Instead of forcing a menu, require a reasonable number of interactive elements.
       return {
-        expectedMenuOptions: 3, // Common pattern for choice questions
-        contentIntent: 'interactive_menu',
+        expectedInteractiveElements: 3, // Typical number for simple choices
+        contentIntent: 'interactive_choice',
         completionRequired: true
       };
     }

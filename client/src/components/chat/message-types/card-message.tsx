@@ -40,6 +40,7 @@ export const CardMessage = memo(function CardMessage({
           <div className="space-y-2">
             {metadata.buttons.map((button, index) => (
               <Button
+                type="button"
                 key={`${button.id}-${index}`}
                 variant="outline"
                 size="sm"
