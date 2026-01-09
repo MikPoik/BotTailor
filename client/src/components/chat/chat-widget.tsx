@@ -307,6 +307,13 @@ function ChatWidget({
       console.warn('sessionStorage not accessible, session refresh may not persist');
     }
 
+    // If embedded, notify parent to update its embed session storage
+    if (isEmbedded && typeof window !== 'undefined' && window.parent) {
+      try {
+        window.parent.postMessage({ type: 'RESET_SESSION', sessionId: newSessionId, reason }, '*');
+      } catch {}
+    }
+
     // Clear query cache for old session
     queryClient.invalidateQueries({ queryKey: ['/api/chat/session'] });
     queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
