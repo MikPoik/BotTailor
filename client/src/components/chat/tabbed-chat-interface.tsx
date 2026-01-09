@@ -1,30 +1,30 @@
 import { useState, useEffect, useRef, useMemo, useCallback, startTransition } from "react";
-import { Send, Paperclip, Home, MessageCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MessageBubble from "./message-bubble";
-import TypingIndicator from "./typing-indicator";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import HomeTab from "./home-tab";
+import { ChatTab } from "./chat-tab";
+import { TabNavigation } from "./tab-navigation";
 import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
 import { computeToneAdjustedColor, resolveThemeColors } from "./color-utils";
+import { useContactForm } from "@/hooks/useContactForm";
+import { useStreamingMessage } from "@/hooks/useStreamingMessage";
 
-const tabDebug = () => {
-  if (typeof window === 'undefined') return false;
-  try {
-    return localStorage.getItem('chat_debug') === '1';
-  } catch {
-    return false;
-  }
-};
 
-const debugLog = (...args: any[]) => {
-  if (tabDebug()) {
-    console.log('[CHAT_DEBUG]', ...args);
-  }
-};
+/**
+ * TabbedChatInterface - Main chat widget component
+ * 
+ * Manages:
+ * - Two-tab UI (Home and Chat)
+ * - Message streaming and display
+ * - User interactions (sending messages, selecting options, quick replies)
+ * - Contact form for message limit exceeded scenarios
+ * - Theme and color management
+ * 
+ * Refactored to use custom hooks:
+ * - useStreamingMessage: handles streaming message logic
+ * - useContactForm: manages contact form state and validation
+ */
 
 interface TabbedChatInterfaceProps {
   sessionId: string;
@@ -49,23 +49,45 @@ export default function TabbedChatInterface({
   onSessionInitialize,
   forceInitialize = false
 }: TabbedChatInterfaceProps) {
+  // UI State
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
-  const [isDocumentHidden, setIsDocumentHidden] = useState(false);
+  
+  // Refs for internal state management
+  const isStreamingRef = useRef(false);
+  const prevMessageCountRef = useRef(0);
+  const renderedMessageIdsRef = useRef<Set<string | number>>(new Set());
+  const hasLoadedContentRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const streamingBubblesRef = useRef<any[]>([]);
-  const prevMessageCountRef = useRef(0);
-  // Ref to track streaming state for callbacks without causing re-renders
-  const isStreamingRef = useRef(false);
-  // Ref to track which message IDs have been rendered (to prevent re-animation)
-  const renderedMessageIdsRef = useRef<Set<string | number>>(new Set());
-  // Ref to track if we've ever had content loaded (to prevent showing spinner on refetches)
-  const hasLoadedContentRef = useRef(false);
+  
   const queryClient = useQueryClient();
-
+  
+  // Custom hooks
+  const { streamingBubblesRef, getStreamingHandlers } = useStreamingMessage({
+    sessionId,
+    isStreaming,
+    readOnlyMode: false,
+    onStreamEnd: () => setIsStreaming(false),
+    onError: (error) => {
+      setIsStreaming(false);
+      console.error("Streaming error:", error);
+    },
+  });
+  
+  const {
+    contactForm,
+    setContactForm,
+    contactFieldErrors,
+    contactError,
+    isSubmittingContact,
+    contactSubmitted,
+    setContactSubmitted,
+    handleContactFormSubmit,
+    isContactFormValid,
+  } = useContactForm(sessionId);
+  
   const {
     messages,
     sendMessage,
@@ -79,31 +101,7 @@ export default function TabbedChatInterface({
     readOnlyMode,
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
-
-  useEffect(() => {
-    if (!tabDebug()) return;
-    debugLog('TabbedChatInterface mount', { sessionId, chatbotConfigId, isEmbedded, isMobile });
-    const visibility = () => {
-      const isHidden = document.hidden;
-      setIsDocumentHidden(isHidden);
-      debugLog('TabbedChatInterface visibility', {
-        state: document.visibilityState,
-        hidden: isHidden,
-        time: Date.now()
-      });
-    };
-    document.addEventListener('visibilitychange', visibility);
-    return () => {
-      debugLog('TabbedChatInterface unmount', { sessionId });
-      document.removeEventListener('visibilitychange', visibility);
-    };
-  }, [sessionId, chatbotConfigId, isEmbedded, isMobile]);
-
-  useEffect(() => {
-    if (!tabDebug()) return;
-    debugLog('TabbedChatInterface messages length', messages.length);
-  }, [messages.length]);
-
+  
   // Initialize session when component mounts if needed
   useEffect(() => {
     if (forceInitialize || (isEmbedded && !onSessionInitialize)) {
@@ -127,601 +125,124 @@ export default function TabbedChatInterface({
     }
   }, [messages.length, chatbotConfig]);
 
-  // Log session loading state changes to debug spinner flash
-  useEffect(() => {
-    console.log('[TABBED_CHAT] Session loading state changed', {
-      isSessionLoading,
-      messagesCount: messages.length,
-      hasSession: !!session,
-      hasLoadedContent: hasLoadedContentRef.current,
-      time: new Date().toISOString()
-    });
-  }, [isSessionLoading, messages.length, session]);
 
   // Contact form state
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    email: "",
-    message: ""
-  });
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
-  const [contactSubmitted, setContactSubmitted] = useState(false);
-  const [contactError, setContactError] = useState("");
-  const [contactFieldErrors, setContactFieldErrors] = useState({
-    name: "",
-    email: "",
-    message: ""
-  });
+  // Now managed by useContactForm hook above
 
+  // Scroll functionality
   const scrollToBottom = () => {
-    // Use smooth scroll behavior for all modes - looks better
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const isUserNearBottom = () => {
     const container = messagesContainerRef.current;
     if (!container) return true;
-
-    const threshold = 200; // pixels from bottom - more generous
+    const threshold = 200;
     const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
     return isNearBottom;
   };
 
-  useEffect(() => {
-    const currentMessageCount = messages?.length || 0;
-    const hasNewMessages = currentMessageCount > prevMessageCountRef.current;
-
-    if (hasNewMessages) {
-      // Always scroll if:
-      // 1. This is the first message
-      // 2. We're currently streaming (multiple bubbles in same response)
-      // 3. User is near bottom
-      const shouldScroll = 
-        prevMessageCountRef.current === 0 || 
-        isStreaming || 
-        isUserNearBottom();
-
-      if (shouldScroll) {
-        // Small delay to ensure DOM is updated, but fast enough to feel responsive
-        setTimeout(scrollToBottom, 50);
-      }
-    }
-
-    prevMessageCountRef.current = currentMessageCount;
-  }, [messages, isStreaming]);
-
-  // Only auto-switch to chat tab when starting a new conversation, not when manually switching tabs
-  // This effect is removed to allow free navigation between tabs
-
-  const handleSendMessage = async (inputMessage: string, payload?: any) => {
-    const messageText =
-      typeof inputMessage === "string"
-        ? inputMessage
-        : String(inputMessage || "");
+  // Message handlers using streaming hooks
+  const handleSendMessage = useCallback(async (messageText: string) => {
     if (!messageText.trim() || isLoading || isStreaming || readOnlyMode) return;
 
     setInputMessage("");
     setIsStreaming(true);
     streamingBubblesRef.current = [];
-
-    // Switch to chat tab when sending a message
     setActiveTab("chat");
-
-    // Force scroll to bottom when user sends a message
     setTimeout(scrollToBottom, 50);
 
+    const handlers = getStreamingHandlers();
     try {
-      await sendStreamingMessage(
-        messageText,
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (message: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...message,
-            metadata: {
-              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
-              isFollowUp,
-              isStreaming: false, // Mark as permanent message
-            },
-          };
-
-          // Add bubble directly to main messages query cache
-          // Use flushSync to force immediate rendering and avoid React 18 batching
-          import('react-dom').then(({ flushSync }) => {
-            flushSync(() => {
-              queryClient.setQueryData(
-                ["/api/chat", sessionId, "messages"],
-                (old: any) => {
-                  if (!old) return { messages: [bubbleWithFlag] };
-                  return { messages: [...old.messages, bubbleWithFlag] };
-                },
-              );
-            });
-          });
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          setIsStreaming(false);
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
-        (error: string) => {
-          setIsStreaming(false);
-          streamingBubblesRef.current = [];
-          console.error("Streaming error:", error);
-        },
-      );
+      await sendStreamingMessage(messageText, handlers.onBubbleReceived, handlers.onAllComplete, handlers.onError);
     } catch (error) {
       setIsStreaming(false);
       streamingBubblesRef.current = [];
     }
-  };
+  }, [isLoading, isStreaming, readOnlyMode, getStreamingHandlers, sendStreamingMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(inputMessage);
     }
-  };
-
-  const validateContactForm = () => {
-    const errors = { name: "", email: "", message: "" };
-    let isValid = true;
-
-    // Name validation
-    if (!contactForm.name.trim()) {
-      errors.name = "Name is required";
-      isValid = false;
-    } else if (contactForm.name.trim().length < 2) {
-      errors.name = "Name must be at least 2 characters";
-      isValid = false;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!contactForm.email.trim()) {
-      errors.email = "Email is required";
-      isValid = false;
-    } else if (!emailRegex.test(contactForm.email.trim())) {
-      errors.email = "Please enter a valid email address";
-      isValid = false;
-    }
-
-    // Message validation
-    if (!contactForm.message.trim()) {
-      errors.message = "Message is required";
-      isValid = false;
-    } else if (contactForm.message.trim().length < 10) {
-      errors.message = "Message must be at least 10 characters";
-      isValid = false;
-    } else if (contactForm.message.trim().length > 1000) {
-      errors.message = "Message must be less than 1000 characters";
-      isValid = false;
-    }
-
-    setContactFieldErrors(errors);
-    return isValid;
-  };
-
-  const isContactFormValid = () => {
-    return contactForm.name.trim().length >= 2 &&
-           /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email.trim()) &&
-           contactForm.message.trim().length >= 10 &&
-           contactForm.message.trim().length <= 1000;
-  };
-
-  const handleContactFormSubmit = async () => {
-    setContactError("");
-
-    if (!validateContactForm()) {
-      return;
-    }
-
-    setIsSubmittingContact(true);
-    try {
-      const response = await fetch(`/api/chat/${sessionId}/submit-form`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          formData: [
-            { id: 'name', label: 'Name', value: contactForm.name.trim() },
-            { id: 'email', label: 'Email', value: contactForm.email.trim() },
-            { id: 'message', label: 'Message', value: contactForm.message.trim() }
-          ],
-          formTitle: 'Contact Request - Message Limit Exceeded'
-        })
-      });
-
-      if (response.ok) {
-        setContactSubmitted(true);
-        setContactForm({ name: "", email: "", message: "" });
-        setContactFieldErrors({ name: "", email: "", message: "" });
-        // Auto-hide success message after 10 seconds
-        setTimeout(() => setContactSubmitted(false), 10000);
-      } else {
-        const errorData = await response.text();
-        setContactError("Failed to send message. Please try again.");
-      }
-    } catch (error) {
-      setContactError("Network error. Please check your connection and try again.");
-    } finally {
-      setIsSubmittingContact(false);
-    }
-  };
+  }, [inputMessage, handleSendMessage]);
 
   const handleOptionSelect = useCallback(async (
     optionId: string,
     payload?: any,
     optionText?: string,
   ) => {
-    // Use refs to avoid stale closures - check current state via refs
     if (readOnlyMode || isStreamingRef.current) return;
 
-    console.log('[TABBED_CHAT] Menu option clicked', {
-      optionId,
-      optionText,
-      messagesCount: messages.length,
-      isSessionLoading,
-      time: new Date().toISOString()
-    });
-
-    if (tabDebug()) {
-      const messagesEl = messagesContainerRef.current;
-      const style = messagesEl ? window.getComputedStyle(messagesEl) : null;
-      debugLog('TabbedChatInterface option click pre-select', {
-        optionId,
-        display: style?.display,
-        visibility: style?.visibility,
-        opacity: style?.opacity,
-        width: messagesEl?.clientWidth,
-        height: messagesEl?.clientHeight,
-        time: Date.now()
-      });
+    try {
+      selectOption(optionId, payload, optionText);
+    } catch (selectError) {
+      console.warn('[SURVEY] Failed to record option selection:', selectError);
     }
 
-    // Add optimistic user message IMMEDIATELY (synchronously) to prevent flash
-    const optimisticUserMessage: Message = {
-      id: Date.now(),
-      sessionId: sessionId,
-      content: optionText || optionId,
-      sender: 'user',
-      messageType: 'text',
-      createdAt: new Date(),
-      metadata: {},
-    };
-
-    queryClient.setQueryData(
-      ["/api/chat", sessionId, "messages"],
-      (old: any) => {
-        if (!old) return { messages: [optimisticUserMessage] };
-        return { messages: [...old.messages, optimisticUserMessage] };
-      },
-    );
+    setIsStreaming(true);
+    streamingBubblesRef.current = [];
+    const displayText = optionText || optionId;
+    const handlers = getStreamingHandlers();
 
     try {
-      // Record the option selection in the backend (this updates survey sessions)
-      await selectOption(optionId, payload, optionText);
-
-      // Then trigger streaming response with the updated survey context
-      const displayText = optionText || optionId;
-      const contextMessage =
-        `User selected option "${optionId}"` +
-        (payload !== undefined && payload !== null
-          ? ` with payload: ${JSON.stringify(payload)}`
-          : "") +
-        ". Provide a helpful response.";
-
-      // Use startTransition to prevent UI flash during state update
-      startTransition(() => {
-        setIsStreaming(true);
-      });
-      streamingBubblesRef.current = [];
-
-      await sendStreamingMessage(
-        displayText, // Send displayText as the actual message content
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (message: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...message,
-            metadata: {
-              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
-              isFollowUp,
-              isStreaming: false, // Mark as permanent message
-            },
-          };
-
-          // Add bubble directly to main messages query cache
-          // Use flushSync to force immediate rendering and avoid React 18 batching
-          import('react-dom').then(({ flushSync }) => {
-            flushSync(() => {
-              queryClient.setQueryData(
-                ["/api/chat", sessionId, "messages"],
-                (old: any) => {
-                  if (!old) return { messages: [bubbleWithFlag] };
-                  return { messages: [...old.messages, bubbleWithFlag] };
-                },
-              );
-            });
-          });
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          startTransition(() => {
-            setIsStreaming(false);
-          });
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
-        (error: string) => {
-          startTransition(() => {
-            setIsStreaming(false);
-          });
-          streamingBubblesRef.current = [];
-          console.error("Option select streaming error:", error);
-        },
-        // Pass contextMessage as the internal message for AI processing
-        contextMessage,
-        true // skipOptimisticMessage - we already added it above
-      );
+      await sendStreamingMessage(displayText, handlers.onBubbleReceived, handlers.onAllComplete, handlers.onError);
     } catch (error) {
-      startTransition(() => {
-        setIsStreaming(false);
-      });
+      setIsStreaming(false);
       streamingBubblesRef.current = [];
       console.error("Option select error:", error);
     }
-  }, [readOnlyMode, selectOption, sendStreamingMessage, queryClient, sessionId]);
+  }, [readOnlyMode, selectOption, sendStreamingMessage, getStreamingHandlers]);
 
   const handleQuickReply = useCallback(async (reply: string) => {
-    // Use refs to avoid stale closures - check current state via refs
     if (readOnlyMode || isStreamingRef.current) return;
 
     setIsStreaming(true);
     streamingBubblesRef.current = [];
+    const handlers = getStreamingHandlers();
 
     try {
-      await sendStreamingMessage(
-        reply,
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (message: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...message,
-            metadata: {
-              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
-              isFollowUp,
-              isStreaming: false, // Mark as permanent message
-            },
-          };
-
-          // Add bubble directly to main messages query cache
-          queryClient.setQueryData(
-            ["/api/chat", sessionId, "messages"],
-            (old: any) => {
-              if (!old) return { messages: [bubbleWithFlag] };
-              return { messages: [...old.messages, bubbleWithFlag] };
-            },
-          );
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          setIsStreaming(false);
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
-        (error: string) => {
-          setIsStreaming(false);
-          streamingBubblesRef.current = [];
-          console.error("Quick reply streaming error:", error);
-        },
-      );
+      await sendStreamingMessage(reply, handlers.onBubbleReceived, handlers.onAllComplete, handlers.onError);
     } catch (error) {
       setIsStreaming(false);
       streamingBubblesRef.current = [];
     }
-  }, [readOnlyMode, sendStreamingMessage, queryClient, sessionId]);
+  }, [readOnlyMode, sendStreamingMessage, getStreamingHandlers]);
 
-  const handleStartChat = async (
+  const handleStartChat = useCallback(async (
     topic: string,
     messageOrPayload?: string | any,
   ) => {
-    // Switch to chat tab
     setActiveTab("chat");
+    const handlers = getStreamingHandlers();
 
-    // Check if this is a survey action with separate display/internal messages
-    if (
-      typeof messageOrPayload === "object" &&
-      messageOrPayload?.actionType === "survey"
-    ) {
-      // Handle survey action with clean display message and internal message with surveyId
-      const displayMessage = messageOrPayload.displayMessage;
-      const internalMessage = messageOrPayload.internalMessage;
-      setInputMessage("");
+    let messageToSend = topic;
+    let internalMessage: any = undefined;
 
-      // Small delay to ensure the tab switch and input update, then send
-      setTimeout(() => {
-        setIsStreaming(true);
-        streamingBubblesRef.current = [];
-
-        sendStreamingMessage(
-          displayMessage, // Show clean message in chat
-          // onBubbleReceived: Add each complete bubble directly to main messages
-          (receivedMessage: Message) => {
-            // Mark as follow-up if this isn't the first bubble in this streaming sequence
-            const isFollowUp = streamingBubblesRef.current.length > 0;
-            const bubbleWithFlag = {
-              ...receivedMessage,
-              metadata: {
-                ...(receivedMessage.metadata && typeof receivedMessage.metadata === 'object' ? receivedMessage.metadata : {}),
-                isFollowUp,
-                isStreaming: false, // Mark as permanent message
-              },
-            };
-
-            // Add bubble directly to main messages query cache
-            queryClient.setQueryData(
-              ["/api/chat", sessionId, "messages"],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-
-            // Keep track of streaming bubbles for counting
-            streamingBubblesRef.current.push(bubbleWithFlag);
-          },
-          // onAllComplete: Streaming finished, just set streaming state to false
-          (messages: Message[]) => {
-            setIsStreaming(false);
-            // Clear the tracking ref since streaming is complete
-            streamingBubblesRef.current = [];
-            setInputMessage(""); // Clear input after sending
-          },
-          // onError: Handle errors
-          (error: string) => {
-            setIsStreaming(false);
-            streamingBubblesRef.current = [];
-            setInputMessage(""); // Clear input on error
-            console.error("Start chat streaming error:", error);
-          },
-          internalMessage, // Send internal message with surveyId to backend
-        ).catch((error) => {
-          setIsStreaming(false);
-          streamingBubblesRef.current = [];
-          setInputMessage(""); // Clear input on error
-          console.error("Start chat error:", error);
-        });
-      }, 100);
-    } else if (
-      typeof messageOrPayload === "object" &&
-      messageOrPayload?.action === "take_assessment"
-    ) {
-      // Handle legacy survey action - start survey flow (fallback)
-      const surveyMessage = `${topic}`;
-      setInputMessage("");
-
-      // Small delay to ensure the tab switch and input update, then send
-      setTimeout(() => {
-        setIsStreaming(true);
-        streamingBubblesRef.current = [];
-
-        sendStreamingMessage(
-          surveyMessage,
-          // onBubbleReceived: Add each complete bubble directly to main messages
-          (receivedMessage: Message) => {
-            // Mark as follow-up if this isn't the first bubble in this streaming sequence
-            const isFollowUp = streamingBubblesRef.current.length > 0;
-            const bubbleWithFlag = {
-              ...receivedMessage,
-              metadata: {
-                ...(receivedMessage.metadata && typeof receivedMessage.metadata === 'object' ? receivedMessage.metadata : {}),
-                isFollowUp,
-                isStreaming: false, // Mark as permanent message
-              },
-            };
-
-            // Add bubble directly to main messages query cache
-            queryClient.setQueryData(
-              ["/api/chat", sessionId, "messages"],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-
-            // Keep track of streaming bubbles for counting
-            streamingBubblesRef.current.push(bubbleWithFlag);
-          },
-          // onAllComplete: Streaming finished, just set streaming state to false
-          (messages: Message[]) => {
-            setIsStreaming(false);
-            // Clear the tracking ref since streaming is complete
-            streamingBubblesRef.current = [];
-            setInputMessage(""); // Clear input after sending
-          },
-          // onError: Handle errors
-          (error: string) => {
-            setIsStreaming(false);
-            streamingBubblesRef.current = [];
-            setInputMessage(""); // Clear input on error
-            console.error("Start chat streaming error:", error);
-          },
-        ).catch((error) => {
-          setIsStreaming(false);
-          streamingBubblesRef.current = [];
-          setInputMessage(""); // Clear input on error
-          console.error("Start chat error:", error);
-        });
-      }, 100);
+    // Handle survey action with separate display/internal messages
+    if (typeof messageOrPayload === "object" && messageOrPayload?.actionType === "survey") {
+      messageToSend = messageOrPayload.displayMessage;
+      internalMessage = messageOrPayload.internalMessage;
+    } else if (typeof messageOrPayload === "object" && messageOrPayload?.action === "take_assessment") {
+      messageToSend = topic;
     } else if (typeof messageOrPayload === "string" && messageOrPayload) {
-      // If a specific message string is provided, send it directly without showing in input
-      setIsStreaming(true);
-      streamingBubblesRef.current = [];
-
-      sendStreamingMessage(
-        messageOrPayload,
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (receivedMessage: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...receivedMessage,
-            metadata: {
-              ...(receivedMessage.metadata && typeof receivedMessage.metadata === 'object' ? receivedMessage.metadata : {}),
-              isFollowUp,
-              isStreaming: false, // Mark as permanent message
-            },
-          };
-
-          // Add bubble directly to main messages query cache
-          queryClient.setQueryData(
-            ["/api/chat", sessionId, "messages"],
-            (old: any) => {
-              if (!old) return { messages: [bubbleWithFlag] };
-              return { messages: [...old.messages, bubbleWithFlag] };
-            },
-          );
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          setIsStreaming(false);
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
-        (error: string) => {
-          setIsStreaming(false);
-          streamingBubblesRef.current = [];
-          console.error("Start chat streaming error:", error);
-        },
-      ).catch((error) => {
-        setIsStreaming(false);
-        streamingBubblesRef.current = [];
-        console.error("Start chat error:", error);
-      });
+      messageToSend = messageOrPayload;
     }
-  };
+
+    setInputMessage("");
+    setIsStreaming(true);
+    streamingBubblesRef.current = [];
+
+    setTimeout(() => {
+      sendStreamingMessage(messageToSend, handlers.onBubbleReceived, handlers.onAllComplete, handlers.onError, internalMessage)
+        .catch((error) => {
+          setIsStreaming(false);
+          streamingBubblesRef.current = [];
+          console.error("Start chat error:", error);
+        });
+    }, 100);
+  }, [getStreamingHandlers, sendStreamingMessage]);
 
   // Resolve colors with embed parameters taking priority, then chatbot config
   const colors = resolveThemeColors(chatbotConfig);
@@ -732,20 +253,15 @@ export default function TabbedChatInterface({
   );
 
   // Memoize transformed messages to prevent unnecessary re-renders
-  // Generate stable unique IDs for messages that don't have one
-  // Track which messages are new (for animation) vs already rendered
   const transformedMessages = useMemo(() => {
-    return messages.map((message, index) => {
-      // Create a stable ID: prefer message.id, fallback to a hash of content + index for stability
+    const transformed = messages.map((message, index) => {
       const stableId = message.id !== undefined && message.id !== null 
         ? (typeof message.id === 'string' ? parseInt((message.id as string).replace('initial-', ''), 10) || index : message.id)
         : `fallback-${index}-${message.content?.slice(0, 20) || 'empty'}`;
       
-      // Check if this message has been rendered before
       const stableKey = `message-${stableId}`;
       const isNewMessage = !renderedMessageIdsRef.current.has(stableKey);
       
-      // Mark as rendered (will take effect after this render)
       if (isNewMessage) {
         renderedMessageIdsRef.current.add(stableKey);
       }
@@ -753,31 +269,19 @@ export default function TabbedChatInterface({
       return {
         ...message,
         id: stableId as number,
-        _stableKey: stableKey, // Store stable key for rendering
-        _isNew: isNewMessage, // Track if this is a new message for animation
+        _stableKey: stableKey,
+        _isNew: isNewMessage,
         createdAt: typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt,
         metadata: message.metadata || {},
         sender: message.sender as 'user' | 'assistant' | 'bot',
         messageType: message.messageType as 'text' | 'card' | 'menu' | 'form' | 'quickReplies' | 'image' | 'multiselect_menu' | 'rating' | 'form_submission' | 'system'
       };
     });
+    return transformed;
   }, [messages]);
 
-  // Only show loading spinner on very first load - never after we have any content
-  // This prevents the flash when clicking menu options or during any state updates
-  // Skip loading if: 1) we have messages, 2) we have a session, OR 3) ref shows we've loaded before
+  // Only show loading spinner on very first load
   const shouldShowSpinner = isSessionLoading && !hasLoadedContentRef.current && messages.length === 0 && !session;
-  
-  // Log when spinner would show to debug flash issues
-  if (shouldShowSpinner) {
-    console.log('[TABBED_CHAT] SHOWING SPINNER', {
-      isSessionLoading,
-      hasLoadedContent: hasLoadedContentRef.current,
-      messagesCount: messages.length,
-      hasSession: !!session,
-      time: new Date().toISOString()
-    });
-  }
   
   if (shouldShowSpinner) {
     return (
@@ -793,7 +297,6 @@ export default function TabbedChatInterface({
       onValueChange={setActiveTab}
       className={`flex flex-col h-full ${isEmbedded ? "embedded-tabs" : ""}`}
     >
-      {/* Tab Content - takes remaining space above navigation */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <TabsContent
           value="home"
@@ -828,256 +331,44 @@ export default function TabbedChatInterface({
             color: colors.textColor,
           }}
         >
-          {/* Messages area - takes remaining space above input */}
-          <div
-            ref={messagesContainerRef}
-            className={`flex-1 overflow-y-auto p-4 space-y-4 min-h-0 ${isEmbedded ? "embedded-messages-area" : ""}`}
-            style={{
-              backgroundColor: colors.backgroundColor,
-              color: colors.textColor,
-              willChange: 'contents',
-            }}
-          >
-            {transformedMessages.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center" style={{ color: colors.textColor, opacity: 0.7 }}>
-                  <MessageCircle className="h-12 w-12 mx-auto mb-4" style={{ color: colors.textColor, opacity: 0.3 }} />
-                  <p className="text-sm">{chatbotConfig?.welcomeMessage || "Start typing to begin the conversation"}</p>
-                </div>
-              </div>
-            ) : (
-              transformedMessages.map((message) => (
-                <MessageBubble
-                  key={(message as any)._stableKey || `message-${message.id}`}
-                  message={message}
-                  onOptionSelect={handleOptionSelect}
-                  onQuickReply={handleQuickReply}
-                  chatbotConfig={chatbotConfig}
-                  sessionId={sessionId}
-                />
-              ))
-            )}
-
-            {(chatIsTyping || isStreaming) && (
-              <TypingIndicator chatbotConfig={chatbotConfig} />
-            )}
-
-            {/* Limit exceeded message */}
-            {readOnlyMode && limitExceededInfo && (
-              <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center">
-                      <MessageCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-orange-800 dark:text-orange-200 mb-3">
-                      {limitExceededInfo.message}
-                    </p>
-                    {limitExceededInfo.showContactForm && !contactSubmitted && (
-                      <div className="mt-4">
-                        <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
-                          Leave your contact details:
-                        </h4>
-                        <div className="space-y-3">
-                          <div>
-                            <input
-                              type="text"
-                              placeholder="Your name"
-                              value={contactForm.name}
-                              onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
-                              disabled={isSubmittingContact}
-                              maxLength={50}
-                              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 dark:bg-orange-900/30 ${
-                                contactFieldErrors.name 
-                                  ? 'border-red-400 dark:border-red-600 focus:ring-red-500' 
-                                  : 'border-orange-300 dark:border-orange-700 focus:ring-orange-500'
-                              }`}
-                            />
-                            {contactFieldErrors.name && (
-                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.name}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <input
-                              type="email"
-                              placeholder="Your email address"
-                              value={contactForm.email}
-                              onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
-                              disabled={isSubmittingContact}
-                              maxLength={100}
-                              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 dark:bg-orange-900/30 ${
-                                contactFieldErrors.email 
-                                  ? 'border-red-400 dark:border-red-600 focus:ring-red-500' 
-                                  : 'border-orange-300 dark:border-orange-700 focus:ring-orange-500'
-                              }`}
-                            />
-                            {contactFieldErrors.email && (
-                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.email}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <textarea
-                              placeholder="Your message (10-1000 characters)"
-                              value={contactForm.message}
-                              onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
-                              disabled={isSubmittingContact}
-                              rows={3}
-                              maxLength={1000}
-                              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 dark:bg-orange-900/30 resize-none ${
-                                contactFieldErrors.message 
-                                  ? 'border-red-400 dark:border-red-600 focus:ring-red-500' 
-                                  : 'border-orange-300 dark:border-orange-700 focus:ring-orange-500'
-                              }`}
-                            />
-                            {contactFieldErrors.message && (
-                              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{contactFieldErrors.message}</p>
-                            )}
-                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                              {contactForm.message.length}/1000 characters
-                            </p>
-                          </div>
-
-                          {contactError && (
-                            <div className="p-2 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-md">
-                              <p className="text-xs text-red-800 dark:text-red-200">{contactError}</p>
-                            </div>
-                          )}
-
-                          <button 
-                            type="button"
-                            className="w-full px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md transition-colors flex items-center justify-center"
-                            onClick={handleContactFormSubmit}
-                            disabled={isSubmittingContact || !isContactFormValid()}
-                          >
-                            {isSubmittingContact && <MessageCircle className="w-4 h-4 mr-2 animate-spin" />}
-                            {isSubmittingContact ? 'Sending...' : 'Send Contact Request'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {limitExceededInfo.showContactForm && contactSubmitted && (
-                      <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <MessageCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                          <p className="text-sm text-green-800 dark:text-green-200">
-                            Thank you! Your message has been sent successfully. We'll get back to you soon.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input area - fixed height */}
-          <div 
-            className="border-t px-4 py-1 flex-shrink-0"
-            style={{
-              backgroundColor: colors.backgroundColor,
-              borderColor: colors.textColor + '30', // Add transparency to border
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <button 
-                type="button"
-                className="transition-colors"
-                style={{ 
-                  color: colors.textColor + '80', // Semi-transparent
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.color = colors.textColor}
-                onMouseLeave={(e) => e.currentTarget.style.color = colors.textColor + '80'}
-              >
-
-              </button>
-
-              <div className="flex-1 relative">
-                <Input
-                  type="text"
-                  placeholder={readOnlyMode ? "Chat temporarily unavailable" : ""}
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="send-input rounded-full pr-12 focus:ring-2 focus:border-transparent"
-                  style={{
-                    backgroundColor: inputBackground,
-                    color: colors.textColor,
-                    borderColor: colors.textColor + '40',
-                    '--tw-ring-color': colors.primaryColor,
-                    fontSize: '14px'
-                  } as React.CSSProperties}
-                  disabled={isLoading || readOnlyMode}
-                />
-                <Button
-                  type="button"
-                  onClick={() => handleSendMessage(inputMessage)}
-                  disabled={!inputMessage.trim() || isLoading || readOnlyMode}
-                  size="sm"
-                  className="send-button absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full h-8 w-8 p-0"
-                  style={{
-                    backgroundColor: colors.primaryColor,
-                    borderColor: colors.primaryColor,
-                    color: 'white'
-                  }}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <ChatTab
+            messages={transformedMessages}
+            inputMessage={inputMessage}
+            onInputChange={setInputMessage}
+            onKeyPress={handleKeyPress}
+            onSendMessage={handleSendMessage}
+            onOptionSelect={handleOptionSelect}
+            onQuickReply={handleQuickReply}
+            chatIsTyping={chatIsTyping}
+            isStreaming={isStreaming}
+            isLoading={isLoading}
+            readOnlyMode={readOnlyMode}
+            limitExceededInfo={limitExceededInfo}
+            chatbotConfig={chatbotConfig}
+            sessionId={sessionId}
+            colors={colors}
+            inputBackground={inputBackground}
+            isMobile={isMobile}
+            isEmbedded={isEmbedded}
+            contactForm={contactForm}
+            setContactForm={setContactForm}
+            contactFieldErrors={contactFieldErrors}
+            contactError={contactError}
+            isSubmittingContact={isSubmittingContact}
+            contactSubmitted={contactSubmitted}
+            onContactFormSubmit={handleContactFormSubmit}
+            isContactFormValid={isContactFormValid}
+          />
         </TabsContent>
       </div>
 
-      {/* Tab Navigation - at bottom */}
-      <TabsList 
-        className="grid w-full grid-cols-2 h-12 p-0.5"
-        style={{
-          backgroundColor: colors.backgroundColor,
-        }}
-      >
-        <TabsTrigger
-          value="home"
-          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent"
-          style={{
-            color: activeTab === 'home' ? colors.primaryColor : colors.textColor + '80',
-            borderColor: activeTab === 'home' ? colors.primaryColor : 'transparent',
-            backgroundColor: activeTab === 'home' ? colors.primaryColor + '10' : 'transparent',
-          }}
-        >
-          <Home className="h-4 w-4" />
-          <span className={isMobile ? "hidden sm:inline" : ""}></span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="chat"
-          className="flex items-center gap-2 h-10 py-2 rounded-lg border-2 border-transparent"
-          style={{
-            color: activeTab === 'chat' ? colors.primaryColor : colors.textColor + '80',
-            borderColor: activeTab === 'chat' ? colors.primaryColor : 'transparent',
-            backgroundColor: activeTab === 'chat' ? colors.primaryColor + '10' : 'transparent',
-          }}
-        >
-          <MessageCircle className="h-4 w-4" />
-          <span className={isMobile ? "hidden sm:inline" : ""}></span>
-          {messages.length > 0 && (
-            <span 
-              className="text-white text-xs rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center"
-              style={{
-                backgroundColor: colors.primaryColor,
-                color: 'white'
-              }}
-            >
-              {messages.length}
-            </span>
-          )}
-        </TabsTrigger>
-      </TabsList>
+      <TabNavigation
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        messagesCount={messages.length}
+        isMobile={isMobile}
+        colors={colors}
+      />
     </Tabs>
   );
 }

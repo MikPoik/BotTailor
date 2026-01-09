@@ -219,7 +219,7 @@ export default function HomeTab({
       <div className="p-4 space-y-6 pb-8">
         {/* Quick Actions */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+          <h3 className="font-semibold text-foreground text-sm uppercase tracking-wide">
             Quick Actions
           </h3>
           <div className="grid grid-cols-1 gap-3">
@@ -248,7 +248,7 @@ export default function HomeTab({
               <Phone className="h-5 w-5 mr-3" />
               <div className="text-left">
                 <div className="font-medium">Request Live Agent</div>
-                <div className="text-xs text-gray-600">
+                <div className="text-xs text-muted-foreground">
                   Talk to a human representative
                 </div>
               </div>
@@ -259,7 +259,7 @@ export default function HomeTab({
         {/* Popular Topics */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+            <h3 className="font-semibold text-foreground text-sm uppercase tracking-wide">
               Popular Topics
             </h3>
             <Star className="h-4 w-4 text-yellow-500" />
@@ -275,7 +275,7 @@ export default function HomeTab({
                   <div className="text-primary mt-1">{topic.icon}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-foreground">
                         {topic.title}
                       </h4>
                       <span
@@ -284,7 +284,7 @@ export default function HomeTab({
                         {topic.category}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">{topic.description}</p>
+                    <p className="text-sm text-muted-foreground">{topic.description}</p>
                   </div>
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function HomeTab({
 
         {/* Category Filter */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+          <h3 className="font-semibold text-foreground text-sm uppercase tracking-wide">
             Browse by Category
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -319,7 +319,7 @@ export default function HomeTab({
 
         {/* All Topics */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
+          <h3 className="font-semibold text-foreground text-sm uppercase tracking-wide">
             {selectedCategory === "all"
               ? "All Topics"
               : `${selectedCategory} Topics`}
@@ -332,10 +332,10 @@ export default function HomeTab({
                 onClick={() => handleTopicClick(topic)}
               >
                 <div className="flex items-start gap-3">
-                  <div className="text-gray-600 mt-1">{topic.icon}</div>
+                  <div className="text-muted-foreground mt-1">{topic.icon}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-foreground">
                         {topic.title}
                       </h4>
                       <span
@@ -344,12 +344,12 @@ export default function HomeTab({
                         {topic.category}
                       </span>
                       {topic.popular && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                        <span className="text-xs px-2 py-1 rounded-full bg-muted text-foreground">
                           Popular
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">{topic.description}</p>
+                    <p className="text-sm text-muted-foreground">{topic.description}</p>
                   </div>
                 </div>
               </div>

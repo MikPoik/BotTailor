@@ -258,12 +258,10 @@ export default function AddData() {
   });
 
   const onWebsiteSubmit = (data: WebsiteFormData) => {
-    //console.log("Website submission data:", data);
     addContentMutation.mutate({ ...data, sourceType: 'website' });
   };
 
   const onTextSubmit = (data: TextFormData) => {
-    //console.log("Text submission data:", data);
     addContentMutation.mutate({ ...data, sourceType: 'text' });
   };
 

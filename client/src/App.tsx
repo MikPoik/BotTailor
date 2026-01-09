@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect,useRef } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { CookieConsentModal, CookieConsentStatus } from "@/components/cookie-consent-modal";
 import { queryClient } from "./lib/queryClient";
@@ -153,9 +153,13 @@ function Router() {
   const isEmbedded = urlEmbedded || configEmbedded;
 
   if (isEmbedded) {
-    // For embedded widgets, bypass authentication and navbar entirely
-    // NO SUSPENSE: Avoid spinner flash during re-renders from menu interactions
-    return <AuthenticatedRouter />;
+    // CRITICAL: Keep Suspense for lazy-loaded components but use invisible fallback
+    // This prevents "component suspended" errors while avoiding visible loading states
+    return (
+      <Suspense fallback={<div style={{ display: 'none' }} />}>
+        <AuthenticatedRouter />
+      </Suspense>
+    );
   }
 
   return (
@@ -183,34 +187,53 @@ function App() {
   // Cookie consent logic
   const [consent, setConsent] = React.useState<CookieConsentStatus>(null);
   const [gaLoaded, setGaLoaded] = React.useState(false);
+  const consentRef = useRef<CookieConsentStatus>(null);
+
+  // Initialize consent from localStorage
   React.useEffect(() => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('cookie_consent') : null;
+    let consentValue: CookieConsentStatus = null;
     if (stored === 'accepted') {
-      setConsent('accepted');
+      consentValue = 'accepted';
     } else if (stored === 'declined') {
-      setConsent('declined');
+      consentValue = 'declined';
     }
+    consentRef.current = consentValue;
+    setConsent(consentValue);
   }, []);
 
-  // Only load GA if consent is accepted and not embedded widget
+  // Load GA when consent is accepted
   React.useEffect(() => {
     const urlEmbedded = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
     const configEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
     const isEmbedded = urlEmbedded || configEmbedded;
+    
     if (consent === 'accepted' && !gaLoaded && !isEmbedded) {
       const gaId = import.meta.env.VITE_GA_ID;
       if (gaId) {
-        // Inject GA script
+        const w = window as any;
+        // Initialize dataLayer before script loads
+        w.dataLayer = w.dataLayer || [];
+        
+        // Define gtag function globally
+        w.gtag = function(...args: any[]) {
+          w.dataLayer.push(arguments);
+        };
+        w.gtag('js', new Date());
+        w.gtag('config', gaId);
+        
+        // Inject GA script after gtag is defined
         const script = document.createElement('script');
         script.async = true;
         script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+        script.onload = () => {
+          setGaLoaded(true);
+        };
+        script.onerror = () => {
+          console.error('Failed to load Google Analytics');
+          setGaLoaded(true); // Mark as loaded to prevent retries
+        };
         document.head.appendChild(script);
-        const w = window as any;
-        w.dataLayer = w.dataLayer || [];
-        const gtag = (...args: any[]) => w.dataLayer.push(args);
-        gtag('js', new Date());
-        gtag('config', gaId);
-        setGaLoaded(true);
       }
     }
   }, [consent, gaLoaded]);
@@ -220,23 +243,12 @@ function App() {
   const configEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
   const isEmbedded = urlEmbedded || configEmbedded;
 
-  // Use a ref to prevent showing fallback after first render
-  const hasRenderedRef = React.useRef(false);
-  React.useEffect(() => {
-    hasRenderedRef.current = true;
-  }, []);
-
-  // Don't show spinner fallback if we've already rendered once or if embedded
-  const shouldShowFallback = !hasRenderedRef.current && !isEmbedded;
-
   return (
-    <ClientOnly fallback={
-      shouldShowFallback ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : null
-    }>
+    <ClientOnly fallback={isEmbedded ? null : (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )}>
       <StackProvider app={stackClientApp}>
         <StackTheme>
           <Toaster />

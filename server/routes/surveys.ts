@@ -11,10 +11,14 @@ export function setupSurveyRoutes(app: Express) {
   app.get('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
+      const chatbotIdNum = Number(chatbotId);
+      if (!Number.isInteger(chatbotIdNum)) {
+        return res.status(400).json({ message: "Invalid chatbotId" });
+      }
       const userId = req.neonUser.id;
 
       // Verify chatbot ownership
-      const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
+      const chatbot = await storage.getChatbotConfig(chatbotIdNum);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
@@ -31,18 +35,22 @@ export function setupSurveyRoutes(app: Express) {
   app.post('/api/chatbots/:chatbotId/surveys', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId } = req.params;
+      const chatbotIdNum = Number(chatbotId);
+      if (!Number.isInteger(chatbotIdNum)) {
+        return res.status(400).json({ message: "Invalid chatbotId" });
+      }
       const userId = req.neonUser.id;
       const body = req.body;
 
       // Verify chatbot ownership
-      const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
+      const chatbot = await storage.getChatbotConfig(chatbotIdNum);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
       const surveyData = insertSurveySchema.parse({
         ...body,
-        chatbotConfigId: parseInt(chatbotId),
+        chatbotConfigId: chatbotIdNum,
       });
 
       const survey = await storage.createSurvey(surveyData);
@@ -61,23 +69,28 @@ export function setupSurveyRoutes(app: Express) {
   app.put('/api/chatbots/:chatbotId/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, surveyId } = req.params;
+      const chatbotIdNum = Number(chatbotId);
+      const surveyIdNum = Number(surveyId);
+      if (!Number.isInteger(chatbotIdNum) || !Number.isInteger(surveyIdNum)) {
+        return res.status(400).json({ message: "Invalid chatbotId or surveyId" });
+      }
       const userId = req.neonUser.id;
       const body = req.body;
 
       // Verify chatbot ownership
-      const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
+      const chatbot = await storage.getChatbotConfig(chatbotIdNum);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
       // Verify survey belongs to this chatbot
-      const existingSurvey = await storage.getSurvey(parseInt(surveyId));
-      if (!existingSurvey || existingSurvey.chatbotConfigId !== parseInt(chatbotId)) {
+      const existingSurvey = await storage.getSurvey(surveyIdNum);
+      if (!existingSurvey || existingSurvey.chatbotConfigId !== chatbotIdNum) {
         return res.status(404).json({ message: "Survey not found" });
       }
 
       const updateData = insertSurveySchema.partial().parse(body);
-      const survey = await storage.updateSurvey(parseInt(surveyId), updateData);
+      const survey = await storage.updateSurvey(surveyIdNum, updateData);
 
       res.json(survey);
     } catch (error) {
@@ -94,11 +107,15 @@ export function setupSurveyRoutes(app: Express) {
   app.patch('/api/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { surveyId } = req.params;
+      const surveyIdNum = Number(surveyId);
+      if (!Number.isInteger(surveyIdNum)) {
+        return res.status(400).json({ message: "Invalid surveyId" });
+      }
       const userId = req.neonUser.id;
       const body = req.body;
 
       // Get the existing survey first
-      const existingSurvey = await storage.getSurvey(parseInt(surveyId));
+      const existingSurvey = await storage.getSurvey(surveyIdNum);
       if (!existingSurvey) {
         return res.status(404).json({ message: "Survey not found" });
       }
@@ -110,7 +127,7 @@ export function setupSurveyRoutes(app: Express) {
       }
 
       const updateData = insertSurveySchema.partial().parse(body);
-      const survey = await storage.updateSurvey(parseInt(surveyId), updateData);
+      const survey = await storage.updateSurvey(surveyIdNum, updateData);
 
       res.json(survey);
     } catch (error) {
@@ -123,25 +140,57 @@ export function setupSurveyRoutes(app: Express) {
     }
   });
 
+  // Delete all survey history (responses/sessions) for a chatbot
+  // IMPORTANT: Place before the parameterized survey delete route to avoid route collision
+  app.delete('/api/chatbots/:chatbotId/surveys/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const { chatbotId } = req.params;
+      const userId = req.neonUser.id;
+
+      // Verify chatbot ownership (accept numeric ID or GUID)
+      let chatbot = undefined as Awaited<ReturnType<typeof storage.getChatbotConfig>> | null;
+      const chatbotIdNum = Number(chatbotId);
+      if (Number.isInteger(chatbotIdNum)) {
+        chatbot = await storage.getChatbotConfig(chatbotIdNum);
+      } else {
+        chatbot = await storage.getChatbotConfigByGuid(userId, chatbotId);
+      }
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot not found" });
+      }
+
+      await storage.deleteAllSurveyHistory(chatbot.id);
+      res.json({ message: "Survey history deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting survey history:", error);
+      res.status(500).json({ message: "Failed to delete survey history" });
+    }
+  });
+
   // Delete survey
   app.delete('/api/chatbots/:chatbotId/surveys/:surveyId', isAuthenticated, async (req: any, res) => {
     try {
       const { chatbotId, surveyId } = req.params;
+      const chatbotIdNum = Number(chatbotId);
+      const surveyIdNum = Number(surveyId);
+      if (!Number.isInteger(chatbotIdNum) || !Number.isInteger(surveyIdNum)) {
+        return res.status(400).json({ message: "Invalid chatbotId or surveyId" });
+      }
       const userId = req.neonUser.id;
 
       // Verify chatbot ownership
-      const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
+      const chatbot = await storage.getChatbotConfig(chatbotIdNum);
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
 
       // Verify survey belongs to this chatbot
-      const existingSurvey = await storage.getSurvey(parseInt(surveyId));
-      if (!existingSurvey || existingSurvey.chatbotConfigId !== parseInt(chatbotId)) {
+      const existingSurvey = await storage.getSurvey(surveyIdNum);
+      if (!existingSurvey || existingSurvey.chatbotConfigId !== chatbotIdNum) {
         return res.status(404).json({ message: "Survey not found" });
       }
 
-      await storage.deleteSurvey(parseInt(surveyId));
+      await storage.deleteSurvey(surveyIdNum);
       res.json({ message: "Survey deleted successfully" });
     } catch (error) {
       console.error("Error deleting survey:", error);
@@ -153,18 +202,22 @@ export function setupSurveyRoutes(app: Express) {
   app.post('/api/survey-sessions/start-survey', async (req, res) => {
     try {
       const { sessionId, surveyId } = req.body;
+      const surveyIdNum = Number(surveyId);
+      if (!Number.isInteger(surveyIdNum)) {
+        return res.status(400).json({ message: "Invalid surveyId" });
+      }
 
       // First deactivate any existing active survey sessions
       await storage.deactivateAllSurveySessions(sessionId);
 
       // Check if there's already a survey session for this specific survey
-      const existingSurveySession = await storage.getSurveySession(surveyId, sessionId);
+      const existingSurveySession = await storage.getSurveySession(surveyIdNum, sessionId);
 
       let surveySession;
       if (existingSurveySession) {
         // If survey exists and is completed, reset it for restart
         if (existingSurveySession.status === 'completed') {
-          console.log(`[SURVEY_START] Restarting completed survey ${surveyId} for session ${sessionId}`);
+          console.log(`[SURVEY_START] Restarting completed survey ${surveyIdNum} for session ${sessionId}`);
           surveySession = await storage.updateSurveySession(existingSurveySession.id, {
             currentQuestionIndex: 0,
             responses: {},
@@ -172,16 +225,16 @@ export function setupSurveyRoutes(app: Express) {
           });
         } else {
           // Reactivate the existing survey session
-          console.log(`[SURVEY_START] Reactivating existing survey ${surveyId} for session ${sessionId}`);
+          console.log(`[SURVEY_START] Reactivating existing survey ${surveyIdNum} for session ${sessionId}`);
           surveySession = await storage.updateSurveySession(existingSurveySession.id, {
             status: 'active'
           });
         }
       } else {
         // Create new survey session
-        console.log(`[SURVEY_START] Creating new survey session ${surveyId} for session ${sessionId}`);
+        console.log(`[SURVEY_START] Creating new survey session ${surveyIdNum} for session ${sessionId}`);
         surveySession = await storage.createSurveySession({
-          surveyId,
+          surveyId: surveyIdNum,
           sessionId,
           currentQuestionIndex: 0,
           responses: {},
@@ -190,8 +243,8 @@ export function setupSurveyRoutes(app: Express) {
       }
 
       // Set this survey as the active survey for the chat session
-      await storage.setActiveSurvey(sessionId, surveyId);
-      console.log(`[SURVEY_START] Set survey ${surveyId} as active for session ${sessionId}`);
+      await storage.setActiveSurvey(sessionId, surveyIdNum);
+      console.log(`[SURVEY_START] Set survey ${surveyIdNum} as active for session ${sessionId}`);
 
       res.json(surveySession);
     } catch (error) {
@@ -262,8 +315,14 @@ export function setupSurveyRoutes(app: Express) {
       const { chatbotId } = req.params;
       const userId = req.neonUser.id;
 
-      // Verify chatbot ownership
-      const chatbot = await storage.getChatbotConfig(parseInt(chatbotId));
+      // Verify chatbot ownership (accept numeric ID or GUID)
+      let chatbot = undefined as Awaited<ReturnType<typeof storage.getChatbotConfig>> | null;
+      const chatbotIdNum = Number(chatbotId);
+      if (Number.isInteger(chatbotIdNum)) {
+        chatbot = await storage.getChatbotConfig(chatbotIdNum);
+      } else {
+        chatbot = await storage.getChatbotConfigByGuid(userId, chatbotId);
+      }
       if (!chatbot || chatbot.userId !== userId) {
         return res.status(404).json({ message: "Chatbot not found" });
       }
@@ -273,6 +332,32 @@ export function setupSurveyRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching survey analytics:", error);
       res.status(500).json({ message: "Failed to fetch survey analytics" });
+    }
+  });
+
+  // Delete all survey history (responses/sessions) for a chatbot
+  app.delete('/api/chatbots/:chatbotId/surveys/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const { chatbotId } = req.params;
+      const userId = req.neonUser.id;
+
+      // Verify chatbot ownership (accept numeric ID or GUID)
+      let chatbot = undefined as Awaited<ReturnType<typeof storage.getChatbotConfig>> | null;
+      const chatbotIdNum = Number(chatbotId);
+      if (Number.isInteger(chatbotIdNum)) {
+        chatbot = await storage.getChatbotConfig(chatbotIdNum);
+      } else {
+        chatbot = await storage.getChatbotConfigByGuid(userId, chatbotId);
+      }
+      if (!chatbot || chatbot.userId !== userId) {
+        return res.status(404).json({ message: "Chatbot not found" });
+      }
+
+      await storage.deleteAllSurveyHistory(chatbot.id);
+      res.json({ message: "Survey history deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting survey history:", error);
+      res.status(500).json({ message: "Failed to delete survey history" });
     }
   });
 }

@@ -12,21 +12,24 @@ interface CookieConsentModalProps {
 
 export const CookieConsentModal: React.FC<CookieConsentModalProps> = ({ onConsent }) => {
   const [visible, setVisible] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
     const consent = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!consent) {
       setVisible(true);
     }
+    setHasInitialized(true);
   }, []);
 
   const handleConsent = (status: CookieConsentStatus) => {
     localStorage.setItem(LOCAL_STORAGE_KEY, status || 'declined');
     setVisible(false);
+    // Call the parent callback immediately after setting localStorage
     onConsent(status);
   };
 
-  if (!visible) return null;
+  if (!hasInitialized || !visible) return null;
 
   return (
     <div className="fixed bottom-0 left-0 w-full z-50 flex justify-center pointer-events-auto">

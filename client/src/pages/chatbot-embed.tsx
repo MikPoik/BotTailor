@@ -143,7 +143,7 @@ export default function ChatbotEmbed() {
 
             (window as any).ChatWidget.init(widgetConfig);
           } catch (error) {
-            console.log('Widget initialization error:', error);
+            // Widget initialization error - silently fail as it will be retried
           }
         } else {
           // If ChatWidget is not available, try again in a short delay

@@ -6,10 +6,12 @@ Smart AI Chatbots Made Simple - A full-stack React application for creating and 
 ## Features
 
 ### 🤖 AI-Powered Chatbots
-- **Advanced Language Models**: Powered by OpenAI GPT-4.1 for natural conversations
-- **Configurable AI Settings**: Customize temperature, max tokens, and system prompts
-- **Context-Aware Responses**: Maintains conversation context and understanding
-- **Streaming Responses**: Real-time message delivery for better user experience
+- **Advanced Language Models**: Powered by OpenAI GPT-4o (configurable per chatbot)
+- **Configurable AI Settings**: Customize model, temperature (0-10 scale), max tokens, and system prompts
+- **RAG System**: Semantic search over website content using pgvector embeddings
+- **Context-Aware Responses**: Includes conversation history, website knowledge, and active survey context
+- **Streaming Responses**: Real-time message delivery with server-sent events
+- **AI Assistants**: Built-in prompt and survey generation assistants
 
 ### 🎨 Customizable UI
 - **Complete Theme Control**: Primary, background, and text color customization
@@ -20,10 +22,11 @@ Smart AI Chatbots Made Simple - A full-stack React application for creating and 
 
 ### 💬 Rich Messaging
 - **Interactive Cards**: Rich content with images, titles, and action buttons
-- **Menu Options**: Category-based navigation and quick actions
+- **Menu Options**: Single and multi-select menus with icons
 - **Quick Replies**: Pre-defined response options for users
-- **Form Integration**: Contact forms with email notifications
-- **Survey Builder**: Interactive surveys and data collection
+- **Rating Messages**: Star, number, and scale rating support
+- **Form Integration**: Contact forms with email notifications via configured SMTP
+- **Survey System**: Visual builder, conditional flow, AI-powered generation, and analytics
 
 ### 🔧 Easy Integration
 - **Simple Embed Code**: One-script integration for any website
@@ -31,18 +34,30 @@ Smart AI Chatbots Made Simple - A full-stack React application for creating and 
 - **Real-time Updates**: HTTP polling for message synchronization
 - **Widget Testing**: Built-in testing tools and live preview
 
-### 📊 Data Management
-- **Website Scanning**: Automatically learn from website content
-- **File Uploads**: Support for documents, PDFs, and text files
-- **Manual Content**: Direct knowledge base entry
-- **Analytics**: Conversation tracking and user interaction analytics
+### 📊 Data Management & Analytics
+- **Website Scanning**: Automated scraping with Cheerio and Playwright
+- **Vector Embeddings**: OpenAI ada-002 embeddings (1536 dimensions) stored in pgvector
+- **File Uploads**: AWS S3 storage for documents, images, and avatars
+- **Manual Content**: Direct text entry for knowledge base
+- **Chat History**: Session tracking with pagination and search
+- **Survey Analytics**: Response tracking, completion rates, and visualizations with Recharts
+
+### 💳 Subscription & Billing
+- **Stripe Integration**: Secure payment processing for subscription plans
+- **Usage Tracking**: Messages per month and bot limits enforcement
+- **Webhook Support**: Automated subscription lifecycle management
+- **Plan Tiers**: Free, Basic, Premium, and Ultra plans with progressive features
 
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- PostgreSQL database (Neon Database recommended)
+- Node.js 20+ and npm
+- PostgreSQL database with pgvector extension (Neon Database required)
 - OpenAI API key
+- Stack Auth project (for authentication)
+- Stripe account (for subscriptions)
+- AWS S3 bucket (for file storage)
+- SMTP credentials (optional, for email notifications)
 
 ### Installation
 
@@ -56,9 +71,31 @@ Smart AI Chatbots Made Simple - A full-stack React application for creating and 
 2. **Environment Setup**
    Set up your environment variables in Replit Secrets or `.env`:
    ```
-   DATABASE_URL=your_postgresql_connection_string
+   # Database (Neon with pgvector support)
+   DATABASE_URL=your_neon_postgresql_connection_string
+   
+   # OpenAI
    OPENAI_API_KEY=your_openai_api_key
+   
+   # Stack Auth
+   NEXT_PUBLIC_STACK_PROJECT_ID=your_stack_project_id
+   NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=your_stack_publishable_key
+   STACK_SECRET_SERVER_KEY=your_stack_secret_key
+   
+   # Stripe
+   STRIPE_SECRET_KEY=your_stripe_secret_key
+   STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+   
+   # AWS S3
+   AWS_REGION=your_aws_region
+   AWS_ACCESS_KEY_ID=your_aws_access_key
+   AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+   AWS_S3_BUCKET=your_s3_bucket_name
+   
+   # Application
    NODE_ENV=development
+   APP_URL=http://localhost:5000
    ```
 
 3. **Database Setup**
@@ -77,13 +114,17 @@ Smart AI Chatbots Made Simple - A full-stack React application for creating and 
 
 ### Creating Your First Chatbot
 
-1. **Sign Up/Login**: Use Replit Authentication to access the platform
-2. **Create Chatbot**: Navigate to "New Chatbot" and configure:
-   - Basic settings (name, description)
-   - AI configuration (model, temperature, system prompt)
-   - UI customization (colors, avatar, background)
-3. **Add Knowledge**: Upload files, scan websites, or add manual content
-4. **Test & Deploy**: Use the built-in tester, then get your embed code
+1. **Sign Up/Login**: Authenticate with Stack Auth (email/password or OAuth)
+2. **Subscribe**: Select a subscription plan (Free tier available)
+3. **Create Chatbot**: Navigate to "New Chatbot" and configure:
+   - Basic settings (name, description, avatar)
+   - AI configuration (model selection, temperature 0-10, max tokens, system prompt)
+   - UI customization (colors, background image, theme)
+   - Email settings (for form submissions)
+4. **Design Home Screen**: Use UI Designer to create custom layouts with topics and quick actions
+5. **Add Knowledge**: Upload files to S3, scan websites, or add manual text content
+6. **Build Surveys**: Create interactive surveys with conditional logic
+7. **Test & Deploy**: Use the built-in tester, then get your embed code
 
 ### Embedding on Your Website
 
@@ -105,114 +146,31 @@ Add this code snippet to your website:
 ## Architecture
 
 ### Tech Stack
-- **Frontend**: React 18 + TypeScript, Vite, Tailwind CSS
-- **Backend**: Express.js + TypeScript, Node.js with ESM
-- **Database**: PostgreSQL with Drizzle ORM
+- **Frontend**: React 18 + TypeScript, Vite, Tailwind CSS, Wouter (routing)
+- **Backend**: Express.js + TypeScript, Node.js with ESM modules
+- **Database**: Neon PostgreSQL (serverless) with Drizzle ORM and pgvector
 - **UI Components**: shadcn/ui built on Radix UI primitives
-- **State Management**: TanStack Query for server state
-- **Authentication**: Replit Auth with OpenID Connect
+- **State Management**: TanStack Query (React Query) for server state
+- **Authentication**: Stack Auth with custom middleware wrapper
+- **AI/ML**: OpenAI API (GPT-4o, ada-002 embeddings)
+- **Payments**: Stripe for subscriptions and billing
+- **Storage**: AWS S3 for file uploads
+- **Scraping**: Cheerio (static) and Playwright (dynamic content)
+- **Analytics**: Recharts for data visualization
 
-### Project Structure
-```
-├── 📁 client/
-│   └── 📁 src/
-│       ├── 📄 App.tsx
-│       ├── 📁 components/
-│       │   ├── 📁 chat/
-│       │   │   ├── 📄 chat-interface.tsx
-│       │   │   ├── 📄 chat-widget.tsx
-│       │   │   ├── 📄 home-tab.tsx
-│       │   │   ├── 📄 message-bubble.tsx
-│       │   │   ├── 📄 prompt-assistant-chatbox.tsx
-│       │   │   ├── 📄 rich-message.tsx
-│       │   │   ├── 📄 streaming-message.tsx
-│       │   │   ├── 📄 tabbed-chat-interface.tsx
-│       │   │   └── 📄 typing-indicator.tsx
-│       │   ├── 📄 navbar.tsx
-│       │   ├── 📄 theme-toggle.tsx
-│       │   └── 📁 ui-designer/
-│       │       ├── 📄 component-registry.tsx
-│       │       └── 📄 dynamic-home-screen.tsx
-│       ├── 📁 contexts/
-│       │   └── 📄 theme-context.tsx
-│       ├── 📁 hooks/
-│       │   ├── 📄 use-chat.ts
-│       │   ├── 📄 use-mobile.tsx
-│       │   ├── 📄 use-toast.ts
-│       │   └── 📄 useAuth.ts
-│       ├── 📁 lib/
-│       │   ├── 📄 authUtils.ts
-│       │   ├── 📄 queryClient.ts
-│       │   └── 📄 utils.ts
-│       ├── 📄 main.tsx
-│       └── 📁 pages/
-│           ├── 📄 Subscription.tsx
-│           ├── 📄 add-data.tsx
-│           ├── 📄 chat-history.tsx
-│           ├── 📄 chat-widget.tsx
-│           ├── 📄 chatbot-edit.tsx
-│           ├── 📄 chatbot-embed.tsx
-│           ├── 📄 chatbot-form.tsx
-│           ├── 📄 chatbot-test.tsx
-│           ├── 📄 dashboard.tsx
-│           ├── 📄 docs.tsx
-│           ├── 📄 home.tsx
-│           ├── 📄 not-found.tsx
-│           ├── 📄 survey-builder.tsx
-│           ├── 📄 ui-designer.tsx
-│           └── 📄 widget-test.tsx
-├── 📄 drizzle.config.ts
-├── 📄 postcss.config.js
-├── 📁 public/
-│   └── 📄 embed.js
-├── 📁 server/
-│   ├── 📄 ai-response-schema.ts
-│   ├── 📄 db.js
-│   ├── 📄 db.ts
-│   ├── 📄 email-service.ts
-│   ├── 📄 index.ts
-│   ├── 📁 openai/
-│   │   ├── 📄 client.ts
-│   │   ├── 📄 context-builder.ts
-│   │   ├── 📄 error-handler.ts
-│   │   ├── 📄 index.ts
-│   │   ├── 📄 response-generator.ts
-│   │   ├── 📄 response-parser.ts
-│   │   ├── 📄 schema.ts
-│   │   └── 📄 streaming-handler.ts
-│   ├── 📄 replitAuth.ts
-│   ├── 📁 routes/
-│   │   ├── 📄 auth.ts
-│   │   ├── 📄 chat.ts
-│   │   ├── 📄 chatbots.ts
-│   │   ├── 📄 index.ts
-│   │   ├── 📄 public.ts
-│   │   ├── 📄 subscription.ts
-│   │   ├── 📄 surveys.ts
-│   │   ├── 📄 ui-designer.ts
-│   │   ├── 📄 uploads.ts
-│   │   └── 📄 websites.ts
-│   ├── 📄 routes.ts
-│   ├── 📄 seed-plans.js
-│   ├── 📄 seed-plans.ts
-│   ├── 📄 storage.ts
-│   ├── 📄 ui-designer-service.ts
-│   ├── 📄 upload-service.ts
-│   ├── 📄 vite.ts
-│   └── 📄 website-scanner.ts
-├── 📁 shared/
-│   └── 📄 schema.ts
-├── 📄 tailwind.config.ts
-└── 📄 vite.config.ts
-
-```
 
 ### Database Schema
-- **Users**: Authentication and user management
-- **Chatbots**: Chatbot configurations and settings
-- **Chat Sessions**: Individual chat sessions
-- **Messages**: Rich message content with JSON metadata
-- **Surveys**: Interactive forms and survey data
+- **neon_auth.users_sync**: Stack Auth managed user table (read-only)
+- **users**: App-specific user data (references Stack Auth by ID)
+- **chatbot_configs**: Chatbot settings, AI config, UI design, email settings
+- **chat_sessions**: Conversation sessions with active survey tracking
+- **messages**: Rich message content with type-specific JSON metadata
+- **website_sources**: Scraped websites, uploaded files, text content
+- **website_content**: Chunked content with 1536-dim vector embeddings
+- **surveys**: Survey definitions with JSON configuration
+- **survey_sessions**: User progress and responses
+- **subscription_plans**: Plan definitions with Stripe IDs and limits
+- **subscriptions**: User subscriptions with usage tracking
 
 ## Configuration Options
 
@@ -240,11 +198,18 @@ Add this code snippet to your website:
 - `npm run db:push` - Push database schema changes
 
 ### API Endpoints
-- `/api/auth/*` - Authentication routes
-- `/api/chatbots/*` - Chatbot CRUD operations
-- `/api/chat/*` - Chat session and messaging
-- `/api/public/*` - Public chatbot data
-- `/widget/:userId/:chatbotGuid` - Embed widget endpoint
+- `/api/ensure-user` - Stack Auth user sync to app database
+- `/api/chatbots/*` - Chatbot CRUD, model settings, config management
+- `/api/chat/*` - Chat sessions, messaging, AI responses, streaming
+- `/api/surveys/*` - Survey builder, sessions, analytics, AI assistance
+- `/api/public/*` - Public chatbot access (no auth required)
+- `/api/uploads/*` - File uploads to S3 (avatars, images, documents)
+- `/api/websites/*` - Website scraping, content management, embeddings
+- `/api/ui-designer/*` - Home screen configuration and preview
+- `/api/contact/*` - Contact form submissions with email
+- `/api/subscription/*` - Stripe checkout, plan management, usage tracking
+- `/api/webhook` - Stripe webhook handler for subscription events
+- `/widget` - Embedded chat widget (supports `?embedded=true`)
 
 ## Deployment
 
@@ -254,12 +219,18 @@ npm run build
 npm run start
 ```
 
-### Replit Deployment
-This application is optimized for Replit deployment with:
-- Automatic dependency installation
-- Environment variable management via Secrets
-- Built-in database integration with Neon
-- One-click deployment to production
+### Cloud Deployment
+This application can be deployed to various platforms:
+- **Fly.io**: Included `fly.toml` configuration
+- **Replit**: Optimized with automatic dependency installation
+- **Vercel/Railway**: Compatible with Node.js hosting
+- **Docker**: Dockerfile included for containerized deployment
+
+Requirements for production:
+- PostgreSQL database with pgvector extension (Neon recommended)
+- Environment variables configured
+- Stripe webhooks endpoint configured
+- S3 bucket for file storage
 
 ## Contributing
 
@@ -279,13 +250,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues**: Report bugs and request features via GitHub issues
 - **Community**: Join our community for support and discussions
 
-## Recent Updates
+## Key Features Breakdown
 
-- **Avatar Upload**: Custom avatar support with URL-based configuration
-- **Enhanced Theming**: Complete color customization system
-- **Improved Analytics**: Conversation tracking and user metrics
-- **Survey Builder**: Interactive forms and data collection tools
-- **Mobile Optimization**: Enhanced mobile chat experience
+### Message Types
+- **Text**: Plain text with optional streaming support
+- **Card**: Rich cards with images, titles, descriptions, and action buttons
+- **Menu**: Single-select menus with icons and custom actions
+- **Multiselect**: Multiple selection menus with min/max constraints
+- **Rating**: Star ratings, number scales, or visual scales
+- **Form**: Multi-field forms with validation and email submission
+- **Quick Replies**: Suggested response buttons
+
+### Home Screen UI Designer
+- **Component-Based**: Header, category tabs, topic grids, quick actions, footer
+- **Dynamic Topics**: Link to messages or surveys with custom actions
+- **Visual Customization**: Background images, colors, transparency controls
+- **Responsive Layouts**: Grid, list, or carousel display modes
+
+### RAG (Retrieval-Augmented Generation)
+- **Website Scraping**: Automatic content extraction from URLs and sitemaps
+- **Vector Search**: Semantic similarity search using OpenAI embeddings
+- **Context Building**: Top 5 relevant chunks included in AI prompts
+- **Multi-Source**: Combine website content, uploaded files, and manual text
+
+### Survey System
+- **Question Types**: Single choice, multiple choice, text input, ratings
+- **Conditional Flow**: Skip logic and branching based on responses
+- **AI Generation**: Automated survey creation for common use cases
+- **Analytics Dashboard**: Completion rates, response visualization, session tracking
 
 ---
 

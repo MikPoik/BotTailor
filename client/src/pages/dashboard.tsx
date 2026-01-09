@@ -261,15 +261,15 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           ) : ((chatbots?.filter(bot => bot.isActive).length || 0) >= (currentSubscription.plan?.maxBots * 0.8)) ? (
-            <Card className="border-orange-200 bg-orange-50">
+            <Card className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-slate-800">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-orange-600" />
+                  <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-orange-800">Approaching Active Chatbot Limit</h3>
-                    <p className="text-sm text-orange-700">
+                    <h3 className="font-semibold text-orange-800 dark:text-orange-400">Approaching Active Chatbot Limit</h3>
+                    <p className="text-sm text-orange-700 dark:text-orange-300">
                       You're using {chatbots?.filter(bot => bot.isActive).length || 0} of {currentSubscription.plan.maxBots} active chatbots on your {currentSubscription.plan.name} plan.
                       <Link href="/subscription" className="text-primary hover:underline ml-1">
                         Consider upgrading
@@ -295,7 +295,6 @@ export default function Dashboard() {
             )}
             <Button 
               onClick={() => {
-                //console.log("Create Chatbot clicked");
                 setLocation("/chatbots/new");
               }}
               disabled={currentSubscription && currentSubscription.plan?.maxBots !== -1 && !isAdmin && ((chatbots?.filter(bot => bot.isActive).length || 0) >= currentSubscription.plan?.maxBots)}

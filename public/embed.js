@@ -167,14 +167,14 @@
       const storedSessionId = this.safeSessionStorage.getItem(storageKey);
 
       if (storedSessionId) {
-        console.log('[EMBED] Retrieved session ID from storage:', storedSessionId);
+        //console.log('[EMBED] Retrieved session ID from storage:', storedSessionId);
         return storedSessionId;
       }
 
       // Generate new sessionId and store it
       const newSessionId = this.generateSessionId();
       this.safeSessionStorage.setItem(storageKey, newSessionId);
-      console.log('[EMBED] Generated and stored new session ID:', newSessionId);
+      //console.log('[EMBED] Generated and stored new session ID:', newSessionId);
       return newSessionId;
     },
 
@@ -182,6 +182,29 @@
       // Inject CSS variables for theme support
       if (!this.config.primaryColor && !this.config.backgroundColor && !this.config.textColor) {
         return; // No theme customization needed
+      }
+
+      // First, ensure viewport-relative fixed positioning works everywhere
+      if (!document.getElementById('chatwidget-viewport-fix')) {
+        const viewportFix = document.createElement('style');
+        viewportFix.id = 'chatwidget-viewport-fix';
+        viewportFix.textContent = `
+          /* CRITICAL: Ensure fixed positioning is relative to viewport */
+          html, body {
+            transform: none !important;
+            perspective: none !important;
+            filter: none !important;
+          }
+          
+          /* Ensure widget container is truly fixed to viewport */
+          #chatwidget-container {
+            position: fixed !important;
+            transform: none !important;
+            perspective: none !important;
+            filter: none !important;
+          }
+        `;
+        document.head.appendChild(viewportFix);
       }
 
       // Check if we already injected the styles
@@ -365,21 +388,21 @@
 
       // Add initial styles to prevent white screen during transitions
       iframe.style.width = '550px';
-      iframe.style.height = '85vh';
-      iframe.style.maxHeight = '900px';
-      iframe.style.minHeight = '700px';
+      iframe.style.height = '90vh';
+      iframe.style.maxHeight = '950px';
+      iframe.style.minHeight = '600px';
       iframe.style.border = 'none';
       iframe.style.borderRadius = '12px';
-      iframe.style.position = 'fixed';
-      iframe.style.bottom = '8px';
+      iframe.style.position = 'absolute';
+      iframe.style.bottom = '0';
       iframe.style.backgroundColor = 'transparent';
       iframe.style.visibility = 'hidden';
       iframe.style.transition = 'all 0.3s ease-out';
       iframe.style.zIndex = this.config.zIndex;
       if (this.config.position === 'bottom-right') {
-        iframe.style.right = '8px';
+        iframe.style.right = '0';
       } else {
-        iframe.style.left = '8px';
+        iframe.style.left = '0';
       }
 
       // Mobile overlay for small screens

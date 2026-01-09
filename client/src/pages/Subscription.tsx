@@ -51,9 +51,9 @@ const PLAN_ICONS = {
 };
 
 const PLAN_COLORS = {
-  Basic: "border-blue-200 bg-blue-50",
-  Premium: "border-purple-200 bg-purple-50 ring-2 ring-purple-500",
-  Ultra: "border-orange-200 bg-orange-50",
+  Basic: "border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-slate-800",
+  Premium: "border-purple-200 bg-purple-50 ring-2 ring-purple-500 dark:border-purple-900 dark:bg-slate-800 dark:ring-purple-600",
+  Ultra: "border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-slate-800",
 };
 
 export default function Subscription() {
@@ -349,7 +349,7 @@ export default function Subscription() {
                 </div>
               )}
               {(currentSubscription as any).cancelAtPeriodEnd && (
-                <div className="text-sm text-orange-600 font-medium">
+                <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
                   Your subscription will be canceled at the end of the current billing period.
                 </div>
               )}
@@ -412,7 +412,7 @@ export default function Subscription() {
 
               <CardHeader className="text-center pb-4">
                 <div className="flex justify-center mb-2">
-                  <div className="p-3 bg-white rounded-full shadow-sm">
+                  <div className="p-3 bg-white dark:bg-slate-700 rounded-full shadow-sm">
                     <Icon className="h-6 w-6" />
                   </div>
                 </div>

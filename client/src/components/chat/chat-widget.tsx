@@ -1,11 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { MessageCircle, MessageCircleMore , X, Minimize2, RefreshCw, HelpCircle } from "lucide-react";
 import TabbedChatInterface from "./tabbed-chat-interface";
 import AboutView from "./about-view";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useChat } from "@/hooks/use-chat";
+import WidgetHeader from "./widget/WidgetHeader";
+import InitialMessageBubbles from "./widget/InitialMessageBubbles";
+import FloatingBubble from "./widget/FloatingBubble";
+import { useInjectChatTheme, useApplyDocumentColors, isLightColor } from "./widget/useWidgetTheme";
+// import { useChat } from "@/hooks/use-chat";
 
 const widgetDebug = () => {
   if (typeof window === 'undefined') return false;
@@ -31,7 +35,7 @@ interface ChatWidgetProps {
   chatbotConfig?: any;
 }
 
-export default function ChatWidget({ 
+function ChatWidget({ 
   sessionId: providedSessionId, 
   position = 'bottom-right',
   primaryColor = '#2563eb',
@@ -40,6 +44,7 @@ export default function ChatWidget({
   chatbotConfig
 }: ChatWidgetProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const headerTitleRef = useRef<HTMLHeadingElement | null>(null);
   const isClient = typeof window !== 'undefined';
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -49,6 +54,7 @@ export default function ChatWidget({
   const [showAbout, setShowAbout] = useState(false);
   // Reactive session ID state that can be updated on refresh
   const [currentSessionId, setCurrentSessionId] = useState(providedSessionId);
+  
   const messageTimeouts = useRef<NodeJS.Timeout[]>([]);
   const renderedInitialMessages = useRef<Set<number>>(new Set());
   const queryClient = useQueryClient();
@@ -61,8 +67,8 @@ export default function ChatWidget({
   // Get chatbot config ID from injected config or props
   const chatbotConfigId = injectedConfig?.chatbotConfig?.id || chatbotConfig?.id;
 
-  // Initialize chat data only when needed
-  const { initializeSession, isSessionLoading, isMessagesLoading } = useChat(currentSessionId, chatbotConfigId);
+  // Avoid subscribing ChatWidget to chat queries; initialization is handled in TabbedChatInterface
+  const initializeSession = useCallback(() => {}, []);
 
   useEffect(() => {
     if (!widgetDebug()) return;
@@ -146,21 +152,8 @@ export default function ChatWidget({
     chatbotConfig?.theme?.chat?.text ||
     '#1f2937';
 
-  // Keep the iframe/background from flashing white by applying theme colors to document
-  useEffect(() => {
-    if (!isClient) return;
-    const prevBodyBg = document.body.style.backgroundColor;
-    const prevHtmlBg = document.documentElement.style.backgroundColor;
-    document.body.style.backgroundColor = resolvedBackgroundColor;
-    document.documentElement.style.backgroundColor = resolvedBackgroundColor;
-    document.body.style.color = resolvedTextColor;
-    document.documentElement.style.color = resolvedTextColor;
-
-    return () => {
-      document.body.style.backgroundColor = prevBodyBg;
-      document.documentElement.style.backgroundColor = prevHtmlBg;
-    };
-  }, [isClient, resolvedBackgroundColor, resolvedTextColor]);
+  // Apply background/text color to document to avoid flash
+  useApplyDocumentColors(resolvedBackgroundColor, resolvedTextColor, isClient);
 
 
   // Load initial messages from chatbot config
@@ -258,367 +251,11 @@ export default function ChatWidget({
     }
   }, [visibleMessages.length]);
 
-  // Helper function to determine if a color is light or dark
-  const isLightColor = (color: string): boolean => {
-    // Ensure we have a valid color, default to white if not
-    if (!color || !color.startsWith('#') || color.length !== 7) {
-      return true; // Default to light if invalid color
-    }
+  // Compute header text color based on primary brightness
+  const headerTextColor = isLightColor(resolvedPrimaryColor) ? '#1f2937' : '#ffffff';
 
-    // Convert hex to RGB
-    const hex = color.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-
-    // Calculate luminance using the relative luminance formula
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5; // Return true if light, false if dark
-  };
-
-  // Inject CSS synchronously to prevent FOUC - memoized to prevent redundant operations
-  useEffect(() => {
-    const themeKey = `${resolvedPrimaryColor}-${resolvedBackgroundColor}-${resolvedTextColor}`;
-    const currentThemeKey = document.documentElement.getAttribute('data-chat-theme-key');
-
-    // Skip if same theme is already applied
-    if (currentThemeKey === themeKey) {
-      return;
-    }
-
-    const injectThemeStyles = () => {
-      let existingStyle = document.getElementById('chat-widget-theme-styles');
-      if (existingStyle) {
-        existingStyle.remove();
-      }
-
-      const style = document.createElement('style');
-      style.id = 'chat-widget-theme-styles';
-
-      // Use brightness detection instead of strict color matching
-      const isLightBackground = isLightColor(backgroundColor);
-
-
-      style.textContent = `
-        .chat-widget-container {
-          --chat-primary: ${resolvedPrimaryColor};
-          --chat-primary-color: ${resolvedPrimaryColor};
-          --chat-background: ${resolvedBackgroundColor};
-          --chat-text: ${resolvedTextColor};
-          --foreground: ${resolvedTextColor};
-          --background: ${resolvedBackgroundColor};
-          --border: ${isLightBackground ? '#e2e8f0' : '#404040'};
-          --input: ${isLightBackground ? '#ffffff' : '#262626'};
-          --muted: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'};
-          --muted-foreground: ${isLightBackground ? '#64748b' : '#a1a1aa'};
-        }
-
-        /* Chat widget specific styling with complete theme */
-        .chat-widget-container {
-          --primary: ${resolvedPrimaryColor};
-          --primary-foreground: white;
-          --ring: ${resolvedPrimaryColor};
-          --chat-bubble-bg: ${resolvedPrimaryColor};
-          --chat-user-bg: ${resolvedPrimaryColor};
-          --chat-hover: ${resolvedPrimaryColor};
-          --background: ${resolvedBackgroundColor};
-          --foreground: ${resolvedTextColor};
-          --card: ${resolvedBackgroundColor};
-          --card-foreground: ${resolvedTextColor};
-          --popover: ${resolvedBackgroundColor};
-          --popover-foreground: ${resolvedTextColor};
-          --muted: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'};
-          --muted-foreground: ${isLightBackground ? '#64748b' : '#a1a1aa'};
-          --border: ${isLightBackground ? '#e2e8f0' : '#404040'};
-          --input: ${isLightBackground ? '#ffffff' : '#262626'};
-          --accent: ${isLightBackground ? '#f1f5f9' : '#262626'};
-          --accent-foreground: ${resolvedTextColor};
-        }
-
-        /* Main chat interface background and text */
-        .chat-widget-container .chat-interface,
-        .chat-widget-container .chat-interface-mobile {
-          background-color: ${resolvedBackgroundColor} !important;
-          color: ${resolvedTextColor} !important;
-        }
-
-        /* Bot message bubbles - use white background - multiple selectors for embedded vs development */
-        .chat-widget-container .chat-message-bot,
-        .chat-message-bot {
-          background-color: ${isLightBackground ? '#ffffff' : '#2a2a2a'} !important;
-          color: ${resolvedTextColor} !important;
-          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
-        }
-
-        /* User message bubbles - multiple selectors for embedded vs development */
-        .chat-widget-container .chat-message-user,
-        .chat-message-user {
-          background-color: ${resolvedPrimaryColor}cc !important;
-          color: white !important;
-        }
-
-        /* Send button */
-        .chat-widget-container button[type="submit"],
-        .chat-widget-container .send-button {
-          background-color: ${resolvedPrimaryColor} !important;
-          border-color: ${resolvedPrimaryColor} !important;
-          color: white !important;
-        }
-
-        /* All default variant buttons */
-        .chat-widget-container .bg-primary {
-          background-color: ${resolvedPrimaryColor} !important;
-          color: white !important;
-        }
-
-        .chat-widget-container .hover\\:bg-primary\\/90:hover {
-          background-color: ${resolvedPrimaryColor}e6 !important;
-        }
-
-        /* Primary buttons and interactive elements */
-        .chat-widget-container .menu-option-button:hover {
-          background-color: ${resolvedPrimaryColor} !important;
-          color: white !important;
-        }
-
-        /* Input and form elements */
-        .chat-widget-container input,
-        .chat-widget-container textarea {
-          background-color: ${isLightBackground ? '#ffffff' : '#262626'} !important;
-          color: ${resolvedTextColor} !important;
-          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
-        }
-
-        /* Input placeholder text */
-        .chat-widget-container input::placeholder,
-        .chat-widget-container textarea::placeholder {
-          color: ${isLightBackground ? '#9ca3af' : '#6b7280'} !important;
-        }
-
-        /* Input focus ring */
-        .chat-widget-container input:focus,
-        .chat-widget-container textarea:focus,
-        .chat-widget-container select:focus {
-          --tw-ring-color: ${resolvedPrimaryColor} !important;
-          border-color: ${resolvedPrimaryColor} !important;
-          box-shadow: 0 0 0 2px ${resolvedPrimaryColor}40 !important;
-        }
-
-        /* Send input specific styling */
-        .chat-widget-container .send-input {
-          background-color: ${isLightBackground ? '#ffffff' : '#262626'} !important;
-          color: ${resolvedTextColor} !important;
-        }
-
-        .chat-widget-container .send-input::placeholder {
-          color: ${isLightBackground ? '#9ca3af' : '#6b7280'} !important;
-        }
-
-        /* Tab navigation background and text */
-        .chat-widget-container [data-radix-tabs-list] {
-          background: ${resolvedBackgroundColor} !important;
-          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
-        }
-
-        /* Tab navigation active state */
-        .chat-widget-container [data-state="active"] {
-          color: ${resolvedPrimaryColor} !important;
-          border-bottom-color: ${resolvedPrimaryColor} !important;
-        }
-
-        /* Tabs trigger default state */
-        .chat-widget-container [data-radix-tabs-trigger] {
-          color: ${textColor} !important;
-        }
-
-        /* Tabs trigger active state */
-        .chat-widget-container [data-radix-tabs-trigger][data-state="active"] {
-          color: ${resolvedPrimaryColor} !important;
-        }
-
-        /* Text color for muted foreground elements */
-        .chat-widget-container .text-muted-foreground,
-        .chat-widget-container [class*="muted-foreground"] {
-          color: ${isLightBackground ? '#64748b' : '#a1a1aa'} !important;
-        }
-
-        .chat-widget-container .text-foreground,
-        .chat-widget-container [class*="foreground"] {
-          color: ${resolvedTextColor} !important;
-        }
-
-        /* Disabled state for buttons and inputs */
-        .chat-widget-container button:disabled,
-        .chat-widget-container input:disabled,
-        .chat-widget-container textarea:disabled {
-          opacity: 0.5 !important;
-          cursor: not-allowed !important;
-        }
-
-        /* Card backgrounds */
-        .chat-widget-container .bg-card {
-          background-color: ${resolvedBackgroundColor} !important;
-          color: ${resolvedTextColor} !important;
-        }
-
-        /* Quick reply buttons */
-        .chat-widget-container .quick-reply-button {
-          background-color: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'} !important;
-          color: ${resolvedTextColor} !important;
-          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
-        }
-
-        .chat-widget-container .quick-reply-button:hover {
-          background-color: ${resolvedPrimaryColor} !important;
-          color: white !important;
-        }
-
-        /* Menu option buttons base styling */
-        .chat-widget-container .menu-option-button,
-        .chat-widget-container button[class*="option"],
-        .chat-widget-container button[class*="menu"] {
-          background-color: ${isLightBackground ? '#f1f5f9' : '#2a2a2a'} !important;
-          color: ${resolvedTextColor} !important;
-          border-color: ${isLightBackground ? '#e2e8f0' : '#404040'} !important;
-          transition: all 0.2s ease !important;
-        }
-
-        .chat-widget-container .menu-option-button:hover,
-        .chat-widget-container button[class*="option"]:hover,
-        .chat-widget-container button[class*="menu"]:hover {
-          background-color: ${resolvedPrimaryColor} !important;
-          color: white !important;
-        }
-
-        /* Neutral text color for default buttons */
-        .chat-widget-container button[class*="neutral"],
-        .chat-widget-container .text-neutral {
-          color: ${resolvedTextColor} !important;
-        }
-
-        .chat-widget-container button[class*="bg-neutral"] {
-          background-color: ${isLightBackground ? '#f3f4f6' : '#2a2a2a'} !important;
-          color: ${resolvedTextColor} !important;
-        }
-
-        .chat-widget-container button[class*="bg-neutral"]:hover {
-          background-color: ${isLightBackground ? '#e5e7eb' : '#3a3a3a'} !important;
-        }
-
-        /* Progress indicators */
-        .chat-widget-container .border-primary {
-          border-color: ${resolvedPrimaryColor} !important;
-        }
-
-        /* Links */
-        .chat-widget-container .text-primary {
-          color: ${resolvedPrimaryColor} !important;
-        }
-
-        /* Interactive hover states */
-        .chat-widget-container .hover\\:text-primary:hover {
-          color: ${resolvedPrimaryColor} !important;
-        }
-
-        /* CSS variable based element colors */
-        .chat-widget-container .bg-muted {
-          background-color: var(--muted) !important;
-        }
-
-        .chat-widget-container .bg-accent {
-          background-color: var(--accent) !important;
-        }
-
-        .chat-widget-container .text-muted-foreground {
-          color: var(--muted-foreground) !important;
-        }
-
-        .chat-widget-container .text-foreground {
-          color: var(--foreground) !important;
-        }
-
-        .chat-widget-container .border-border {
-          border-color: var(--border) !important;
-        }
-
-        .chat-widget-container .bg-background {
-          background-color: var(--background) !important;
-        }
-
-        .chat-widget-container .bg-card {
-          background-color: var(--card) !important;
-          color: var(--card-foreground) !important;
-        }
-
-        /* Ensure all neutral classes use CSS variables */
-        .chat-widget-container [class*="border-neutral"] {
-          border-color: var(--border) !important;
-        }
-
-        .chat-widget-container [class*="bg-neutral"] {
-          background-color: var(--muted) !important;
-          color: var(--foreground) !important;
-        }
-
-        .chat-widget-container [class*="text-neutral"] {
-          color: var(--foreground) !important;
-        }
-
-        /* Form controls focus states */
-        .chat-widget-container .focus-visible\\:ring-ring:focus-visible {
-          --tw-ring-color: ${resolvedPrimaryColor} !important;
-        }
-
-        /* Selection and highlight states */
-        .chat-widget-container ::selection {
-          background-color: ${resolvedPrimaryColor}40 !important;
-        }
-
-        /* Embedded widget - NO animation since it's always visible in iframe */
-        /* Animation would replay on re-renders causing flash */
-        .chat-widget-embedded {
-          opacity: 1 !important;
-          transform: none !important;
-        }
-
-        .chat-widget-embedded.closing {
-          animation: chatWidgetEmbedClose 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
-        }
-
-        @keyframes chatWidgetEmbedClose {
-          from {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-          to {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-          }
-        }
-
-        /* Smooth transitions for interactive elements only - NOT all elements */
-        .chat-widget-embedded button,
-        .chat-widget-embedded input,
-        .chat-widget-embedded a {
-          transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
-        }
-      `;
-      document.head.appendChild(style);
-
-      // Mark the current theme as applied
-      document.documentElement.setAttribute('data-chat-theme-key', themeKey);
-    };
-
-    injectThemeStyles();
-
-    return () => {
-      // Only remove if we're unmounting completely, not just theme changes
-      const existingStyle = document.getElementById('chat-widget-theme-styles');
-      if (existingStyle && !document.documentElement.getAttribute('data-chat-theme-key')) {
-        existingStyle.remove();
-      }
-    };
-  }, [resolvedPrimaryColor, resolvedBackgroundColor, resolvedTextColor]);
+  // Inject chat theme CSS and viewport fixes
+  useInjectChatTheme(resolvedPrimaryColor, resolvedBackgroundColor, resolvedTextColor);
 
   const toggleChat = () => {
     if (isOpen) {
@@ -659,7 +296,6 @@ export default function ChatWidget({
   };
 
   const refreshSession = (reason: string = 'manual') => {
-    debugLog('refreshSession', { reason, currentSessionId });
     // Generate new session ID
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -667,7 +303,6 @@ export default function ChatWidget({
     const storageKey = isEmbedded ? 'embed-session-id' : 'global-chat-session-id';
     try {
       sessionStorage.setItem(storageKey, newSessionId);
-      console.log(`[REFRESH] Generated new session ID: ${newSessionId}`);
     } catch (error) {
       console.warn('sessionStorage not accessible, session refresh may not persist');
     }
@@ -689,23 +324,36 @@ export default function ChatWidget({
         initializeSession();
       }, 100);
     }
-
-    console.log(`[REFRESH] Chat history cleared, new session started: ${newSessionId}`);
   };
 
 
-  // Initialize session for embedded chat when embedded mode is active and sessionId is available
+// Ensure widget visibility
   useEffect(() => {
-    if (isEmbedded && currentSessionId) {
-      initializeSession();
-    }
-  }, [isEmbedded, currentSessionId, initializeSession]);
+    if (!isClient || isEmbedded) return;
 
-  // Render different interfaces based on conditions but all at the end
+    const ensureVisible = () => {
+      // Target only the widget container, not the chat interface
+      const containers = document.querySelectorAll('body > div.font-sans[style*="position: fixed"][style*="bottom: 16px"]');
+      containers.forEach(container => {
+        const el = container as HTMLElement;
+        el.style.display = 'flex';
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+        el.style.zIndex = '40';
+        el.style.position = 'fixed';
+        el.style.right = '16px';
+        el.style.bottom = '16px';
+      });
+    };
+
+    setTimeout(ensureVisible, 100);
+  }, [isClient, isEmbedded]);
+
   // Mobile full-screen interface
   if (isMobile && isOpen) {
     return (
-      <div ref={containerRef}>
+      <div ref={containerRef} className="chat-widget-container">
         {/* Mobile overlay */}
         <div 
           className={`fixed inset-0 bg-black z-40 transition-opacity duration-300 ${
@@ -721,56 +369,15 @@ export default function ChatWidget({
             : 'animate-slideUp'
         }`}>
           {/* Mobile header */}
-          <div 
-            className="text-white p-2 flex items-center justify-between flex-shrink-0"
-            style={{ backgroundColor: resolvedPrimaryColor }}
-          >
-            <div className="flex items-center space-x-2">
-              <img 
-                src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-                alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-10 h-10 rounded-full border-2 border-white"
-              />
-
-              <div>
-                <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button 
-                type="button"
-                onClick={() => setShowAbout(true)}
-                className="text-white p-1.5 rounded transition-colors"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                title="About BotTailor"
-                data-testid="button-about"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
-              <button 
-                type="button"
-                onClick={() => refreshSession('mobile-header-button')}
-                className="text-white p-1.5 rounded transition-colors"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                title="Start new conversation"
-                data-testid="button-refresh-session"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-              <button 
-                type="button"
-                onClick={closeChat}
-                className="text-white p-1.5 rounded transition-colors"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                data-testid="button-close-chat"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <WidgetHeader
+            primaryColor={resolvedPrimaryColor}
+            title={chatbotConfig?.name || 'Support Assistant'}
+            avatarUrl={chatbotConfig?.avatarUrl}
+            onAbout={() => setShowAbout(true)}
+            onRefresh={() => refreshSession('mobile-header-button')}
+            onClose={closeChat}
+            variant="mobile"
+          />
 
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
@@ -786,7 +393,7 @@ export default function ChatWidget({
                 key={`chat-${currentSessionId}`}
                 sessionId={currentSessionId} 
                 isMobile={true} 
-                isPreloaded={!isSessionLoading && !isMessagesLoading}
+                isPreloaded={true}
                 chatbotConfigId={chatbotConfigId}
                 chatbotConfig={chatbotConfig}
                 onSessionInitialize={initializeSession}
@@ -808,58 +415,29 @@ export default function ChatWidget({
     };
 
     return (
-      <div className="chat-widget-embedded" ref={containerRef}>
+      <div 
+        className="chat-widget-embedded chat-widget-container" 
+        ref={containerRef}
+        style={{
+          // Force GPU acceleration and prevent repaint flash
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          willChange: 'contents',
+          // Keep content visible during re-renders
+          contentVisibility: 'visible',
+          contain: 'layout style paint'
+        }}
+      >
         {/* Desktop header - sticky at top */}
-        <div 
-          className="chat-header text-white p-2 flex items-center justify-between"
-          style={{ backgroundColor: resolvedPrimaryColor }}
-        >
-          <div className="flex items-center space-x-2">
-            <img 
-              src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-              alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-              className="w-10 h-10 rounded-full border-2 border-white"
-            />
-
-            <div>
-              <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button 
-              type="button"
-              onClick={() => setShowAbout(true)}
-              className="text-white p-1.5 rounded transition-colors"
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              title="About BotTailor"
-              data-testid="button-about"
-            >
-              <HelpCircle className="h-4 w-4" />
-            </button>
-            <button 
-              type="button"
-              onClick={() => refreshSession('embedded-header-button')}
-              className="text-white p-1.5 rounded transition-colors"
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              title="Start new conversation"
-              data-testid="button-refresh-session"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-            <button 
-              type="button"
-              onClick={handleEmbeddedClose}
-              className="text-white p-1.5 rounded transition-colors"
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              data-testid="button-minimize-chat"
-            >
-              <Minimize2 className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        <WidgetHeader
+          primaryColor={resolvedPrimaryColor}
+          title={chatbotConfig?.name || 'Support Assistant'}
+          avatarUrl={chatbotConfig?.avatarUrl}
+          onAbout={() => setShowAbout(true)}
+          onRefresh={() => refreshSession('embedded-header-button')}
+          onClose={handleEmbeddedClose}
+          variant="embedded"
+        />
 
         {/* Chat content - takes remaining space */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -872,9 +450,10 @@ export default function ChatWidget({
             />
           ) : (
             <TabbedChatInterface 
+              key={`chat-${currentSessionId}`}
               sessionId={currentSessionId} 
               isMobile={false} 
-              isPreloaded={!isSessionLoading && !isMessagesLoading}
+              isPreloaded={true}
               isEmbedded={true}
               chatbotConfigId={chatbotConfigId}
               chatbotConfig={chatbotConfig}
@@ -888,189 +467,77 @@ export default function ChatWidget({
 
   // For non-embedded (development page), show floating widget
   return (
-    <div className={`fixed ${positionClasses[position]} z-50 font-sans`} ref={containerRef}>
-      {/* Chat Bubble */}
-      {!isOpen && (
-        <div className="relative">
-          <button
-            type="button"
-            onClick={toggleChat}
-            className="w-14 h-14 rounded-full shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
-            style={{ backgroundColor: resolvedPrimaryColor, border: `1px solid ${resolvedPrimaryColor}80`}}
-          >
-            <MessageCircleMore className="w-7 h-7 text-white" strokeWidth={1.5}/>
-          </button>
-
-          {hasNewMessage && (
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">1</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Initial Message Bubbles */}
-      {!isOpen && visibleMessages.length > 0 && (
-        <div
-          className={cn(
-            "absolute flex flex-col gap-2 transition-all duration-300",
-            position === 'bottom-right' ? 'items-end' : 'items-start'
-          )}
-          style={{
-            [position === 'bottom-right' ? 'right' : 'left']: '0',
-            bottom: '68px',
-            zIndex: 46,
-            maxWidth: '380px',
-            width: 'max-content'
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => {
+    <>
+      {/* Chat Bubble and Initial Messages Container */}
+      <div 
+        className={`font-sans chat-widget-container`} 
+        ref={containerRef} 
+        style={{ 
+          position: 'fixed',
+          [position === 'bottom-right' ? 'right' : 'left']: '16px',
+          bottom: '16px',
+          zIndex: 40,
+          pointerEvents: isOpen ? 'none' : 'auto',
+          display: isOpen ? 'none' : 'block',
+          width: '70px',
+          height: '70px'
+        }}
+      >
+        {/* Initial Message Bubbles - absolutely positioned above the bubble */}
+        {visibleMessages.length > 0 && (
+          <InitialMessageBubbles
+            position={position}
+            visibleMessages={visibleMessages}
+            initialMessages={initialMessages}
+            onDismissAll={() => {
               setVisibleMessages([]);
-              // Mark messages as dismissed in sessionStorage
-              const messagesHash = chatbotConfig?.id ? 
-                `${chatbotConfig.id}_${initialMessages.join('|')}` : 
-                initialMessages.join('|');
+              const messagesHash = chatbotConfig?.id ? `${chatbotConfig.id}_${initialMessages.join('|')}` : initialMessages.join('|');
               const dismissedKey = `chat-initial-messages-dismissed-${messagesHash}`;
               safeSessionStorageForMessages.setItem(dismissedKey, 'true');
             }}
-            className="bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-800 rounded-full p-2 shadow-lg border border-gray-200 transition-colors duration-200"
-            title="Hide all messages"
-          >
-            <X className="w-4 h-4" />
-          </button>
+            onOpenChat={() => {
+              setIsOpen(true);
+              setHasNewMessage(false);
+              queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
+            }}
+          />
+        )}
 
-          <div
-            className={cn(
-              "flex flex-col gap-4",
-              position === 'bottom-right' ? 'items-end' : 'items-start'
-            )}
-          >
-            {visibleMessages
-              .slice()
-              .reverse()
-              .map((messageIndex) => {
-                const uniqueKey = `initial-message-${messageIndex}-${currentSessionId}`;
-                const isNewMessage = !renderedInitialMessages.current.has(messageIndex);
+        {/* Chat Bubble */}
+        <FloatingBubble
+          color={resolvedPrimaryColor}
+          onClick={toggleChat}
+          hasNewMessage={hasNewMessage}
+        />
+      </div>
 
-                if (isNewMessage) {
-                  renderedInitialMessages.current.add(messageIndex);
-                }
-
-                return (
-                  <div
-                    key={uniqueKey}
-                    className={cn(
-                      "relative",
-                      isNewMessage && "animate-fadeIn"
-                    )}
-                    style={{ maxWidth: '380px', minWidth: '280px' }}
-                  >
-                    <div 
-                      className="bg-white rounded-2xl shadow-xl border border-gray-300 px-3 py-2 relative cursor-pointer hover:shadow-2xl transition-shadow duration-200"
-                      onClick={() => {
-                        setIsOpen(true);
-                        setHasNewMessage(false);
-                        queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
-                      }}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className="flex-1">
-                          <p className="text-gray-800 text-sm leading-relaxed font-normal">
-                            {initialMessages[messageIndex]}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Arrow pointing to chat bubble */}
-                      <div 
-                        className="absolute w-4 h-4 bg-white border-r border-b border-gray-200 transform rotate-45"
-                        style={{
-                          [position === 'bottom-right' ? 'right' : 'left']: '16px',
-                          bottom: '-8px',
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      )}
-
-      {/* Chat Interface */}
+      {/* Chat Interface - Rendered as sibling to avoid nested fixed positioning */}
       {(isOpen || isClosing) && (
         <div className={`chat-widget-container bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fadeIn ${
           isMobile 
             ? 'fixed inset-4 z-50' 
             : 'w-[550px]'
         }`} style={!isMobile ? { 
-          height: '85vh', 
-          maxHeight: '900px', 
-          minHeight: '700px', 
+          position: 'fixed',
+          bottom: '20px',
+          [position === 'bottom-right' ? 'right' : 'left']: '20px',
+          height: 'clamp(600px, 90vh, 950px)', 
+          maxHeight: '950px', 
+          zIndex: 45,  /* Below cookie consent modal (z-50) */
           animation: isClosing 
             ? 'chatWidgetClose 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards' 
             : 'chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)'
         } : {}}>
           {/* Chat header */}
-          <div 
-            className="text-white p-2 flex items-center justify-between flex-shrink-0"
-            style={{ backgroundColor: resolvedPrimaryColor }}
-          >
-            <div className="flex items-center space-x-2">
-              <img 
-                src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-                alt={`${chatbotConfig?.name || 'Support agent'} avatar`} 
-                className="w-10 h-10 rounded-full border-2 border-white"
-              />
-
-              <div>
-                <h3 className="font-medium text-sm">{chatbotConfig?.name || 'Support Assistant'}</h3>
-                {/*
-                <div className="flex items-center space-x-1 text-xs text-blue-100">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                  <span>Online</span>
-                </div>
-                */}
-              </div>
-
-            </div>
-            <div className="flex items-center space-x-3">
-              <button 
-                type="button"
-                onClick={() => setShowAbout(true)}
-                className="text-white p-1.5 rounded transition-colors"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                title="About BotTailor"
-                data-testid="button-about"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
-              <button 
-                type="button"
-                onClick={() => refreshSession('floating-header-button')}
-                className="text-white p-1.5 rounded transition-colors"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                title="Start new conversation"
-                data-testid="button-refresh-session"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-              <button 
-                type="button"
-                onClick={toggleChat}
-                className="text-white p-1.5 rounded transition-colors"
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${resolvedPrimaryColor}cc`}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                data-testid="button-minimize-chat"
-              >
-                <Minimize2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <WidgetHeader
+            primaryColor={resolvedPrimaryColor}
+            title={chatbotConfig?.name || 'Support Assistant'}
+            avatarUrl={chatbotConfig?.avatarUrl}
+            onAbout={() => setShowAbout(true)}
+            onRefresh={() => refreshSession('floating-header-button')}
+            onClose={toggleChat}
+            variant="floating"
+          />
 
           {/* Chat content - takes remaining space */}
           <div className="flex-1 flex flex-col min-h-0">
@@ -1086,7 +553,7 @@ export default function ChatWidget({
                 key={`chat-${currentSessionId}`}
                 sessionId={currentSessionId}
                 isMobile={isMobile}
-                isPreloaded={!isSessionLoading && !isMessagesLoading}
+                isPreloaded={true}
                 chatbotConfigId={chatbotConfigId}
                 chatbotConfig={chatbotConfig}
               />
@@ -1094,6 +561,10 @@ export default function ChatWidget({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
+
+// Prevent unnecessary re-renders by memoizing the component
+// This stops the entire widget from re-rendering when React Query updates
+export default memo(ChatWidget);

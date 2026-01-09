@@ -419,7 +419,6 @@ Please consider these colors when generating the UI design to ensure visual cons
           description: "Please check your JSON syntax before saving.",
           variant: "destructive",
         });
-        console.error("JSON parsing error:", error);
         return;
       }
     }
@@ -1027,7 +1026,7 @@ Please consider these colors when generating the UI design to ensure visual cons
                       key={configKey}
                       config={currentConfig}
                       onTopicClick={handleTopicClick}
-                      onActionClick={(action) => console.log('Action:', action)}
+                      onActionClick={() => {}}
                       previewFontSizes={{
                         titleFontSize,
                         descriptionFontSize

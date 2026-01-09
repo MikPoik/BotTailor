@@ -4,13 +4,13 @@
 
 :root {
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(243, 30%, 20%);
+  --foreground: hsl(0, 0%, 3.6%);
   --muted: hsl(243, 20%, 94%);
   --muted-foreground: hsl(243, 15%, 45%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(243, 30%, 20%);
+  --popover-foreground: hsl(243, 30%, 10%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(243, 30%, 20%);
+  --card-foreground: hsl(243, 30%, 10%);
   --border: hsl(243, 25%, 88%);
   --input: hsl(243, 20%, 94%);
   --primary: hsl(243, 70%, 45%);
@@ -52,6 +52,7 @@
   --border: hsl(243, 20%, 25%);
   --input: hsl(243, 25%, 20%);
   --primary: hsl(243, 70%, 60%);
+  --primary-light: hsl(243, 70%, 25%);
   --primary-foreground: hsl(243, 30%, 10%);
   --secondary: hsl(38, 92%, 60%);
   --secondary-foreground: hsl(243, 30%, 10%);
@@ -79,6 +80,7 @@
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
     background-color: var(--background) !important;
+    color: var(--foreground) !important;
     transition: none !important;
   }
 
@@ -87,43 +89,52 @@
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
     background-color: var(--background) !important;
+    color: var(--foreground) !important;
     transition: none !important;
   }
 
+  /* Ensure headings use foreground color */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--foreground) !important;
+  }
+
   /* Prevent white flash during React re-renders */
-  html, body, #root {
+  html, body {
     background-color: var(--background) !important;
-    will-change: contents;
-    contain: layout style;
+  }
+  
+  /* CRITICAL: Do NOT use 'contain' on #root as it breaks fixed positioning */
+  #root {
+    background-color: var(--background) !important;
   }
 
   /* Ensure proper dark mode for chat elements */
   .dark .chat-message-bot {
-    background-color: hsl(240, 10%, 15%);
-    border-color: hsl(240, 3.7%, 25%);
-    color: hsl(0, 0%, 98%);
+    background-color: var(--card);
+    border-color: var(--border);
+    color: var(--card-foreground);
   }
 
   .dark .chat-interface {
-    background-color: hsl(240, 10%, 3.9%);
-    border-color: hsl(240, 3.7%, 15.9%);
+    background-color: var(--background);
+    border-color: var(--border);
   }
 
   .dark .chat-interface-mobile {
-    background-color: hsl(240, 10%, 3.9%);
+    background-color: var(--background);
   }
 
   /* Input styling for dark mode */
   .dark input,
   .dark textarea {
-    background-color: hsl(240, 3.7%, 15.9%);
-    color: hsl(0, 0%, 98%);
-    border-color: hsl(240, 3.7%, 25%);
+    background-color: var(--input);
+    color: var(--foreground);
+    border-color: var(--border);
   }
 
   .dark input::placeholder,
   .dark textarea::placeholder {
-    color: hsl(240, 5%, 64.9%);
+    color: var(--muted-foreground);
   }
 }
 
@@ -222,19 +233,23 @@
   }
 
   .chat-interface {
-    @apply absolute bottom-0 right-0 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden;
+    @apply absolute bottom-0 right-0 bg-background rounded-lg shadow-2xl flex flex-col overflow-hidden;
     width: 520px;
-    height: 85vh;
+    height: 90vh;
     min-height: 700px;
-    max-height: 95vh;
+    max-height: 950px;
     animation: chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+    color: var(--foreground);
+    border: 1px solid var(--border);
   }
 
   /* Embedded widget styling */
   .chat-widget-embedded {
-    @apply w-full flex flex-col overflow-hidden bg-white;
+    @apply w-full flex flex-col overflow-hidden bg-background;
     height: 100vh !important;
     max-height: 100vh !important;
+    color: var(--foreground);
+    border: 1px solid var(--border);
   }
 
   /* Chat header for embedded mode */
@@ -277,9 +292,10 @@
     flex-shrink: 0 !important;
     position: sticky !important;
     bottom: 0 !important;
-    background: white !important;
+    background: var(--background) !important;
+    color: var(--foreground) !important;
     z-index: 40 !important;
-    border-top: 1px solid #e5e7eb !important;
+    border-top: 1px solid var(--border) !important;
   }
 
   /* Embedded messages area should be flexible */
@@ -336,7 +352,7 @@
 
   .chat-typing-dots {
     @apply w-2 h-2 rounded-full animate-bounce;
-    background-color: var(--neutral-600);
+    background-color: var(--muted-foreground);
   }
 
   .chat-typing-dots:nth-child(2) {
@@ -352,23 +368,24 @@
 
   .menu-option-button {
     background-color: var(--primary-light);
+    color: var(--foreground);
   }
 
   .menu-option-button:hover {
     background-color: var(--chat-primary-color, var(--primary)) !important;
-    color: white !important;
+    color: var(--primary-foreground) !important;
   }
 
   /* Dark mode for menu option button */
   .dark .menu-option-button {
-    background-color: hsl(240, 3.7%, 25%);
-    color: hsl(0, 0%, 98%);
-    border-color: hsl(240, 3.7%, 35%);
+    background-color: var(--muted);
+    color: var(--foreground);
+    border-color: var(--border);
   }
 
   .dark .menu-option-button:hover {
-    background-color: var(--chat-primary-color, hsl(213, 93%, 54%)) !important;
-    color: white !important;
+    background-color: var(--chat-primary-color, var(--primary)) !important;
+    color: var(--primary-foreground) !important;
   }
 }
 
@@ -472,6 +489,10 @@
   overflow: hidden;
 }
 
+.dark .home-hero {
+  background: linear-gradient(135deg, hsl(243, 30%, 15%) 0%, hsl(243, 25%, 12%) 50%, hsl(38, 92%, 15%) 100%);
+}
+
 .home-hero::before {
   content: '';
   position: absolute;
@@ -518,11 +539,20 @@
   position: relative;
 }
 
+.dark .features-section {
+  background: linear-gradient(180deg, hsl(243, 25%, 20%) 0%, hsl(243, 30%, 12%) 100%);
+}
+
 .feature-card {
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
   border: 1px solid hsl(243, 25%, 88%);
+}
+
+.dark .feature-card {
+  border: 1px solid hsl(243, 20%, 30%);
+  background-color: hsl(243, 25%, 18%);
 }
 
 .feature-card::before {
@@ -564,6 +594,10 @@
 
 .demo-section {
   background: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(243, 20%, 94%) 100%);
+}
+
+.dark .demo-section {
+  background: linear-gradient(180deg, hsl(243, 30%, 12%) 0%, hsl(243, 25%, 20%) 100%);
 }
 
 .cta-section {
@@ -617,6 +651,12 @@
   animation: float 4s ease-in-out infinite;
 }
 
+.dark .section-badge {
+  background: hsl(243, 70%, 25%);
+  color: hsl(243, 70%, 60%);
+  border: 1px solid hsl(243, 70%, 35%);
+}
+
 .hero-button {
   position: relative;
   overflow: hidden;
@@ -658,7 +698,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: white;
+    background: var(--background);
+    color: var(--foreground);
     z-index: 50;
     display: flex;
     flex-direction: column;
@@ -667,6 +708,7 @@
     font-size:0.9rem !important;
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
+    border: 1px solid var(--border);
   }
 
   /* Mobile embedded widget styling */
@@ -705,9 +747,10 @@
   div[data-radix-tabs-list] {
     position: sticky !important;
     bottom: 0 !important;
-    background: white !important;
+    background: var(--background) !important;
+    color: var(--foreground) !important;
     z-index: 1000 !important;
-    border-top: 1px solid #e5e7eb !important;
+    border-top: 1px solid var(--border) !important;
     flex-shrink: 0 !important;
   }
 

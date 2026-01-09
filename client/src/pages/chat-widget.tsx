@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import ChatWidget from "@/components/chat/chat-widget";
 
 export default function ChatWidgetPage() {
@@ -38,7 +38,6 @@ export default function ChatWidgetPage() {
     if (embedded && injectedConfig?.sessionId) {
       // Use session ID from server injection (already optimized for embedded mode)
       newSessionId = injectedConfig.sessionId;
-      console.log('[CHAT-WIDGET] Using server-injected session ID:', newSessionId);
     } else {
       // Development mode: Use global session storage for consistency
       const storageKey = 'global-chat-session-id';
@@ -46,11 +45,9 @@ export default function ChatWidgetPage() {
       
       if (storedSessionId) {
         newSessionId = storedSessionId;
-        console.log('[CHAT-WIDGET] Retrieved session ID from global storage:', newSessionId);
       } else {
         newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         safeSessionStorage.setItem(storageKey, newSessionId);
-        console.log('[CHAT-WIDGET] Generated and stored new session ID:', newSessionId);
       }
     }
     
@@ -70,13 +67,17 @@ export default function ChatWidgetPage() {
   // Only show spinner on very first load - never show it again after initialization
   const shouldShowPageSpinner = !sessionId && !hasInitializedRef.current;
   
-  if (shouldShowPageSpinner) {
-    console.log('[CHAT-WIDGET-PAGE] ⚠️ SHOWING PAGE-LEVEL SPINNER ⚠️', {
-      sessionId,
-      hasInitialized: hasInitializedRef.current,
-      time: new Date().toISOString()
-    });
-  }
+  // Prepare embedded widget data (must be outside conditionals per React hooks rules)
+  const injectedConfig = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__ : undefined;
+  const chatbotConfig = useMemo(() => injectedConfig?.chatbotConfig, [injectedConfig?.chatbotConfig?.id]);
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  
+  // Memoize theme to prevent recreating object on every render
+  const theme = useMemo(() => ({
+    primaryColor: urlParams?.get('primaryColor') || injectedConfig?.theme?.primaryColor || '#2563eb',
+    backgroundColor: urlParams?.get('backgroundColor') || injectedConfig?.theme?.backgroundColor || '#ffffff',
+    textColor: urlParams?.get('textColor') || injectedConfig?.theme?.textColor || '#1f2937'
+  }), [injectedConfig?.theme?.primaryColor, injectedConfig?.theme?.backgroundColor, injectedConfig?.theme?.textColor]);
   
   if (shouldShowPageSpinner) {
     return (
@@ -88,17 +89,13 @@ export default function ChatWidgetPage() {
 
   // If embedded, show only the chat widget
   if (isEmbedded) {
-    // Check if we have a specific chatbot config from the injected config
-    const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
-    const chatbotConfig = injectedConfig?.chatbotConfig;
-
     // STRICT VALIDATION: No fallback allowed - must have valid chatbot config
     if (!injectedConfig?.embedded || !chatbotConfig?.id) {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-gray-50">
+        <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-slate-900">
           <div className="text-center p-4">
-            <p className="text-gray-600 text-sm">Chat widget configuration error</p>
-            <p className="text-gray-500 text-xs mt-1">No valid chatbot configuration found</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Chat widget configuration error</p>
+            <p className="text-gray-500 dark:text-gray-500 text-xs mt-1">No valid chatbot configuration found</p>
           </div>
         </div>
       );
@@ -115,15 +112,6 @@ export default function ChatWidgetPage() {
         </div>
       );
     }
-
-    // Read theme colors from URL parameters first, then fallback to injected config, then defaults
-    const urlParams = new URLSearchParams(window.location.search);
-
-    const theme = {
-      primaryColor: urlParams.get('primaryColor') || injectedConfig?.theme?.primaryColor || '#2563eb',
-      backgroundColor: urlParams.get('backgroundColor') || injectedConfig?.theme?.backgroundColor || '#ffffff',
-      textColor: urlParams.get('textColor') || injectedConfig?.theme?.textColor || '#1f2937'
-    };
 
     return (
       <div

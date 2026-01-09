@@ -29,13 +29,11 @@ export function useGlobalChatSession() {
     const storedSessionId = safeSessionStorage.getItem(GLOBAL_SESSION_STORAGE_KEY);
 
     if (storedSessionId) {
-      //console.log("[GLOBAL-CHAT] Retrieved session ID from storage:", storedSessionId);
       return storedSessionId;
     }
 
     const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     safeSessionStorage.setItem(GLOBAL_SESSION_STORAGE_KEY, newSessionId);
-    //console.log("[GLOBAL-CHAT] Generated and stored new session ID:", newSessionId);
     return newSessionId;
   });
 

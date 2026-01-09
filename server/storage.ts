@@ -113,6 +113,9 @@ export interface IStorage {
     }>;
   }>;
 
+  // Survey history deletion
+  deleteAllSurveyHistory(chatbotConfigId: number): Promise<void>;
+
   // Conversation count methods
   getConversationCount(userId: string): Promise<number>;
 
@@ -567,6 +570,24 @@ export class DatabaseStorage implements IStorage {
     await db.delete(surveySessions).where(eq(surveySessions.surveyId, id));
     // Then delete the survey
     await db.delete(surveys).where(eq(surveys.id, id));
+  }
+
+  async deleteAllSurveyHistory(chatbotConfigId: number): Promise<void> {
+    // Find all surveys belonging to this chatbot
+    const surveysForChatbot = await db
+      .select({ id: surveys.id })
+      .from(surveys)
+      .where(eq(surveys.chatbotConfigId, chatbotConfigId));
+
+    if (!surveysForChatbot || surveysForChatbot.length === 0) return;
+
+    const surveyIds = surveysForChatbot.map((s) => s.id);
+
+    // Delete all survey sessions linked to these surveys
+    // Use iterative deletion to avoid importing extra helpers; keeps behavior explicit
+    for (const sid of surveyIds) {
+      await db.delete(surveySessions).where(eq(surveySessions.surveyId, sid));
+    }
   }
 
   // Survey session methods

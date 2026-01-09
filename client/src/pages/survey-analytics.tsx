@@ -1,11 +1,24 @@
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BarChart3, Clock, Users, TrendingUp, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, BarChart3, Clock, Users, TrendingUp, CheckCircle, XCircle, Trash2, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 
 interface SurveySession {
@@ -56,6 +69,7 @@ interface ChatbotConfig {
 export default function SurveyAnalytics() {
   const { guid } = useParams<{ guid: string }>();
   const [selectedSurvey, setSelectedSurvey] = useState<number | null>(null);
+  const { toast } = useToast();
 
   // Fetch chatbot details
   const { data: chatbot } = useQuery<ChatbotConfig>({
@@ -67,6 +81,37 @@ export default function SurveyAnalytics() {
   const { data: analytics, isLoading: analyticsLoading } = useQuery<SurveyAnalyticsResponse>({
     queryKey: [`/api/chatbots/${chatbot?.id}/surveys/analytics`],
     enabled: !!chatbot?.id,
+  });
+
+  // Delete all survey history mutation
+  const deleteSurveyHistoryMutation = useMutation({
+    mutationFn: async () => {
+      if (!chatbot?.id) throw new Error("Chatbot not loaded");
+      const response = await apiRequest('DELETE', `/api/chatbots/${chatbot.id}/surveys/history`);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || 'Failed to delete survey history');
+      }
+      return response;
+    },
+    onSuccess: async () => {
+      const key = [`/api/chatbots/${chatbot?.id}/surveys/analytics`];
+      // Invalidate and proactively refetch to ensure immediate UI update
+      await queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' });
+      await queryClient.refetchQueries({ queryKey: key, type: 'active' });
+      setSelectedSurvey(null);
+      toast({
+        title: "Success",
+        description: "Survey history deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete survey history",
+        variant: "destructive",
+      });
+    },
   });
 
   const formatTime = (milliseconds: number) => {
@@ -121,6 +166,42 @@ export default function SurveyAnalytics() {
             </p>
           )}
         </div>
+        {analytics && analytics.totalResponses > 0 && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                disabled={deleteSurveyHistoryMutation.isPending}
+                data-testid="button-delete-survey-history"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {deleteSurveyHistoryMutation.isPending ? "Deleting..." : "Delete Survey History"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent data-testid="dialog-delete-survey-history">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  Delete Survey History
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete all {analytics.totalResponses} recorded survey response{analytics.totalResponses !== 1 ? 's' : ''}? This action cannot be undone and will permanently remove survey session data used for analytics.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel data-testid="button-cancel-delete-survey-history">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => deleteSurveyHistoryMutation.mutate()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  data-testid="button-confirm-delete-survey-history"
+                >
+                  Delete Survey History
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       {!analytics || analytics.totalSurveys === 0 ? (

@@ -77,6 +77,9 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     refetchOnMount: false, // Prevent refetch on component remounts
   });
 
+  // Detect if we're in embedded mode
+  const isEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
+
   // Get messages
   const { data: messagesData, isLoading: isMessagesLoading } = useQuery({
     queryKey: ['/api/chat', sessionId, 'messages'],
@@ -94,9 +97,15 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     },
     enabled: !!sessionId && !!session,
     staleTime: Infinity, // Messages are managed via optimistic updates, never auto-refetch
+    gcTime: Infinity, // Keep data in cache forever in embedded mode
     refetchOnWindowFocus: false, // Prevent refetch on iframe focus changes (causes flash)
     refetchOnMount: false, // Prevent refetch on component remounts
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    refetchInterval: false, // Disable polling
+    refetchIntervalInBackground: false,
+    notifyOnChangeProps: isEmbedded ? [] : undefined, // In embedded mode, prevent notifications unless data actually changes
+    structuralSharing: false, // Disable structural sharing to prevent unnecessary re-renders
+    placeholderData: (previousData) => previousData, // Keep showing previous data during updates to prevent flash
   });
 
   // Memoize filtered messages to prevent unnecessary re-renders
@@ -134,7 +143,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         safeSessionStorage.removeItem(limitKey);
         setReadOnlyMode(false);
         setLimitExceededInfo(null);
-        console.log('[CHAT] Cleared read-only state for potential recovery');
+
       }, 30 * 60 * 1000); // 30 minutes
 
       return () => clearTimeout(recoveryTimer);
@@ -272,7 +281,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
                 onError?.(data.message);
               }
             } catch (parseError) {
-              console.warn('Failed to parse streaming data:', parseError, 'Line:', line);
+              // Silently skip unparseable lines (could be partial chunks)
             }
           }
         }
@@ -322,7 +331,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     },
   });
 
-  // Select option mutation
+  // Select option mutation - NEVER invalidate queries to prevent flash
   const selectOptionMutation = useMutation({
     mutationFn: async ({ optionId, payload, optionText }: { optionId: string; payload?: any; optionText?: string }) => {
       // Don't create optimistic user message here - streaming will handle it
@@ -337,6 +346,8 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
       return result;
     },
+    // CRITICAL: Never invalidate queries on option select to prevent flash
+    // Messages are updated via streaming callbacks instead
   });
 
   const sendMessage = async (content: string) => {
@@ -344,7 +355,6 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   };
 
   const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
-    //console.log(`[FRONTEND] Selecting option: ${optionId}, text: ${optionText}`);
     return selectOptionMutation.mutateAsync({ optionId, payload, optionText });
   };
 

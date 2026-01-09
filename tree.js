@@ -13,6 +13,9 @@ node tree.js --export
 Export simple tree to tree.md:
 node tree.js --export --simple
 
+Output in JSON format:
+node tree.js --json
+
 Ignore specific folders:
 node tree.js --ignore client/src/components/ui --simple --export
 
@@ -538,6 +541,7 @@ function generateSourceCodeTreeWithDirectory(
   directoryTree,
   exportToFile = false,
   simpleMode = false,
+  jsonOutput = false,
 ) {
   const generator = new SourceCodeTreeGenerator(filePaths, {}, directoryTree);
 
@@ -554,17 +558,43 @@ function generateSourceCodeTreeWithDirectory(
     simpleMode,
   );
 
-  const title = simpleMode
-    ? "Directory Tree Structure:"
-    : "Source Code Tree with Directory Structure:";
-  console.log(title);
-  console.log("=".repeat(60));
-  console.log(treeOutput);
+  if (jsonOutput) {
+    const jsonData = {
+      title: simpleMode ? "Directory Tree" : "Source Code Tree",
+      generatedAt: new Date().toISOString(),
+      simpleMode,
+      directoryTree,
+      analysisTree: tree,
+    };
+    console.log(JSON.stringify(jsonData, null, 2));
+  } else {
+    const title = simpleMode
+      ? "Directory Tree Structure:"
+      : "Source Code Tree with Directory Structure:";
+    console.log(title);
+    console.log("=".repeat(60));
+    console.log(treeOutput);
+  }
 
   // Export to file if requested
   if (exportToFile) {
-    const title = simpleMode ? "Directory Tree" : "Source Code Tree";
-    const markdownContent = `# ${title}
+    if (jsonOutput) {
+      const jsonData = {
+        title: simpleMode ? "Directory Tree" : "Source Code Tree",
+        generatedAt: new Date().toISOString(),
+        simpleMode,
+        directoryTree,
+        analysisTree: tree,
+      };
+      try {
+        fs.writeFileSync("tree.json", JSON.stringify(jsonData, null, 2), "utf8");
+        console.log("\n✅ Tree exported to tree.json");
+      } catch (error) {
+        console.error("\n❌ Failed to export tree:", error.message);
+      }
+    } else {
+      const title = simpleMode ? "Directory Tree" : "Source Code Tree";
+      const markdownContent = `# ${title}
 
 Generated on: ${new Date().toISOString()}
 ${simpleMode ? "\n*Simple mode: Directory structure only*" : ""}
@@ -574,11 +604,12 @@ ${treeOutput}
 \`\`\`
 `;
 
-    try {
-      fs.writeFileSync("tree.md", markdownContent, "utf8");
-      console.log("\n✅ Tree exported to tree.md");
-    } catch (error) {
-      console.error("\n❌ Failed to export tree:", error.message);
+      try {
+        fs.writeFileSync("tree.md", markdownContent, "utf8");
+        console.log("\n✅ Tree exported to tree.md");
+      } catch (error) {
+        console.error("\n❌ Failed to export tree:", error.message);
+      }
     }
   }
 
@@ -593,7 +624,6 @@ ${treeOutput}
 function buildDirectoryTree(
   dir,
   extensions = [".ts", ".tsx", ".js", ".jsx"],
-  rootDir = dir,
   ignoreFolders = [],
 ) {
   const tree = {};
@@ -603,10 +633,10 @@ function buildDirectoryTree(
 
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      const relativePath = path.relative(rootDir, fullPath);
+      const relativePath = path.relative(process.cwd(), fullPath);
 
       // Skip the tree.js file itself
-      if (entry.name === "tree.js" && dir === rootDir) {
+      if (entry.name === "tree.js" && dir === process.cwd()) {
         continue;
       }
 
@@ -634,7 +664,6 @@ function buildDirectoryTree(
           const subtree = buildDirectoryTree(
             fullPath,
             extensions,
-            rootDir,
             ignoreFolders,
           );
           if (Object.keys(subtree).length > 0) {
@@ -682,6 +711,7 @@ if (isMainModule) {
   let ignoreFolders = [];
   let exportToFile = false;
   let simpleMode = false;
+  let jsonOutput = false;
 
   // Check for --simple flag
   const simpleIndex = args.indexOf("--simple");
@@ -695,6 +725,13 @@ if (isMainModule) {
   if (exportIndex !== -1) {
     exportToFile = true;
     args.splice(exportIndex, 1);
+  }
+
+  // Check for --json flag
+  const jsonIndex = args.indexOf("--json");
+  if (jsonIndex !== -1) {
+    jsonOutput = true;
+    args.splice(jsonIndex, 1);
   }
 
   // Check for --ignore flag
@@ -722,7 +759,6 @@ if (isMainModule) {
     const directoryTree = buildDirectoryTree(
       currentDir,
       [".ts", ".tsx", ".js", ".jsx"],
-      currentDir,
       ignoreFolders,
     );
     const foundFiles = extractFilePaths(directoryTree);
@@ -742,6 +778,7 @@ if (isMainModule) {
       directoryTree,
       exportToFile,
       simpleMode,
+      jsonOutput,
     );
   } else {
     // Process specified files/directories
@@ -760,7 +797,6 @@ if (isMainModule) {
         const argTree = buildDirectoryTree(
           arg,
           [".ts", ".tsx", ".js", ".jsx"],
-          arg,
           ignoreFolders,
         );
         const dirFiles = extractFilePaths(argTree);
@@ -786,6 +822,7 @@ if (isMainModule) {
       directoryTree,
       exportToFile,
       simpleMode,
+      jsonOutput,
     );
   }
 }

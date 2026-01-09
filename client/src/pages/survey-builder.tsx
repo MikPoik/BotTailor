@@ -146,16 +146,15 @@ export default function SurveyBuilderPage() {
       return await apiRequest("PATCH", `/api/surveys/${data.id}`, data.updates);
     },
     onSuccess: (data, variables) => {
-      // Invalidate queries to refetch data
+      // Only invalidate queries to refetch data - this updates the list
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${chatbot?.id}/surveys`] });
 
-      // Update the selected survey if it's the one being updated
+      // Update the selected survey in local state to prevent UI jumps
       if (selectedSurvey && selectedSurvey.id === variables.id) {
-        // Update the local state with the new data
         const updatedSurvey = { ...selectedSurvey, ...variables.updates };
         setSelectedSurvey(updatedSurvey);
 
-        // Update local form state
+        // Update local form state for name/description
         if (variables.updates.name) {
           setLocalSurveyName(variables.updates.name);
         }
@@ -163,8 +162,20 @@ export default function SurveyBuilderPage() {
           setLocalSurveyDescription(variables.updates.description || "");
         }
 
-        // Clear unsaved changes flag
+        // Update local settings state if surveyConfig changed
+        if (variables.updates.surveyConfig) {
+          const config = variables.updates.surveyConfig as SurveyConfig;
+          if (config.completionMessage !== undefined) {
+            setLocalCompletionMessage(config.completionMessage);
+          }
+          if (config.aiInstructions !== undefined) {
+            setLocalAiInstructions(config.aiInstructions);
+          }
+        }
+
+        // Clear unsaved changes flags
         setHasUnsavedChanges(false);
+        setHasUnsavedSettings(false);
       }
 
       toast({ title: "Survey updated successfully!" });
@@ -322,22 +333,37 @@ export default function SurveyBuilderPage() {
   // Local state for editing questions to prevent constant updates
   const [localQuestionText, setLocalQuestionText] = useState<{ [key: number]: string }>({});
   const [localOptionTexts, setLocalOptionTexts] = useState<{ [key: string]: string }>({});
+  
+  // Local state for question settings to prevent immediate saves
+  const [localQuestionSettings, setLocalQuestionSettings] = useState<{ [key: number]: Partial<SurveyQuestion> }>({});
+  
+  // Local state for survey settings
+  const [localCompletionMessage, setLocalCompletionMessage] = useState<string>("");
+  const [localAiInstructions, setLocalAiInstructions] = useState<string>("");
+  const [hasUnsavedSettings, setHasUnsavedSettings] = useState<boolean>(false);
 
-  // Auto-save debouncing for survey details
+  // Update local settings state when selectedSurvey changes
   useEffect(() => {
-    if (hasUnsavedChanges && selectedSurvey) {
-      const timer = setTimeout(() => {
-        handleSaveSurveyDetails();
-      }, 2000); // Auto-save after 2 seconds of inactivity
-
-      return () => clearTimeout(timer);
+    if (selectedSurvey) {
+      const config = getSurveyConfig(selectedSurvey);
+      setLocalCompletionMessage(config.completionMessage || "");
+      setLocalAiInstructions(config.aiInstructions || "");
+      setHasUnsavedSettings(false);
     }
-  }, [hasUnsavedChanges, localSurveyName, localSurveyDescription, selectedSurvey, handleSaveSurveyDetails]);
+  }, [selectedSurvey]);
+
+  // Track changes to settings
+  useEffect(() => {
+    if (selectedSurvey) {
+      const config = getSurveyConfig(selectedSurvey);
+      const completionChanged = localCompletionMessage !== (config.completionMessage || "");
+      const aiChanged = localAiInstructions !== (config.aiInstructions || "");
+      setHasUnsavedSettings(completionChanged || aiChanged);
+    }
+  }, [localCompletionMessage, localAiInstructions, selectedSurvey]);
 
   const handleUpdateQuestion = (surveyId: number, questionIndex: number, updates: Partial<SurveyQuestion>) => {
     if (!selectedSurvey) return;
-
-    
 
     const currentConfig = getSurveyConfig(selectedSurvey);
     const updatedQuestions = currentConfig.questions.map((q: SurveyQuestion, index: number) =>
@@ -348,15 +374,6 @@ export default function SurveyBuilderPage() {
       ...currentConfig,
       questions: updatedQuestions,
     };
-
-
-
-    // Optimistically update the selected survey state
-    const optimisticUpdatedSurvey = {
-      ...selectedSurvey,
-      surveyConfig: updatedConfig
-    };
-    setSelectedSurvey(optimisticUpdatedSurvey);
 
     updateSurveyMutation.mutate({
       id: surveyId,
@@ -383,6 +400,22 @@ export default function SurveyBuilderPage() {
   const handleOptionTextChange = (questionIndex: number, optionIndex: number, text: string) => {
     const key = `${questionIndex}-${optionIndex}`;
     setLocalOptionTexts(prev => ({ ...prev, [key]: text }));
+  };
+
+  const handleQuestionSettingChange = (questionIndex: number, updates: Partial<SurveyQuestion>) => {
+    setLocalQuestionSettings(prev => ({
+      ...prev,
+      [questionIndex]: { ...prev[questionIndex], ...updates }
+    }));
+  };
+
+  const getQuestionSetting = (questionIndex: number, key: keyof SurveyQuestion, defaultValue: any) => {
+    const localSettings = localQuestionSettings[questionIndex];
+    if (localSettings && localSettings[key] !== undefined) {
+      return localSettings[key];
+    }
+    const question = getSurveyConfig(selectedSurvey).questions[questionIndex];
+    return question?.[key] ?? defaultValue;
   };
 
   const handleOptionTextSave = (questionIndex: number, optionIndex: number) => {
@@ -645,18 +678,18 @@ export default function SurveyBuilderPage() {
                                   <div>
                                     <Label>Question Type</Label>
                                     <Select
-                                      value={question.type}
+                                      value={getQuestionSetting(index, 'type', question.type)}
                                       onValueChange={(value) => {
                                         const updates: Partial<SurveyQuestion> = { type: value as any };
                                         if (value === "text" || value === "rating") {
                                           updates.options = undefined;
-                                        } else if (!question.options) {
+                                        } else if (!question.options && !getQuestionSetting(index, 'options', null)) {
                                           updates.options = [
                                             { id: "option1", text: "Option 1" },
                                             { id: "option2", text: "Option 2" },
                                           ];
                                         }
-                                        handleUpdateQuestion(selectedSurvey.id, index, updates);
+                                        handleQuestionSettingChange(index, updates);
                                       }}
                                     >
                                       <SelectTrigger>
@@ -674,8 +707,8 @@ export default function SurveyBuilderPage() {
                                   <div>
                                     <Label>Required</Label>
                                     <Select
-                                      value={question.required ? "true" : "false"}
-                                      onValueChange={(value) => handleUpdateQuestion(selectedSurvey.id, index, { required: value === "true" })}
+                                      value={getQuestionSetting(index, 'required', question.required) ? "true" : "false"}
+                                      onValueChange={(value) => handleQuestionSettingChange(index, { required: value === "true" })}
                                     >
                                       <SelectTrigger>
                                         <SelectValue />
@@ -688,12 +721,12 @@ export default function SurveyBuilderPage() {
                                   </div>
                                 </div>
 
-                                {(question.type === 'single_choice' || question.type === 'multiple_choice') && (
+                                {(getQuestionSetting(index, 'type', question.type) === 'single_choice' || getQuestionSetting(index, 'type', question.type) === 'multiple_choice') && (
                                   <div>
                                     <Label>Allow Free Choice</Label>
                                     <Select
-                                      value={question.allowFreeChoice ? "true" : "false"}
-                                      onValueChange={(value) => handleUpdateQuestion(selectedSurvey.id, index, { allowFreeChoice: value === "true" })}
+                                      value={getQuestionSetting(index, 'allowFreeChoice', question.allowFreeChoice) ? "true" : "false"}
+                                      onValueChange={(value) => handleQuestionSettingChange(index, { allowFreeChoice: value === "true" })}
                                     >
                                       <SelectTrigger>
                                         <SelectValue />
@@ -726,10 +759,7 @@ export default function SurveyBuilderPage() {
                                             size="sm"
                                             onClick={async () => {
                                               if (question.options && question.options.length > 2) {
-                                                //console.log(`Deleting option ${optionIndex} from question ${index}. Current options:`, question.options);
-
                                                 const updatedOptions = question.options.filter((_: any, idx: number) => idx !== optionIndex);
-                                                //console.log('Updated options after deletion:', updatedOptions);
 
                                                 // Clear local state for deleted option and adjust indices
                                                 setLocalOptionTexts(prev => {
@@ -775,7 +805,7 @@ export default function SurveyBuilderPage() {
                                 )}
 
                                 {
-                                  question.type === 'rating' && (
+                                  getQuestionSetting(index, 'type', question.type) === 'rating' && (
                                     <div className="space-y-3">
                                       <Label>Rating Configuration</Label>
                                       <div className="grid grid-cols-3 gap-4">
@@ -783,38 +813,47 @@ export default function SurveyBuilderPage() {
                                           <Label>Min Value</Label>
                                           <Input
                                             type="number"
-                                            value={question.metadata?.minValue || 1}
-                                            onChange={(e) => handleUpdateQuestion(selectedSurvey.id, index, {
-                                              metadata: {
-                                                ...question.metadata,
-                                                minValue: parseInt(e.target.value) || 1
-                                              }
-                                            })}
+                                            value={getQuestionSetting(index, 'metadata', question.metadata)?.minValue || 1}
+                                            onChange={(e) => {
+                                              const currentMetadata = getQuestionSetting(index, 'metadata', question.metadata) || {};
+                                              handleQuestionSettingChange(index, {
+                                                metadata: {
+                                                  ...currentMetadata,
+                                                  minValue: parseInt(e.target.value) || 1
+                                                }
+                                              });
+                                            }}
                                           />
                                         </div>
                                         <div>
                                           <Label>Max Value</Label>
                                           <Input
                                             type="number"
-                                            value={question.metadata?.maxValue || 5}
-                                            onChange={(e) => handleUpdateQuestion(selectedSurvey.id, index, {
-                                              metadata: {
-                                                ...question.metadata,
-                                                maxValue: parseInt(e.target.value) || 5
-                                              }
-                                            })}
+                                            value={getQuestionSetting(index, 'metadata', question.metadata)?.maxValue || 5}
+                                            onChange={(e) => {
+                                              const currentMetadata = getQuestionSetting(index, 'metadata', question.metadata) || {};
+                                              handleQuestionSettingChange(index, {
+                                                metadata: {
+                                                  ...currentMetadata,
+                                                  maxValue: parseInt(e.target.value) || 5
+                                                }
+                                              });
+                                            }}
                                           />
                                         </div>
                                         <div>
                                           <Label>Rating Type</Label>
                                           <Select
-                                            value={question.metadata?.ratingType || 'stars'}
-                                            onValueChange={(value) => handleUpdateQuestion(selectedSurvey.id, index, {
-                                              metadata: {
-                                                ...question.metadata,
-                                                ratingType: value as 'stars' | 'numbers' | 'scale'
-                                              }
-                                            })}
+                                            value={getQuestionSetting(index, 'metadata', question.metadata)?.ratingType || 'stars'}
+                                            onValueChange={(value) => {
+                                              const currentMetadata = getQuestionSetting(index, 'metadata', question.metadata) || {};
+                                              handleQuestionSettingChange(index, {
+                                                metadata: {
+                                                  ...currentMetadata,
+                                                  ratingType: value as 'stars' | 'numbers' | 'scale'
+                                                }
+                                              });
+                                            }}
                                           >
                                             <SelectTrigger>
                                               <SelectValue />
@@ -876,6 +915,16 @@ export default function SurveyBuilderPage() {
                                         });
                                       }
 
+                                      // Save local question settings if changed
+                                      if (localQuestionSettings[index]) {
+                                        Object.assign(updates, localQuestionSettings[index]);
+                                        setLocalQuestionSettings(prev => {
+                                          const newState = { ...prev };
+                                          delete newState[index];
+                                          return newState;
+                                        });
+                                      }
+
                                       // Apply all updates at once
                                       if (Object.keys(updates).length > 0) {
                                         handleUpdateQuestion(selectedSurvey.id, index, updates);
@@ -908,6 +957,13 @@ export default function SurveyBuilderPage() {
                                           delete newState[optionKey];
                                           return newState;
                                         });
+                                      });
+
+                                      // Clear question settings changes
+                                      setLocalQuestionSettings(prev => {
+                                        const newState = { ...prev };
+                                        delete newState[index];
+                                        return newState;
                                       });
 
                                       setEditingQuestion(null);
@@ -972,7 +1028,15 @@ export default function SurveyBuilderPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setEditingQuestion(index)}
+                                    onClick={() => {
+                                      // Clear any pending local settings for this question when entering edit mode
+                                      setLocalQuestionSettings(prev => {
+                                        const newState = { ...prev };
+                                        delete newState[index];
+                                        return newState;
+                                      });
+                                      setEditingQuestion(index);
+                                    }}
                                     data-testid={`button-edit-question-${index}`}
                                   >
                                     <Edit className="h-4 w-4" />
@@ -1053,19 +1117,8 @@ export default function SurveyBuilderPage() {
                         <Label htmlFor="completion-message">Completion Message</Label>
                         <Textarea
                           id="completion-message"
-                          value={getSurveyConfig(selectedSurvey).completionMessage || ""}
-                          onChange={(e) => {
-                            const currentConfig = getSurveyConfig(selectedSurvey);
-                            updateSurveyMutation.mutate({
-                              id: selectedSurvey.id,
-                              updates: { 
-                                surveyConfig: {
-                                  ...currentConfig,
-                                  completionMessage: e.target.value
-                                }
-                              }
-                            });
-                          }}
+                          value={localCompletionMessage}
+                          onChange={(e) => setLocalCompletionMessage(e.target.value)}
                           placeholder="Thank you for completing the survey!"
                         />
                       </div>
@@ -1074,22 +1127,40 @@ export default function SurveyBuilderPage() {
                         <Label htmlFor="ai-instructions">AI Instructions</Label>
                         <Textarea
                           id="ai-instructions"
-                          value={getSurveyConfig(selectedSurvey).aiInstructions || ""}
-                          onChange={(e) => {
-                            const currentConfig = getSurveyConfig(selectedSurvey);
-                            updateSurveyMutation.mutate({
-                              id: selectedSurvey.id,
-                              updates: { 
-                                surveyConfig: {
-                                  ...currentConfig,
-                                  aiInstructions: e.target.value
-                                }
-                              }
-                            });
-                          }}
+                          value={localAiInstructions}
+                          onChange={(e) => setLocalAiInstructions(e.target.value)}
                           placeholder="Instructions for how the AI should conduct this survey..."
                         />
                       </div>
+
+                      {hasUnsavedSettings && (
+                        <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950 rounded-md">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-amber-600">You have unsaved changes to the survey settings.</p>
+                          </div>
+                          <Button
+                            onClick={() => {
+                              if (!selectedSurvey) return;
+                              const currentConfig = getSurveyConfig(selectedSurvey);
+                              updateSurveyMutation.mutate({
+                                id: selectedSurvey.id,
+                                updates: { 
+                                  surveyConfig: {
+                                    ...currentConfig,
+                                    completionMessage: localCompletionMessage,
+                                    aiInstructions: localAiInstructions
+                                  }
+                                }
+                              });
+                            }}
+                            disabled={updateSurveyMutation.isPending}
+                            size="sm"
+                          >
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Settings
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
