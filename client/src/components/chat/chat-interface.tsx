@@ -6,7 +6,6 @@ import MessageBubble from "./message-bubble";
 import TypingIndicator from "./typing-indicator";
 import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
-import { useQueryClient } from "@tanstack/react-query";
 import { computeToneAdjustedColor, resolveThemeColors } from "./color-utils";
 
 interface ChatInterfaceProps {
@@ -21,8 +20,6 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
   const [isStreaming, setIsStreaming] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const streamingBubblesRef = useRef<any[]>([]);
-  const queryClient = useQueryClient();
 
   const { 
     messages, 
@@ -48,61 +45,27 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
     scrollToBottom();
   }, [messages]);
 
-  // Clear streaming bubbles only when we start a new message
-  useEffect(() => {
-    // Don't clear bubbles based on message matching since they're already saved to DB
-    // They will be cleared when starting a new streaming sequence
-  }, []);
-
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || isStreaming) return;
 
     const message = inputMessage.trim();
     setInputMessage("");
     setIsStreaming(true);
-    streamingBubblesRef.current = [];
 
     try {
       await sendStreamingMessage(
         message,
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (message: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...message,
-            metadata: {
-              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
-              isFollowUp,
-              isStreaming: false // Mark as permanent message
-            }
-          };
-
-          // Add bubble directly to main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [bubbleWithFlag] };
-            return { messages: [...old.messages, bubbleWithFlag] };
-          });
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          setIsStreaming(false);
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
+        undefined, // No bubble callback - useChat handles cache
+        () => setIsStreaming(false), // onComplete
         (error: string) => {
           setIsStreaming(false);
-          streamingBubblesRef.current = [];
           console.error("Streaming error:", error);
-        }
+        },
+        undefined, // internalMessage
+        false // skipOptimisticMessage - let useChat add user message
       );
     } catch (error) {
       setIsStreaming(false);
-      streamingBubblesRef.current = [];
     }
   };
 
@@ -128,46 +91,17 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
         ". Provide a helpful response.";
 
       setIsStreaming(true);
-      streamingBubblesRef.current = [];
 
       await sendStreamingMessage(
-        displayText, // Send displayText as the actual message content
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (message: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...message,
-            metadata: {
-              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
-              isFollowUp,
-              isStreaming: false // Mark as permanent message
-            }
-          };
-
-          // Add bubble directly to main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [bubbleWithFlag] };
-            return { messages: [...old.messages, bubbleWithFlag] };
-          });
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          setIsStreaming(false);
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
+        displayText,
+        undefined, // No bubble callback - useChat handles cache  
+        () => setIsStreaming(false), // onComplete
         (error: string) => {
           setIsStreaming(false);
-          streamingBubblesRef.current = [];
           console.error("Option select streaming error:", error);
         },
-        // Pass contextMessage as the internal message for AI processing
-        contextMessage
+        contextMessage, // Pass contextMessage as the internal message for AI processing
+        true // skipOptimisticMessage - user message already shown via selectOption
       );
     } catch (error) {
       console.error("Option select error:", error);
@@ -177,49 +111,21 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
   const handleQuickReply = async (reply: string) => {    if (isLoading || isStreaming) return;
 
     setIsStreaming(true);
-    streamingBubblesRef.current = [];
 
     try {
       await sendStreamingMessage(
         reply,
-        // onBubbleReceived: Add each complete bubble directly to main messages
-        (message: Message) => {
-          // Mark as follow-up if this isn't the first bubble in this streaming sequence
-          const isFollowUp = streamingBubblesRef.current.length > 0;
-          const bubbleWithFlag = {
-            ...message,
-            metadata: {
-              ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
-              isFollowUp,
-              isStreaming: false // Mark as permanent message
-            }
-          };
-
-          // Add bubble directly to main messages query cache
-          queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-            if (!old) return { messages: [bubbleWithFlag] };
-            return { messages: [...old.messages, bubbleWithFlag] };
-          });
-
-          // Keep track of streaming bubbles for counting
-          streamingBubblesRef.current.push(bubbleWithFlag);
-        },
-        // onAllComplete: Streaming finished, just set streaming state to false
-        (messages: Message[]) => {
-          setIsStreaming(false);
-          // Clear the tracking ref since streaming is complete
-          streamingBubblesRef.current = [];
-        },
-        // onError: Handle errors
+        undefined, // No bubble callback - useChat handles cache
+        () => setIsStreaming(false), // onComplete
         (error: string) => {
           setIsStreaming(false);
-          streamingBubblesRef.current = [];
           console.error("Quick reply streaming error:", error);
-        }
+        },
+        undefined, // internalMessage
+        false // skipOptimisticMessage - let useChat add user message
       );
     } catch (error) {
       setIsStreaming(false);
-      streamingBubblesRef.current = [];
     }
   };
 

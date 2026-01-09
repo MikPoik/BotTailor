@@ -38,30 +38,16 @@ export const useStreamingMessage = ({
   const getStreamingHandlers = useCallback((): StreamingMessageHandlers => {
     return {
       onBubbleReceived: (message: Message) => {
-        // Mark as follow-up if this isn't the first bubble in this streaming sequence
+        // Just track bubbles - don't add to cache (use-chat.ts handles that)
         const isFollowUp = streamingBubblesRef.current.length > 0;
         const bubbleWithFlag = {
           ...message,
           metadata: {
             ...(message.metadata && typeof message.metadata === 'object' ? message.metadata : {}),
             isFollowUp,
-            isStreaming: false, // Mark as permanent message
+            isStreaming: false,
           },
         };
-
-        // Add bubble directly to main messages query cache
-        // Use flushSync to force immediate rendering and avoid React 18 batching
-        import('react-dom').then(({ flushSync }) => {
-          flushSync(() => {
-            queryClient.setQueryData(
-              ['/api/chat', sessionId, 'messages'],
-              (old: any) => {
-                if (!old) return { messages: [bubbleWithFlag] };
-                return { messages: [...old.messages, bubbleWithFlag] };
-              },
-            );
-          });
-        });
 
         // Keep track of streaming bubbles for counting
         streamingBubblesRef.current.push(bubbleWithFlag);

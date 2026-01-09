@@ -11,7 +11,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useEffect } from "react";
 import ChatWidget from "@/components/chat/chat-widget";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
-import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle, TrendingUp, ExternalLink, MoreHorizontal } from "lucide-react";
+import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle, TrendingUp, ExternalLink, MoreHorizontal, Layers } from "lucide-react";
 import React from "react";
 import type { RouteDefinition } from "@shared/route-metadata";
 import { useUser } from '@stackframe/react';
@@ -367,6 +367,12 @@ export default function Dashboard() {
                           <Link href={`/chatbots/${chatbot.guid}/ui-designer`} className="flex items-center cursor-pointer">
                             <Palette className="mr-2 h-4 w-4" />
                             UI Designer
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/chatbots/${chatbot.guid}/embed-designs`} className="flex items-center cursor-pointer">
+                            <Layers className="mr-2 h-4 w-4" />
+                            Embed Designs
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>

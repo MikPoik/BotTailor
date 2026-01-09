@@ -197,7 +197,12 @@ export function setupPublicRoutes(app: Express) {
   });
 
   // Embed route with optional GUID parameter
+  // If an embed SPA config is already prepared by upstream middleware (embeds route in dev),
+  // skip serving the legacy HTML and let Vite catch-all render the SPA.
   app.get("/embed/:guid?", async (req: Request, res: Response, next: NextFunction) => {
+    if ((req as any).embedConfig) {
+      return next();
+    }
     try {
       const { guid } = req.params;
       let html = '';

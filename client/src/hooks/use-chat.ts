@@ -77,15 +77,23 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     refetchOnMount: false, // Prevent refetch on component remounts
   });
 
-  // Detect if we're in embedded mode
-  const isEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
+  // Detect embedding modes
+  const isEmbedDesign = typeof window !== 'undefined'
+    ? Boolean((window as any).__EMBED_CONFIG__)
+    : false;
+  const isLegacyChatEmbed = typeof window !== 'undefined'
+    ? Boolean((window as any).__CHAT_WIDGET_CONFIG__?.embedded)
+    : false;
+  const isEmbedded = isEmbedDesign || isLegacyChatEmbed;
 
   // Get messages
   const { data: messagesData, isLoading: isMessagesLoading } = useQuery({
     queryKey: ['/api/chat', sessionId, 'messages'],
     queryFn: async () => {
       // Use absolute URL when widget is embedded
-      const config = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__ : undefined;
+      const config = typeof window !== 'undefined'
+        ? (window as any).__CHAT_WIDGET_CONFIG__ || (window as any).__EMBED_CONFIG__
+        : undefined;
       const baseUrl = config?.apiUrl || '';
       const url = `/api/chat/${sessionId}/messages`;
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
@@ -103,7 +111,8 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     refetchInterval: false, // Disable polling
     refetchIntervalInBackground: false,
-    notifyOnChangeProps: isEmbedded ? [] : undefined, // In embedded mode, prevent notifications unless data actually changes
+    // For legacy chat embed we mute query notifications to avoid extra renders; for new embed designs, keep updates live.
+    notifyOnChangeProps: isLegacyChatEmbed ? [] : undefined,
     structuralSharing: false, // Disable structural sharing to prevent unnecessary re-renders
     placeholderData: (previousData) => previousData, // Keep showing previous data during updates to prevent flash
   });
@@ -157,8 +166,10 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     onAllComplete?: (messages: Message[]) => void,
     onError?: (error: string) => void,
     internalMessage?: string,
-    skipOptimisticMessage?: boolean
+    skipOptimisticMessage?: boolean,
+    options?: { manageCache?: boolean }
   ) => {
+    const manageCache = options?.manageCache !== false;
     try {
       setIsTyping(true);
       logDebug('sendStreamingMessage start', { userDisplayText, sessionId, chatbotConfigId });
@@ -171,7 +182,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
           content: userDisplayText,
           sender: 'user',
           messageType: 'text',
-          metadata: {},
+          metadata: { isOptimistic: true }, // Mark as optimistic for replacement
           createdAt: new Date(), // Use Date object for schema consistency
         };
 
@@ -183,8 +194,10 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         });
       }
 
-      // Use absolute URL when widget is embedded
-      const config = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__ : undefined;
+      // Use absolute URL when widget is embedded (chat widget or new embed)
+      const config = typeof window !== 'undefined'
+        ? (window as any).__CHAT_WIDGET_CONFIG__ || (window as any).__EMBED_CONFIG__
+        : undefined;
       const baseUrl = config?.apiUrl || '';
       const url = `/api/chat/${sessionId}/messages/stream`;
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
@@ -243,11 +256,43 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
               if (data.type === 'bubble' && data.message) {
                 const receiveTime = new Date().toISOString();
                 logDebug(`${receiveTime} stream bubble`, data.message.id);
-                // A complete bubble has arrived - show it immediately
+                // Always append the bubble to cache for embed/widget
+                queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+                  if (!old) return { messages: [data.message] };
+                  
+                  // Check if this message already exists by ID (deduplicate)
+                  const messageExists = old.messages.some((m: Message) => m.id === data.message.id);
+                  console.log('[use-chat] Bubble received:', {
+                    messageId: data.message.id,
+                    sender: data.message.sender,
+                    exists: messageExists,
+                    currentMessageIds: old.messages.map((m: Message) => m.id)
+                  });
+                  
+                  if (messageExists) {
+                    console.log('[use-chat] Message already exists, skipping');
+                    return old; // Don't modify if message already exists
+                  }
+                  
+                  // If this is a user message from server, remove optimistic user message
+                  let messages = old.messages;
+                  if (data.message.sender === 'user') {
+                    const beforeCount = messages.length;
+                    messages = messages.filter((m: Message) => 
+                      !((m.metadata as any)?.isOptimistic && m.sender === 'user')
+                    );
+                    const afterCount = messages.length;
+                    console.log('[use-chat] Removed optimistic user messages:', beforeCount - afterCount);
+                  }
+                  
+                  console.log('[use-chat] Adding message to cache:', data.message.id);
+                  return { messages: [...messages, data.message] };
+                });
                 onBubbleReceived?.(data.message);
               } else if (data.type === 'complete') {
                 logDebug('stream complete');
                 setIsTyping(false);
+                // Don't add messages again - they're already in cache from bubbles
                 onAllComplete?.(data.messages);
               } else if (data.type === 'limit_exceeded') {
                 setIsTyping(false);
@@ -381,7 +426,9 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
     initializedSessionRef.current = sessionId;
 
-    // Session initialized - no need to invalidate queries for optimistic UI
+    // Fetch messages after session creation to get welcome message
+    await queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
+
     return sessionResult;
   }, [chatbotConfigId, queryClient, sessionId, session]);
 

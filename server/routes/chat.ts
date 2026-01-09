@@ -339,6 +339,24 @@ export function setupChatRoutes(app: Express) {
           chatbotConfigId: chatbotConfigId || null,
         });
 
+        // Send welcome message for new sessions
+        if (chatbotConfigId) {
+          try {
+            const chatbotConfig = await storage.getChatbotConfigById(chatbotConfigId);
+            if (chatbotConfig && chatbotConfig.welcomeMessage) {
+              await storage.insertMessage({
+                sessionId,
+                content: chatbotConfig.welcomeMessage,
+                sender: "assistant",
+                messageType: "text",
+                metadata: {},
+              });
+            }
+          } catch (welcomeError) {
+            console.error("Error sending welcome message:", welcomeError);
+            // Don't fail session creation if welcome message fails
+          }
+        }
       }
 
       res.json({ session });

@@ -169,6 +169,17 @@ export async function setupVite(app: Express, server: Server) {
         pageTemplate = pageTemplate.replace('</head>', `${configScript}</head>`);
       }
 
+      // Inject embed config for /embed/:embedId in development
+      if ((req as any).embedConfig) {
+        const embedConfig = (req as any).embedConfig;
+        const embedScript = `
+          <script>
+            window.__EMBED_CONFIG__ = ${JSON.stringify(embedConfig)};
+          </script>
+        `;
+        pageTemplate = pageTemplate.replace('</head>', `${embedScript}</head>`);
+      }
+
       const page = await vite.transformIndexHtml(url, pageTemplate);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
@@ -249,6 +260,17 @@ export function serveStatic(app: Express) {
           </script>
         `;
         pageTemplate = pageTemplate.replace('</head>', `${configScript}</head>`);
+      }
+
+      // Inject embed config for /embed/:embedId in production build too, if set
+      if ((req as any).embedConfig) {
+        const embedConfig = (req as any).embedConfig;
+        const embedScript = `
+          <script>
+            window.__EMBED_CONFIG__ = ${JSON.stringify(embedConfig)};
+          </script>
+        `;
+        pageTemplate = pageTemplate.replace('</head>', `${embedScript}</head>`);
       }
 
       res.status(200).set({ "Content-Type": "text/html" }).send(pageTemplate);

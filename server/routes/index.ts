@@ -9,6 +9,7 @@ import { setupUploadRoutes } from "./uploads";
 import { setupWebsiteRoutes } from "./websites";
 import { setupUIDesignerRoutes } from "./ui-designer";
 import { setupContactRoutes } from "./contact";
+import { setupEmbedRoutes } from "./embeds";
 import { subscriptionRouter, webhookHandler } from "./subscription";
 
 // Main route registration function
@@ -18,6 +19,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupChatRoutes(app);
   setupChatbotRoutes(app);
   setupSurveyRoutes(app);
+  // Register embed routes BEFORE public routes to avoid /embed path conflicts
+  setupEmbedRoutes(app);
   setupPublicRoutes(app);
   setupUploadRoutes(app);
   setupWebsiteRoutes(app);

@@ -181,6 +181,53 @@ export const subscriptions = pgTable("subscriptions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Embed Designs table for managing iframe embedding variants
+export const embedDesigns = pgTable("embed_designs", {
+  id: serial("id").primaryKey(),
+  chatbotConfigId: integer("chatbot_config_id").notNull().references(() => chatbotConfigs.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  embedId: varchar("embed_id").notNull().unique().$defaultFn(() => uuidv4()), // Public-facing ID for embed URLs
+  
+  // Basic info
+  name: varchar("name"),
+  description: text("description"),
+  designType: varchar("design_type").notNull().default("minimal"), // 'minimal', 'compact', 'full'
+  
+  // Theme customization
+  primaryColor: varchar("primary_color").default("#2563eb"),
+  backgroundColor: varchar("background_color").default("#ffffff"),
+  textColor: varchar("text_color").default("#1f2937"),
+  
+  // UI customization
+  welcomeMessage: text("welcome_message"),
+  welcomeType: varchar("welcome_type").default("text"), // 'text', 'form', 'buttons'
+  inputPlaceholder: varchar("input_placeholder").default("Type your message..."),
+  showAvatar: boolean("show_avatar").default(true),
+  showTimestamp: boolean("show_timestamp").default(false),
+  headerText: varchar("header_text"),
+  footerText: text("footer_text"),
+  
+  // Advanced options
+  hideBranding: boolean("hide_branding").default(false),
+  customCss: text("custom_css"),
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Embed Design Components table to control which UI elements are shown
+export const embedDesignComponents = pgTable("embed_design_components", {
+  id: serial("id").primaryKey(),
+  embedDesignId: integer("embed_design_id").notNull().references(() => embedDesigns.id, { onDelete: "cascade" }),
+  
+  componentName: varchar("component_name").notNull(), // 'welcome_section', 'chat_messages', 'input_field', etc.
+  isVisible: boolean("is_visible").default(true),
+  componentOrder: integer("component_order").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // User upsert schema for Neon Auth
 export const upsertUserSchema = createInsertSchema(users).pick({
   id: true,

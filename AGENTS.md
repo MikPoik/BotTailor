@@ -245,7 +245,7 @@ Generated on: 2025-12-09T08:06:56.854Z
 ```
 {
   "title": "Directory Tree",
-  "generatedAt": "2026-01-09T07:04:14.621Z",
+  "generatedAt": "2026-01-09T21:15:14.258Z",
   "simpleMode": true,
   "directoryTree": {
     "client": {
@@ -380,6 +380,65 @@ Generated on: 2025-12-09T08:06:56.854Z
                   "type": "file",
                   "path": "client/src/components/cookie-consent-modal.tsx"
                 },
+                "embed": {
+                  "type": "directory",
+                  "children": {
+                    "EmbedChatInterface.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/EmbedChatInterface.tsx"
+                    },
+                    "EmbedDesignForm.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/EmbedDesignForm.tsx"
+                    },
+                    "EmbedDesignPreview.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/EmbedDesignPreview.tsx"
+                    },
+                    "embed-components": {
+                      "type": "directory",
+                      "children": {
+                        "EmbedFooter.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-components/EmbedFooter.tsx"
+                        },
+                        "EmbedHeader.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-components/EmbedHeader.tsx"
+                        },
+                        "EmbedInput.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-components/EmbedInput.tsx"
+                        },
+                        "EmbedMessages.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-components/EmbedMessages.tsx"
+                        },
+                        "EmbedWelcome.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-components/EmbedWelcome.tsx"
+                        }
+                      }
+                    },
+                    "embed-designs": {
+                      "type": "directory",
+                      "children": {
+                        "CompactEmbed.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-designs/CompactEmbed.tsx"
+                        },
+                        "FullEmbed.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-designs/FullEmbed.tsx"
+                        },
+                        "MinimalEmbed.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-designs/MinimalEmbed.tsx"
+                        }
+                      }
+                    }
+                  }
+                },
                 "footer.tsx": {
                   "type": "file",
                   "path": "client/src/components/footer.tsx"
@@ -446,6 +505,10 @@ Generated on: 2025-12-09T08:06:56.854Z
                 "useContactForm.ts": {
                   "type": "file",
                   "path": "client/src/hooks/useContactForm.ts"
+                },
+                "useEmbedConfig.ts": {
+                  "type": "file",
+                  "path": "client/src/hooks/useEmbedConfig.ts"
                 },
                 "useStreamingMessage.ts": {
                   "type": "file",
@@ -533,6 +596,18 @@ Generated on: 2025-12-09T08:06:56.854Z
                   "type": "file",
                   "path": "client/src/pages/docs.tsx"
                 },
+                "embed-design-edit.tsx": {
+                  "type": "file",
+                  "path": "client/src/pages/embed-design-edit.tsx"
+                },
+                "embed-designs.tsx": {
+                  "type": "file",
+                  "path": "client/src/pages/embed-designs.tsx"
+                },
+                "embed.tsx": {
+                  "type": "file",
+                  "path": "client/src/pages/embed.tsx"
+                },
                 "home.tsx": {
                   "type": "file",
                   "path": "client/src/pages/home.tsx"
@@ -603,6 +678,10 @@ Generated on: 2025-12-09T08:06:56.854Z
         "email-service.ts": {
           "type": "file",
           "path": "server/email-service.ts"
+        },
+        "embed-service.ts": {
+          "type": "file",
+          "path": "server/embed-service.ts"
         },
         "index.ts": {
           "type": "file",
@@ -675,6 +754,10 @@ Generated on: 2025-12-09T08:06:56.854Z
             "contact.ts": {
               "type": "file",
               "path": "server/routes/contact.ts"
+            },
+            "embeds.ts": {
+              "type": "file",
+              "path": "server/routes/embeds.ts"
             },
             "index.ts": {
               "type": "file",

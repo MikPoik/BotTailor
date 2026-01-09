@@ -29,6 +29,9 @@ import SurveyBuilder from "@/pages/survey-builder";
 import SurveyAnalytics from "@/pages/survey-analytics";
 import ChatHistory from "@/pages/chat-history";
 import ChatbotEmbed from "@/pages/chatbot-embed";
+import EmbedPage from "@/pages/embed";
+import EmbedDesignsPage from "@/pages/embed-designs";
+import EmbedDesignEditPage from "@/pages/embed-design-edit";
 import Docs from "@/pages/docs";
 import Pricing from "@/pages/pricing";
 import Subscription from "@/pages/Subscription";
@@ -44,13 +47,16 @@ function HandlerRoutes() {
 }
 
 function AuthenticatedRouter() {
-  // Check if this is an embedded widget context
-  // Check both URL params and injected config (SSR-safe)
-  const urlEmbedded = typeof window !== 'undefined' ? 
+  // Check embedded contexts
+  // - Chat widget embed: `embedded=true` or `window.__CHAT_WIDGET_CONFIG__`
+  // - New iframe embed designs: `window.__EMBED_CONFIG__`
+  const urlEmbedded = typeof window !== 'undefined' ?
     new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
-  const configEmbedded = typeof window !== 'undefined' ? 
-    (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
-  const isEmbedded = urlEmbedded || configEmbedded;
+  const chatEmbedFlag = typeof window !== 'undefined' ?
+    (window as any).__CHAT_WIDGET_CONFIG__?.embedded === true : false;
+  const isEmbedDesign = typeof window !== 'undefined' ?
+    !!(window as any).__EMBED_CONFIG__ : false;
+  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign;
 
   // Sync user to database on login (right after Stack Auth authentication)
   const stackUser = useUser();
@@ -64,8 +70,9 @@ function AuthenticatedRouter() {
     }
   }, [stackUser?.id, isEmbedded]);
 
-  if (isEmbedded) {
-    // For embedded widgets, skip authentication entirely
+  // If chat-widget embed is active (legacy), use ChatWidget routes.
+  // For new embed designs, continue to normal router so /embed/:embedId works.
+  if (!isEmbedDesign && (urlEmbedded || chatEmbedFlag)) {
     return (
       <Switch>
         <Route path="/widget" component={ChatWidget} />
@@ -116,6 +123,7 @@ function AuthenticatedRouterContent() {
       <Route path="/pricing" component={Pricing} />
       <Route path="/widget" component={ChatWidget} />
       <Route path="/chat-widget" component={ChatWidget} />
+      <Route path="/embed/:embedId" component={EmbedPage} />
       
       {/* Support route alias */}
       <Route path="/support" component={Docs} />
@@ -132,6 +140,12 @@ function AuthenticatedRouterContent() {
           <Route path="/chatbots/:guid/survey-analytics" component={SurveyAnalytics} />
           <Route path="/chatbots/:guid/surveys" component={SurveyBuilder} />
           <Route path="/chatbots/:guid/embed" component={ChatbotEmbed} />
+          <Route path="/chatbots/:guid/embed-designs" component={EmbedDesignsPage} />
+          <Route path="/chatbots/:guid/embed-design/:embedId/edit" component={EmbedDesignEditPage} />
+          <Route path="/chatbots/:guid/embed-design/new" component={EmbedDesignEditPage} />
+          <Route path="/chatbot/:guid/embed-designs" component={EmbedDesignsPage} />
+          <Route path="/chatbot/:guid/embed-design/:embedId/edit" component={EmbedDesignEditPage} />
+          <Route path="/chatbot/:guid/embed-design/new" component={EmbedDesignEditPage} />
           <Route path="/chatbots/:guid" component={ChatbotEdit} />
           <Route path="/subscription" component={Subscription} />
         </>
@@ -144,13 +158,14 @@ function AuthenticatedRouterContent() {
 }
 
 function Router() {
-  // Check if this is an embedded widget context
-  // Check both URL params and injected config (SSR-safe)
-  const urlEmbedded = typeof window !== 'undefined' ? 
+  // Determine embedded context for layout decisions (hide navbar/footer)
+  const urlEmbedded = typeof window !== 'undefined' ?
     new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
-  const configEmbedded = typeof window !== 'undefined' ? 
-    (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
-  const isEmbedded = urlEmbedded || configEmbedded;
+  const chatEmbedFlag = typeof window !== 'undefined' ?
+    (window as any).__CHAT_WIDGET_CONFIG__?.embedded === true : false;
+  const isEmbedDesign = typeof window !== 'undefined' ?
+    !!(window as any).__EMBED_CONFIG__ : false;
+  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign;
 
   if (isEmbedded) {
     // CRITICAL: Keep Suspense for lazy-loaded components but use invisible fallback
@@ -240,8 +255,9 @@ function App() {
 
   // Only show modal if not embedded widget and consent not given
   const urlEmbedded = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
-  const configEmbedded = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
-  const isEmbedded = urlEmbedded || configEmbedded;
+  const chatEmbedFlag = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded === true : false;
+  const isEmbedDesign = typeof window !== 'undefined' ? !!(window as any).__EMBED_CONFIG__ : false;
+  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign;
 
   return (
     <ClientOnly fallback={isEmbedded ? null : (

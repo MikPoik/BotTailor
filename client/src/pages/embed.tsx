@@ -1,0 +1,68 @@
+import { useParams } from "wouter";
+import { useEmbedConfigFromWindow, useEmbedConfig } from "@/hooks/useEmbedConfig";
+import { EmbedChatInterface } from "@/components/embed/EmbedChatInterface";
+import { useEffect } from "react";
+
+/**
+ * Public embed page that renders a chat interface for iframe embedding
+ * Route: /embed/:embedId
+ *
+ * The page receives configuration either:
+ * 1. From window.__EMBED_CONFIG__ (injected by server in production)
+ * 2. From API call (in development or as fallback)
+ */
+export default function EmbedPage() {
+  const { embedId } = useParams();
+
+  // Try to get config from window first (injected by server)
+  const windowConfig = useEmbedConfigFromWindow();
+
+  // Fallback to API call if no window config
+  const { data: apiConfig, isLoading: configLoading } = useEmbedConfig(embedId || "");
+
+  // Use whichever config is available
+  const config = windowConfig || apiConfig;
+
+  // Set page title
+  useEffect(() => {
+    if (config?.chatbotName) {
+      document.title = config.chatbotName;
+    }
+  }, [config?.chatbotName]);
+
+  // Loading state
+  if (!config && (configLoading || (!windowConfig && !embedId))) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <svg className="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          <p className="text-gray-600">Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (!config) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="text-red-600 font-semibold">Unable to load chat</p>
+          <p className="text-gray-600 text-sm">The embed configuration could not be loaded.</p>
+          {embedId && <p className="text-gray-400 text-xs">ID: {embedId}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  const apiUrl = windowConfig?.apiUrl || window.location.origin;
+
+  return <EmbedChatInterface config={config} apiUrl={apiUrl} />;
+}

@@ -6,7 +6,8 @@ function getEmbeddedConfig(): any {
     return undefined;
   }
 
-  return (window as any).__CHAT_WIDGET_CONFIG__;
+  // Prefer chat widget config, fall back to new embed config
+  return (window as any).__CHAT_WIDGET_CONFIG__ || (window as any).__EMBED_CONFIG__;
 }
 
 function normalizeBaseUrl(raw?: string): { baseUrl: string; warned: boolean } {
