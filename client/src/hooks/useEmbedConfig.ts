@@ -60,29 +60,11 @@ export function useEmbedConfigFromWindow(): EmbedConfig | null {
  * Injects CSS variables that can be used by components
  */
 export function useEmbedTheme(theme: EmbedConfig["theme"]) {
-  useEffect(() => {
-    if (!theme) return;
-
-    const root = document.documentElement;
-    root.style.setProperty("--embed-primary", theme.primaryColor);
-    root.style.setProperty("--embed-bg", theme.backgroundColor);
-    root.style.setProperty("--embed-text", theme.textColor);
-
-    // Also set Tailwind color variables
-    root.style.setProperty("--background", theme.backgroundColor);
-    root.style.setProperty("--foreground", theme.textColor);
-    root.style.setProperty("--primary", theme.primaryColor);
-
-    // Set inline styles on body
-    document.body.style.backgroundColor = theme.backgroundColor;
-    document.body.style.color = theme.textColor;
-
-    return () => {
-      root.style.removeProperty("--embed-primary");
-      root.style.removeProperty("--embed-bg");
-      root.style.removeProperty("--embed-text");
-    };
-  }, [theme]);
+  // This function is intentionally a no-op in hook form
+  // Theme colors should only be applied to the specific embed container
+  // via inline styles in the component, NOT globally to document/body
+  // See EmbedChatInterface.tsx for container-scoped color application
+  return null;
 }
 
 /**
@@ -131,10 +113,19 @@ export function useEmbedScroll(containerRef: React.RefObject<HTMLDivElement>) {
 
 /**
  * Hook to ensure embed renders with proper size and no overflow
- * Sets HTML/body to 100% height with no margins
+ * Only sets HTML/body styles in embedded/iframe mode, NOT in preview mode
  */
 export function useEmbedLayout() {
   useEffect(() => {
+    // Only apply layout changes in embedded mode (iframe), not in preview
+    const isEmbedded = typeof window !== "undefined" && 
+      (new URLSearchParams(window.location.search).get("embedded") === "true" ||
+       (window as any).__EMBED_CONFIG__?.embedded === true);
+    
+    if (!isEmbedded) {
+      return; // Don't modify document in preview mode
+    }
+
     const html = document.documentElement;
     const body = document.body;
 
@@ -155,7 +146,7 @@ export function useEmbedLayout() {
       overflow: body.style.overflow,
     };
 
-    // Apply embed styles
+    // Apply embed styles only in embedded mode
     html.style.height = "100%";
     html.style.width = "100%";
     html.style.margin = "0";

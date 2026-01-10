@@ -11,13 +11,7 @@
   overflow: hidden;
   background-color: var(--embed-bg, #ffffff);
   color: var(--embed-text, #1f2937);
-
-  /* Prevent scrolling body behind embed */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  /* Note: position:fixed is only applied via inline styles in iframe context */
 }
 
 /* ============================================
@@ -444,7 +438,9 @@
 
 /* Minimal design - clean, minimal UI */
 .embed-chat-interface[data-design-type="minimal"] {
-  /* Base styles */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* Compact design - small header, focused chat */
@@ -458,7 +454,9 @@
 
 /* Full design - all elements visible */
 .embed-chat-interface[data-design-type="full"] {
-  /* Show all elements */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* ============================================

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { embedDesigns, embedDesignComponents, chatbotConfigs } from "@shared/schema";
+import { embedDesigns, embedDesignComponents, chatbotConfigs, CTAConfig } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -21,6 +21,7 @@ export interface CreateEmbedDesignInput {
   footerText?: string;
   hideBranding?: boolean;
   customCss?: string;
+  ctaConfig?: CTAConfig; // NEW: CTA configuration
 }
 
 export interface UpdateEmbedDesignInput {
@@ -40,6 +41,7 @@ export interface UpdateEmbedDesignInput {
   hideBranding?: boolean;
   customCss?: string;
   isActive?: boolean;
+  ctaConfig?: CTAConfig; // NEW: CTA configuration
 }
 
 /**
@@ -66,6 +68,7 @@ export async function createEmbedDesign(input: CreateEmbedDesignInput) {
       showTimestamp: input.showTimestamp ?? false,
       headerText: input.headerText,
       footerText: input.footerText,
+      ctaConfig: input.ctaConfig || null, // NEW: CTA config
       hideBranding: input.hideBranding ?? false,
       customCss: input.customCss,
       isActive: true,

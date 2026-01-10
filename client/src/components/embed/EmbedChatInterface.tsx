@@ -134,11 +134,24 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     config,
   };
 
+  // Check if we're in embedded/iframe mode
+  const isEmbedded = typeof window !== "undefined" && 
+    (new URLSearchParams(window.location.search).get("embedded") === "true" ||
+     (window as any).__EMBED_CONFIG__?.embedded === true);
+
   return (
     <div
       className="embed-chat-interface"
       ref={containerRef}
       data-design-type={config.designType}
+      style={isEmbedded ? {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+      } : undefined}
     >
       {config.designType === "minimal" && <MinimalEmbed {...variantProps} />}
       {config.designType === "compact" && <CompactEmbed {...variantProps} />}

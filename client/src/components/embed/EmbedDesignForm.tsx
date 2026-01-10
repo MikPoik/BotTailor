@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EmbedThemeCustomizer } from "./EmbedThemeCustomizer";
 
 // Validation schema for embed design
 const embedDesignSchema = z.object({
@@ -33,6 +34,7 @@ interface EmbedDesignFormProps {
   initialData?: Partial<EmbedDesignFormData>;
   isLoading?: boolean;
   submitButtonText?: string;
+  onChange?: (data: EmbedDesignFormData) => void;
 }
 
 export function EmbedDesignForm({
@@ -40,17 +42,11 @@ export function EmbedDesignForm({
   initialData,
   isLoading = false,
   submitButtonText = "Create Design",
+  onChange,
 }: EmbedDesignFormProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-    setValue,
-    reset,
-  } = useForm<EmbedDesignFormData>({
+  const methods = useForm<EmbedDesignFormData>({
     resolver: zodResolver(embedDesignSchema),
     defaultValues: initialData || {
       designType: "compact",
@@ -64,18 +60,30 @@ export function EmbedDesignForm({
     },
   });
 
-  // Update form when initialData changes (e.g., when loading existing design)
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+    setValue,
+    reset,
+  } = methods;
+
+  // Watch all form values and notify parent on change
+  const allFormValues = useWatch({ control: methods.control });
+  
   useEffect(() => {
-    if (initialData) {
-      reset(initialData);
+    if (onChange && allFormValues) {
+      onChange(allFormValues as EmbedDesignFormData);
     }
-  }, [initialData, reset]);
+  }, [allFormValues, onChange]);
 
   const designType = watch("designType");
   const primaryColor = watch("primaryColor");
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
       {/* Basic Info */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Design Info</h3>
@@ -149,66 +157,8 @@ export function EmbedDesignForm({
 
       {/* Theme Colors */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Theme Colors</h3>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="primaryColor">Primary Color *</Label>
-            <div className="flex gap-2 items-center">
-              <input
-                id="primaryColor"
-                type="color"
-                {...register("primaryColor")}
-                className="h-10 w-20 rounded border cursor-pointer"
-              />
-              <Input
-                type="text"
-                {...register("primaryColor")}
-                className="flex-1"
-                placeholder="#2563eb"
-              />
-            </div>
-            {errors.primaryColor && <p className="text-sm text-red-500">{errors.primaryColor.message}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="backgroundColor">Background Color *</Label>
-            <div className="flex gap-2 items-center">
-              <input
-                id="backgroundColor"
-                type="color"
-                {...register("backgroundColor")}
-                className="h-10 w-20 rounded border cursor-pointer"
-              />
-              <Input
-                type="text"
-                {...register("backgroundColor")}
-                className="flex-1"
-                placeholder="#ffffff"
-              />
-            </div>
-            {errors.backgroundColor && <p className="text-sm text-red-500">{errors.backgroundColor.message}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="textColor">Text Color *</Label>
-            <div className="flex gap-2 items-center">
-              <input
-                id="textColor"
-                type="color"
-                {...register("textColor")}
-                className="h-10 w-20 rounded border cursor-pointer"
-              />
-              <Input
-                type="text"
-                {...register("textColor")}
-                className="flex-1"
-                placeholder="#1f2937"
-              />
-            </div>
-            {errors.textColor && <p className="text-sm text-red-500">{errors.textColor.message}</p>}
-          </div>
-        </div>
+        <h3 className="text-lg font-semibold">Design Theme</h3>
+        <EmbedThemeCustomizer />
       </div>
 
       {/* UI Text & Messages */}
@@ -310,5 +260,6 @@ export function EmbedDesignForm({
         </Button>
       </div>
     </form>
+    </FormProvider>
   );
 }

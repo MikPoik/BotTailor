@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
-import { EmbedDesignForm, type EmbedDesignFormData } from "@/components/embed/EmbedDesignForm";
+import { EmbedDesignForm, type EmbedDesignFormData } from "@/components/embed/EmbedDesignForm-v2";
 import { EmbedDesignPreview } from "@/components/embed/EmbedDesignPreview";
 import { Button } from "@/components/ui/button";
 import { Loader, Eye } from "lucide-react";
@@ -34,6 +34,7 @@ export default function EmbedDesignEditPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [formValues, setFormValues] = useState<EmbedDesignFormData | null>(null);
 
   // Check if creating new by looking at the URL path
   const isNew = location.includes("/embed-design/new");
@@ -66,6 +67,8 @@ export default function EmbedDesignEditPage() {
           showTimestamp: data.showTimestamp,
           hideBranding: data.hideBranding,
         },
+        // Include CTA configuration when present
+        ctaConfig: data.ctaConfig,
       };
 
       const url = isNew 
@@ -97,6 +100,9 @@ export default function EmbedDesignEditPage() {
   });
 
   const handleSave = (data: EmbedDesignFormData) => {
+    // Update preview in real-time
+    setFormValues(data);
+    
     return new Promise<void>((resolve, reject) => {
       saveMutation.mutate(data, {
         onSuccess: () => resolve(),
@@ -107,7 +113,28 @@ export default function EmbedDesignEditPage() {
 
   const isPending = saveMutation.isPending;
 
-  const previewConfig = design 
+  // Use form values for preview if available, otherwise use database design
+  const previewConfig = formValues
+    ? {
+        designType: (formValues.designType || "compact") as "minimal" | "compact" | "full",
+        theme: {
+          primaryColor: formValues.primaryColor || "#2563eb",
+          backgroundColor: formValues.backgroundColor || "#ffffff",
+          textColor: formValues.textColor || "#1f2937",
+        },
+        ui: {
+          headerText: formValues.headerText || "Chat with us",
+          footerText: formValues.footerText,
+          inputPlaceholder: formValues.inputPlaceholder || "Type your message...",
+          welcomeMessage: formValues.welcomeMessage || "Welcome! How can we help?",
+          showAvatar: formValues.showAvatar !== false,
+          showTimestamp: formValues.showTimestamp !== false,
+          hideBranding: formValues.hideBranding === true,
+        },
+        components: [],
+        chatbotConfigId: design?.chatbotConfigId,
+      }
+    : design 
     ? {
         designType: design.designType as "minimal" | "compact" | "full",
         theme: {
@@ -200,6 +227,7 @@ export default function EmbedDesignEditPage() {
                 hideBranding: design.hideBranding,
               } : undefined}
               onSubmit={handleSave}
+              onChange={setFormValues}
               isLoading={isPending}
               submitButtonText={isNew ? "Create Design" : "Save Changes"}
             />

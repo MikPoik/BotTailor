@@ -342,9 +342,9 @@ export function setupChatRoutes(app: Express) {
         // Send welcome message for new sessions
         if (chatbotConfigId) {
           try {
-            const chatbotConfig = await storage.getChatbotConfigById(chatbotConfigId);
+            const chatbotConfig = await storage.getChatbotConfig(chatbotConfigId);
             if (chatbotConfig && chatbotConfig.welcomeMessage) {
-              await storage.insertMessage({
+              await storage.createMessage({
                 sessionId,
                 content: chatbotConfig.welcomeMessage,
                 sender: "assistant",

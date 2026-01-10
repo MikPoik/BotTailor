@@ -1,6 +1,6 @@
 {
   "title": "Directory Tree",
-  "generatedAt": "2026-01-09T21:15:14.258Z",
+  "generatedAt": "2026-01-10T20:27:32.319Z",
   "simpleMode": true,
   "directoryTree": {
     "client": {
@@ -142,6 +142,10 @@
                       "type": "file",
                       "path": "client/src/components/embed/EmbedChatInterface.tsx"
                     },
+                    "EmbedDesignForm-v2.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/EmbedDesignForm-v2.tsx"
+                    },
                     "EmbedDesignForm.tsx": {
                       "type": "file",
                       "path": "client/src/components/embed/EmbedDesignForm.tsx"
@@ -149,6 +153,10 @@
                     "EmbedDesignPreview.tsx": {
                       "type": "file",
                       "path": "client/src/components/embed/EmbedDesignPreview.tsx"
+                    },
+                    "EmbedThemeCustomizer.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/EmbedThemeCustomizer.tsx"
                     },
                     "embed-components": {
                       "type": "directory",
@@ -172,6 +180,52 @@
                         "EmbedWelcome.tsx": {
                           "type": "file",
                           "path": "client/src/components/embed/embed-components/EmbedWelcome.tsx"
+                        }
+                      }
+                    },
+                    "embed-cta": {
+                      "type": "directory",
+                      "children": {
+                        "CTABuilder.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/CTABuilder.tsx"
+                        },
+                        "CTAPreview.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/CTAPreview.tsx"
+                        },
+                        "CTAView.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/CTAView.tsx"
+                        },
+                        "cta-component-registry.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/cta-component-registry.tsx"
+                        },
+                        "cta-components": {
+                          "type": "directory",
+                          "children": {
+                            "CTAButtonGroup.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAButtonGroup.tsx"
+                            },
+                            "CTADescription.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTADescription.tsx"
+                            },
+                            "CTAFeatureList.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAFeatureList.tsx"
+                            },
+                            "CTAForm.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAForm.tsx"
+                            },
+                            "CTAHeader.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAHeader.tsx"
+                            }
+                          }
                         }
                       }
                     },

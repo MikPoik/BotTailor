@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Loader } from "lucide-react";
+import { Loader, Send } from "lucide-react";
 
 interface EmbedInputProps {
   value: string;
@@ -57,19 +57,7 @@ export function EmbedInput({
           {isLoading ? (
             <Loader className="h-4 w-4 animate-spin" />
           ) : (
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9-7-9-7m0 0l-9 7 9 7"
-              />
-            </svg>
+            <Send className="h-4 w-4" />
           )}
         </button>
       </div>

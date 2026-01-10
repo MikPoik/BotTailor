@@ -207,6 +207,9 @@ export const embedDesigns = pgTable("embed_designs", {
   headerText: varchar("header_text"),
   footerText: text("footer_text"),
   
+  // CTA configuration (NEW)
+  ctaConfig: jsonb("cta_config"), // CTA view configuration
+  
   // Advanced options
   hideBranding: boolean("hide_branding").default(false),
   customCss: text("custom_css"),
@@ -598,3 +601,91 @@ export const messageSchema = z.object({
 });
 
 export type MessageSchema = z.infer<typeof messageSchema>;
+// ============================================
+// CTA Configuration Schemas (NEW)
+// ============================================
+
+export const CTAButtonSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  variant: z.enum(['solid', 'outline', 'ghost']).default('solid'),
+  predefinedMessage: z.string(), // Message sent when button is clicked
+  actionLabel: z.string().optional(),
+});
+
+export const CTAComponentSchema = z.object({
+  id: z.string(),
+  type: z.enum(['header', 'description', 'form', 'button_group', 'feature_list']),
+  order: z.number(),
+  visible: z.boolean().default(true),
+  props: z.object({
+    title: z.string().optional(),
+    subtitle: z.string().optional(),
+    description: z.string().optional(),
+    backgroundImageUrl: z.string().optional(),
+    features: z.array(z.object({
+      icon: z.string().optional(),
+      title: z.string(),
+      description: z.string(),
+    })).optional(),
+  }).optional(),
+});
+
+export const CTAThemeSchema = z.object({
+  primaryColor: z.string().optional(),
+  backgroundColor: z.string().optional(),
+  textColor: z.string().optional(),
+  accentColor: z.string().optional(),
+});
+
+export const CTASettingsSchema = z.object({
+  autoShowAfterSeconds: z.number().optional(),
+  dismissible: z.boolean().default(true),
+  showOncePerSession: z.boolean().default(false),
+});
+
+export const CTAGenerationSchema = z.object({
+  prompt: z.string(),
+  model: z.string(),
+  timestamp: z.date(),
+});
+
+export const CTAConfigSchema = z.object({
+  version: z.string().default('1.0'),
+  enabled: z.boolean().default(false),
+  
+  // Layout
+  layout: z.object({
+    style: z.enum(['banner', 'card', 'modal', 'sidebar']).default('card'),
+    position: z.enum(['top', 'center', 'bottom']).default('center'),
+    width: z.enum(['full', 'wide', 'narrow']).default('wide'),
+  }).optional(),
+  
+  // Components (similar to homeScreenConfig)
+  components: z.array(CTAComponentSchema).default([]),
+  
+  // CTA Button Configuration
+  primaryButton: CTAButtonSchema,
+  secondaryButton: z.object({
+    id: z.string(),
+    text: z.string(),
+    action: z.enum(['close', 'link', 'none']),
+    url: z.string().optional(),
+  }).optional(),
+  
+  // Theming
+  theme: CTAThemeSchema.optional(),
+  
+  // AI Generation tracking
+  generatedBy: CTAGenerationSchema.optional(),
+  
+  // Settings
+  settings: CTASettingsSchema.optional(),
+});
+
+export type CTAButton = z.infer<typeof CTAButtonSchema>;
+export type CTAComponent = z.infer<typeof CTAComponentSchema>;
+export type CTATheme = z.infer<typeof CTAThemeSchema>;
+export type CTASettings = z.infer<typeof CTASettingsSchema>;
+export type CTAGeneration = z.infer<typeof CTAGenerationSchema>;
+export type CTAConfig = z.infer<typeof CTAConfigSchema>;

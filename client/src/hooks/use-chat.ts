@@ -426,9 +426,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
     initializedSessionRef.current = sessionId;
 
-    // Fetch messages after session creation to get welcome message
-    await queryClient.invalidateQueries({ queryKey: ['/api/chat', sessionId, 'messages'] });
-
+    // Session initialized - no need to invalidate queries for optimistic UI
     return sessionResult;
   }, [chatbotConfigId, queryClient, sessionId, session]);
 

@@ -66,6 +66,7 @@ export function setupEmbedRoutes(app: Express) {
         chatbotConfigId: design.chatbotConfigId,
         chatbotGuid: design.chatbotConfig?.guid,
         chatbotName: design.chatbotConfig?.name,
+        ctaConfig: design.ctaConfig, // NEW: Return CTA config
       });
     } catch (error) {
       console.error("Error fetching embed configuration:", error);
@@ -136,16 +137,11 @@ export function setupEmbedRoutes(app: Express) {
         const sessionData = `
           <style>
             :root {
-              --background: ${theme.backgroundColor};
-              --foreground: ${theme.textColor};
-              --primary: ${theme.primaryColor};
-              --chat-background: ${theme.backgroundColor};
-              --chat-text: ${theme.textColor};
-              --chat-primary-color: ${theme.primaryColor};
+              --embed-primary: ${theme.primaryColor};
+              --embed-bg: ${theme.backgroundColor};
+              --embed-text: ${theme.textColor};
             }
             html, body, #root {
-              background-color: ${theme.backgroundColor};
-              color: ${theme.textColor};
               margin: 0;
               padding: 0;
               overflow: hidden;
@@ -174,6 +170,7 @@ export function setupEmbedRoutes(app: Express) {
                   name: design.chatbotConfig?.name,
                 },
               })},
+              ctaConfig: ${JSON.stringify(design.ctaConfig)},
               components: ${JSON.stringify(
                 design.components?.map((c: any) => ({
                   name: c.componentName,
@@ -213,6 +210,7 @@ export function setupEmbedRoutes(app: Express) {
               name: design.chatbotConfig?.name,
             },
           },
+          ctaConfig: design.ctaConfig, // NEW: Pass CTA config
           components: design.components,
           chatbotGuid: design.chatbotConfig?.guid,
           chatbotConfigId: design.chatbotConfigId ?? null,
@@ -238,7 +236,7 @@ export function setupEmbedRoutes(app: Express) {
     try {
       const { guid } = req.params;
       const userId = (req as any).neonUser.id;
-      const { name, description, designType, theme, ui } = req.body;
+      const { name, description, designType, theme, ui, ctaConfig } = req.body;
 
       // Get chatbot config
       const chatbot = await storage.getChatbotConfigByGuid(userId, guid);
@@ -264,6 +262,7 @@ export function setupEmbedRoutes(app: Express) {
         headerText: ui?.headerText,
         footerText: ui?.footerText,
         hideBranding: ui?.hideBranding,
+        ctaConfig, // NEW: Pass CTA config
       });
 
       res.json(design);
@@ -332,7 +331,7 @@ export function setupEmbedRoutes(app: Express) {
     try {
       const { guid, embedId } = req.params;
       const userId = (req as any).neonUser.id;
-      const { name, description, designType, theme, ui, isActive } = req.body;
+      const { name, description, designType, theme, ui, isActive, ctaConfig } = req.body;
 
       // Get chatbot config
       const chatbot = await storage.getChatbotConfigByGuid(userId, guid);
@@ -361,6 +360,7 @@ export function setupEmbedRoutes(app: Express) {
         headerText: ui?.headerText,
         footerText: ui?.footerText,
         hideBranding: ui?.hideBranding,
+        ctaConfig, // NEW: Pass CTA config
         isActive,
       });
 
