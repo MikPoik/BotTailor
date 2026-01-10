@@ -1,6 +1,6 @@
 {
   "title": "Directory Tree",
-  "generatedAt": "2026-01-10T20:27:32.319Z",
+  "generatedAt": "2026-01-10T22:22:33.967Z",
   "simpleMode": true,
   "directoryTree": {
     "client": {
@@ -138,6 +138,10 @@
                 "embed": {
                   "type": "directory",
                   "children": {
+                    "CTAAssistant.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/CTAAssistant.tsx"
+                    },
                     "EmbedChatInterface.tsx": {
                       "type": "file",
                       "path": "client/src/components/embed/EmbedChatInterface.tsx"
@@ -205,6 +209,10 @@
                         "cta-components": {
                           "type": "directory",
                           "children": {
+                            "Badge.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/Badge.tsx"
+                            },
                             "CTAButtonGroup.tsx": {
                               "type": "file",
                               "path": "client/src/components/embed/embed-cta/cta-components/CTAButtonGroup.tsx"
@@ -224,8 +232,24 @@
                             "CTAHeader.tsx": {
                               "type": "file",
                               "path": "client/src/components/embed/embed-cta/cta-components/CTAHeader.tsx"
+                            },
+                            "Container.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/Container.tsx"
+                            },
+                            "Divider.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/Divider.tsx"
+                            },
+                            "RichText.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/RichText.tsx"
                             }
                           }
+                        },
+                        "style-utils.ts": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/style-utils.ts"
                         }
                       }
                     },
@@ -511,6 +535,10 @@
               "type": "file",
               "path": "server/openai/context-builder.ts"
             },
+            "cta-generator.ts": {
+              "type": "file",
+              "path": "server/openai/cta-generator.ts"
+            },
             "dynamic-content-validator.ts": {
               "type": "file",
               "path": "server/openai/dynamic-content-validator.ts"
@@ -563,6 +591,10 @@
             "contact.ts": {
               "type": "file",
               "path": "server/routes/contact.ts"
+            },
+            "cta-ai.ts": {
+              "type": "file",
+              "path": "server/routes/cta-ai.ts"
             },
             "embeds.ts": {
               "type": "file",

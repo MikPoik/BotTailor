@@ -11,6 +11,7 @@ import { setupUIDesignerRoutes } from "./ui-designer";
 import { setupContactRoutes } from "./contact";
 import { setupEmbedRoutes } from "./embeds";
 import { subscriptionRouter, webhookHandler } from "./subscription";
+import ctaAiRouter from "./cta-ai";
 
 // Main route registration function
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -26,6 +27,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupWebsiteRoutes(app);
   setupUIDesignerRoutes(app);
   setupContactRoutes(app);
+  
+  // CTA AI generation routes
+  app.use('/api/cta', ctaAiRouter);
   
   // Webhook route (must be at /api/webhook for Stripe)
   app.use("/api/webhook", webhookHandler);

@@ -605,29 +605,167 @@ export type MessageSchema = z.infer<typeof messageSchema>;
 // CTA Configuration Schemas (NEW)
 // ============================================
 
+// Extended styling system for rich CTA design
+// Supports comprehensive CSS properties for AI layout generation
+export const ComponentStyleSchema = z.object({
+  // ========== COLORS & OPACITY ==========
+  // Theme color overrides - allows per-component customization
+  backgroundColor: z.string().optional(),
+  color: z.string().optional(), // Text color (alias for textColor)
+  textColor: z.string().optional(), // Explicit text color
+  borderColor: z.string().optional(),
+  opacity: z.number().min(0).max(1).optional(),
+  
+  // ========== BORDERS ==========
+  borderWidth: z.number().optional(),
+  borderRadius: z.number().optional(),
+  borderStyle: z.enum(['solid', 'dashed', 'dotted', 'double', 'groove', 'ridge', 'inset', 'outset']).optional(),
+  border: z.string().optional(), // Shorthand: "1px solid #ccc"
+  
+  // ========== SHADOWS & EFFECTS ==========
+  boxShadow: z.string().optional(),
+  textShadow: z.string().optional(),
+  filter: z.string().optional(), // blur, brightness, contrast, etc.
+  
+  // ========== SPACING ==========
+  padding: z.number().optional(),
+  paddingTop: z.number().optional(),
+  paddingRight: z.number().optional(),
+  paddingBottom: z.number().optional(),
+  paddingLeft: z.number().optional(),
+  margin: z.number().optional(),
+  marginTop: z.number().optional(),
+  marginRight: z.number().optional(),
+  marginBottom: z.number().optional(),
+  marginLeft: z.number().optional(),
+  gap: z.number().optional(),
+  
+  // ========== TYPOGRAPHY ==========
+  fontSize: z.number().optional(),
+  fontWeight: z.number().optional(),
+  fontStyle: z.enum(['normal', 'italic', 'oblique']).optional(),
+  lineHeight: z.number().optional(),
+  letterSpacing: z.number().optional(),
+  textAlign: z.enum(['left', 'center', 'right', 'justify']).optional(),
+  textDecoration: z.enum(['none', 'underline', 'overline', 'line-through']).optional(),
+  textTransform: z.enum(['none', 'uppercase', 'lowercase', 'capitalize']).optional(),
+  wordBreak: z.enum(['normal', 'break-all', 'keep-all', 'break-word']).optional(),
+  whiteSpace: z.enum(['normal', 'nowrap', 'pre', 'pre-wrap', 'pre-line']).optional(),
+  
+  // ========== SIZING ==========
+  width: z.string().optional(),
+  height: z.string().optional(),
+  minWidth: z.string().optional(),
+  minHeight: z.string().optional(),
+  maxWidth: z.string().optional(),
+  maxHeight: z.string().optional(),
+  aspectRatio: z.string().optional(),
+  
+  // ========== DISPLAY & FLEX ==========
+  display: z.enum(['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'inline-grid', 'none']).optional(),
+  flexDirection: z.enum(['row', 'row-reverse', 'column', 'column-reverse']).optional(),
+  flexWrap: z.enum(['wrap', 'nowrap', 'wrap-reverse']).optional(),
+  flexGrow: z.number().optional(),
+  flexShrink: z.number().optional(),
+  flexBasis: z.string().optional(),
+  flex: z.string().optional(), // Shorthand: "1 1 auto"
+  alignItems: z.enum(['flex-start', 'flex-end', 'center', 'stretch', 'baseline']).optional(),
+  alignContent: z.enum(['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly', 'stretch']).optional(),
+  justifyContent: z.enum(['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly']).optional(),
+  alignSelf: z.enum(['auto', 'flex-start', 'flex-end', 'center', 'stretch', 'baseline']).optional(),
+  
+  // ========== GRID ==========
+  gridTemplateColumns: z.string().optional(),
+  gridTemplateRows: z.string().optional(),
+  gridAutoFlow: z.enum(['row', 'column', 'dense']).optional(),
+  gridAutoColumns: z.string().optional(),
+  gridAutoRows: z.string().optional(),
+  gridGap: z.number().optional(),
+  gridColumnGap: z.number().optional(),
+  gridRowGap: z.number().optional(),
+  gridColumn: z.string().optional(),
+  gridRow: z.string().optional(),
+  
+  // ========== POSITIONING ==========
+  position: z.enum(['static', 'relative', 'absolute', 'fixed', 'sticky']).optional(),
+  top: z.string().optional(),
+  right: z.string().optional(),
+  bottom: z.string().optional(),
+  left: z.string().optional(),
+  zIndex: z.number().optional(),
+  
+  // ========== OVERFLOW ==========
+  overflow: z.enum(['visible', 'hidden', 'scroll', 'auto']).optional(),
+  overflowX: z.enum(['visible', 'hidden', 'scroll', 'auto']).optional(),
+  overflowY: z.enum(['visible', 'hidden', 'scroll', 'auto']).optional(),
+  
+  // ========== TRANSFORMS ==========
+  transform: z.string().optional(),
+  transformOrigin: z.string().optional(),
+  
+  // ========== TRANSITIONS & ANIMATIONS ==========
+  transition: z.string().optional(),
+  cursor: z.enum(['auto', 'pointer', 'default', 'text', 'wait', 'help', 'move', 'not-allowed', 'grab', 'grabbing']).optional(),
+  
+  // ========== BACKGROUND ==========
+  backgroundSize: z.enum(['auto', 'cover', 'contain']).optional(),
+  backgroundPosition: z.string().optional(),
+  backgroundRepeat: z.enum(['repeat', 'no-repeat', 'repeat-x', 'repeat-y']).optional(),
+  backgroundAttachment: z.enum(['scroll', 'fixed', 'local']).optional(),
+  
+  // ========== GRADIENTS & EFFECTS ==========
+  gradient: z.object({
+    enabled: z.boolean(),
+    type: z.enum(['linear', 'radial']).optional(),
+    angle: z.number().optional(), // 0-360 for linear
+    startColor: z.string().optional(),
+    endColor: z.string().optional(),
+  }).optional(),
+}).strict();
+
 export const CTAButtonSchema = z.object({
   id: z.string(),
   text: z.string(),
   variant: z.enum(['solid', 'outline', 'ghost']).default('solid'),
   predefinedMessage: z.string(), // Message sent when button is clicked
   actionLabel: z.string().optional(),
+  style: ComponentStyleSchema.optional(), // Extended styling
 });
 
 export const CTAComponentSchema = z.object({
   id: z.string(),
-  type: z.enum(['header', 'description', 'form', 'button_group', 'feature_list']),
+  type: z.enum(['header', 'description', 'form', 'button_group', 'feature_list', 'badge', 'divider', 'container', 'richtext', 'custom_html']),
   order: z.number(),
   visible: z.boolean().default(true),
+  style: ComponentStyleSchema.optional(), // Component-level styling
   props: z.object({
     title: z.string().optional(),
     subtitle: z.string().optional(),
     description: z.string().optional(),
     backgroundImageUrl: z.string().optional(),
+    
+    // Feature list
     features: z.array(z.object({
       icon: z.string().optional(),
       title: z.string(),
       description: z.string(),
+      style: ComponentStyleSchema.optional(),
     })).optional(),
+    
+    // Badge component
+    icon: z.string().optional(),
+    badgeStyle: z.enum(['circle', 'rounded', 'square']).optional(),
+    
+    // Divider component
+    dividerStyle: z.enum(['solid', 'dashed', 'dotted']).optional(),
+    dividerColor: z.string().optional(),
+    
+    // Container component (layout wrapper)
+    layout: z.enum(['column', 'row', 'grid']).optional(),
+    columns: z.number().optional(),
+    
+    // RichText component
+    htmlContent: z.string().optional(),
   }).optional(),
 });
 
@@ -659,6 +797,13 @@ export const CTAConfigSchema = z.object({
     style: z.enum(['banner', 'card', 'modal', 'sidebar']).default('card'),
     position: z.enum(['top', 'center', 'bottom']).default('center'),
     width: z.enum(['full', 'wide', 'narrow']).default('wide'),
+    backgroundImage: z.string().optional(), // S3 URL for background image
+    backgroundPattern: z.enum(['none', 'dots', 'grid', 'waves', 'stripes']).optional(), // CSS pattern
+    backgroundOverlay: z.object({
+      enabled: z.boolean(),
+      color: z.string().optional(),
+      opacity: z.number().min(0).max(1).optional(),
+    }).optional(),
   }).optional(),
   
   // Components (similar to homeScreenConfig)
@@ -689,3 +834,4 @@ export type CTATheme = z.infer<typeof CTAThemeSchema>;
 export type CTASettings = z.infer<typeof CTASettingsSchema>;
 export type CTAGeneration = z.infer<typeof CTAGenerationSchema>;
 export type CTAConfig = z.infer<typeof CTAConfigSchema>;
+export type ComponentStyle = z.infer<typeof ComponentStyleSchema>;

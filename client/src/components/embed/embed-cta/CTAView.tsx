@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { CTAConfig } from '@shared/schema';
 import { renderCTAComponent } from './cta-component-registry';
 import { CTAButtonGroup } from './cta-components/CTAButtonGroup';
-import '../cta-styles.css';
+import { getBackgroundPattern } from './style-utils';
+import './cta-styles.css';
 
 interface CTAViewProps {
   config: CTAConfig;
@@ -18,10 +19,17 @@ interface CTAViewProps {
  * CTAView - Main CTA display component
  * 
  * Renders the complete CTA view with:
- * - Components (header, description, features, etc.)
- * - Primary and secondary buttons
- * - Theme application
+ * - Components (header, description, features, etc.) with flexible layout
+ * - Primary and secondary buttons with style customization
+ * - Theme application with per-component color overrides
+ * - Background images & patterns
  * - Responsive layouts
+ * 
+ * Layout Features:
+ * - Supports vertical (default), horizontal, and grid component layouts
+ * - Component gaps controlled via config.layout.componentGap
+ * - Theme colors can be overridden per-component via component.style.textColor/backgroundColor
+ * - Full flexbox/grid support for complex layouts
  */
 export const CTAView: React.FC<CTAViewProps> = ({
   config,
@@ -34,7 +42,30 @@ export const CTAView: React.FC<CTAViewProps> = ({
 
   // Get layout CSS classes
   const layoutClass = `cta-layout-${config.layout?.style || 'card'}`;
-  const positionClass = `cta-position-${config.layout?.position || 'center'}`;
+  const positionClass = embedded ? '' : `cta-position-${config.layout?.position || 'center'}`;
+
+  // Build background style
+  const backgroundStyle: React.CSSProperties = {};
+  if (config.layout?.backgroundImage) {
+    backgroundStyle.backgroundImage = `url(${config.layout.backgroundImage})`;
+    backgroundStyle.backgroundSize = 'cover';
+    backgroundStyle.backgroundPosition = 'center';
+  } else if (config.layout?.backgroundPattern) {
+    const pattern = getBackgroundPattern(config.layout.backgroundPattern, '#e5e7eb');
+    if (pattern) {
+      backgroundStyle.backgroundImage = pattern;
+      backgroundStyle.backgroundSize = config.layout.backgroundPattern === 'grid' ? '20px 20px' : 'auto';
+    }
+  }
+
+  // Apply overlay if background exists
+  if ((config.layout?.backgroundImage || config.layout?.backgroundPattern) && 
+      config.layout?.backgroundOverlay?.enabled) {
+    const overlayColor = config.layout.backgroundOverlay.color || 'rgba(0, 0, 0, 0.3)';
+    const overlayOpacity = config.layout.backgroundOverlay.opacity ?? 0.5;
+    backgroundStyle.backgroundColor = overlayColor;
+    backgroundStyle.opacity = overlayOpacity;
+  }
 
   // Theme CSS variables applied via useEffect below
   const themeStyle: React.CSSProperties = {};
@@ -77,14 +108,33 @@ export const CTAView: React.FC<CTAViewProps> = ({
   }, [config.components]);
 
   return (
-    <div className={`cta-view ${embedded ? 'embedded' : ''}`} style={themeStyle}>
-      <div className={`${layoutClass} ${positionClass}`}>
-        {/* Render all CTA components */}
+    <div 
+      className={`cta-view ${embedded ? 'embedded' : ''}`} 
+      style={{
+        ...themeStyle,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'auto',
+        ...backgroundStyle,
+      }}
+    >
+      <div 
+        className={`${layoutClass} ${positionClass}`}
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+        }}
+      >
+        {/* Render all CTA components with flexible layout support */}
         {sortedComponents.map((component) =>
           renderCTAComponent(component, config, component.id)
         )}
 
-        {/* Button Group */}
+        {/* Button Group with style support */}
         {config.primaryButton && (
           <CTAButtonGroup
             primaryButton={config.primaryButton}
@@ -92,6 +142,7 @@ export const CTAView: React.FC<CTAViewProps> = ({
             onPrimaryClick={handlePrimaryClick}
             onSecondaryClick={handleSecondaryClick}
             layout={config.layout?.style === 'sidebar' ? 'vertical' : 'vertical'}
+            componentStyle={config.primaryButton.style}
           />
         )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { EmbedThemeCustomizer } from "./EmbedThemeCustomizer";
 import { CTABuilder } from "./embed-cta/CTABuilder";
 import { CTAPreview } from "./embed-cta/CTAPreview";
+import { CTAAssistant } from "./CTAAssistant";
 import { CTAConfig } from "@shared/schema";
 
 // Validation schema for embed design
@@ -58,16 +59,21 @@ export function EmbedDesignForm({
 
   const methods = useForm<EmbedDesignFormData>({
     resolver: zodResolver(embedDesignSchema),
-    defaultValues: initialData || {
-      designType: "compact",
-      primaryColor: "#2563eb",
-      backgroundColor: "#ffffff",
-      textColor: "#1f2937",
-      inputPlaceholder: "Type your message...",
-      showAvatar: true,
-      showTimestamp: true,
-      hideBranding: false,
-      ctaConfig: undefined,
+    defaultValues: {
+      designType: initialData?.designType || "compact",
+      primaryColor: initialData?.primaryColor || "#2563eb",
+      backgroundColor: initialData?.backgroundColor || "#ffffff",
+      textColor: initialData?.textColor || "#1f2937",
+      inputPlaceholder: initialData?.inputPlaceholder || "Type your message...",
+      showAvatar: initialData?.showAvatar ?? true,
+      showTimestamp: initialData?.showTimestamp ?? false,
+      hideBranding: initialData?.hideBranding ?? false,
+      name: initialData?.name || "",
+      description: initialData?.description || "",
+      headerText: initialData?.headerText || "",
+      footerText: initialData?.footerText || "",
+      welcomeMessage: initialData?.welcomeMessage || "",
+      ctaConfig: initialData?.ctaConfig || undefined,
     },
   });
 
@@ -82,18 +88,37 @@ export function EmbedDesignForm({
 
   // Watch all form values and notify parent on change
   const allFormValues = useWatch({ control: methods.control });
+  const previousValuesRef = useRef<EmbedDesignFormData | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
-    if (onChange && allFormValues) {
-      onChange({ ...allFormValues, ctaConfig } as EmbedDesignFormData);
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-  }, [allFormValues, onChange, ctaConfig]);
+
+    // Debounce form changes to avoid infinite loops
+    timeoutRef.current = setTimeout(() => {
+      const newValues = { ...allFormValues, ctaConfig } as EmbedDesignFormData;
+      // Only call onChange if values actually changed
+      if (onChange && JSON.stringify(previousValuesRef.current) !== JSON.stringify(newValues)) {
+        previousValuesRef.current = newValues;
+        onChange(newValues);
+      }
+    }, 300);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [allFormValues, ctaConfig, onChange]);
 
   const designType = watch("designType");
 
   const handleCtaConfigChange = (newConfig: CTAConfig) => {
     setCtaConfig(newConfig);
-    setValue("ctaConfig", newConfig);
+    setValue("ctaConfig", newConfig, { shouldDirty: true, shouldTouch: true });
   };
 
   return (
@@ -313,14 +338,106 @@ export function EmbedDesignForm({
           </div>
         )}
 
+
         {/* CTA Tab */}
         {activeTab === "cta" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", minHeight: "500px" }}>
-            {/* Builder */}
-            <div style={{ overflowY: "auto", paddingRight: "12px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Enable CTA and Settings */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  {...register("ctaConfig.enabled")}
+                  style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                />
+                <span style={{ fontSize: "15px", fontWeight: 500 }}>Enable CTA View</span>
+              </label>
+
+              {watch("ctaConfig.enabled") && (
+                <div style={{ marginLeft: "26px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Settings</h4>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      {...register("ctaConfig.dismissible")}
+                      style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                    />
+                    <span style={{ fontSize: "14px" }}>Allow users to dismiss CTA</span>
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      {...register("ctaConfig.showOncePerSession")}
+                      style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                    />
+                    <span style={{ fontSize: "14px" }}>Show only once per session</span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {/* AI Assistant */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>AI Generator</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowCtaPreview(true)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    backgroundColor: "#f3f4f6",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  👁️ Preview
+                </button>
+              </div>
+              <CTAAssistant
+                chatbotName={chatbotName}
+                currentConfig={ctaConfig}
+                theme={{
+                  primaryColor: watch("primaryColor"),
+                  backgroundColor: watch("backgroundColor"),
+                  textColor: watch("textColor"),
+                }}
+                onConfigGenerated={(generatedConfig) => {
+                  handleCtaConfigChange(generatedConfig);
+                }}
+              />
+            </div>
+
+            {/* JSON Editor */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Manual Builder</h4>
+                <button
+                  type="button"
+                  onClick={() => setShowCtaPreview(true)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    backgroundColor: "#f3f4f6",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  👁️ Preview
+                </button>
+              </div>
               <CTABuilder
                 initialConfig={ctaConfig}
                 chatbotName={chatbotName}
+                themeColors={{
+                  primaryColor: watch("primaryColor"),
+                  backgroundColor: watch("backgroundColor"),
+                  textColor: watch("textColor"),
+                }}
                 onConfigChange={handleCtaConfigChange}
                 onPreviewToggle={(show) => {
                   if (show) {
@@ -328,55 +445,6 @@ export function EmbedDesignForm({
                   }
                 }}
               />
-            </div>
-
-            {/* Preview Panel */}
-            <div style={{
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              backgroundColor: "#f9fafb",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}>
-              <div style={{
-                padding: "12px 16px",
-                borderBottom: "1px solid #e5e7eb",
-                backgroundColor: "white",
-              }}>
-                <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Live Preview</h3>
-              </div>
-              <div style={{ flex: 1, overflow: "auto", padding: "12px" }}>
-                {ctaConfig && ctaConfig.enabled ? (
-                  <div style={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "white",
-                    borderRadius: "6px",
-                    padding: "12px",
-                  }}>
-                    <p style={{ margin: "0 0 12px 0", fontSize: "13px", fontWeight: 600 }}>Preview Update</p>
-                    <p style={{ margin: 0, fontSize: "12px", color: "#6b7280", textAlign: "center" }}>
-                      Full preview available when you click "Preview CTA" button
-                    </p>
-                  </div>
-                ) : (
-                  <div style={{
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#999",
-                    textAlign: "center",
-                    fontSize: "13px",
-                  }}>
-                    Enable CTA to see preview
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         )}

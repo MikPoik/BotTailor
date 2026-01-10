@@ -1,6 +1,249 @@
+# Overview
+
+This project is a full-stack React chat widget application featuring an Express.js backend and a React frontend. Its primary purpose is to provide an embeddable customer support chat widget for any website. The widget supports rich messaging, including text, interactive cards, menus, and quick replies, aiming to offer a comprehensive and customizable communication tool for businesses. The vision is to enable seamless integration of sophisticated chat functionalities, enhancing user engagement and support capabilities across various web platforms.
+
+## User Preferences
+
+Preferred communication style: Like talking to a software developer, technical and detailed.
+
+## System Architecture
+
+### Frontend Architecture
+- **Node version**: NodeJs 20
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **UI Library**: shadcn/ui built on Radix UI primitives
+- **Styling**: Tailwind CSS with CSS variables
+- **State Management**: TanStack Query (React Query) for server state
+- **Routing**: Wouter for client-side routing
+- **UI/UX Decisions**: Mobile-first responsive design; customizable floating chat bubble, full-featured chat UI with message bubbles, typing indicators, and rich content support. Theming is controlled via a color resolution system that prioritizes embed parameters, then UI Designer theme settings, and finally default CSS values. Background images can be uploaded and displayed on the home screen with text readability overlay.
+
+### Backend Architecture
+- **Framework**: Express.js with TypeScript
+- **Runtime**: Node.js with ESM modules
+- **Database ORM**: Drizzle ORM for PostgreSQL
+- **Database Provider**: Neon Database (serverless PostgreSQL)
+- **Authentication**: Stack Auth (@stackframe/react) with custom middleware wrapper
+- **AI Integration**: OpenAI API for chat responses, embeddings, and structured generation
+- **Payment Processing**: Stripe for subscription management
+- **File Storage**: AWS S3 for uploads (images, files)
+- **Email Service**: Email notifications for form submissions
+- **Vector Search**: pgvector for semantic search over website content (1536 dimensions)
+
+### System Design Choices
+- **Chat Widget System**: Features a customizable floating chat bubble (bottom-right/bottom-left) and a full-featured chat interface supporting text messages, interactive cards, menu options, and quick replies.
+- **Message System**: Supports rich messages with images, titles, descriptions, action buttons, interactive menus, quick replies, forms, ratings, and multiselect menus. Includes streaming support for AI responses. Uses polling for real-time updates.
+- **Data Flow**: Sessions are initialized by the client, followed by a welcome message from the server. Message exchange occurs in real-time via polling. The server can send structured messages with interactive elements, and client selections trigger server responses.
+- **Database Schema**: Includes Users (Stack Auth sync + app data), Chat Sessions (session management), Messages (rich content via JSON metadata), Chatbot Configs (AI settings, email config, home screen design), Website Sources (content scraping), Website Content (vectorized for RAG), Surveys (builder + sessions), and Subscriptions (Stripe integration).
+- **Theming System**: Implements a complete color priority system where embed parameters override UI Designer theme settings, which in turn override default CSS. Includes support for primary, background, and text colors, and background images. Email configuration for form submissions is integrated, allowing form functionality to be conditional on proper email setup.
+- **Real-time Communication**: Uses HTTP polling for message synchronization, chosen for simpler deployment and broader compatibility over WebSockets.
+- **AI Architecture**: Modular OpenAI service in `/server/openai/` with specialized handlers for chat responses, surveys, prompt assistance, and streaming. Uses best-effort JSON parsing for robust handling of AI output. Context builder includes website content (RAG), conversation history, and active survey state.
+- **RAG System**: Website scraping with Cheerio and Playwright, content chunking, OpenAI embeddings (ada-002, 1536 dims), stored in PostgreSQL with pgvector. Semantic search provides context to AI responses.
+- **Survey System**: Visual survey builder, conditional flow support, AI-powered survey assistance, response analytics with charts, and session tracking.
+- **Authentication Flow**: Stack Auth handles user authentication via SDK, custom middleware extracts `x-stack-user-id` header, users synced to app database on first login. Dual tables: `neon_auth.users_sync` (Stack managed) and `users` (app data).
+- **Payment Flow**: Stripe checkout for subscriptions, webhook handlers for lifecycle events, usage tracking (messages per month), plan enforcement with limits on bots and messages.
+
+## External Dependencies
+
+### Core Dependencies
+- **@neondatabase/serverless**: Serverless PostgreSQL connection
+- **drizzle-orm**: Type-safe database operations
+- **@tanstack/react-query**: Server state management
+- **express**: Web server framework
+- **@radix-ui/***: Accessible UI primitives
+- **tailwindcss**: Utility-first CSS framework
+- **@stackframe/react**: Stack Auth SDK for authentication
+- **openai**: OpenAI API client for AI features
+- **stripe**: Payment processing and subscriptions
+- **@aws-sdk/client-s3**: File storage in S3
+- **pgvector**: PostgreSQL vector extension for embeddings
+- **cheerio**: HTML parsing for website scraping
+- **playwright**: Browser automation for dynamic content
+- **wouter**: Lightweight client-side routing
+- **zod**: Schema validation and type safety
+- **recharts**: Data visualization for analytics
+
+### Development Tools (for context, not integrated into production build)
+- **tsx**: TypeScript execution for development
+- **vite**: Frontend build tool with HMR
+- **esbuild**: Backend bundling for production
+- **@replit/vite-plugin-runtime-error-modal**: Development error handling
+
+## Key Implementation Details
+
+### Database Schema Organization
+The database follows a clear separation of concerns:
+
+**Authentication Tables:**
+- `neon_auth.users_sync` - Managed by Stack Auth, read-only for application
+- `users` - Application-specific user data (references Stack Auth users by ID)
+
+**Chatbot System:**
+- `chatbot_configs` - AI settings, prompts, email config, UI design, identified by `guid` for public access
+- `chat_sessions` - Conversation sessions with optional user association and active survey tracking
+- `messages` - Chat messages with `messageType` and rich `metadata` JSON field
+
+**Content & RAG:**
+- `website_sources` - Scraped websites, uploaded files, or text content
+- `website_content` - Chunked content with 1536-dim vector embeddings for semantic search
+
+**Survey System:**
+- `surveys` - Survey definitions with JSON `surveyConfig` containing questions and flow
+- `survey_sessions` - User progress through surveys with response tracking
+
+**Subscription & Billing:**
+- `subscription_plans` - Plan definitions with Stripe IDs and feature limits
+- `subscriptions` - User subscriptions with usage tracking and Stripe sync
+
+### API Route Structure
+Routes are organized in `/server/routes/` by domain:
+- **auth.ts**: User sync endpoint (`/api/ensure-user`)
+- **chat.ts**: Message exchange, session management, AI responses
+- **chatbots.ts**: CRUD for chatbot configs, model settings
+- **surveys.ts**: Survey builder, session management, analytics
+- **public.ts**: Public chatbot access (no auth required)
+- **uploads.ts**: File uploads to S3
+- **websites.ts**: Website scraping and content management
+- **ui-designer.ts**: Dynamic home screen configuration
+- **contact.ts**: Contact form submissions with email
+- **subscription.ts**: Stripe checkout, webhooks, plan management
+
+### Authentication Pattern
+1. Stack Auth handles all authentication UI and session management
+2. On successful auth, Stack Auth includes `x-stack-user-id` header in all requests
+3. `neonAuthMiddleware` extracts this header and attaches user to `req.neonUser`
+4. Protected routes use `isAuthenticated` middleware to enforce auth
+5. First login triggers `/api/ensure-user` to sync user to app database
+6. Public routes (embed widget, public chatbot access) bypass auth entirely
+
+### OpenAI Service Architecture
+Located in `/server/openai/`, follows modular design:
+- **client.ts**: OpenAI client singleton with configuration
+- **response-generator.ts**: Main AI response functions (chat, surveys, prompts)
+- **streaming-handler.ts**: Server-sent events for streaming responses
+- **context-builder.ts**: Builds system prompts with RAG context, conversation history, survey state
+- **response-parser.ts**: Best-effort JSON parsing, bubble completion detection
+- **error-handler.ts**: Graceful fallbacks for AI failures
+- **schema.ts**: Zod schemas for structured AI output
+- **dynamic-content-validator.ts**: Validates survey topic references
+- **survey-menu-validator.ts**: Ensures survey questions have required options
+
+Key patterns:
+- Uses `gpt-4o` model by default (configurable per chatbot)
+- Temperature stored as 0-10 scale, divided by 10 for API
+- Best-effort JSON parser handles incomplete/malformed AI responses
+- Streaming responses use chunking with `isStreaming: true` metadata
+- RAG context includes up to 5 most relevant website content chunks
+
+### Message Metadata Structure
+The `metadata` JSON field on messages supports multiple types:
+
+**Text Messages:**
+```json
+{ "isStreaming": true, "chunks": [...] }
+```
+
+**Card Messages:**
+```json
+{
+  "title": "string",
+  "description": "string",
+  "imageUrl": "string",
+  "buttons": [{"id": "btn1", "text": "Click", "action": "message", "payload": "..."}]
+}
+```
+
+**Menu/Multiselect Messages:**
+```json
+{
+  "options": [{"id": "opt1", "text": "Option 1", "action": "message"}],
+  "allowMultiple": true,
+  "minSelections": 1,
+  "maxSelections": 3
+}
+```
+
+**Rating Messages:**
+```json
+{
+  "minValue": 1,
+  "maxValue": 5,
+  "ratingType": "stars|numbers|scale"
+}
+```
+
+**Form Messages:**
+```json
+{
+  "formFields": [{"id": "email", "label": "Email", "type": "email", "required": true}],
+  "submitButton": {"id": "submit", "text": "Send", "action": "form_submit"}
+}
+```
+
+### UI Designer Home Screen Config
+Stored in `chatbot_configs.homeScreenConfig` as JSON:
+```json
+{
+  "version": "1.0",
+  "components": [
+    {
+      "id": "header_1",
+      "type": "header|category_tabs|topic_grid|quick_actions|footer",
+      "props": {
+        "title": "...",
+        "topics": [{"id": "t1", "title": "...", "actionType": "message|survey", "surveyId": 123}]
+      },
+      "order": 1,
+      "visible": true
+    }
+  ],
+  "theme": {"primaryColor": "#...", "backgroundImageUrl": "..."},
+  "settings": {"enableSearch": false, "enableCategories": true}
+}
+```
+
+Components rendered by `dynamic-home-screen.tsx` using `component-registry.tsx` mapping.
+
+### Subscription Enforcement
+Plan limits checked on:
+- Creating new chatbots (check `maxBots`)
+- Sending messages (check `maxMessagesPerMonth`)
+- Monthly usage resets tracked via `messagesUsedThisMonth`
+
+Stripe webhooks handle:
+- `checkout.session.completed` - Create subscription
+- `customer.subscription.updated` - Update subscription status
+- `customer.subscription.deleted` - Cancel subscription
+- `invoice.payment_failed` - Mark subscription as past_due
+
+### Embed Widget Pattern
+Widget can be embedded via:
+1. Direct URL with `?embedded=true` parameter
+2. Script injection with `window.__CHAT_WIDGET_CONFIG__`
+
+Embed bypasses:
+- Authentication completely
+- Layout/navigation (Navbar/Footer)
+- Redirects to login
+
+Uses `chatbotGuid` from URL params or config to load chatbot settings.
+
+### File Upload Flow
+1. Client uploads file via `/api/uploads` (multipart/form-data)
+2. Server validates file type and size
+3. File uploaded to S3 with unique key
+4. Returns S3 URL for storage in database
+5. Used for: avatars, background images, uploaded documents for RAG
+
+
+# Source Code Tree
+
+Generated on: 2026-01-08T19:41:07.825Z
+
+
 {
   "title": "Directory Tree",
-  "generatedAt": "2026-01-10T20:07:38.779Z",
+  "generatedAt": "2026-01-10T22:22:33.967Z",
   "simpleMode": true,
   "directoryTree": {
     "client": {
@@ -138,9 +381,17 @@
                 "embed": {
                   "type": "directory",
                   "children": {
+                    "CTAAssistant.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/CTAAssistant.tsx"
+                    },
                     "EmbedChatInterface.tsx": {
                       "type": "file",
                       "path": "client/src/components/embed/EmbedChatInterface.tsx"
+                    },
+                    "EmbedDesignForm-v2.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/embed/EmbedDesignForm-v2.tsx"
                     },
                     "EmbedDesignForm.tsx": {
                       "type": "file",
@@ -176,6 +427,72 @@
                         "EmbedWelcome.tsx": {
                           "type": "file",
                           "path": "client/src/components/embed/embed-components/EmbedWelcome.tsx"
+                        }
+                      }
+                    },
+                    "embed-cta": {
+                      "type": "directory",
+                      "children": {
+                        "CTABuilder.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/CTABuilder.tsx"
+                        },
+                        "CTAPreview.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/CTAPreview.tsx"
+                        },
+                        "CTAView.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/CTAView.tsx"
+                        },
+                        "cta-component-registry.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/cta-component-registry.tsx"
+                        },
+                        "cta-components": {
+                          "type": "directory",
+                          "children": {
+                            "Badge.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/Badge.tsx"
+                            },
+                            "CTAButtonGroup.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAButtonGroup.tsx"
+                            },
+                            "CTADescription.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTADescription.tsx"
+                            },
+                            "CTAFeatureList.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAFeatureList.tsx"
+                            },
+                            "CTAForm.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAForm.tsx"
+                            },
+                            "CTAHeader.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CTAHeader.tsx"
+                            },
+                            "Container.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/Container.tsx"
+                            },
+                            "Divider.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/Divider.tsx"
+                            },
+                            "RichText.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/RichText.tsx"
+                            }
+                          }
+                        },
+                        "style-utils.ts": {
+                          "type": "file",
+                          "path": "client/src/components/embed/embed-cta/style-utils.ts"
                         }
                       }
                     },
@@ -461,6 +778,10 @@
               "type": "file",
               "path": "server/openai/context-builder.ts"
             },
+            "cta-generator.ts": {
+              "type": "file",
+              "path": "server/openai/cta-generator.ts"
+            },
             "dynamic-content-validator.ts": {
               "type": "file",
               "path": "server/openai/dynamic-content-validator.ts"
@@ -513,6 +834,10 @@
             "contact.ts": {
               "type": "file",
               "path": "server/routes/contact.ts"
+            },
+            "cta-ai.ts": {
+              "type": "file",
+              "path": "server/routes/cta-ai.ts"
             },
             "embeds.ts": {
               "type": "file",

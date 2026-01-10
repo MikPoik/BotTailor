@@ -25,6 +25,7 @@ interface EmbedDesign {
   showTimestamp: boolean;
   hideBranding: boolean;
   chatbotConfigId: number;
+  ctaConfig?: any; // CTA configuration
 }
 
 export default function EmbedDesignEditPage() {
@@ -102,9 +103,15 @@ export default function EmbedDesignEditPage() {
   const handleSave = (data: EmbedDesignFormData) => {
     // Update preview in real-time
     setFormValues(data);
-    
+
+    // Ensure CTA config is included — prefer the form value, then local preview state, then existing design
+    const finalData: EmbedDesignFormData = {
+      ...data,
+      ctaConfig: (data as any).ctaConfig || (formValues as any)?.ctaConfig || (design as any)?.ctaConfig,
+    } as EmbedDesignFormData;
+
     return new Promise<void>((resolve, reject) => {
-      saveMutation.mutate(data, {
+      saveMutation.mutate(finalData, {
         onSuccess: () => resolve(),
         onError: (error) => reject(error),
       });
@@ -205,8 +212,8 @@ export default function EmbedDesignEditPage() {
         </Button>
       </div>
 
-      {/* Form and Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Form */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg border p-6">
@@ -225,6 +232,7 @@ export default function EmbedDesignEditPage() {
                 showAvatar: design.showAvatar,
                 showTimestamp: design.showTimestamp,
                 hideBranding: design.hideBranding,
+                ctaConfig: design.ctaConfig, // Load saved CTA config
               } : undefined}
               onSubmit={handleSave}
               onChange={setFormValues}
@@ -234,35 +242,7 @@ export default function EmbedDesignEditPage() {
           </div>
         </div>
 
-        {/* Live Preview (Desktop only) */}
-        <div className="hidden lg:block">
-          <div className="sticky top-6 bg-white rounded-lg border p-4">
-            <h3 className="font-semibold mb-3">Quick Preview</h3>
-            <div
-              className="border rounded-lg h-96 overflow-hidden flex flex-col"
-              style={{
-                backgroundColor: previewConfig.theme.backgroundColor,
-                color: previewConfig.theme.textColor,
-              }}
-            >
-              <div
-                className="px-3 py-2 border-b flex items-center justify-between text-sm font-medium"
-                style={{ borderBottomColor: previewConfig.theme.primaryColor }}
-              >
-                <span>{previewConfig.ui.headerText || "Chat"}</span>
-                <span className="text-xs opacity-75">Preview</span>
-              </div>
-              <div className="flex-1 overflow-auto p-3 flex items-center justify-center">
-                <p className="text-xs text-center opacity-75">
-                  Full preview available below
-                </p>
-              </div>
-              <div className="p-2 border-t" style={{ borderTopColor: previewConfig.theme.primaryColor }}>
-                <div className="text-xs text-center opacity-75">Input area</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Right preview removed for CTA tab; use modal Preview button instead */}
       </div>
 
       {/* Preview Modal */}

@@ -32,7 +32,7 @@ export const CTAPreview: React.FC<CTAPreviewProps> = ({
   const deviceDimensions = {
     mobile: { width: '375px', height: '667px' },
     tablet: { width: '768px', height: '1024px' },
-    desktop: { width: '100%', height: '600px' },
+    desktop: { width: 'calc(100% - 40px)', height: '600px' }, // Account for padding
   };
 
   const dims = deviceDimensions[deviceType];
@@ -46,6 +46,7 @@ export const CTAPreview: React.FC<CTAPreviewProps> = ({
         gap: '24px',
         height: isFullScreen ? '100vh' : 'auto',
         backgroundColor: isFullScreen ? '#fff' : 'transparent',
+        width: '100%',
       }}
     >
       {/* Controls - Hidden in fullscreen */}
@@ -136,8 +137,9 @@ export const CTAPreview: React.FC<CTAPreviewProps> = ({
           backgroundColor: isFullScreen ? '#fff' : '#f9fafb',
           borderRadius: isFullScreen ? '0' : '8px',
           padding: isFullScreen ? '0' : '24px',
-          minHeight: isFullScreen ? '100vh' : '600px',
+          minHeight: isFullScreen ? '100vh' : deviceType === 'desktop' ? '650px' : '600px',
           overflow: 'auto',
+          width: '100%',
         }}
       >
         {/* Full Screen Header */}
@@ -195,6 +197,8 @@ export const CTAPreview: React.FC<CTAPreviewProps> = ({
             marginTop: isFullScreen ? '56px' : '0',
             display: 'flex',
             flexDirection: 'column',
+            maxWidth: '100%',
+            flexShrink: 0,
           }}
         >
           {/* CTA Content */}
@@ -202,6 +206,7 @@ export const CTAPreview: React.FC<CTAPreviewProps> = ({
             <CTAView
               config={config}
               chatbotName={chatbotName}
+              embedded={true}
               onPrimaryButtonClick={() => {
                 console.log('Primary button clicked in preview');
               }}
@@ -241,30 +246,48 @@ export const CTAPreview: React.FC<CTAPreviewProps> = ({
     </div>
   );
 
-  // Render as modal overlay
+  // Render as modal overlay with backdrop
   return (
-    <div
-      style={{
-        position: isFullScreen ? 'fixed' : 'absolute',
-        top: isFullScreen ? 0 : '24px',
-        left: isFullScreen ? 0 : '24px',
-        right: isFullScreen ? 0 : '24px',
-        bottom: isFullScreen ? 0 : 'auto',
-        backgroundColor: isFullScreen ? 'white' : 'white',
-        borderRadius: isFullScreen ? '0' : '8px',
-        boxShadow: isFullScreen
-          ? 'none'
-          : '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-        zIndex: 1000,
-        overflow: isFullScreen ? 'auto' : 'auto',
-        maxHeight: isFullScreen ? '100vh' : 'calc(100vh - 100px)',
-        padding: isFullScreen ? '0' : '24px',
-        maxWidth: isFullScreen ? '100%' : '1200px',
-        margin: isFullScreen ? '0' : '0 auto',
-      }}
-    >
-      {content}
-    </div>
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 999,
+        }}
+      />
+      
+      {/* Modal */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed',
+          top: isFullScreen ? 0 : '50%',
+          left: isFullScreen ? 0 : '50%',
+          transform: isFullScreen ? 'none' : 'translate(-50%, -50%)',
+          width: isFullScreen ? '100%' : deviceType === 'desktop' ? '95vw' : 'auto',
+          height: isFullScreen ? '100%' : 'auto',
+          maxWidth: isFullScreen ? '100%' : '95vw',
+          maxHeight: isFullScreen ? '100%' : '90vh',
+          backgroundColor: 'white',
+          borderRadius: isFullScreen ? '0' : '12px',
+          boxShadow: isFullScreen
+            ? 'none'
+            : '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          overflow: 'auto',
+          padding: isFullScreen ? '0' : '24px',
+        }}
+      >
+        {content}
+      </div>
+    </>
   );
 };
 
