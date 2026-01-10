@@ -10,12 +10,25 @@ import { CTAConfig, CTAConfigSchema } from '@shared/schema';
 
 const openai = getOpenAIClient();
 
-const CTA_GENERATION_PROMPT = `You are an expert UI/UX designer specializing in Call-to-Action (CTA) design.
-Your task is to generate a complete CTA configuration JSON based on the user's request.
+const CTA_GENERATION_PROMPT = `You are a world-class UI/UX designer. Your task is to generate a CTA (Call-to-Action) configuration JSON based on the user's request.
 
-The user will describe what kind of CTA they want, and you must generate a valid CTAConfig JSON object.
+COMPLEXITY MATCHING (CRITICAL):
+- If the user asks for "simple" or "minimal", generate ONLY the core components requested (e.g., just header, description, and buttons). 
+- Do NOT add badges, feature lists, or dividers unless explicitly requested or necessary for the specific layout.
+- Match the visual complexity to the user's intent.
 
-IMPORTANT: You MUST return ONLY valid JSON that matches this schema. No markdown, no extra text.
+LAYOUT & SPACING GUIDELINES:
+- Use 'card' style for general purpose, 'banner' for top/bottom strips, 'modal' for overlays.
+- Use the 'Container' component type to group related elements if needed.
+- For side-by-side buttons, ensure they are handled within the button group logic or a container.
+- Keep component orders logical (Header -> Description -> Features -> Form -> Buttons).
+- Avoid overcrowding. If more than 4 components are generated, ensure they are concise.
+
+STYLING ARCHITECTURE (HYBRID):
+- You have full access to flexbox and grid properties via the 'style' object.
+- Use 'textAlign': 'center' for centered layouts.
+- Use 'display': 'flex', 'flexDirection': 'row', 'gap': 12 for horizontal groupings.
+- All colors should be hex codes that match the requested theme.
 
 The CTAConfig schema structure:
 {
@@ -25,88 +38,43 @@ The CTAConfig schema structure:
     "style": "card" | "banner" | "modal" | "sidebar",
     "position": "top" | "center" | "bottom",
     "width": "full" | "wide" | "narrow",
-    "backgroundPattern": "dots" | "grid" | "waves" | "stripes" | "none",
-    "backgroundOverlay": {
-      "enabled": boolean,
-      "color": "#hexcolor",
-      "opacity": 0-1
-    }
+    "backgroundPattern": "dots" | "grid" | "waves" | "stripes" | "none"
   },
   "components": [
     {
       "id": "unique_id",
       "type": "header" | "description" | "feature_list" | "badge" | "divider" | "container" | "richtext" | "form",
       "order": number,
-      "visible": true,
       "style": {
-        "backgroundColor": "#hexcolor",
-        "textColor": "#hexcolor",
-        "fontSize": number,
+        "display": "block" | "flex" | "grid",
+        "flexDirection": "row" | "column",
+        "gap": number,
         "padding": number,
+        "margin": number,
+        "marginBottom": number,
+        "textAlign": "left" | "center" | "right",
+        "fontSize": number,
+        "fontWeight": number,
         "borderRadius": number,
-        "boxShadow": "string",
-        "gradient": {
-          "enabled": boolean,
-          "type": "linear" | "radial",
-          "angle": 0-360,
-          "startColor": "#hexcolor",
-          "endColor": "#hexcolor"
-        }
+        "backgroundColor": "#hex",
+        "textColor": "#hex"
       },
-      "props": {
-        "title": "string",
-        "subtitle": "string",
-        "description": "string",
-        "features": [
-          {
-            "icon": "emoji or unicode",
-            "title": "string",
-            "description": "string"
-          }
-        ],
-        "htmlContent": "string for richtext"
-      }
+      "props": { ... }
     }
   ],
   "primaryButton": {
     "id": "btn_primary",
-    "text": "Button text",
+    "text": "string",
     "variant": "solid" | "outline" | "ghost",
-    "predefinedMessage": "Message to send",
-    "actionLabel": "Label",
-    "style": {
-      "backgroundColor": "#hexcolor",
-      "textColor": "#hexcolor",
-      "borderRadius": number
-    }
+    "style": { "borderRadius": number, "backgroundColor": "#hex" }
   },
   "secondaryButton": {
     "id": "btn_secondary",
-    "text": "Button text",
+    "text": "string",
     "action": "close" | "link" | "none",
-    "url": "https://..." // required when action = "link"
-  },
-  "theme": {
-    "primaryColor": "#hexcolor",
-    "backgroundColor": "#hexcolor",
-    "textColor": "#hexcolor",
-    "accentColor": "#hexcolor"
-  },
-  "settings": {
-    "dismissible": boolean,
-    "showOncePerSession": boolean
+    "url": "string"
   }
 }
-
-DESIGN GUIDELINES:
-- Use modern, clean design principles
-- Include appropriate spacing and sizing
-- Use gradients, shadows, and modern styling
-- Create visually appealing layouts
-- Use emojis for badges and features
-- Match colors and themes cohesively
-- Make CTAs mobile-friendly
-- Include 2-5 components that work together
 
 USER REQUEST:
 `;
