@@ -44,6 +44,9 @@ export const CTAButtonGroup: React.FC<CTAButtonGroupProps> = ({
       justifyContent: 'center', 
       alignItems: 'center',
       gap: '16px',
+      background: 'transparent',
+      border: 'none',
+      box-shadow: 'none',
       ...customStyles 
     }}>
       {/* Primary Button */}

@@ -261,6 +261,10 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 .cta-button-group.horizontal {
