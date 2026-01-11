@@ -13,6 +13,7 @@ import { CTABuilder } from "./embed-cta/CTABuilder";
 import { CTAPreview } from "./embed-cta/CTAPreview";
 import { CTAAssistant } from "./CTAAssistant";
 import { CTAConfig } from "@shared/schema";
+import { VisualCTAEditor } from "./cta-builder";
 
 // Validation schema for embed design
 const embedDesignSchema = z.object({
@@ -52,9 +53,8 @@ export function EmbedDesignForm({
   chatbotName = "Support",
 }: EmbedDesignFormProps) {
   const [activeTab, setActiveTab] = useState<"design" | "cta">("design");
-  const [ctaConfig, setCtaConfig] = useState<CTAConfig | undefined>(
-    initialData?.ctaConfig as CTAConfig
-  );
+  const [ctaSubTab, setCtaSubTab] = useState<"visual" | "ai" | "json">("visual");
+  const [ctaConfig, setCtaConfig] = useState<CTAConfig | undefined>(initialData?.ctaConfig as CTAConfig | undefined);
   const [showCtaPreview, setShowCtaPreview] = useState(false);
 
   const methods = useForm<EmbedDesignFormData>({
@@ -344,22 +344,61 @@ export function EmbedDesignForm({
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             {/* Enable CTA and Settings */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  {...register("ctaConfig.enabled")}
-                  style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                />
-                <span style={{ fontSize: "15px", fontWeight: 500 }}>Enable CTA View</span>
-              </label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={ctaConfig?.enabled || false}
+                    onChange={(e) => {
+                      const newConfig = { ...ctaConfig, enabled: e.target.checked } as CTAConfig;
+                      handleCtaConfigChange(newConfig);
+                    }}
+                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: "15px", fontWeight: 500 }}>Enable CTA View</span>
+                </label>
 
-              {watch("ctaConfig.enabled") && (
+                {ctaConfig?.enabled && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCtaPreview(true)}
+                    style={{
+                      padding: "6px 16px",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      backgroundColor: "#2563eb",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#1d4ed8";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#2563eb";
+                    }}
+                  >
+                    👁️ Preview CTA
+                  </button>
+                )}
+              </div>
+
+              {ctaConfig?.enabled && (
                 <div style={{ marginLeft: "26px", display: "flex", flexDirection: "column", gap: "12px" }}>
                   <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Settings</h4>
                   <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                     <input
                       type="checkbox"
-                      {...register("ctaConfig.dismissible")}
+                      checked={ctaConfig?.settings?.dismissible ?? true}
+                      onChange={(e) => {
+                        const newConfig = {
+                          ...ctaConfig,
+                          settings: { ...ctaConfig?.settings, dismissible: e.target.checked }
+                        } as CTAConfig;
+                        handleCtaConfigChange(newConfig);
+                      }}
                       style={{ width: "16px", height: "16px", cursor: "pointer" }}
                     />
                     <span style={{ fontSize: "14px" }}>Allow users to dismiss CTA</span>
@@ -367,7 +406,14 @@ export function EmbedDesignForm({
                   <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                     <input
                       type="checkbox"
-                      {...register("ctaConfig.showOncePerSession")}
+                      checked={ctaConfig?.settings?.showOncePerSession ?? false}
+                      onChange={(e) => {
+                        const newConfig = {
+                          ...ctaConfig,
+                          settings: { ...ctaConfig?.settings, showOncePerSession: e.target.checked }
+                        } as CTAConfig;
+                        handleCtaConfigChange(newConfig);
+                      }}
                       style={{ width: "16px", height: "16px", cursor: "pointer" }}
                     />
                     <span style={{ fontSize: "14px" }}>Show only once per session</span>
@@ -376,76 +422,119 @@ export function EmbedDesignForm({
               )}
             </div>
 
-            {/* AI Assistant */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-                <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>AI Generator</h4>
-                <button
-                  type="button"
-                  onClick={() => setShowCtaPreview(true)}
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    backgroundColor: "#f3f4f6",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                >
-                  👁️ Preview
-                </button>
-              </div>
-              <CTAAssistant
-                chatbotName={chatbotName}
-                currentConfig={ctaConfig}
-                theme={{
-                  primaryColor: watch("primaryColor"),
-                  backgroundColor: watch("backgroundColor"),
-                  textColor: watch("textColor"),
-                }}
-                onConfigGenerated={(generatedConfig) => {
-                  handleCtaConfigChange(generatedConfig);
-                }}
-              />
-            </div>
+            {/* CTA Sub-tabs */}
+            {ctaConfig?.enabled && (
+              <>
+                <div style={{
+                  display: "flex",
+                  gap: "8px",
+                  borderBottom: "1px solid #e5e7eb",
+                  marginTop: "8px",
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setCtaSubTab("visual")}
+                    style={{
+                      padding: "10px 16px",
+                      fontSize: "13px",
+                      fontWeight: ctaSubTab === "visual" ? 600 : 500,
+                      border: "none",
+                      backgroundColor: "transparent",
+                      cursor: "pointer",
+                      borderBottom: ctaSubTab === "visual" ? "2px solid #2563eb" : "none",
+                      color: ctaSubTab === "visual" ? "#2563eb" : "#6b7280",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    🎨 Component Layout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCtaSubTab("ai")}
+                    style={{
+                      padding: "10px 16px",
+                      fontSize: "13px",
+                      fontWeight: ctaSubTab === "ai" ? 600 : 500,
+                      border: "none",
+                      backgroundColor: "transparent",
+                      cursor: "pointer",
+                      borderBottom: ctaSubTab === "ai" ? "2px solid #2563eb" : "none",
+                      color: ctaSubTab === "ai" ? "#2563eb" : "#6b7280",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    ✨ AI Generator
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCtaSubTab("json")}
+                    style={{
+                      padding: "10px 16px",
+                      fontSize: "13px",
+                      fontWeight: ctaSubTab === "json" ? 600 : 500,
+                      border: "none",
+                      backgroundColor: "transparent",
+                      cursor: "pointer",
+                      borderBottom: ctaSubTab === "json" ? "2px solid #2563eb" : "none",
+                      color: ctaSubTab === "json" ? "#2563eb" : "#6b7280",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    📝 JSON Editor
+                  </button>
+                </div>
 
-            {/* JSON Editor */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-                <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}>Manual Builder</h4>
-                <button
-                  type="button"
-                  onClick={() => setShowCtaPreview(true)}
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    backgroundColor: "#f3f4f6",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                >
-                  👁️ Preview
-                </button>
-              </div>
-              <CTABuilder
-                initialConfig={ctaConfig}
-                chatbotName={chatbotName}
-                themeColors={{
-                  primaryColor: watch("primaryColor"),
-                  backgroundColor: watch("backgroundColor"),
-                  textColor: watch("textColor"),
-                }}
-                onConfigChange={handleCtaConfigChange}
-                onPreviewToggle={(show) => {
-                  if (show) {
-                    setShowCtaPreview(true);
-                  }
-                }}
-              />
-            </div>
+                {/* Visual Editor Sub-tab */}
+                {ctaSubTab === "visual" && (
+                  <div>
+                    <VisualCTAEditor
+                      config={ctaConfig}
+                      onChange={handleCtaConfigChange}
+                    />
+                  </div>
+                )}
+
+                {/* AI Assistant Sub-tab */}
+                {ctaSubTab === "ai" && (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <CTAAssistant
+                      chatbotName={chatbotName}
+                      currentConfig={ctaConfig}
+                      theme={{
+                        primaryColor: watch("primaryColor"),
+                        backgroundColor: watch("backgroundColor"),
+                        textColor: watch("textColor"),
+                      }}
+                      onConfigGenerated={(generatedConfig) => {
+                        handleCtaConfigChange(generatedConfig);
+                        setCtaSubTab("visual"); // Switch to visual editor after generation
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* JSON Editor Sub-tab */}
+                {ctaSubTab === "json" && (
+                  <div>
+                    <CTABuilder
+                      initialConfig={ctaConfig}
+                      chatbotName={chatbotName}
+                      themeColors={{
+                        primaryColor: watch("primaryColor"),
+                        backgroundColor: watch("backgroundColor"),
+                        textColor: watch("textColor"),
+                      }}
+                      onConfigChange={handleCtaConfigChange}
+                      onPreviewToggle={(show) => {
+                        if (show) {
+                          setShowCtaPreview(true);
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 

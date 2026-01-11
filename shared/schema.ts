@@ -727,7 +727,9 @@ export const CTAButtonSchema = z.object({
   id: z.string(),
   text: z.string(),
   variant: z.enum(['solid', 'outline', 'ghost']).default('solid'),
-  predefinedMessage: z.string(), // Message sent when button is clicked
+  action: z.enum(['message', 'link', 'custom']).default('message'),
+  predefinedMessage: z.string().optional(), // Message sent when action is 'message'
+  url: z.string().optional(), // URL when action is 'link'
   actionLabel: z.string().optional(),
   style: ComponentStyleSchema.optional(), // Extended styling
 });
@@ -751,6 +753,9 @@ export const CTAComponentSchema = z.object({
       description: z.string(),
       style: ComponentStyleSchema.optional(),
     })).optional(),
+    
+    // Button group
+    buttons: z.array(CTAButtonSchema).optional(),
     
     // Badge component
     icon: z.string().optional(),
@@ -797,6 +802,7 @@ export const CTAConfigSchema = z.object({
     style: z.enum(['banner', 'card', 'modal', 'sidebar']).default('card'),
     position: z.enum(['top', 'center', 'bottom']).default('center'),
     width: z.enum(['full', 'wide', 'narrow']).default('wide'),
+    componentGap: z.number().min(0).max(100).optional(), // Gap between components in pixels
     backgroundImage: z.string().optional(), // S3 URL for background image
     backgroundPattern: z.enum(['none', 'dots', 'grid', 'waves', 'stripes']).optional(), // CSS pattern
     backgroundOverlay: z.object({
@@ -809,8 +815,9 @@ export const CTAConfigSchema = z.object({
   // Components (similar to homeScreenConfig)
   components: z.array(CTAComponentSchema).default([]),
   
-  // CTA Button Configuration
-  primaryButton: CTAButtonSchema,
+  // CTA Button Configuration (DEPRECATED - use button_group component instead)
+  // Kept for backward compatibility
+  primaryButton: CTAButtonSchema.optional(),
   secondaryButton: z.object({
     id: z.string(),
     text: z.string(),

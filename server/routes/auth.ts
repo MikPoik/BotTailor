@@ -5,37 +5,72 @@ import { db } from "../db";
 import { neonAuthUsers } from "@shared/schema";
 import { eq, and, isNull } from "drizzle-orm";
 
+// Development mode check
+const isDevelopment = process.env.NODE_ENV !== "production";
+
 // Authentication routes for Neon Auth
 export async function setupAuthRoutes(app: Express) {
   // Helper to fetch Neon Auth user profile
-  async function fetchNeonAuthUser(userId: string) {
-    const [neonAuthUser] = await db
-      .select()
-      .from(neonAuthUsers)
-      .where(
-        and(
-          eq(neonAuthUsers.id, userId),
-          isNull(neonAuthUsers.deletedAt)
+  async function fetchNeonAuthUser(userId: string, profileData?: { email?: string; name?: string }) {
+    // In development, use provided profile data or fallback to dummy data
+    if (isDevelopment) {
+      console.log(`[DEV MODE] Using ${profileData ? 'provided' : 'dummy'} Neon Auth user for ${userId}`);
+      return {
+        id: userId,
+        name: profileData?.name || "Dev User",
+        email: profileData?.email || "dev@example.com",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+        rawJson: null,
+      };
+    }
+
+    try {
+      const [neonAuthUser] = await db
+        .select()
+        .from(neonAuthUsers)
+        .where(
+          and(
+            eq(neonAuthUsers.id, userId),
+            isNull(neonAuthUsers.deletedAt)
+          )
         )
-      )
-      .limit(1);
-    return neonAuthUser;
+        .limit(1);
+      return neonAuthUser;
+    } catch (error) {
+      // If query fails in production, log error and return null
+      console.error("[NEON AUTH] Failed to query neon_auth.users_sync:", error);
+      return null;
+    }
   }
 
   // Get current user - lazy creation on first access
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.neonUser.id;
+      console.log(`[AUTH] GET /api/auth/user for userId: ${userId}${isDevelopment ? ' (dev mode)' : ''}`);
       
       // Try to get existing user from app database
       let user = await storage.getUser(userId);
       
+      if (user) {
+        console.log(`[AUTH] User already exists in database: ${user.email || user.id}`);
+      }
+      
       // If user doesn't exist, create them from Neon Auth data
       if (!user) {
-        // Query neon_auth.users_sync for profile data
-        const neonAuthUser = await fetchNeonAuthUser(userId);
+        // Extract profile data from query params (for dev mode)
+        const profileData = isDevelopment ? {
+          email: req.query.email as string,
+          name: req.query.name as string,
+        } : undefined;
+        
+        // Query neon_auth.users_sync for profile data (or use dev dummy data)
+        const neonAuthUser = await fetchNeonAuthUser(userId, profileData);
         
         if (!neonAuthUser) {
+          console.error(`[NEON AUTH] User not found: ${userId}`);
           return res.status(404).json({ message: "User not found in Neon Auth" });
         }
 
@@ -48,7 +83,7 @@ export async function setupAuthRoutes(app: Express) {
           profileImageUrl: null,
         });
         
-        console.log(`[NEON AUTH] Created new user: ${userId}`);
+        console.log(`[NEON AUTH] Created new user: ${userId}${isDevelopment ? ' (dev mode)' : ''}`);
       }
       
       res.json(user);
@@ -62,15 +97,30 @@ export async function setupAuthRoutes(app: Express) {
   app.post('/api/ensure-user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.neonUser.id;
+      console.log(`[AUTH] POST /api/ensure-user for userId: ${userId}${isDevelopment ? ' (dev mode)' : ''}`);
+      if (req.body?.email) {
+        console.log(`[AUTH] Received profile data - email: ${req.body.email}, name: ${req.body.name}`);
+      }
       
       // Try to get existing user
       let user = await storage.getUser(userId);
       
+      if (user) {
+        console.log(`[AUTH] User already exists in database: ${user.email || user.id}`);
+      }
+      
       // If user doesn't exist, create them
       if (!user) {
-        const neonAuthUser = await fetchNeonAuthUser(userId);
+        // Extract profile data from request body (for dev mode)
+        const profileData = isDevelopment && req.body ? {
+          email: req.body.email as string,
+          name: req.body.name as string,
+        } : undefined;
+        
+        const neonAuthUser = await fetchNeonAuthUser(userId, profileData);
         
         if (!neonAuthUser) {
+          console.error(`[NEON AUTH] User not found during ensure-user: ${userId}`);
           return res.status(404).json({ message: "User not found in Neon Auth" });
         }
 
@@ -81,6 +131,8 @@ export async function setupAuthRoutes(app: Express) {
           lastName: null,
           profileImageUrl: null,
         });
+        
+        console.log(`[NEON AUTH] Ensured user exists: ${userId}${isDevelopment ? ' (dev mode)' : ''}`);
       }
       
       res.json(user);

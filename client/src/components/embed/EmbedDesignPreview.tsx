@@ -7,6 +7,7 @@ import { Copy } from "lucide-react";
 
 interface EmbedDesignPreviewProps {
   config: {
+    embedId?: string;
     designType: "minimal" | "compact" | "full";
     theme: {
       primaryColor: string;

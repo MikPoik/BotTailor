@@ -58,14 +58,11 @@ export const CTAView: React.FC<CTAViewProps> = ({
     }
   }
 
-  // Apply overlay if background exists
-  if ((config.layout?.backgroundImage || config.layout?.backgroundPattern) && 
-      config.layout?.backgroundOverlay?.enabled) {
-    const overlayColor = config.layout.backgroundOverlay.color || 'rgba(0, 0, 0, 0.3)';
-    const overlayOpacity = config.layout.backgroundOverlay.opacity ?? 0.5;
-    backgroundStyle.backgroundColor = overlayColor;
-    backgroundStyle.opacity = overlayOpacity;
-  }
+  // Get overlay opacity for rendering
+  const overlayOpacity = (config.layout?.backgroundImage || config.layout?.backgroundPattern) && 
+                         config.layout?.backgroundOverlay?.enabled
+    ? config.layout.backgroundOverlay.opacity ?? 0.3
+    : 0;
 
   // Theme CSS variables applied via useEffect below
   const themeStyle: React.CSSProperties = {};
@@ -104,7 +101,7 @@ export const CTAView: React.FC<CTAViewProps> = ({
 
   // Sort components by order
   const sortedComponents = useMemo(() => {
-    return [...(config.components || [])].sort((a, b) => a.order - b.order);
+    return [...(config.components || [])].sort((a: any, b: any) => a.order - b.order);
   }, [config.components]);
 
   return (
@@ -118,8 +115,24 @@ export const CTAView: React.FC<CTAViewProps> = ({
         width: '100%',
         overflow: 'auto',
         ...backgroundStyle,
+        position: 'relative',
       }}
     >
+      {/* Overlay layer for background images */}
+      {overlayOpacity > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: config.layout?.backgroundOverlay?.color || 'rgba(0, 0, 0, 1)',
+          opacity: overlayOpacity,
+          pointerEvents: 'none',
+          zIndex: 0,
+        }} />
+      )}
+      
       <div 
         className={`${layoutClass} ${positionClass}`}
         style={{
@@ -127,16 +140,51 @@ export const CTAView: React.FC<CTAViewProps> = ({
           display: 'flex',
           flexDirection: 'column',
           minHeight: 0,
-          gap: (config.layout as any)?.componentGap ? `${(config.layout as any).componentGap}px` : 'var(--cta-component-gap, 16px)',
+          gap: config.layout?.componentGap !== undefined ? `${config.layout.componentGap}px` : '16px',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {/* Render all CTA components with flexible layout support */}
-        {sortedComponents.map((component) =>
-          renderCTAComponent(component, config, component.id)
-        )}
+        {sortedComponents.map((component: any) => {
+          // Handle button_group component specially to wire up click handlers
+          if (component.type === 'button_group' && component.props?.buttons) {
+            return (
+              <CTAButtonGroup
+                key={component.id}
+                primaryButton={component.props.buttons[0]}
+                secondaryButton={component.props.buttons[1]}
+                onPrimaryClick={() => {
+                  const button = component.props.buttons?.[0];
+                  if (button?.action === 'message' && button.predefinedMessage) {
+                    onPrimaryButtonClick?.(button.predefinedMessage);
+                  } else if (button?.action === 'link' && button.url) {
+                    window.open(button.url, '_blank');
+                  }
+                }}
+                onSecondaryClick={() => {
+                  const button = component.props.buttons?.[1];
+                  if (button?.action === 'close') {
+                    onClose?.();
+                  } else if (button?.action === 'link' && button.url) {
+                    window.open(button.url, '_blank');
+                  } else if (button?.action === 'message' && button.predefinedMessage) {
+                    onSecondaryButtonClick?.(button.predefinedMessage);
+                  } else {
+                    onSecondaryButtonClick?.();
+                  }
+                }}
+                layout={config.layout?.style === 'sidebar' ? 'vertical' : 'vertical'}
+                componentStyle={component.style}
+              />
+            );
+          }
+          
+          return renderCTAComponent(component, config, component.id);
+        })}
 
-        {/* Button Group with style support */}
-        {config.primaryButton && (
+        {/* Legacy: Button Group for backward compatibility (if primaryButton still exists) */}
+        {config.primaryButton && !sortedComponents.some((c: any) => c.type === 'button_group') && (
           <CTAButtonGroup
             primaryButton={config.primaryButton}
             secondaryButton={config.secondaryButton}

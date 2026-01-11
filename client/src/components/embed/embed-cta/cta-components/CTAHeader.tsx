@@ -40,12 +40,12 @@ export const CTAHeader: React.FC<CTAHeaderProps> = ({ component }) => {
   return (
     <div className={headerClass} style={headerStyle}>
       {title && (
-        <h1 className="cta-header-title" style={{ color: titleColor }}>
+        <h1 className="cta-header-title" style={titleColor ? { color: titleColor + ' !important' } : {}}>
           {title}
         </h1>
       )}
       {subtitle && (
-        <p className="cta-header-subtitle" style={{ color: titleColor, opacity: 0.8 }}>
+        <p className="cta-header-subtitle" style={titleColor ? { color: titleColor + ' !important', opacity: 0.8 } : { opacity: 0.8 }}>
           {subtitle}
         </p>
       )}

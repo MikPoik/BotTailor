@@ -11,7 +11,7 @@ import { CTAConfig } from "@shared/schema";
 import "./embed-chat-interface.css";
 
 interface EmbedConfig {
-  embedId: string;
+  embedId?: string;
   designType: "minimal" | "compact" | "full";
   theme: {
     primaryColor: string;

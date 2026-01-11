@@ -42,7 +42,7 @@ The CTAConfig schema structure:
   "components": [
     {
       "id": "unique_id",
-      "type": "header" | "description" | "feature_list" | "badge" | "divider" | "container" | "richtext" | "form",
+      "type": "header" | "description" | "feature_list" | "badge" | "divider" | "container" | "richtext" | "form" | "button_group",
       "order": number,
       "style": {
         "display": "block" | "flex" | "grid",
@@ -58,22 +58,33 @@ The CTAConfig schema structure:
         "backgroundColor": "#hex",
         "textColor": "#hex"
       },
-      "props": { ... }
+      "props": { 
+        // For button_group type:
+        "buttons": [
+          {
+            "id": "btn_1",
+            "text": "Button Text",
+            "variant": "solid" | "outline" | "ghost",
+            "action": "message" | "link" | "custom",
+            "predefinedMessage": "message to send" (if action is "message"),
+            "url": "https://..." (if action is "link"),
+            "actionLabel": "Label",
+            "style": { "borderRadius": number, "backgroundColor": "#hex" }
+          }
+        ],
+        "layout": "horizontal" | "vertical",
+        "gap": number
+      }
     }
   ],
-  "primaryButton": {
-    "id": "btn_primary",
-    "text": "string",
-    "variant": "solid" | "outline" | "ghost",
-    "style": { "borderRadius": number, "backgroundColor": "#hex" }
-  },
-  "secondaryButton": {
-    "id": "btn_secondary",
-    "text": "string",
-    "action": "close" | "link" | "none",
-    "url": "string"
+  "theme": {
+    "primaryColor": "#hex",
+    "backgroundColor": "#hex",
+    "textColor": "#hex"
   }
 }
+
+IMPORTANT: Always include a "button_group" component in the components array with buttons array in props. Do NOT use the deprecated "primaryButton" or "secondaryButton" fields at the root level.
 
 USER REQUEST:
 `;

@@ -63,7 +63,14 @@ function AuthenticatedRouter() {
   useEffect(() => {
     if (stackUser && !isEmbedded) {
       // Call /api/ensure-user to sync/create user in app database
-      apiRequest("POST", "/api/ensure-user").catch((error) => {
+      // Send user profile data for development mode
+      const userEmail = stackUser.primaryEmail || undefined;
+      const userName = stackUser.displayName || stackUser.primaryEmail?.split('@')[0] || undefined;
+      
+      apiRequest("POST", "/api/ensure-user", {
+        email: userEmail,
+        name: userName,
+      }).catch((error) => {
         console.warn("[USER SYNC] Failed to sync user to database:", error);
         // Don't throw - user will still be able to use the app, just without sync
       });

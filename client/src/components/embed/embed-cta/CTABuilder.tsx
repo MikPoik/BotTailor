@@ -34,20 +34,19 @@ export const CTABuilder: React.FC<CTABuilderProps> = ({
       id: 'btn_1',
       text: 'Start Chat',
       variant: 'solid',
+      action: 'message',
       predefinedMessage: 'Hi! I need help.',
       actionLabel: 'Start Chat',
     },
   };
 
-  const config = initialConfig || defaultConfig;
-  
   // State for JSON editor
-  const [jsonText, setJsonText] = useState<string>(JSON.stringify(config, null, 2));
+  const [jsonText, setJsonText] = useState<string>(JSON.stringify(initialConfig || defaultConfig, null, 2));
 
   // Update jsonText when initialConfig changes
   useEffect(() => {
-    setJsonText(JSON.stringify(config, null, 2));
-  }, [config]);
+    setJsonText(JSON.stringify(initialConfig || defaultConfig, null, 2));
+  }, [initialConfig]);
 
   const mergePartialConfig = (base: CTAConfig, overrides: Record<string, unknown>) => {
     const clone = JSON.parse(JSON.stringify(base)) as Record<string, unknown>;
@@ -77,7 +76,8 @@ export const CTABuilder: React.FC<CTABuilderProps> = ({
   const handleSaveJsonEdit = () => {
     try {
       const parsed = JSON.parse(jsonText);
-      const merged = mergePartialConfig(config, parsed);
+      const currentConfig = initialConfig || defaultConfig;
+      const merged = mergePartialConfig(currentConfig, parsed);
       const validated = CTAConfigSchema.parse(merged);
       onConfigChange?.(validated);
       setJsonText(JSON.stringify(validated, null, 2));
