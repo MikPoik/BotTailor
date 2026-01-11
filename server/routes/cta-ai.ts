@@ -30,7 +30,20 @@ router.post('/generate', isAuthenticated, async (req: Request, res: Response) =>
 
       try {
         const composedPrompt = body.currentConfig || body.messages?.length
-          ? `You are updating an existing CTA configuration.\n\nCurrent CTA config:\n${JSON.stringify(body.currentConfig ?? {}, null, 2)}\n\nChat history (latest first):\n${(body.messages ?? []).map(m => `- ${m.role}: ${m.content}`).join('\n')}\n\nUser request:\n${body.prompt}\n\nPlease return the FULL updated CTAConfig JSON that incorporates the request while preserving sensible parts of the current config.`
+          ? `You are updating an existing CTA configuration.
+          
+CRITICAL: You MUST preserve all existing components (especially headers and titles) unless explicitly asked to remove them. If the user asks for a style change (like background color), keep all content components (header, buttons, etc.) intact.
+
+Current CTA config:
+${JSON.stringify(body.currentConfig ?? {}, null, 2)}
+
+Chat history (latest first):
+${(body.messages ?? []).map(m => `- ${m.role}: ${m.content}`).join('\n')}
+
+User request:
+${body.prompt}
+
+Please return the FULL updated CTAConfig JSON that incorporates the request while strictly maintaining all existing content components unless removal was requested.`
           : body.prompt;
 
         const { config, description } = await generateCTAWithStreaming(
@@ -55,7 +68,20 @@ router.post('/generate', isAuthenticated, async (req: Request, res: Response) =>
     } else {
       // Non-streaming response
       const composedPrompt = body.currentConfig || body.messages?.length
-        ? `You are updating an existing CTA configuration.\n\nCurrent CTA config:\n${JSON.stringify(body.currentConfig ?? {}, null, 2)}\n\nChat history (latest first):\n${(body.messages ?? []).map(m => `- ${m.role}: ${m.content}`).join('\n')}\n\nUser request:\n${body.prompt}\n\nPlease return the FULL updated CTAConfig JSON that incorporates the request while preserving sensible parts of the current config.`
+        ? `You are updating an existing CTA configuration. 
+        
+CRITICAL: You MUST preserve all existing components (especially headers and titles) unless explicitly asked to remove them. If the user asks for a style change (like background color), keep all content components (header, buttons, etc.) intact.
+
+Current CTA config:
+${JSON.stringify(body.currentConfig ?? {}, null, 2)}
+
+Chat history (latest first):
+${(body.messages ?? []).map(m => `- ${m.role}: ${m.content}`).join('\n')}
+
+User request:
+${body.prompt}
+
+Please return the FULL updated CTAConfig JSON that incorporates the request while strictly maintaining all existing content components unless removal was requested.`
         : body.prompt;
 
       const { config, description } = await generateCTAFromPrompt(
