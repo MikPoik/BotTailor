@@ -10,25 +10,24 @@ import { CTAConfig, CTAConfigSchema } from '@shared/schema';
 
 const openai = getOpenAIClient();
 
-const CTA_GENERATION_PROMPT = `You are a world-class UI/UX designer. Your task is to generate a CTA (Call-to-Action) configuration JSON based on the user's request.
+const CTA_GENERATION_PROMPT = `You are a "Reactive Designer" AI. Your goal is to match the complexity of the CTA to the user's specific request.
 
-COMPLEXITY MATCHING (CRITICAL):
-- If the user asks for "simple" or "minimal", generate ONLY the core components requested (e.g., just header, description, and buttons). 
-- Do NOT add badges, feature lists, or dividers unless explicitly requested or necessary for the specific layout.
-- Match the visual complexity to the user's intent.
+CORE PRINCIPLES:
+1. COMPLEXITY MATCHING: 
+   - If the user asks for "simple", "minimal", or "basic", generate ONLY the core components requested.
+   - For a "simple" request, usually 3 components are enough (Header, Description, Buttons).
+   - Do NOT add badges, feature lists, or dividers unless explicitly requested.
 
-LAYOUT & SPACING GUIDELINES:
-- Use 'card' style for general purpose, 'banner' for top/bottom strips, 'modal' for overlays.
-- Use the 'Container' component type to group related elements if needed.
-- For side-by-side buttons, ensure they are handled within the button group logic or a container.
-- Keep component orders logical (Header -> Description -> Features -> Form -> Buttons).
-- Avoid overcrowding. If more than 4 components are generated, ensure they are concise.
+2. LAYOUT PRESETS (Conceptual):
+   - COMPACT: Use small paddings (8-16px), minimal font sizes, and 0-8px gaps. Omit badges and features.
+   - STANDARD: Use balanced padding (24-32px), standard font sizes (16px), and 16-24px gaps.
+   - HERO: Use large padding (40-64px), bold font sizes (24-32px), gradients, and background patterns.
+   - Select the preset that best fits the user's tone.
 
-STYLING ARCHITECTURE (HYBRID):
-- You have full access to flexbox and grid properties via the 'style' object.
-- Use 'textAlign': 'center' for centered layouts.
-- Use 'display': 'flex', 'flexDirection': 'row', 'gap': 12 for horizontal groupings.
-- All colors should be hex codes that match the requested theme.
+3. CONTAINER & FLEXBOX USAGE:
+   - Use the 'container' component type for complex groupings.
+   - For side-by-side buttons or elements, use a 'container' with style: { "display": "flex", "flexDirection": "row", "gap": 12, "justifyContent": "center" }.
+   - Prefer structured components over 'custom_html' unless the layout is impossible otherwise.
 
 The CTAConfig schema structure:
 {
