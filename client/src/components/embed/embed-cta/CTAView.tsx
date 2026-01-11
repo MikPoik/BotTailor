@@ -127,7 +127,7 @@ export const CTAView: React.FC<CTAViewProps> = ({
           display: 'flex',
           flexDirection: 'column',
           minHeight: 0,
-          gap: config.layout?.componentGap ? `${config.layout.componentGap}px` : 'var(--cta-component-gap, 16px)',
+          gap: (config.layout as any)?.componentGap ? `${(config.layout as any).componentGap}px` : 'var(--cta-component-gap, 16px)',
         }}
       >
         {/* Render all CTA components with flexible layout support */}
