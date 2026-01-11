@@ -79,7 +79,6 @@ export function useEmbedScroll(containerRef: React.RefObject<HTMLDivElement>) {
     const handleWheel = (e: WheelEvent) => {
       const isScrollable = container.scrollHeight > container.clientHeight;
       if (!isScrollable) {
-        e.preventDefault();
         return;
       }
 
@@ -96,8 +95,15 @@ export function useEmbedScroll(containerRef: React.RefObject<HTMLDivElement>) {
       if (container.contains(e.target as Node)) {
         const isScrollable = container.scrollHeight > container.clientHeight;
         if (!isScrollable) {
-          e.preventDefault();
+          return;
         }
+        
+        const touch = e.touches[0];
+        const isAtTop = container.scrollTop === 0;
+        const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 1;
+        
+        // This is a simplified check, a more robust one would track touch start position
+        // but for now we just want to avoid blanket e.preventDefault() which kills scroll
       }
     };
 

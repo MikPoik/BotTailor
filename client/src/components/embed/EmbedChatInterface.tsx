@@ -90,7 +90,7 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSendMessage = () => {
     if (!input.trim()) return;
