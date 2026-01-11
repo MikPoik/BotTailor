@@ -46,7 +46,7 @@ export const CTAButtonGroup: React.FC<CTAButtonGroupProps> = ({
       gap: '16px',
       background: 'transparent',
       border: 'none',
-      box-shadow: 'none',
+      boxShadow: 'none',
       ...customStyles 
     }}>
       {/* Primary Button */}
