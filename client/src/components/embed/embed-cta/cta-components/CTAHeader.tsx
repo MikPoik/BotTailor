@@ -35,15 +35,17 @@ export const CTAHeader: React.FC<CTAHeaderProps> = ({ component }) => {
     ...componentStyle,
   };
 
+  const titleColor = (component.style as any)?.textColor || (component.style as any)?.color;
+
   return (
     <div className={headerClass} style={headerStyle}>
       {title && (
-        <h1 className="cta-header-title" style={{ color: componentStyle.color || componentStyle.textColor }}>
+        <h1 className="cta-header-title" style={{ color: titleColor }}>
           {title}
         </h1>
       )}
       {subtitle && (
-        <p className="cta-header-subtitle" style={{ color: componentStyle.color || componentStyle.textColor, opacity: 0.8 }}>
+        <p className="cta-header-subtitle" style={{ color: titleColor, opacity: 0.8 }}>
           {subtitle}
         </p>
       )}
