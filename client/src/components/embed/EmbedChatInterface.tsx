@@ -1,13 +1,17 @@
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useEmbedTheme, useEmbedLayout, useEmbedScroll, useEmbedSession } from "@/hooks/useEmbedConfig";
+import { useEmbedStage } from "@/hooks/useEmbedStage";
 import { useChat } from "@/hooks/use-chat";
 import { MinimalEmbed } from "./embed-designs/MinimalEmbed";
 import { CompactEmbed } from "./embed-designs/CompactEmbed";
 import { FullEmbed } from "./embed-designs/FullEmbed";
+import { CTAView } from "./embed-cta/CTAView";
 import { Loader } from "lucide-react";
+import { CTAConfig } from "@shared/schema";
 import "./embed-chat-interface.css";
 
 interface EmbedConfig {
+  embedId: string;
   designType: "minimal" | "compact" | "full";
   theme: {
     primaryColor: string;
@@ -29,6 +33,7 @@ interface EmbedConfig {
     visible: boolean;
   }>;
   chatbotConfigId?: number;
+  ctaConfig?: CTAConfig;
 }
 
 interface EmbedChatInterfaceProps {
@@ -36,39 +41,32 @@ interface EmbedChatInterfaceProps {
   apiUrl: string;
 }
 
-/**
- * Main wrapper component for iframe-based embed chats
- * Supports multiple design variants (minimal, compact, full)
- * Handles theme application, layout, scroll constraints, and session management
- */
 export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
 
-  // Debug: Log config to see what designType we're getting
   useEffect(() => {
     console.log('[EmbedChatInterface] Config received:', {
       designType: config.designType,
       hasHeader: !!config.ui.headerText,
       hasFooter: !!config.ui.footerText,
-      theme: config.theme
+      theme: config.theme,
+      ctaEnabled: config.ctaConfig?.enabled
     });
   }, [config]);
 
-  // Apply theme colors
   useEmbedTheme(config.theme);
-
-  // Ensure proper embed layout
   useEmbedLayout();
-
-  // Constrain scrolling to message container
   useEmbedScroll(messagesRef);
 
-  // Get session ID
   const sessionId = useEmbedSession();
 
-  // Initialize chat with session
+  const { stage, transitionToChat, pendingMessage, clearPendingMessage } = useEmbedStage({
+    embedId: config.embedId || 'default',
+    ctaConfig: config.ctaConfig,
+  });
+
   const {
     messages,
     sendStreamingMessage,
@@ -78,14 +76,19 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     isTyping,
   } = useChat(sessionId || "", config.chatbotConfigId);
 
-  // Ensure session is created before interacting
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && stage === 'chat') {
       void initializeSession();
     }
-  }, [sessionId, initializeSession]);
+  }, [sessionId, initializeSession, stage]);
 
-  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (stage === 'chat' && pendingMessage && sessionId) {
+      sendStreamingMessage(pendingMessage);
+      clearPendingMessage();
+    }
+  }, [stage, pendingMessage, sessionId, sendStreamingMessage, clearPendingMessage]);
+
   useEffect(() => {
     if (messagesRef.current) {
       requestAnimationFrame(() => {
@@ -113,7 +116,48 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     await sendStreamingMessage(reply);
   };
 
-  // Show loading state
+  const handleCTAPrimaryClick = (message: string) => {
+    transitionToChat(message);
+  };
+
+  const handleCTASecondaryClick = (message?: string) => {
+    transitionToChat(message);
+  };
+
+  const handleCTAClose = () => {
+    transitionToChat();
+  };
+
+  const isEmbedded = typeof window !== "undefined" && 
+    (new URLSearchParams(window.location.search).get("embedded") === "true" ||
+     (window as any).__EMBED_CONFIG__?.embedded === true);
+
+  if (stage === 'cta' && config.ctaConfig?.enabled) {
+    return (
+      <div
+        className="embed-chat-interface embed-cta-stage"
+        ref={containerRef}
+        data-design-type={config.designType}
+        style={isEmbedded ? {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+        } : undefined}
+      >
+        <CTAView
+          config={config.ctaConfig}
+          onPrimaryButtonClick={handleCTAPrimaryClick}
+          onSecondaryButtonClick={handleCTASecondaryClick}
+          onClose={handleCTAClose}
+          embedded={isEmbedded}
+        />
+      </div>
+    );
+  }
+
   if (isLoading && !messages.length) {
     return (
       <div className="embed-chat-interface embed-loading">
@@ -125,7 +169,6 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     );
   }
 
-  // Render the appropriate variant based on designType
   const variantProps = {
     messages,
     input,
@@ -137,11 +180,6 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     isTyping,
     config,
   };
-
-  // Check if we're in embedded/iframe mode
-  const isEmbedded = typeof window !== "undefined" && 
-    (new URLSearchParams(window.location.search).get("embedded") === "true" ||
-     (window as any).__EMBED_CONFIG__?.embedded === true);
 
   return (
     <div
@@ -163,5 +201,3 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     </div>
   );
 }
-
-

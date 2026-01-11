@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
+import { CTAConfig } from "@shared/schema";
+
 export interface EmbedConfig {
   embedId: string;
   designType: "minimal" | "compact" | "full";
@@ -28,6 +30,7 @@ export interface EmbedConfig {
   chatbotName: string;
   chatbotConfigId?: number;
   apiUrl?: string;
+  ctaConfig?: CTAConfig;
 }
 
 /**
