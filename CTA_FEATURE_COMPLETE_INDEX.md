@@ -431,38 +431,21 @@ interface CTAConfig {
 
 ## ⏭️ Next Phases
 
-### Phase 3: AI Integration (Planned)
-**Objective:** Automated CTA generation with AI assistance
-
-**Deliverables:**
-- AI prompt engineering for CTA suggestions
-- OpenAI integration for content generation
-- AI assistant UI panel in CTABuilder
-- One-click CTA generation
-- Template library
-
-**Files to Create:**
-- `server/openai/cta-generator.ts`
-- `server/routes/ai-cta.ts`
-- `client/src/components/embed/embed-cta/CTAAssistant.tsx`
-- Documentation updates
-
----
-
-### Phase 4: Two-Stage Rendering (Planned)
+### Phase 4: Two-Stage Rendering (Current Focus)
 **Objective:** Implement CTA → Chat transition logic
 
 **Deliverables:**
-- Stage management system
-- CTA dismissal handling
-- Chat interface transition
-- Message injection from CTA
-- Analytics tracking
+- Stage management system (`useEmbedStage.ts`)
+- CTA dismissal handling (sessionStorage)
+- Chat interface transition (EmbedStageManager)
+- Message injection from CTA buttons
+- Analytics tracking readiness
 
-**Files to Create:**
-- `client/src/hooks/useEmbedStage.ts`
-- `client/src/components/embed/EmbedStageManager.tsx`
-- `server/routes/embed-analytics.ts`
+**Files to Create/Modify:**
+- `client/src/hooks/useEmbedStage.ts` (New)
+- `client/src/components/embed/EmbedChatInterface.tsx` (Update)
+- `client/src/components/embed/embed-cta/CTAView.tsx` (Update)
+- `PHASE4_IMPLEMENTATION_PLAN.md` (New - Detailed Plan)
 
 ---
 
