@@ -88,7 +88,11 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      requestAnimationFrame(() => {
+        if (messagesRef.current) {
+          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+        }
+      });
     }
   }, [messages, isTyping]);
 

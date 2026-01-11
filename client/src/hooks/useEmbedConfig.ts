@@ -98,12 +98,13 @@ export function useEmbedScroll(containerRef: React.RefObject<HTMLDivElement>) {
           return;
         }
         
-        const touch = e.touches[0];
+        // Let the browser handle standard touch behavior within the scrollable container
+        // Only prevent default if we're trying to scroll past the boundaries
         const isAtTop = container.scrollTop === 0;
         const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 1;
         
-        // This is a simplified check, a more robust one would track touch start position
-        // but for now we just want to avoid blanket e.preventDefault() which kills scroll
+        // We don't preventDefault here to allow native elastic scroll or just normal scroll
+        // The wheel handler covers the desktop case which is more prone to bubbling
       }
     };
 

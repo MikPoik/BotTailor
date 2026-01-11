@@ -51,7 +51,10 @@ export const CTAAssistant: React.FC<CTAAssistantProps> = ({
   const scrollToBottom = () => {
     const container = messagesContainerRef.current;
     if (container) {
-      container.scrollTop = container.scrollHeight;
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+      });
     }
   };
 
