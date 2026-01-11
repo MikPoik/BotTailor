@@ -295,42 +295,36 @@ Here's a complete example showing all the new capabilities:
 
 ## AI Prompt Guidance
 
-When instructing AI to generate CTAs, use this guidance:
+When instructing AI to generate CTAs, use this guidance to ensure a professional, centered, and high-quality look:
 
 ```
 # CTA Generation Instructions
 
-You are generating a CTA (Call-To-Action) configuration in JSON format.
+You are generating a CTA (Call-To-Action) configuration in JSON format. Your goal is to create high-conversion, professional designs like the "Gold Centered" style.
 
-## Layout & Styling Rules
+## Professional Design Guidelines (Gold Centered Style)
 
-1. **Prefer structured components** - Use header, description, feature_list, badge, etc.
-   - These are flexible and support full styling control
+1. **Layout Strategy:**
+   - Use `layout.style: "card"` or `"modal"`.
+   - Set `layout.position: "center"`.
+   - Use `layout.componentGap: 32` for spaciousness.
 
-2. **Control layout with component.style** - Use flexbox/grid properties:
-   ```json
-   {
-     "display": "grid",
-     "gridTemplateColumns": "repeat(3, 1fr)",
-     "gap": 20
-   }
-   ```
+2. **Styling Palette:**
+   - **Background:** Use a warm gold/ochre for the container: `"backgroundColor": "#c5a059"`.
+   - **Typography:** Use black or deep charcoal for text: `"textColor": "#000000"`.
+   - **Buttons:** Use "Pill" style (fully rounded) and black background:
+     - `primaryButton.style: { "backgroundColor": "#000000", "borderRadius": 9999, "padding": "14px 32px" }`
 
-3. **Theme color overrides** - Override theme colors per-component:
-   ```json
-   {
-     "style": {
-       "textColor": "#custom-color",
-       "backgroundColor": "#custom-bg"
-     }
-   }
-   ```
+3. **Content Hierarchy:**
+   - **Header:** Use a large, bold title and a clear subtitle.
+   - **Alignment:** Always center-align text for this style: `component.style: { "textAlign": "center" }`.
 
-4. **Only use custom_html for impossible layouts** - Most layouts are possible with flex/grid.
-
-5. **Keep it responsive** - Use CSS units like %, vw, em instead of fixed px where possible.
+4. **Structured Components:**
+   - Use `header` for the main hook.
+   - Use `button_group` for the actions.
 
 ## Available Styling Properties
+```
 
 Your component.style can include:
 - Colors: backgroundColor, textColor, borderColor

@@ -30,19 +30,20 @@ export const CTAHeader: React.FC<CTAHeaderProps> = ({ component }) => {
   if (!component.visible) return null;
 
   const headerClass = backgroundImageUrl ? 'cta-header cta-header-with-bg' : 'cta-header';
-  const headerStyle: React.CSSProperties = backgroundImageUrl 
-    ? { backgroundImage: `url(${backgroundImageUrl})` }
-    : {};
+  const headerStyle: React.CSSProperties = {
+    ...(backgroundImageUrl ? { backgroundImage: `url(${backgroundImageUrl})` } : {}),
+    ...componentStyle,
+  };
 
   return (
-    <div className={headerClass} style={{ ...headerStyle, ...componentStyle }}>
+    <div className={headerClass} style={headerStyle}>
       {title && (
-        <h1 className="cta-header-title">
+        <h1 className="cta-header-title" style={{ color: componentStyle.color || componentStyle.textColor }}>
           {title}
         </h1>
       )}
       {subtitle && (
-        <p className="cta-header-subtitle">
+        <p className="cta-header-subtitle" style={{ color: componentStyle.color || componentStyle.textColor, opacity: 0.8 }}>
           {subtitle}
         </p>
       )}

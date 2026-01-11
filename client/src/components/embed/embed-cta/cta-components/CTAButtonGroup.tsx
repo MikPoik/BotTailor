@@ -40,14 +40,24 @@ export const CTAButtonGroup: React.FC<CTAButtonGroupProps> = ({
   const buttonGroupClass = `cta-button-group ${layout === 'horizontal' ? 'horizontal' : ''}`;
 
   return (
-    <div className={buttonGroupClass} style={customStyles}>
+    <div className={buttonGroupClass} style={{ 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      gap: '16px',
+      ...customStyles 
+    }}>
       {/* Primary Button */}
       <button
         className={`cta-button ${primaryButton.variant || 'solid'}`}
         onClick={onPrimaryClick}
         title={primaryButton.actionLabel}
         aria-label={primaryButton.actionLabel || primaryButton.text}
-        style={applyComponentStyle(primaryButton.style)}
+        style={{
+          backgroundColor: '#000',
+          color: '#fff',
+          borderRadius: '9999px',
+          ...applyComponentStyle(primaryButton.style)
+        }}
       >
         {primaryButton.text}
       </button>
@@ -59,7 +69,12 @@ export const CTAButtonGroup: React.FC<CTAButtonGroupProps> = ({
           onClick={onSecondaryClick}
           title={('actionLabel' in secondaryButton ? secondaryButton.actionLabel : undefined) as string}
           aria-label={(('actionLabel' in secondaryButton ? secondaryButton.actionLabel : secondaryButton.text) as string) || secondaryButton.text}
-          style={applyComponentStyle(('style' in secondaryButton ? secondaryButton.style : undefined))}
+          style={{
+            backgroundColor: '#000',
+            color: '#fff',
+            borderRadius: '9999px',
+            ...applyComponentStyle(('style' in secondaryButton ? secondaryButton.style : undefined))
+          }}
         >
           {secondaryButton.text}
         </button>

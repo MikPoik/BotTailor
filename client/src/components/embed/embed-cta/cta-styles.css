@@ -11,24 +11,24 @@
   
   /* Layout CSS Variables - Can be overridden */
   --cta-layout-card-width: 90%;
-  --cta-layout-card-max-width: 700px;
-  --cta-layout-card-padding: 32px;
-  --cta-layout-modal-max-width: 700px;
-  --cta-layout-modal-padding: 40px;
+  --cta-layout-card-max-width: 800px;
+  --cta-layout-card-padding: 64px 32px;
+  --cta-layout-modal-max-width: 800px;
+  --cta-layout-modal-padding: 72px 40px;
   
   /* Component Spacing Variables */
-  --cta-component-gap: 16px;
-  --cta-header-margin-bottom: 24px;
-  --cta-description-margin-bottom: 24px;
-  --cta-feature-list-margin-bottom: 32px;
-  --cta-button-group-margin-top: 24px;
+  --cta-component-gap: 32px;
+  --cta-header-margin-bottom: 40px;
+  --cta-description-margin-bottom: 32px;
+  --cta-feature-list-margin-bottom: 48px;
+  --cta-button-group-margin-top: 40px;
   
   /* Header Styling Variables */
   --cta-header-text-align: center;
-  --cta-header-title-font-size: 24px;
-  --cta-header-title-font-weight: 700;
-  --cta-header-subtitle-font-size: 16px;
-  --cta-header-subtitle-font-weight: 500;
+  --cta-header-title-font-size: 48px;
+  --cta-header-title-font-weight: 800;
+  --cta-header-subtitle-font-size: 20px;
+  --cta-header-subtitle-font-weight: 400;
   
   /* Description Variables */
   --cta-description-text-align: center;
@@ -270,10 +270,10 @@
 /* ========== Button Styles ========== */
 
 .cta-button {
-  padding: 12px 24px;
+  padding: 14px 32px;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 9999px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -281,9 +281,8 @@
   font-family: inherit;
   display: inline-block;
   width: auto;
-  min-width: 140px;
-  flex: 1;
-  max-width: 280px;
+  min-width: 180px;
+  flex: 0 1 auto;
 }
 
 .cta-button:disabled {
@@ -293,9 +292,9 @@
 
 /* Solid Variant */
 .cta-button.solid {
-  background-color: var(--cta-primary);
+  background-color: var(--cta-primary, #000000);
   color: white;
-  border: 2px solid var(--cta-primary);
+  border: 2px solid var(--cta-primary, #000000);
 }
 
 .cta-button.solid:hover:not(:disabled) {
