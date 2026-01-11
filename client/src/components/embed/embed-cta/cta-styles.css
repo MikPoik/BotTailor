@@ -84,6 +84,10 @@
   border-radius: 12px;
   background-color: var(--cta-bg);
   box-shadow: var(--cta-shadow);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .cta-layout-modal {
@@ -93,6 +97,10 @@
   border-radius: 16px;
   background-color: var(--cta-bg);
   box-shadow: var(--cta-shadow-lg);
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .cta-layout-sidebar {
@@ -134,7 +142,7 @@
 /* ========== Header Component ========== */
 
 .cta-header {
-  margin-bottom: var(--cta-header-margin-bottom, 24px);
+  margin-bottom: var(--cta-header-margin-bottom, 16px);
   text-align: var(--cta-header-text-align, center);
 }
 
@@ -181,7 +189,7 @@
 /* ========== Description Component ========== */
 
 .cta-description {
-  margin-bottom: var(--cta-description-margin-bottom, 24px);
+  margin-bottom: var(--cta-description-margin-bottom, 16px);
   font-size: var(--cta-description-font-size, 15px);
   line-height: var(--cta-description-line-height, 1.6);
   color: var(--cta-text);
@@ -191,7 +199,7 @@
 /* ========== Feature List Component ========== */
 
 .cta-feature-list {
-  margin-bottom: var(--cta-feature-list-margin-bottom, 32px);
+  margin-bottom: var(--cta-feature-list-margin-bottom, 20px);
   display: grid;
   gap: var(--cta-feature-list-gap, 16px);
 }
