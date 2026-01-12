@@ -52,6 +52,7 @@ function ChatWidget({
   const [initialMessages, setInitialMessages] = useState<string[]>([]);
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
   const [showAbout, setShowAbout] = useState(false);
+  const [isAnimatingOpen, setIsAnimatingOpen] = useState(false);
   // Reactive session ID state that can be updated on refresh
   const [currentSessionId, setCurrentSessionId] = useState(providedSessionId);
   
@@ -267,9 +268,12 @@ function ChatWidget({
       }, 400); // Match animation duration
     } else {
       setIsOpen(true);
+      setIsAnimatingOpen(true);
       setHasNewMessage(false);
       // Initialize session and messages when chat opens for first time
       initializeSession();
+      // Remove animation class after it completes to prevent re-triggering on re-renders
+      setTimeout(() => setIsAnimatingOpen(false), 800);
     }
   };
 
@@ -356,7 +360,7 @@ function ChatWidget({
         <div className={`fixed inset-0 z-50 bg-white flex flex-col ${
           isClosing 
             ? 'animate-slideDown' 
-            : 'animate-slideUp'
+            : isAnimatingOpen ? 'animate-slideUp' : ''
         }`}>
           {/* Mobile header */}
           <WidgetHeader
@@ -503,7 +507,7 @@ function ChatWidget({
 
       {/* Chat Interface - Rendered as sibling to avoid nested fixed positioning */}
       {(isOpen || isClosing) && (
-        <div className={`chat-widget-container bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fadeIn ${
+        <div className={`chat-widget-container bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden ${
           isMobile 
             ? 'fixed inset-4 z-50' 
             : 'w-[550px]'
@@ -516,7 +520,7 @@ function ChatWidget({
           zIndex: 45,  /* Below cookie consent modal (z-50) */
           animation: isClosing 
             ? 'chatWidgetClose 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards' 
-            : 'chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)'
+            : isAnimatingOpen ? 'chatWidgetOpen 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none'
         } : {}}>
           {/* Chat header */}
           <WidgetHeader
