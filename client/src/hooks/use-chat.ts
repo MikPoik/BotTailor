@@ -113,7 +113,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     refetchIntervalInBackground: false,
     // Allow notifications for streaming updates in all embed modes
     // notifyOnChangeProps removed to enable real-time streaming bubble updates
-    structuralSharing: false, // Disable structural sharing to prevent unnecessary re-renders
+    structuralSharing: true, // Re-enable structural sharing to maintain object references
     // placeholderData removed - it was preventing cache updates from showing during streaming
   });
 

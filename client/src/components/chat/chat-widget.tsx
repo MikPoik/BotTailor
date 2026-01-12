@@ -54,7 +54,16 @@ function ChatWidget({
   const [showAbout, setShowAbout] = useState(false);
   const [isAnimatingOpen, setIsAnimatingOpen] = useState(false);
   // Reactive session ID state that can be updated on refresh
-  const [currentSessionId, setCurrentSessionId] = useState(providedSessionId);
+  const [currentSessionId, setCurrentSessionId] = useState(() => {
+    return providedSessionId;
+  });
+
+  // Keep currentSessionId in sync with props ONLY if it changes from outside
+  useEffect(() => {
+    if (providedSessionId && providedSessionId !== currentSessionId) {
+      setCurrentSessionId(providedSessionId);
+    }
+  }, [providedSessionId]);
   
   const messageTimeouts = useRef<NodeJS.Timeout[]>([]);
   const renderedInitialMessages = useRef<Set<number>>(new Set());
@@ -73,6 +82,9 @@ function ChatWidget({
 
   // Avoid subscribing ChatWidget to chat queries; initialization is handled in TabbedChatInterface
   const initializeSession = useCallback(() => {}, []);
+
+  // Use a stable key that doesn't change on every render
+  const chatInterfaceKey = useMemo(() => `chat-${currentSessionId}`, [currentSessionId]);
 
   useEffect(() => {
     if (!widgetDebug()) return;
@@ -387,7 +399,7 @@ function ChatWidget({
               />
             ) : (
             <TabbedChatInterface 
-                key={`chat-${currentSessionId}`}
+                key={chatInterfaceKey}
                 sessionId={currentSessionId} 
                 isMobile={true} 
                 isPreloaded={true}
@@ -447,7 +459,7 @@ function ChatWidget({
             />
           ) : (
             <TabbedChatInterface 
-              key={`chat-${currentSessionId}`}
+              key={chatInterfaceKey}
               sessionId={currentSessionId} 
               isMobile={false} 
               isPreloaded={true}
@@ -547,7 +559,7 @@ function ChatWidget({
               />
             ) : (
             <TabbedChatInterface 
-                key={`chat-${currentSessionId}`}
+                key={chatInterfaceKey}
                 sessionId={currentSessionId}
                 isMobile={isMobile}
                 isPreloaded={true}
