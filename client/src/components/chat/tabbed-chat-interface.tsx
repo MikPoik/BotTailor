@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, startTransition } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, startTransition, memo } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import HomeTab from "./home-tab";
 import { ChatTab } from "./chat-tab";
@@ -38,7 +38,7 @@ interface TabbedChatInterfaceProps {
   forceInitialize?: boolean; // Force session initialization
 }
 
-export default function TabbedChatInterface({
+const TabbedChatInterface = memo(({
   sessionId,
   isMobile,
   isPreloaded = false,
@@ -48,7 +48,7 @@ export default function TabbedChatInterface({
   chatbotConfig,
   onSessionInitialize,
   forceInitialize = false
-}: TabbedChatInterfaceProps) {
+}: TabbedChatInterfaceProps) => {
   // UI State
   const [inputMessage, setInputMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -376,4 +376,8 @@ export default function TabbedChatInterface({
       />
     </Tabs>
   );
-}
+});
+
+TabbedChatInterface.displayName = 'TabbedChatInterface';
+
+export default TabbedChatInterface;

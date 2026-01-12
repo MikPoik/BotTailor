@@ -68,6 +68,9 @@ function ChatWidget({
   // Get chatbot config ID from injected config or props
   const chatbotConfigId = injectedConfig?.chatbotConfig?.id || chatbotConfig?.id;
 
+  // Memoize config to ensure stable reference for children
+  const memoizedConfig = useMemo(() => chatbotConfig, [chatbotConfig?.id, chatbotConfig?.updatedAt]);
+
   // Avoid subscribing ChatWidget to chat queries; initialization is handled in TabbedChatInterface
   const initializeSession = useCallback(() => {}, []);
 
@@ -383,13 +386,13 @@ function ChatWidget({
                 textColor={resolvedTextColor}
               />
             ) : (
-              <TabbedChatInterface 
+            <TabbedChatInterface 
                 key={`chat-${currentSessionId}`}
                 sessionId={currentSessionId} 
                 isMobile={true} 
                 isPreloaded={true}
                 chatbotConfigId={chatbotConfigId}
-                chatbotConfig={chatbotConfig}
+                chatbotConfig={memoizedConfig}
                 onSessionInitialize={initializeSession}
               />
             )}
@@ -450,7 +453,7 @@ function ChatWidget({
               isPreloaded={true}
               isEmbedded={true}
               chatbotConfigId={chatbotConfigId}
-              chatbotConfig={chatbotConfig}
+              chatbotConfig={memoizedConfig}
             />
           )}
         </div>
@@ -511,7 +514,7 @@ function ChatWidget({
           isMobile 
             ? 'fixed inset-4 z-50' 
             : 'w-[550px]'
-        }`} style={!isMobile ? { 
+        } ${isAnimatingOpen ? 'animate-fadeIn' : ''}`} style={!isMobile ? { 
           position: 'fixed',
           bottom: '20px',
           [position === 'bottom-right' ? 'right' : 'left']: '20px',
@@ -543,13 +546,13 @@ function ChatWidget({
                 textColor={resolvedTextColor}
               />
             ) : (
-              <TabbedChatInterface 
+            <TabbedChatInterface 
                 key={`chat-${currentSessionId}`}
                 sessionId={currentSessionId}
                 isMobile={isMobile}
                 isPreloaded={true}
                 chatbotConfigId={chatbotConfigId}
-                chatbotConfig={chatbotConfig}
+                chatbotConfig={memoizedConfig}
               />
             )}
           </div>
