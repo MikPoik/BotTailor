@@ -102,6 +102,11 @@ export default function TabbedChatInterface({
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
   
+  // Debug: Log when messages prop changes
+  useEffect(() => {
+    console.log('[TabbedChatInterface] Messages changed:', messages.length);
+  }, [messages]);
+  
   // Initialize session when component mounts if needed
   useEffect(() => {
     if (forceInitialize || (isEmbedded && !onSessionInitialize)) {

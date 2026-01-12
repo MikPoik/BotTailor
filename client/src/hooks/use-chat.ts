@@ -87,7 +87,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   const isEmbedded = isEmbedDesign || isLegacyChatEmbed;
 
   // Get messages
-  const { data: messagesData, isLoading: isMessagesLoading } = useQuery({
+  const { data: messagesData, isLoading: isMessagesLoading, dataUpdatedAt } = useQuery({
     queryKey: ['/api/chat', sessionId, 'messages'],
     queryFn: async () => {
       // Use absolute URL when widget is embedded
@@ -111,10 +111,10 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     refetchInterval: false, // Disable polling
     refetchIntervalInBackground: false,
-    // For legacy chat embed we mute query notifications to avoid extra renders; for new embed designs, keep updates live.
-    notifyOnChangeProps: isLegacyChatEmbed ? [] : undefined,
+    // Allow notifications for streaming updates in all embed modes
+    // notifyOnChangeProps removed to enable real-time streaming bubble updates
     structuralSharing: false, // Disable structural sharing to prevent unnecessary re-renders
-    placeholderData: (previousData) => previousData, // Keep showing previous data during updates to prevent flash
+    // placeholderData removed - it was preventing cache updates from showing during streaming
   });
 
   // Memoize filtered messages to prevent unnecessary re-renders
@@ -227,11 +227,20 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         throw new Error('No reader available');
       }
 
+      console.log('[STREAM] Starting to read stream at:', new Date().toISOString());
       let buffer = ''; // Buffer for incomplete lines
+      let chunkCount = 0;
 
       while (true) {
+        const readStartTime = new Date().toISOString();
         const { done, value } = await reader.read();
-        if (done) break;
+        const readEndTime = new Date().toISOString();
+        chunkCount++;
+        console.log(`[STREAM CHUNK ${chunkCount}] Read at ${readStartTime}, received at ${readEndTime}, size: ${value?.length || 0} bytes`);
+        if (done) {
+          console.log('[STREAM] Stream reading complete at:', new Date().toISOString(), 'Total chunks:', chunkCount);
+          break;
+        }
 
         const chunk = decoder.decode(value);
         buffer += chunk;
@@ -255,39 +264,30 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
               if (data.type === 'bubble' && data.message) {
                 const receiveTime = new Date().toISOString();
+                console.log(`[STREAM] ${receiveTime} Received bubble:`, data.message.id, data.message.messageType);
                 logDebug(`${receiveTime} stream bubble`, data.message.id);
+                
                 // Always append the bubble to cache for embed/widget
                 queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
                   if (!old) return { messages: [data.message] };
                   
                   // Check if this message already exists by ID (deduplicate)
                   const messageExists = old.messages.some((m: Message) => m.id === data.message.id);
-                  console.log('[use-chat] Bubble received:', {
-                    messageId: data.message.id,
-                    sender: data.message.sender,
-                    exists: messageExists,
-                    currentMessageIds: old.messages.map((m: Message) => m.id)
-                  });
-                  
                   if (messageExists) {
-                    console.log('[use-chat] Message already exists, skipping');
                     return old; // Don't modify if message already exists
                   }
                   
                   // If this is a user message from server, remove optimistic user message
-                  let messages = old.messages;
+                  // Always create a new array to ensure React Query detects the change
+                  let messages = [...old.messages];
                   if (data.message.sender === 'user') {
-                    const beforeCount = messages.length;
                     messages = messages.filter((m: Message) => 
                       !((m.metadata as any)?.isOptimistic && m.sender === 'user')
                     );
-                    const afterCount = messages.length;
-                    console.log('[use-chat] Removed optimistic user messages:', beforeCount - afterCount);
                   }
-                  
-                  console.log('[use-chat] Adding message to cache:', data.message.id);
                   return { messages: [...messages, data.message] };
                 });
+
                 onBubbleReceived?.(data.message);
               } else if (data.type === 'complete') {
                 logDebug('stream complete');

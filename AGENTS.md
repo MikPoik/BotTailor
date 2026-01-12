@@ -238,12 +238,9 @@ Uses `chatbotGuid` from URL params or config to load chatbot settings.
 
 # Source Code Tree
 
-Generated on: 2026-01-08T19:41:07.825Z
-
-
 {
   "title": "Directory Tree",
-  "generatedAt": "2026-01-10T22:22:33.967Z",
+  "generatedAt": "2026-01-12T13:24:27.066Z",
   "simpleMode": true,
   "directoryTree": {
     "client": {
@@ -405,6 +402,80 @@ Generated on: 2026-01-08T19:41:07.825Z
                       "type": "file",
                       "path": "client/src/components/embed/EmbedThemeCustomizer.tsx"
                     },
+                    "cta-builder": {
+                      "type": "directory",
+                      "children": {
+                        "ComponentListPanel.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/ComponentListPanel.tsx"
+                        },
+                        "ComponentPropertyEditor.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/ComponentPropertyEditor.tsx"
+                        },
+                        "ContainerSettings.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/ContainerSettings.tsx"
+                        },
+                        "VisualCTAEditor.tsx": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/VisualCTAEditor.tsx"
+                        },
+                        "component-metadata.ts": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/component-metadata.ts"
+                        },
+                        "fields": {
+                          "type": "directory",
+                          "children": {
+                            "ArrayItemEditor.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/ArrayItemEditor.tsx"
+                            },
+                            "ColorField.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/ColorField.tsx"
+                            },
+                            "NumberField.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/NumberField.tsx"
+                            },
+                            "PropertyFieldRenderer.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/PropertyFieldRenderer.tsx"
+                            },
+                            "SelectField.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/SelectField.tsx"
+                            },
+                            "TextField.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/TextField.tsx"
+                            },
+                            "TextareaField.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/TextareaField.tsx"
+                            },
+                            "ToggleField.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/cta-builder/fields/ToggleField.tsx"
+                            }
+                          }
+                        },
+                        "index.ts": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/index.ts"
+                        },
+                        "types.ts": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/types.ts"
+                        },
+                        "useComponentEditor.ts": {
+                          "type": "file",
+                          "path": "client/src/components/embed/cta-builder/useComponentEditor.ts"
+                        }
+                      }
+                    },
                     "embed-components": {
                       "type": "directory",
                       "children": {
@@ -479,6 +550,10 @@ Generated on: 2026-01-08T19:41:07.825Z
                             "Container.tsx": {
                               "type": "file",
                               "path": "client/src/components/embed/embed-cta/cta-components/Container.tsx"
+                            },
+                            "CustomHTML.tsx": {
+                              "type": "file",
+                              "path": "client/src/components/embed/embed-cta/cta-components/CustomHTML.tsx"
                             },
                             "Divider.tsx": {
                               "type": "file",
@@ -585,6 +660,10 @@ Generated on: 2026-01-08T19:41:07.825Z
                 "useEmbedConfig.ts": {
                   "type": "file",
                   "path": "client/src/hooks/useEmbedConfig.ts"
+                },
+                "useEmbedStage.ts": {
+                  "type": "file",
+                  "path": "client/src/hooks/useEmbedStage.ts"
                 },
                 "useStreamingMessage.ts": {
                   "type": "file",

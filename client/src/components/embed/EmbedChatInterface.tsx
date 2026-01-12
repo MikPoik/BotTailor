@@ -76,6 +76,11 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     isTyping,
   } = useChat(sessionId || "", config.chatbotConfigId);
 
+  // Debug: Log when messages change
+  useEffect(() => {
+    console.log('[EmbedChatInterface] Messages changed:', messages.length);
+  }, [messages]);
+
   useEffect(() => {
     if (sessionId && stage === 'chat') {
       void initializeSession();

@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import {
   createEmbedDesign,
   getEmbedDesignById,
@@ -17,6 +18,9 @@ import { storage } from "../storage";
 import { isAuthenticated } from "../neonAuth";
 
 export function setupEmbedRoutes(app: Express) {
+  // Ensure ESM-compatible __dirname resolution
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
   // ============================================
   // PUBLIC ROUTES (No authentication)
   // ============================================
