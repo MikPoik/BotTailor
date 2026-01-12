@@ -334,28 +334,19 @@ function ChatWidget({
   };
 
 
-// Ensure widget visibility
+  // Ensure widget visibility - Refined to use React-safe approach and prevent layout thrashing
   useEffect(() => {
     if (!isClient || isEmbedded) return;
-
-    const ensureVisible = () => {
-      // Target only the widget container, not the chat interface
-      const containers = document.querySelectorAll('body > div.font-sans[style*="position: fixed"][style*="bottom: 16px"]');
-      containers.forEach(container => {
-        const el = container as HTMLElement;
-        el.style.display = 'flex';
-        el.style.visibility = 'visible';
-        el.style.opacity = '1';
-        el.style.pointerEvents = 'auto';
-        el.style.zIndex = '40';
-        el.style.position = 'fixed';
-        el.style.right = '16px';
-        el.style.bottom = '16px';
-      });
-    };
-
-    setTimeout(ensureVisible, 100);
-  }, [isClient, isEmbedded]);
+    
+    // We've moved from a timeout to a direct style application on the containerRef
+    // to ensure React stays in control of the element's lifecycle
+    if (containerRef.current) {
+      const el = containerRef.current;
+      el.style.display = isOpen ? 'none' : 'block';
+      el.style.visibility = 'visible';
+      el.style.opacity = '1';
+    }
+  }, [isClient, isEmbedded, isOpen]);
 
   // Mobile full-screen interface
   if (isMobile && isOpen) {

@@ -45,6 +45,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              e.nativeEvent.stopImmediatePropagation();
               // Fire immediately - stateless like quick reply
               onOptionSelect(option.id, option.payload, label);
             }}

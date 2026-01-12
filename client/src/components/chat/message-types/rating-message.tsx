@@ -38,6 +38,7 @@ export const RatingMessage = memo(function RatingMessage({
                  onClick={(e) => {
                    e.preventDefault();
                    e.stopPropagation();
+                   e.nativeEvent.stopImmediatePropagation();
                    handleRatingSelect(rating);
                  }}
                  onMouseEnter={() => setHoveredRating(rating)}
@@ -72,6 +73,7 @@ export const RatingMessage = memo(function RatingMessage({
                  onClick={(e) => {
                    e.preventDefault();
                    e.stopPropagation();
+                   e.nativeEvent.stopImmediatePropagation();
                    handleRatingSelect(rating);
                  }}
                  className={`px-3 py-2 rounded-lg border transition-colors ${
