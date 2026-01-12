@@ -334,18 +334,10 @@ function ChatWidget({
   };
 
 
-  // Ensure widget visibility - Refined to use React-safe approach and prevent layout thrashing
+  // Ensure widget visibility - Simplified to remove manual DOM manipulation
+  // and rely on React's state-driven rendering for the bubble and interface
   useEffect(() => {
     if (!isClient || isEmbedded) return;
-    
-    // We've moved from a timeout to a direct style application on the containerRef
-    // to ensure React stays in control of the element's lifecycle
-    if (containerRef.current) {
-      const el = containerRef.current;
-      el.style.display = isOpen ? 'none' : 'block';
-      el.style.visibility = 'visible';
-      el.style.opacity = '1';
-    }
   }, [isClient, isEmbedded, isOpen]);
 
   // Mobile full-screen interface
