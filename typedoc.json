@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["server/index.ts", "server/storage.ts", "shared/schema.ts", "client/src/App.tsx"],
+  "out": "docs",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "excludeExternals": true,
+  "cleanOutputDir": true,
+  "hideGenerator": true,
+  "includeVersion": false
+}
