@@ -64,16 +64,23 @@ const TabbedChatInterface = memo(({
   
   const queryClient = useQueryClient();
   
+  // Memoize streaming callbacks to prevent getStreamingHandlers from changing on every render
+  const handleStreamEnd = useCallback(() => {
+    setIsStreaming(false);
+  }, []);
+  
+  const handleStreamError = useCallback((error: string) => {
+    setIsStreaming(false);
+    console.error("Streaming error:", error);
+  }, []);
+  
   // Custom hooks
   const { streamingBubblesRef, getStreamingHandlers } = useStreamingMessage({
     sessionId,
     isStreaming,
     readOnlyMode: false,
-    onStreamEnd: () => setIsStreaming(false),
-    onError: (error) => {
-      setIsStreaming(false);
-      console.error("Streaming error:", error);
-    },
+    onStreamEnd: handleStreamEnd,
+    onError: handleStreamError,
   });
   
   const {
