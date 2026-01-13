@@ -17,7 +17,11 @@ interface TrackingData {
 }
 
 const DOMAIN_MAP: { [key: string]: string[] } = {
-  'AUTH_SYSTEM': ['server/routes/auth.ts', 'server/neonAuth.ts', 'client/src/hooks/useAuth.ts']
+  'CHAT_SYSTEM': ['server/routes/chat.ts', 'client/src/components/chat', 'client/src/hooks/use-chat.ts', 'server/openai'],
+  'SURVEY_SYSTEM': ['server/routes/surveys.ts', 'client/src/pages/survey-builder.tsx', 'shared/schema.ts'],
+  'AUTH_SYSTEM': ['server/routes/auth.ts', 'server/neonAuth.ts', 'client/src/hooks/useAuth.ts'],
+  'EMBED_SYSTEM': ['server/routes/embeds.ts', 'client/src/components/embed', 'client/src/pages/embed.tsx'],
+  'UI_DESIGNER': ['server/routes/ui-designer.ts', 'client/src/components/ui-designer', 'server/ui-designer-service.ts']
 };
 
 async function generateSummary(filePath: string, content: string) {
