@@ -1,34 +1,39 @@
 # AI Summary: server/routes/contact.ts
 
-# Summary of `server/routes/contact.ts`
+# Contact Route Handler Documentation
 
 ## Purpose
-The `contact.ts` file implements a RESTful endpoint for handling contact form submissions within an Express application. It validates input data using a schema and integrates with an email service (Brevo) to send contact inquiries to designated support or sales teams.
+The `contact.ts` file defines and manages the contact form submission functionality for the application. It provides an API endpoint to process user inquiries about sales and support, validating incoming data and sending email notifications through an external service (Brevo).
 
 ## Key Functions
-1. **Contact Form Schema Validation**:
-   - Uses `zod` to define and validate a contact form schema including fields such as `contactType`, `name`, `email`, `company`, and `message`.
 
-2. **Setup Contact Routes**:
-   - Exposes a POST endpoint at `/api/contact` for receiving contact form submissions and sending emails based on validated data.
-   - Validates incoming request data against the schema.
-   - Determines the email recipient based on the type of contact request (sales or support).
-   - Constructs the submission data for the Brevo email service and sends the email.
-   - Handles errors gracefully by returning appropriate HTTP status codes and messages.
+- **`setupContactRoutes(app: Express)`**: 
+  - Integrates the contact form submission endpoint (`/api/contact`) into the Express application.
+  - Validates incoming form data using `Zod` schema for structure and requirements.
+  - Determines the appropriate recipient (Sales or Support) based on the form submission type.
+  - Uses the `BrevoEmailService` to send an email with the submission details.
+  - Handles errors during validation and email sending, returning appropriate responses.
 
-3. **Email Sending**:
-   - Utilizes the `BrevoEmailService` to send the email, encapsulating the logic for preparing and dispatching the email.
+### Validation Schema
+- **`contactFormSchema`**: A `Zod` schema that defines the expected structure of the contact form data, including:
+  - `contactType`: Enum (sales, support)
+  - `name`: String with a minimum of 2 characters
+  - `email`: Valid email format
+  - `company`: Optional string
+  - `message`: String with a minimum of 10 characters
 
 ## Dependencies
-- **Express**: Serves as the web application framework.
-- **zod**: Used for schema validation of contact form data.
-- **BrevoEmailService**: Custom service module for handling email operations. It includes types like `FormSubmissionData` used for structuring data before sending it.
+- **Express**: The application framework used to handle routing and HTTP requests.
+- **Zod**: A schema validation library used to define and validate the structure of incoming data.
+- **BrevoEmailService**: A custom email service module that handles the logic for sending emails through Brevo (formerly SendinBlue).
+- Environment Variables:
+  - `BREVO_API_KEY`: Required for the Brevo service connection.
+  - `BREVO_SUPPORT_EMAIL`, `BREVO_SALES_EMAIL`, `BREVO_RECIPIENT_EMAIL`: Configurable recipient emails based on the nature of the inquiry.
+  - `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`: Configurable sender details for the email.
 
-### Environment Variables
-- The code relies on several environment variables for configuration:
-  - `BREVO_API_KEY`: Required for Brevo integration.
-  - `BREVO_SUPPORT_EMAIL`, `BREVO_SALES_EMAIL`, `BREVO_RECIPIENT_EMAIL`: Used to determine the recipient of the email.
-  - `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`: Default values for the sender information in the email.
+## Interaction with Other Files
+This module depends on:
+- **`../email-service`**: This file exports the `BrevoEmailService` and the `FormSubmissionData` type, which are crucial for preparing and sending email notifications. It establishes the connection to the Brevo email service.
+- The values set in the environment variables defined outside of this file ensure proper functioning and security of the email notifications.
 
-## Architectural Context
-This file is part of the server-side codebase for a web application, potentially involving user interaction through contact forms. It demonstrates a clear separation of concerns by validating user input and handling email transmission, ensuring that potential errors are managed and providing feedback to users effectively. Integration with Brevo exemplifies an external service dependency for enhancing functionality (email notifications) in server applications.
+In summary, `contact.ts` serves as a point of interaction for users submitting inquiries on the

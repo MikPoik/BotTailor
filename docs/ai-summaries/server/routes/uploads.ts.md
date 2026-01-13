@@ -1,33 +1,24 @@
 # AI Summary: server/routes/uploads.ts
 
-# File: `server/routes/uploads.ts`
+# Summary of `server/routes/uploads.ts`
 
 ## Purpose
-The `uploads.ts` module defines RESTful routes for handling file uploads and serving files from storage in an Express application. It facilitates users to upload avatars and background images while ensuring users are authenticated.
+The `uploads.ts` file sets up routes for handling file uploads (specifically avatars and background images) and serving files from storage in an Express application. It integrates user authentication for secure upload operations.
 
 ## Key Functions
-### 1. **setupUploadRoutes(app: Express)**
-   - Initializes and sets up the following routes in the Express application:
-   
-   - **POST `/api/upload/avatar`**
-     - Endpoint for uploading user avatars.
-     - Validates the file, checks if the user is authenticated, and processes the upload with the `uploadAvatar` function.
-     - Responds with the uploaded avatar's URL or an error message.
-     
-   - **POST `/api/upload/background`**
-     - Endpoint for uploading user background images.
-     - Similar functionality to the avatar upload, using the `uploadBackgroundImage` function.
-     - Sends back the URL of the uploaded background image or an error status.
-
-   - **GET `/api/storage/*`**
-     - Serves files from storage based on the requested file name.
-     - Retrieves file content using `getFileFromStorage` and sets appropriate headers before sending the response.
-     - Handles errors in file retrieval and serving.
+- **setupUploadRoutes(app: Express)**: Initializes file upload routes and serves files:
+  - **POST /api/upload/avatar**: Handles avatar image uploads. It:
+    - Validates user authentication via `isAuthenticated`.
+    - Uses the `upload.single('avatar')` middleware to process the incoming file.
+    - Calls `uploadAvatar` to save the file and returns the file URL.
+  - **POST /api/upload/background**: Handles background image uploads with similar functionality as the avatar upload.
+  - **GET /api/storage/**: Serves files from storage based on the requested filename.
+    - Calls `getFileFromStorage` to retrieve the file, setting appropriate headers and cache settings.
 
 ## Dependencies
-- **Express**: The framework used to build the server and define routes.
-- **upload-service**: Module containing functions like `upload`, `uploadAvatar`, `uploadBackgroundImage`, and `getFileFromStorage`, which handle file processing and storage.
-- **neonAuth**: Middleware function `isAuthenticated` that verifies user authentication before allowing access to the upload routes.
+- **Express**: The framework used for building the web server and handling routes.
+- **upload-service**: Custom service providing functions for file uploads (`uploadAvatar`, `uploadBackgroundImage`, `getFileFromStorage`).
+- **neonAuth**: Middleware that provides user authentication verification (`isAuthenticated`).
 
 ## Architectural Context
-This module is part of a larger backend application that relies on Express for routing, integrates file handling mechanisms, and enforces authentication. It promotes a modular design by isolating file upload logic into a dedicated route file, facilitating future maintenance and enhancements.
+This file functions as part of a larger Express server architecture, where it is responsible for managing user media uploads and file retrieval. It relies on external services for file handling and authentication, indicating a modular design where different responsibilities (like uploading, authentication, and file storage) are separated into distinct services/files. This design promotes scalability and maintainability by allowing changes to be isolated within individual files or services.

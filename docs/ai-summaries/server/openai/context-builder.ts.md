@@ -1,29 +1,33 @@
 # AI Summary: server/openai/context-builder.ts
 
-# Summary of `context-builder.ts`
+# Summary of `server/openai/context-builder.ts`
 
 ## Purpose
-The `context-builder.ts` file is designed to enhance chatbot responses by optimizing search queries and building contextual information from website content based on user interactions. It ensures that queries are appropriately sized for vector-based searches and combines recent conversation history to provide richer context for responses.
+The `context-builder.ts` file is designed to optimize search queries for retrieving relevant context from a storage system, primarily for applications involving AI chatbots. It ensures that search queries are within a specified optimal length for more effective vector searches while also using recent conversation history to enhance the contextual relevance of responses.
 
 ## Key Functions
-
 ### 1. `optimizeSearchQuery(query: string): string`
-- **Description**: This function normalizes and optimizes a search query to fit within an optimal character range of 60-160 characters. It intelligently truncates long queries at sentence or word boundaries to maintain meaningfulness.
-- **Input**: A string `query` representing the user search input.
-- **Output**: A refined string that is ready for better vector search performance.
+- **Functionality:** 
+  - Normalizes whitespace and trims the input query.
+  - Checks if the query length is within the optimal range (60-160 characters).
+  - If the query is too long, intelligently truncates it at sentence or word boundaries. 
+  - If too short (less than 60 characters), it leaves it unchanged.
+  - Logs the original and optimized query lengths for debugging purposes.
 
 ### 2. `buildWebsiteContext(chatbotConfigId: number, searchQuery: string, conversationHistory: Array<{ role: string; content: string }>, maxContentLength: number): Promise<string>`
-- **Description**: This asynchronous function constructs a contextual query by combining a user’s search query with recent conversation history if the query is deemed too short. It utilizes the optimized search query to retrieve relevant website content for improved chatbot accuracy.
-- **Inputs**: 
-  - `chatbotConfigId`: A unique identifier for the chatbot configuration.
-  - `searchQuery`: The user's search input.
-  - `conversationHistory`: An array of past conversation messages.
-  - `maxContentLength`: A limit for response content length (default: 500).
-- **Output**: A Promise that resolves to a string containing relevant context from websites.
+- **Functionality:**
+  - Constructs a contextual query that incorporates recent user messages if the current search query is short (under 20 characters).
+  - Combines recent conversation history to provide context for queries that may lack detail.
+  - Calls `optimizeSearchQuery` to refine the query before performing a search.
+  - Interacts with the `storage` to fetch relevant content based on the optimized query.
+  - Formats and returns the relevant content from the website as a string for use in chatbot responses.
 
 ## Dependencies
-- **Local Imports**:
-  - `storage`: A module that handles data storage and retrieval, specifically for querying similar content.
-  - `buildSystemPrompt`, `buildSurveyContext`: Functions presumably used in response generation that leverage AI response schemas.
+- **Imports:**
+  - `storage` from `../storage`: This is used for searching similar content based on the optimized query.
+  - `buildSystemPrompt` and `buildSurveyContext` from `../ai-response-schema`: Although these are imported, they are not used in this file. Their import hints at potential interactions with other components of the application related to AI responses and schema management.
 
-This file is part of a larger system that integrates AI response capabilities and relevant data retrieval to enhance the user interaction experience with chatbots.
+## Architectural Context
+The `context-builder.ts` file plays a vital role in enhancing the capabilities of a chatbot system by ensuring that context-sensitive queries are constructed and optimized before interacting with a storage backend. It intricately merges user history and current inputs to promote more relevant and informative responses, thus improving the overall user experience in AI-driven applications. 
+
+The file functions as part of a larger architecture where modular components interact—namely, the storage system for accessing

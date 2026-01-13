@@ -3,30 +3,26 @@
 # Error Handler Module
 
 ## Purpose
-The `error-handler.ts` module is designed to manage errors in response generation from an AI system. It provides mechanisms for generating fallback responses, salvaging malformed responses, and logging critical errors.
+The `error-handler.ts` file is part of the server-side implementation responsible for managing errors encountered during the generation of responses from an AI service. It defines functions that generate fallback responses, attempt to salvage malformed AI responses, and handle both parsing and critical errors with appropriate logging and recovery strategies.
 
 ## Key Functions
+1. **generateFallbackResponse**: 
+   - Creates a default response indicating an issue with generating AI content. 
+   - Returns an `AIResponse` object with a predefined apology message.
 
-1. **`generateFallbackResponse()`**
-   - Creates a standardized fallback response when the AI system encounters an error generating a response.
-   - Returns a predefined message indicating the inability to generate a response.
+2. **attemptResponseSalvage**:
+   - Tries to salvage potentially malformed responses by parsing them from a string format.
+   - Supports various cases, including JSON objects, plain strings, and cases where content is nested within an object.
+   - Logs the salvage attempt and outcomes for diagnostics.
 
-2. **`attemptResponseSalvage(accumulatedContent: string): AIResponse | null`**
-   - Attempts to salvage a malformed response by parsing a string as a JSON object.
-   - Handles various cases, including direct message formats, plain text responses, and potential message content extraction.
-   - Returns an `AIResponse` object if salvage is successful, or `null` if it fails.
+3. **handleParseError**:
+   - Manages parsing errors by logging detailed error information and the raw content that failed parsing.
+   - Attempts to salvage a response using the `attemptResponseSalvage` function before falling back to a predefined response.
 
-3. **`handleParseError(parseError: unknown, accumulatedContent: string, context: string = "response generation")`**
-   - Logs parsing errors and attempts to salvage a response from the accumulated content.
-   - Uses the fallback response if salvaging fails.
-   - Provides detailed logs for debugging and error tracking.
-
-4. **`handleCriticalError(error: unknown, context: string = "OpenAI service")`**
-   - Logs critical errors encountered within the OpenAI service context.
-   - Returns a fallback response as a safety measure against critical failures.
+4. **handleCriticalError**:
+   - Logs critical errors that occur within the OpenAI service context and returns a fallback response.
 
 ## Dependencies
-- **`AIResponse` Type**: Imported from `../ai-response-schema`, this type defines the structure of the AI response objects utilized throughout the module. 
-
-## Architectural Context
-This module integrates into an AI service framework where handling of response errors is crucial for maintaining user interactions. It emphasizes robustness by providing fallback mechanisms and detailed logging, ensuring that even in failure scenarios, the system remains resilient and communicative.
+- **`AIResponse`**: Imported from `../ai-response-schema`, which defines the structure of AI responses this module manipulates.
+  
+This module interacts closely with other parts of the server, especially those handling AI response generation and error management, ensuring that even in failure conditions, the user receives a meaningful response or notification of the error.

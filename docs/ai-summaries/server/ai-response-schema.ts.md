@@ -1,31 +1,27 @@
 # AI Summary: server/ai-response-schema.ts
 
-# File Summary: `server/ai-response-schema.ts`
+# server/ai-response-schema.ts
 
 ## Purpose
-The `ai-response-schema.ts` file defines the schemas used for structuring AI responses within a chatbot. It utilizes the Zod library for schema validation and encompasses various interactive elements such as buttons, options, and form fields, ensuring that the structured data meets defined requirements. The file also provides a function to build a system prompt based on chatbot configuration and survey context.
+The `ai-response-schema.ts` file is designed to define and validate the data structures used for AI chatbot responses, specifically for interactive messages and forms. It utilizes the Zod validation library to ensure that message formats adhere to specified schemas, thus facilitating correct rendering and interaction in a client application.
 
 ## Key Functions
-### 1. `buildSystemPrompt`
-- **Purpose**: Generates a system prompt for the chatbot based on provided configurations and the survey context.
-- **Parameters**:
-  - `chatbotConfig`: Configuration object for the chatbot.
-  - `surveyContext`: Contextual string for active surveys.
-  - `isSurveyActive`: Boolean flag indicating if the survey is currently active.
-- **Functionality**: 
-  - Sets a default prompt if a custom one isn’t provided. 
-  - Checks for email configuration related to form submissions.
-  - Constructs a list of possible message types based on the chatbot's mode (survey or standard).
+1. **Schemas Definition**:
+   - **ButtonSchema**: Validates the structure for interactive buttons used in messages.
+   - **OptionSchema**: Validates the structure for options in menu items.
+   - **FormFieldSchema**: Validates form inputs for user data collection.
+   - **MessageBubbleSchema**: Represents the structure of individual message bubbles, combining different message types and potential metadata.
+   - **AIResponseSchema**: Validates the overall structure of AI responses containing multiple message bubbles.
 
-## Key Schemas
-- **ButtonSchema**: Describes the structure of interactive buttons.
-- **OptionSchema**: Outlines the properties for menu options in interactive elements.
-- **FormFieldSchema**: Defines the fields required for forms, including types, placeholders, and validation.
-- **MessageBubbleSchema**: Details the format for different types of messages (text, cards, menus, etc.) along with optional metadata.
-- **AIResponseSchema**: A composite schema for AI responses that consists of an array of message bubbles.
+2. **`buildSystemPrompt` Function**: 
+   - Constructs a dynamic system prompt message based on the provided chatbot configuration and survey context. This function allows for customization of the chatbot's response behavior and formats by managing different messaging types, particularly integrating forms and surveys.
 
 ## Dependencies
-- **Zod Library**: A TypeScript-first schema declaration and validation library used for defining and validating the various schemas in this file.
+- **Zod**: The file imports the Zod library for schema validation, which is essential for enforcing the structure of the data being handled.
 
-### Usage Context
-This schema design is crucial for maintaining a consistent structure in AI-driven conversations, facilitating interactive exchanges between users and the chatbot while ensuring data integrity through validation. The focus on dynamic message types enables the chatbot to adapt its responses based on the user's interaction and context.
+## Architectural Context
+- This file interacts with other components of the server that manage bot behavior and responses. It likely integrates with service files that process user input and generate AI responses based on the defined schemas.
+- The constructed schemas ensure that front-end components are receiving accurately validated data, helping to maintain data integrity throughout the application.
+- The message bubble schemas may interact with UI rendering files that display chat interactions, enabling responsive and interactive design elements such as buttons and forms.
+
+Overall, this file is a crucial component in ensuring that the AI response system operates with robust data structures that are validated before being sent to users or rendered on the front end.

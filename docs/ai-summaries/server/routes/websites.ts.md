@@ -1,37 +1,36 @@
 # AI Summary: server/routes/websites.ts
 
-# Architectural Overview of `websites.ts`
+# Summary of `server/routes/websites.ts`
 
 ## Purpose
-The `websites.ts` file provides RESTful API endpoints for managing website content sources related to chatbots within an Express application. It facilitates retrieval, addition, and deletion of website sources, ensuring that only authenticated users can access or modify the resources associated with their chatbots.
+The `websites.ts` file defines API routes for managing website content sources associated with chatbots in an Express application. It facilitates getting, adding, and deleting website sources which can be either URLs or text files. Authentication is enforced to ensure that users can only manage sources for their own chatbots.
 
 ## Key Functions
-1. **`setupWebsiteRoutes(app: Express)`**: Configures the routes for website source management.
-   
-   - **GET `/api/chatbots/:chatbotId/website-sources`**: 
-     - Retrieves website sources for a specified chatbot.
-     - Validates chatbot ownership based on user authentication.
-     - Returns 404 if the chatbot is not found and 500 on failure.
 
-   - **POST `/api/chatbots/:chatbotId/website-sources`**: 
-     - Adds a new content source (website, text, or file) to a specified chatbot.
-     - Validates the input data based on the source type and parses it using a Zod schema.
-     - Initiates background processing to scan a website or process text content.
-     - Handles validation errors and responds with appropriate status codes.
-     - Returns 500 on failure.
+1. **GET `/api/chatbots/:chatbotId/website-sources`**
+   - **Functionality**: Fetch website sources linked to a specified chatbot.
+   - **Authentication**: Checks if the user is authenticated.
+   - **Ownership Verification**: Validates that the user owns the specified chatbot by checking the `userId` associated with it.
 
-   - **DELETE `/api/chatbots/:chatbotId/website-sources/:sourceId`**:
-     - Deletes a specified website source associated with a chatbot after verifying ownership.
-     - Returns 404 if the chatbot or source is not found.
+2. **POST `/api/chatbots/:chatbotId/website-sources`**
+   - **Functionality**: Add a new website source (website, text, or file) for a specified chatbot.
+   - **Input Validation**: Ensures that required fields are provided based on the source type using `insertWebsiteSourceSchema`.
+   - **Background Processing**: Initiates either a website scan or text content processing after storing the new source.
+
+3. **DELETE `/api/chatbots/:chatbotId/website-sources/:sourceId`**
+   - **Functionality**: Remove a specific website source from a chatbot's sources.
+   - **Authentication & Ownership Verification**: Similar checks as in the other routes to ensure the user can delete the source.
 
 ## Dependencies
-- **Express**: Framework for building the API.
-- **`@shared/schema`**: Contains the Zod schema for validating website source data.
-- **`zod` & `zod-validation-error`**: Libraries used for schema validation and error handling.
-- **`../storage`**: Module for data storage and retrieval operations related to chatbots and sources.
-- **`../neonAuth`**: Middleware for user authentication to authorize requests.
-- **`../website-scanner`**: Class to handle scanning of websites and processing of text content.
-- **`../upload-service`**: Facilitates the uploading of text files (though its use is less prominent in this file). 
 
-## Summary
-This file is a crucial part of the application, managing the lifecycle of website sources tied to chatbots. By utilizing a structured route setup and validation mechanisms, it ensures a secure and efficient means for users to manage their content.
+- **Express**: The main web framework for routing and handling HTTP requests.
+- **Storage Module** (`../storage`): Manages interactions with the database for retrieving and storing chatbot configurations and website sources.
+- **Zod** (`zod`): A schema validation library used to validate incoming data and ensure it conforms to expected formats.
+- **Zod Validation Error Handling** (`zod-validation-error`): Translates Zod schema validation errors into user-friendly messages.
+- **Authentication Middleware** (`../neonAuth`): Ensures routes are accessible only to authenticated users.
+- **Website Scanner Class** (`../website-scanner`): Responsible for scanning websites and processing text content in the background.
+- **Upload Service** (`../upload-service`): Potentially involved in handling file uploads, although its usage in the provided code snippet is not highlighted.
+
+## Architectural Context
+
+`websites.ts` serves as a crucial component in the

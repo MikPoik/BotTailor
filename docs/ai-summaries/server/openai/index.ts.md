@@ -2,52 +2,55 @@
 
 # Summary of `server/openai/index.ts`
 
-## Purpose 
-This file serves as a modular entry point for the OpenAI service implementation. It facilitates backward compatibility with an earlier version (`openai-service.ts`) while exposing various functionalities necessary for interaction with OpenAI's API and managing related responses.
+## Purpose
+The `index.ts` file serves as the main entry point for a modular OpenAI service, ensuring backward compatibility with the legacy `openai-service.ts`. Its primary function is to re-export various functionalities, utilities, and types from multiple modules related to response generation, client management, context building, response parsing, error handling, and schema definitions.
 
 ## Key Functions
-- **Response Generation**: 
+The file re-exports key functions and data types, allowing other parts of the application to access them conveniently. Here are the modules it interacts with:
+
+- **Response Generation**
   - `generateMultiBubbleResponse`
   - `generateOptionResponse`
   - `generateStructuredResponse`
   - `generatePromptAssistance`
   - `generateSurveyAssistance`
   
-- **Streaming Response Handling**:
+- **Streaming Handling**
   - `generateStreamingResponse`
   
-- **Client Utilities**:
+- **Client Utilities**
   - `getOpenAIClient`
   - `isOpenAIConfigured`
-  
-- **Context Building**:
+
+- **Context Building**
   - `buildWebsiteContext`
   - `buildActiveSurveyContext`
   - `buildCompleteSystemPrompt`
-  
-- **Response Parsing**:
+
+- **Response Parsing**
   - `parseOpenAIResponse`
   - `parseStreamingContent`
   - `isBubbleComplete`
   - `validateSurveyMenuRequirements`
-  
-- **Error Handling**:
+
+- **Error Handling**
   - `generateFallbackResponse`
   - `handleParseError`
   - `handleCriticalError`
-  
-- **Schema and Types**:
-  - Exposes `MULTI_BUBBLE_RESPONSE_SCHEMA`.
-  - TypeScript types: `ConversationMessage`, `ChatConfig`, and `StreamingBubbleEvent`.
+
+- **Schema and Type Exports**
+  - `MULTI_BUBBLE_RESPONSE_SCHEMA`
+  - TypeScript types: `ConversationMessage`, `ChatConfig`, `StreamingBubbleEvent`
 
 ## Dependencies
-This file depends on several modules within the same directory:
-- `response-generator.ts`
-- `streaming-handler.ts`
-- `client.ts`
-- `context-builder.ts`
-- `response-parser.ts`
-- `error-handler.ts`
-- `schema.ts`
+This file depends on the following modules within the same directory:
 
-Each of these modules provides specialized functionalities that contribute to the overall operation of the OpenAI service within the application, ensuring a structured and cohesive architecture.
+- `./response-generator`
+- `./streaming-handler`
+- `./client`
+- `./context-builder`
+- `./response-parser`
+- `./error-handler`
+- `./schema`
+
+Through these dependencies, `index.ts` facilitates a cohesive architecture that allows for modular and maintainable code, while also providing a convenient interface for other components in the application to interact with OpenAI's functionalities.

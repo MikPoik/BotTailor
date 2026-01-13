@@ -1,23 +1,37 @@
 # AI Summary: server/routes/surveys.ts
 
-# Summary of `server/routes/surveys.ts`
+# Surveys Route Module
 
 ## Purpose
-The `surveys.ts` file defines the API routes for managing surveys associated with chatbots. It provides endpoints for fetching, creating, and updating surveys, with security measures to ensure only authenticated users can access the data and confirm ownership over the chatbots.
+The `surveys.ts` module is part of the server-side routes for managing surveys associated with chatbots. It provides API endpoints for creating, retrieving, and updating surveys while ensuring that users are authenticated and authorized to interact with their chatbots.
 
 ## Key Functions
-- **setupSurveyRoutes(app: Express)**: Initializes survey management routes on the provided Express application.
-  - **GET /api/chatbots/:chatbotId/surveys**: Retrieves all surveys for a specified chatbot. Validates the chatbot ID and checks if the user is the owner.
-  - **POST /api/chatbots/:chatbotId/surveys**: Creates a new survey for the specified chatbot. Validates the input data against a schema and checks chatbot ownership.
-  - **PUT /api/chatbots/:chatbotId/surveys/:surveyId**: Updates an existing survey for a specified chatbot. Checks ownership of both the chatbot and the survey before applying changes.
-  - **PATCH**: A simplified endpoint (not fully visible) for direct survey updates, likely allowing partial updates to survey details.
+
+1. **setupSurveyRoutes(app: Express)**: Initializes the survey-related routes in the Express application.
+
+   - **GET `/api/chatbots/:chatbotId/surveys`**: 
+     - Fetches all surveys related to a specific chatbot. 
+     - Validates ownership of the chatbot and responds with a list of surveys.
+
+   - **POST `/api/chatbots/:chatbotId/surveys`**: 
+     - Creates a new survey for a specified chatbot.
+     - Validates the provided data against the `insertSurveySchema` and ensures chatbot ownership.
+
+   - **PUT `/api/chatbots/:chatbotId/surveys/:surveyId`**:
+     - Updates an existing survey associated with a chatbot.
+     - Ensures both the chatbot and survey belong to the authenticated user.
+
+   - **PATCH endpoint (not fully shown)**:
+     - Intended to allow direct updates to surveys (details of this function are not fully provided).
 
 ## Dependencies
-- **Express**: A web application framework for Node.js used to create the API routes.
-- **storage**: Custom storage module for interacting with the database to fetch and manage chatbot and survey data.
-- **@shared/schema**: Contains shared Zod schemas for request validation (e.g., `insertSurveySchema`, `SurveyConfigSchema`).
-- **zod**: A TypeScript-first schema declaration and validation library used for parsing and validating input data.
-- **zod-validation-error**: A utility for transforming Zod validation errors into a more user-friendly format.
-- **neonAuth**: A custom authentication module for verifying user identity and permissions. 
 
-This file plays a critical role in providing a structured way to manage surveys while enforcing user authentication and data integrity.
+- **Express**: Used for building the server and defining routes.
+- **storage**: A module that likely handles database operations for chatbots and surveys (retrieval, creation, and update).
+- **@shared/schema**: Contains schemas (`insertSurveySchema`, `SurveyConfigSchema`) for validating survey data, ensuring that the data integrity is maintained upon creation and updates.
+- **zod**: A validation library used for parsing and validating input data against predefined schemas.
+- **zod-validation-error**: A utility for converting Zod validation errors into a more manageable format.
+- **neonAuth**: A module that handles user authentication, providing middleware (`isAuthenticated`) to secure routes.
+
+## Architectural Context
+The `surveys.ts` file operates within a larger web application architecture, integrating with modules that handle data storage and user authentication. It interacts with the `storage` for CRUD operations on surveys and `neonAuth` for enforcing access control, ensuring users can only manage surveys belonging to their own chatbots. This promotes a secure and organized structure for handling user data and business logic surrounding surveys in a chatbot environment.

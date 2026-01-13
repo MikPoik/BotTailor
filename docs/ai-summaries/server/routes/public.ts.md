@@ -1,29 +1,34 @@
 # AI Summary: server/routes/public.ts
 
-# Summary of `server/routes/public.ts`
+```markdown
+# `server/routes/public.ts`
 
 ## Purpose
-This module sets up public routes for an Express server, serving static files that are necessary for client-side integration and SEO. It handles both development and production environments by dynamically locating files based on their availability.
+This module defines and sets up public API routes for serving static files without requiring authentication. It allows access to various frontend resources such as JavaScript and CSS files, as well as SEO-related files, ensuring compatibility across different development and production environments.
 
 ## Key Functions
-1. **`findStaticFilePath(filename: string): string | null`**:
-   - Searches for static files across multiple paths: 
-     - Production path (`dist/public`)
-     - Development path (`public`)
-     - Alternative production path.
-   - Returns the path of the file if found, otherwise returns `null`.
+- **`findStaticFilePath(filename: string): string | null`**: 
+  - A helper function that searches for the requested static file in multiple directories (production and development paths). It returns the correct path if found or `null` if not.
 
-2. **`setupPublicRoutes(app: Express)`**:
-   - Configures the Express application to serve specific static files:
-     - **`GET /embed.js`**: Serves the JavaScript embed file; handles requests both with and without a trailing slash.
-     - **`GET /embed.css`**: Serves the CSS embed file.
-     - **`GET /robots.txt`**: Serves SEO-related `robots.txt`, logs a warning if the file is not found.
-     - **`GET /sitemap.xml`**: Serves SEO-related `sitemap.xml`, logs a warning if the file is not found.
+- **`setupPublicRoutes(app: Express)`**: 
+  - Main function to set up the public API routes.
+  - Defines routes to serve:
+    - `/embed.js` and `/embed.js/`: Serves the embedded JavaScript file.
+    - `/embed.css`: Serves the embedded CSS file.
+    - `/robots.txt`: Serves the robots.txt file for SEO purposes.
+    - `/sitemap.xml`: Serves the sitemap.xml file for SEO purposes.
+  
+Each route logs a message if the requested file cannot be found and returns a 404 status.
 
 ## Dependencies
-- **Express**: For creating the server and handling HTTP requests.
-- **fs**: For filesystem operations, specifically checking if files exist.
-- **path**: For resolving file paths across different operating systems.
-- **url (fileURLToPath)**: To convert URL strings to file paths, aiding in dynamic path resolution.
+- **Express**: Utilized for creating the web server and handling HTTP requests.
+- **`fs`**: Used for file system operations to check if specific static files exist.
+- **`path`**: Helps handle and transform file paths.
+- **`url`**: Specifically used to get the current directory of the module file.
 
-This module is crucial for ensuring that clients can access necessary resources without authentication, improving the overall usability and visibility of the application in search engines.
+## Architectural Context
+The `public.ts` file interacts with the rest of the server application by:
+- Receiving requests for static file resources from the client.
+- Utilizing filesystem functions to serve these resources from defined directories based on the environment.
+- This file is part of a broader server routing structure, serving as an interface for client-side assets, enhancing application performance and SEO.
+```

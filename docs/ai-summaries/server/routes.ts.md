@@ -1,17 +1,20 @@
 # AI Summary: server/routes.ts
 
-# server/routes.ts
+# Summary of `server/routes.ts`
 
 ## Purpose
-The `routes.ts` file serves as a transitional component in a web server application built with Express and HTTP. It maintains backward compatibility while the application transitions to a modular routing structure, facilitating a smoother migration for existing code and users.
+The `server/routes.ts` file serves as a transitional legacy routes file that maintains backward compatibility with older route structures while facilitating the gradual migration to a new modular routing architecture. 
 
 ## Key Functions
-- **`registerRoutes(app: Express): Promise<Server>`**: This asynchronous function takes an Express application instance as an argument and registers routes using a new, modular route structure defined in `./routes/index`. It is designed to return a server instance.
+- **registerRoutes(app: Express): Promise<Server>**
+  - This asynchronous function accepts an Express application instance (`app`) as an argument.
+  - It invokes the `registerRoutes` function from the modular routes in the `routes/index` file, allowing the server to utilize the updated routing system.
+  - Returns a Promise that resolves to an instance of the HTTP server (`Server`).
 
 ## Dependencies
-- **Express**: The file imports the `Express` type from the `express` package to type the `app` parameter, ensuring compatibility with Express applications.
-- **http**: It imports the `createServer` and `Server` types from the `http` package, utilizing them for server-related functionalities.
-- **Modular Routes**: The file relies on the `registerRoutes` function from `./routes/index`, which contains the new modular route implementations. 
+- **Express**: Utilized for creating and handling the web server, requiring the Express library for type definitions.
+- **http**: The Node.js HTTP module imported to manage server creation.
+- **./routes/index**: Imports the `registerRoutes` function from the new modular route structure, indicating there is a directory of modularized route definitions responsible for handling the application's routing logic.
 
 ## Architectural Context
-This file is part of a broader refactor aimed at restructuring the routing architecture of the application. By adopting a modular approach, the application is expected to improve maintainability and scalability as the legacy code is gradually phased out.
+This file serves as a bridge between the old routing implementation and the new modular approach, indicating a planned phasing-out of legacy code. The modular routes in `./routes/index` are expected to provide a more maintainable and organized structure for route handling, reflecting improved software architectural practices. As development progresses, this legacy file will be deprecated, ensuring a cleaner codebase aligned with modern practices in route management.
