@@ -1,3 +1,7 @@
+/**
+ * Database schema definitions using Drizzle ORM.
+ * Includes tables for users, chatbots, sessions, messages, and surveys.
+ */
 import {
   pgTable,
   text,

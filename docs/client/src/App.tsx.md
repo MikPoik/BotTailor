@@ -1,5 +1,8 @@
 # Documentation for client/src/App.tsx
 
+Root component for the React frontend application.
+ Sets up routing, providers (Auth, Theme, Query), and global UI elements.
+/
 Check embedded contexts
 - Chat widget embed: `embedded=true` or `window.__CHAT_WIDGET_CONFIG__`
 - New iframe embed designs: `window.__EMBED_CONFIG__`

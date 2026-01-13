@@ -1,3 +1,7 @@
+/**
+ * Main entry point for the Express server.
+ * Configures middleware, API routes, authentication, and static file serving.
+ */
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes";

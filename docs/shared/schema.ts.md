@@ -1,5 +1,8 @@
 # Documentation for shared/schema.ts
 
+Database schema definitions using Drizzle ORM.
+ Includes tables for users, chatbots, sessions, messages, and surveys.
+/
 Neon Auth managed schema - reference only, not for migrations
 App-specific user data (references Neon Auth users by ID)
 AI Chatbot Configuration table

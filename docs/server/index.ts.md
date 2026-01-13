@@ -1,5 +1,8 @@
 # Documentation for server/index.ts
 
+Main entry point for the Express server.
+ Configures middleware, API routes, authentication, and static file serving.
+/
 Handle webhook routes BEFORE JSON parsing to preserve raw body for Stripe signature verification
 Apply JSON parsing to all other routes
 Enable trust proxy for proper IP forwarding

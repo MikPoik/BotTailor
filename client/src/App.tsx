@@ -1,3 +1,7 @@
+/**
+ * Root component for the React frontend application.
+ * Sets up routing, providers (Auth, Theme, Query), and global UI elements.
+ */
 import React, { Suspense, useEffect,useRef } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { CookieConsentModal, CookieConsentStatus } from "@/components/cookie-consent-modal";

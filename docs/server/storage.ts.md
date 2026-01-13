@@ -1,5 +1,8 @@
 # Documentation for server/storage.ts
 
+Storage interface and implementation for the application.
+ Handles database operations for users, chat sessions, messages, and configurations.
+/
 User operations (required for Replit Auth)
 Chat session methods
 Message methods

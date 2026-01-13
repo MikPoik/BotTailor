@@ -1,3 +1,7 @@
+/**
+ * Storage interface and implementation for the application.
+ * Handles database operations for users, chat sessions, messages, and configurations.
+ */
 import {
   users,
   chatSessions,
