@@ -74,6 +74,9 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const [isHydrated, setIsHydrated] = useState(false);
 
+  // DEBUG: Log every Home render
+  console.log('[Home RENDER]', { sessionId, isHydrated, timestamp: Date.now() });
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
