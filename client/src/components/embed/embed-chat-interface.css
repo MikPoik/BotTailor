@@ -1,5 +1,12 @@
 /* Embed Chat Interface Styles */
 
+/* CRITICAL: Disable all transitions in embed to prevent flashing on menu interactions */
+/* Exception: Allow scroll-behavior for smooth scrolling */
+.embed-chat-interface,
+.embed-chat-interface * {
+  transition: none !important;
+}
+
 .embed-chat-interface {
   display: flex;
   flex-direction: column;
@@ -81,6 +88,7 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
   min-height: 0; /* Important for flex child sizing */
+  scroll-behavior: smooth;
 }
 
 .embed-messages-container::-webkit-scrollbar {

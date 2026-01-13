@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Message, ChatSession } from "@shared/schema";
+import { useChatSession } from "@/contexts/chat-session-context";
 
 const chatDebug = () => {
   if (typeof window === 'undefined') return false;
@@ -395,13 +396,13 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     // Messages are updated via streaming callbacks instead
   });
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = useCallback(async (content: string) => {
     return sendMessageMutation.mutateAsync(content);
-  };
+  }, [sendMessageMutation]);
 
-  const selectOption = async (optionId: string, payload?: any, optionText?: string) => {
+  const selectOption = useCallback(async (optionId: string, payload?: any, optionText?: string) => {
     return selectOptionMutation.mutateAsync({ optionId, payload, optionText });
-  };
+  }, [selectOptionMutation]);
 
   // Function to manually initialize session when chat is opened
   const initializeSession = useCallback(async () => {

@@ -57,6 +57,12 @@ export function EmbedDesignForm({
   const [ctaConfig, setCtaConfig] = useState<CTAConfig | undefined>(initialData?.ctaConfig as CTAConfig | undefined);
   const [showCtaPreview, setShowCtaPreview] = useState(false);
 
+
+  // Sync ctaConfig with initialData when it changes (will also reset form later)
+  useEffect(() => {
+    setCtaConfig(initialData?.ctaConfig as CTAConfig | undefined);
+  }, [initialData?.ctaConfig]);
+
   const methods = useForm<EmbedDesignFormData>({
     resolver: zodResolver(embedDesignSchema),
     defaultValues: {
@@ -85,6 +91,26 @@ export function EmbedDesignForm({
     setValue,
     reset,
   } = methods;
+
+  // Reset form when initialData changes
+  useEffect(() => {
+    reset({
+      designType: initialData?.designType || "compact",
+      primaryColor: initialData?.primaryColor || "#2563eb",
+      backgroundColor: initialData?.backgroundColor || "#ffffff",
+      textColor: initialData?.textColor || "#1f2937",
+      inputPlaceholder: initialData?.inputPlaceholder || "Type your message...",
+      showAvatar: initialData?.showAvatar ?? true,
+      showTimestamp: initialData?.showTimestamp ?? false,
+      hideBranding: initialData?.hideBranding ?? false,
+      name: initialData?.name || "",
+      description: initialData?.description || "",
+      headerText: initialData?.headerText || "",
+      footerText: initialData?.footerText || "",
+      welcomeMessage: initialData?.welcomeMessage || "",
+      ctaConfig: initialData?.ctaConfig || undefined,
+    });
+  }, [initialData, reset]);
 
   // Watch all form values and notify parent on change
   const allFormValues = useWatch({ control: methods.control });
@@ -119,11 +145,27 @@ export function EmbedDesignForm({
   const handleCtaConfigChange = (newConfig: CTAConfig) => {
     setCtaConfig(newConfig);
     setValue("ctaConfig", newConfig, { shouldDirty: true, shouldTouch: true });
+
+    // If the CTA has its own theme values, keep top-level form theme fields in sync
+    if (newConfig?.theme) {
+      if (newConfig.theme.primaryColor) setValue("primaryColor", newConfig.theme.primaryColor, { shouldDirty: true });
+      if (newConfig.theme.backgroundColor) setValue("backgroundColor", newConfig.theme.backgroundColor, { shouldDirty: true });
+      if (newConfig.theme.textColor) setValue("textColor", newConfig.theme.textColor, { shouldDirty: true });
+    }
   };
+
+  // Ensure submitted payload always includes the latest ctaConfig from state
+  const submitHandler = handleSubmit((data) => {
+    // Merge the current ctaConfig into the submitted data to avoid race conditions
+    // Always include both top-level and ctaConfig.layout fields
+    const merged = { ...data };
+    // Do not set top-level backgroundImage or layout, only keep in ctaConfig
+    onSubmit({ ...merged, ctaConfig } as EmbedDesignFormData);
+  });
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl">
+      <form onSubmit={submitHandler} className="space-y-6 max-w-4xl">
         
         {/* Tab Navigation */}
         <div style={{

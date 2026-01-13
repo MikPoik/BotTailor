@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bot, MessageSquare, Settings, Zap, Sparkles, Globe, Shield, Clock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import ChatWidget from "@/components/chat/chat-widget";
+import { ChatWidgetPortal } from "@/components/chat/ChatWidgetPortal";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 import type { RouteDefinition } from "@shared/route-metadata";
 
@@ -69,13 +69,9 @@ export const route: RouteDefinition = {
 };
 
 export default function Home() {
-  // Use unified global chat session
-  const { sessionId } = useGlobalChatSession();
+  const { sessionId: globalSessionId } = useGlobalChatSession();
   const { isAuthenticated } = useAuth();
   const [isHydrated, setIsHydrated] = useState(false);
-
-  // DEBUG: Log every Home render
-  console.log('[Home RENDER]', { sessionId, isHydrated, timestamp: Date.now() });
 
   useEffect(() => {
     setIsHydrated(true);
@@ -98,9 +94,7 @@ export default function Home() {
         metaDescription.setAttribute('content', 'Create intelligent, customizable AI chatbots for your website in minutes. Deploy anywhere with our powerful AI platform. No coding required - start free today!');
       }
     }
-
-    // The sessionId is now managed by useState and sessionStorage, so this useEffect block is no longer needed for sessionId generation.
-  }, [sessionId]);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -426,16 +420,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Chat Widget */}
-      {isHydrated && sessionId && defaultChatbot && defaultChatbot.isActive && (
-        <ChatWidget 
-          sessionId={sessionId}
-          position="bottom-right"
-          primaryColor={defaultChatbot.homeScreenConfig?.theme?.primaryColor || "#3b82f6"}
-          backgroundColor={defaultChatbot.homeScreenConfig?.theme?.backgroundColor || "#ffffff"}
-          textColor={defaultChatbot.homeScreenConfig?.theme?.textColor || "#1f2937"}
-          chatbotConfig={defaultChatbot}
-        />
+      {/* Chat Widget - Mounted in isolated Portal with separate QueryClient */}
+      {isHydrated && (
+        <ChatWidgetPortal />
       )}
     </div>
   );

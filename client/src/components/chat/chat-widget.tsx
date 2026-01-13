@@ -3,7 +3,8 @@ import { MessageCircle, MessageCircleMore , X, Minimize2, RefreshCw, HelpCircle 
 import TabbedChatInterface from "./tabbed-chat-interface";
 import AboutView from "./about-view";
 import { cn } from "@/lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import WidgetHeader from "./widget/WidgetHeader";
 import InitialMessageBubbles from "./widget/InitialMessageBubbles";
@@ -20,14 +21,8 @@ const widgetDebug = () => {
   }
 };
 
-const debugLog = (...args: any[]) => {
-  if (widgetDebug()) {
-    console.log('[CHAT_DEBUG]', ...args);
-  }
-};
-
 interface ChatWidgetProps {
-  sessionId: string;
+  sessionId: string; // Required - provided by Portal context
   position?: 'bottom-right' | 'bottom-left';
   primaryColor?: string;
   backgroundColor?: string;
@@ -36,7 +31,7 @@ interface ChatWidgetProps {
 }
 
 function ChatWidget({ 
-  sessionId: providedSessionId, 
+  sessionId: providedSessionId,
   position = 'bottom-right',
   primaryColor = '#2563eb',
   backgroundColor = '#ffffff',
@@ -53,21 +48,23 @@ function ChatWidget({
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
   const [showAbout, setShowAbout] = useState(false);
   const [isAnimatingOpen, setIsAnimatingOpen] = useState(false);
-  // Reactive session ID state that can be updated on refresh
-  const [currentSessionId, setCurrentSessionId] = useState(() => {
-    return providedSessionId;
-  });
 
-  // Keep currentSessionId in sync with props ONLY if it changes from outside
-  useEffect(() => {
-    if (providedSessionId && providedSessionId !== currentSessionId) {
-      setCurrentSessionId(providedSessionId);
-    }
-  }, [providedSessionId]);
+  // sessionId is required and provided by Portal context
+  // Keep sessionId in state so we can reset the in-memory session without deleting DB records
+  const [currentSessionId, setCurrentSessionId] = useState<string>(providedSessionId);
   
   const messageTimeouts = useRef<NodeJS.Timeout[]>([]);
   const renderedInitialMessages = useRef<Set<number>>(new Set());
   const queryClient = useQueryClient();
+
+  // Fetch default chatbot config if not provided
+  const { data: defaultChatbot } = useQuery({
+    queryKey: ['/api/public/default-chatbot'],
+    enabled: !chatbotConfig,
+    retry: false,
+  });
+
+  const activeChatbotConfig = chatbotConfig || defaultChatbot;
 
   // Generate a unique session ID for this chat widget instance
   const isMobile = useIsMobile();
@@ -75,82 +72,34 @@ function ChatWidget({
   const isEmbedded = injectedConfig?.embedded || false;
 
   // Get chatbot config ID from injected config or props
-  const chatbotConfigId = injectedConfig?.chatbotConfig?.id || chatbotConfig?.id;
+  const chatbotConfigId = injectedConfig?.chatbotConfig?.id || activeChatbotConfig?.id;
 
   // Memoize config to ensure stable reference for children
-  const memoizedConfig = useMemo(() => chatbotConfig, [chatbotConfig?.id, chatbotConfig?.updatedAt]);
+  const memoizedConfig = useMemo(() => activeChatbotConfig, [activeChatbotConfig?.id, activeChatbotConfig?.updatedAt]);
 
-  // Avoid subscribing ChatWidget to chat queries; initialization is handled in TabbedChatInterface
-  const initializeSession = useCallback(() => {}, []);
+  // Avoid subscribing ChatWidget to chat queries; provide a lightweight initializer
+  // that creates the session on the server (so it persists) without subscribing
+  // to message queries in the widget itself.
+  const initializeSession = useCallback(async () => {
+    try {
+      await apiRequest('POST', '/api/chat/session', {
+        sessionId: currentSessionId,
+        chatbotConfigId: chatbotConfigId || null,
+      });
+
+      // Ensure any cached session/messages for this id are refreshed
+      queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
+    } catch (error) {
+      console.error('[ChatWidget] initializeSession error', error);
+    }
+  }, [currentSessionId, chatbotConfigId, queryClient]);
 
   // Use a stable key that doesn't change on every render
   const chatInterfaceKey = useMemo(() => `chat-${currentSessionId}`, [currentSessionId]);
 
-  // DEBUG: Log every render with key state values
-  console.log('[ChatWidget RENDER]', {
-    isOpen,
-    isClosing,
-    isAnimatingOpen,
-    isMobile,
-    currentSessionId,
-    providedSessionId,
-    timestamp: Date.now()
-  });
-
-  useEffect(() => {
-    if (!widgetDebug()) return;
-    debugLog('ChatWidget mount', { sessionId: currentSessionId, embedded: isEmbedded });
-    const beforeUnload = () => debugLog('ChatWidget beforeunload');
-    const unload = () => debugLog('ChatWidget unload');
-    const visibility = () => debugLog('ChatWidget visibility', {
-      state: document.visibilityState,
-      hidden: document.hidden,
-      time: Date.now()
-    });
-    const pageHide = (e: PageTransitionEvent) => debugLog('ChatWidget pagehide', { persisted: e.persisted });
-    const pageShow = (e: PageTransitionEvent) => debugLog('ChatWidget pageshow', { persisted: e.persisted });
-    const blur = () => debugLog('ChatWidget window blur');
-    const focus = () => debugLog('ChatWidget window focus');
-    window.addEventListener('pagehide', pageHide);
-    window.addEventListener('pageshow', pageShow);
-    window.addEventListener('blur', blur);
-    window.addEventListener('focus', focus);
-    window.addEventListener('beforeunload', beforeUnload);
-    window.addEventListener('unload', unload);
-    document.addEventListener('visibilitychange', visibility);
-
-    // Observe container visibility/display changes to catch unexpected toggles
-    let observer: MutationObserver | null = null;
-    if (containerRef.current) {
-      observer = new MutationObserver(() => {
-        const el = containerRef.current;
-        if (!el) return;
-        const style = window.getComputedStyle(el);
-        debugLog('ChatWidget container mutation', {
-          display: style.display,
-          visibility: style.visibility,
-          opacity: style.opacity,
-          className: el.className
-        });
-      });
-      observer.observe(containerRef.current, { attributes: true, attributeFilter: ['style', 'class'] });
-    }
-
-    return () => {
-      debugLog('ChatWidget unmount');
-      window.removeEventListener('pagehide', pageHide);
-      window.removeEventListener('pageshow', pageShow);
-      window.removeEventListener('blur', blur);
-      window.removeEventListener('focus', focus);
-      window.removeEventListener('beforeunload', beforeUnload);
-      window.removeEventListener('unload', unload);
-      document.removeEventListener('visibilitychange', visibility);
-      if (observer) observer.disconnect();
-    };
-  }, [currentSessionId, isEmbedded]);
-
   // Don't render widget if chatbot is inactive
-  if (chatbotConfig && !chatbotConfig.isActive) {
+  if (activeChatbotConfig && !activeChatbotConfig.isActive) {
     return null;
   }
 
@@ -162,21 +111,21 @@ function ChatWidget({
   // Resolve theme colors - prioritize props, then chatbot config theme
   // Support both theme.chat.primary (old) and homeScreenConfig.theme.primaryColor (new)
   const resolvedPrimaryColor = primaryColor || 
-    chatbotConfig?.homeScreenConfig?.theme?.primaryColor ||
-    chatbotConfig?.theme?.primaryColor ||
-    chatbotConfig?.theme?.chat?.primary ||
+    activeChatbotConfig?.homeScreenConfig?.theme?.primaryColor ||
+    activeChatbotConfig?.theme?.primaryColor ||
+    activeChatbotConfig?.theme?.chat?.primary ||
     '#2563eb';
   
   const resolvedBackgroundColor = backgroundColor ||
-    chatbotConfig?.homeScreenConfig?.theme?.backgroundColor ||
-    chatbotConfig?.theme?.backgroundColor ||
-    chatbotConfig?.theme?.chat?.background ||
+    activeChatbotConfig?.homeScreenConfig?.theme?.backgroundColor ||
+    activeChatbotConfig?.theme?.backgroundColor ||
+    activeChatbotConfig?.theme?.chat?.background ||
     '#ffffff';
     
   const resolvedTextColor = textColor ||
-    chatbotConfig?.homeScreenConfig?.theme?.textColor ||
-    chatbotConfig?.theme?.textColor ||
-    chatbotConfig?.theme?.chat?.text ||
+    activeChatbotConfig?.homeScreenConfig?.theme?.textColor ||
+    activeChatbotConfig?.theme?.textColor ||
+    activeChatbotConfig?.theme?.chat?.text ||
     '#1f2937';
 
   // Apply background/text color to document to avoid flash
@@ -185,8 +134,8 @@ function ChatWidget({
 
   // Load initial messages from chatbot config
   useEffect(() => {
-    if (chatbotConfig?.initialMessages && Array.isArray(chatbotConfig.initialMessages)) {
-      const messages = chatbotConfig.initialMessages.map((msg: any) => 
+    if (activeChatbotConfig?.initialMessages && Array.isArray(activeChatbotConfig.initialMessages)) {
+      const messages = activeChatbotConfig.initialMessages.map((msg: any) => 
         typeof msg === 'string' ? msg : msg.content || msg
       );
       setInitialMessages(messages);
@@ -326,41 +275,19 @@ function ChatWidget({
   };
 
   const refreshSession = (reason: string = 'manual') => {
-    // Generate new session ID
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Do NOT delete messages from DB. Instead, create a new in-memory session id
+    // so future messages are persisted under a new session. This preserves
+    // historical messages for analytics while resetting the active conversation.
+    const newId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+      ? (crypto as any).randomUUID()
+      : `session-${Math.random().toString(36).slice(2)}-${Date.now()}`;
 
-    // Update sessionStorage with new session ID
-    const storageKey = isEmbedded ? 'embed-session-id' : 'global-chat-session-id';
-    try {
-      sessionStorage.setItem(storageKey, newSessionId);
-    } catch (error) {
-      console.warn('sessionStorage not accessible, session refresh may not persist');
-    }
+    // Update state to remount chat interface with new session id
+    setCurrentSessionId(newId);
 
-    // If embedded, notify parent to update its embed session storage
-    if (isEmbedded && typeof window !== 'undefined' && window.parent) {
-      try {
-        window.parent.postMessage({ type: 'RESET_SESSION', sessionId: newSessionId, reason }, '*');
-      } catch {}
-    }
-
-    // Clear query cache for old session
-    queryClient.invalidateQueries({ queryKey: ['/api/chat/session'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
-
-    // Remove old session data to force fresh cache
+    // Remove any cached queries for the old session so UI resets immediately
+    queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
     queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId] });
-
-    // Update the current session ID state to trigger re-renders
-    setCurrentSessionId(newSessionId);
-
-    // Re-initialize the session with new ID
-    if (initializeSession) {
-      // Small delay to ensure state updates are processed
-      setTimeout(() => {
-        initializeSession();
-      }, 100);
-    }
   };
 
 
@@ -576,6 +503,7 @@ function ChatWidget({
                 isPreloaded={true}
                 chatbotConfigId={chatbotConfigId}
                 chatbotConfig={memoizedConfig}
+                onSessionInitialize={initializeSession}
               />
             )}
           </div>

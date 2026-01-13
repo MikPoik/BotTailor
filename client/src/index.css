@@ -70,7 +70,8 @@
 
 @layer base {
   * {
-    @apply border-border transition-colors duration-200;
+    @apply border-border;
+    /* Transition removed globally to fix widget flashing on menu interactions */
   }
 
   body {
@@ -135,6 +136,19 @@
   .dark input::placeholder,
   .dark textarea::placeholder {
     color: var(--muted-foreground);
+  }
+
+  /* Re-apply transitions only to specific interactive elements */
+  button, a, [role="button"], [role="menuitem"], input, textarea, select {
+    @apply transition-colors duration-200;
+  }
+
+  /* Explicitly disable transitions for widget portal and all its children */
+  #chat-widget-portal-root,
+  #chat-widget-portal-root *,
+  [data-widget-container],
+  [data-widget-container] * {
+    transition: none !important;
   }
 }
 
@@ -313,6 +327,7 @@
     background-color: inherit !important;
     contain: layout style !important;
     transform: translateZ(0) !important;
+    scroll-behavior: smooth !important;
   }
 
   /* Embedded tabs container */

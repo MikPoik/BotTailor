@@ -1,7 +1,11 @@
 import { useParams } from "wouter";
 import { useEmbedConfigFromWindow, useEmbedConfig } from "@/hooks/useEmbedConfig";
 import { EmbedChatInterface } from "@/components/embed/EmbedChatInterface";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { widgetQueryClient } from "@/lib/widgetQueryClient";
+import { ChatSessionProvider } from "@/contexts/chat-session-context";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 /**
  * Public embed page that renders a chat interface for iframe embedding
@@ -10,6 +14,9 @@ import { useEffect } from "react";
  * The page receives configuration either:
  * 1. From window.__EMBED_CONFIG__ (injected by server in production)
  * 2. From API call (in development or as fallback)
+ * 
+ * Uses widgetQueryClient and dedicated providers to isolate the embed
+ * from the main app's state management, preventing flashing on interactions.
  */
 export default function EmbedPage() {
   const { embedId } = useParams();
@@ -22,6 +29,9 @@ export default function EmbedPage() {
 
   // Use whichever config is available
   const config = windowConfig || apiConfig;
+
+  // Memoize config to prevent unnecessary provider re-initializations
+  const memoizedConfig = useMemo(() => config, [config?.embedId, config?.designType, config?.chatbotConfigId]);
 
   // Set page title
   useEffect(() => {
@@ -64,5 +74,41 @@ export default function EmbedPage() {
 
   const apiUrl = windowConfig?.apiUrl || window.location.origin;
 
-  return <EmbedChatInterface config={config} apiUrl={apiUrl} />;
+  // Provide a fallback config if memoizedConfig is undefined
+  // You may want to define a defaultConfig object elsewhere or inline here
+  const defaultConfig = {
+    embedId: embedId || "",
+    designType: "full" as const,
+    theme: {
+      primaryColor: "#2563eb",
+      backgroundColor: "#ffffff",
+      textColor: "#111827",
+    },
+    ui: {
+      welcomeMessage: "Welcome!",
+      welcomeType: "text",
+      inputPlaceholder: "Type your message...",
+      showAvatar: true,
+      showTimestamp: true,
+      headerText: "Chatbot",
+      footerText: "",
+      hideBranding: false,
+    },
+    components: [],
+    chatbotGuid: "",
+    chatbotName: "Chatbot",
+    chatbotConfigId: undefined,
+    apiUrl: apiUrl,
+    ctaConfig: undefined,
+  };
+
+  return (
+    <QueryClientProvider client={widgetQueryClient}>
+      <ThemeProvider>
+        <ChatSessionProvider>
+          <EmbedChatInterface config={memoizedConfig ?? defaultConfig} apiUrl={apiUrl} />
+        </ChatSessionProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
 }

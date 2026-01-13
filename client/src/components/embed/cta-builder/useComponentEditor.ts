@@ -235,10 +235,10 @@ export function useComponentEditor({ initialConfig, onChange }: UseComponentEdit
     return null;
   }, []);
 
-  // Get currently selected component
-  const selectedComponent = state.config.components.find(
+  // Get currently selected component (safely handle missing config/components)
+  const selectedComponent = state.config?.components?.find(
     c => c.id === state.selectedComponentId
-  );
+  ) ?? null;
 
   const actions: EditorActions = {
     selectComponent,

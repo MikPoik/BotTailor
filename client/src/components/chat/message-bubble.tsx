@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Message } from "@shared/schema";
 import RichMessage from "./rich-message";
 import StreamingMessage from "./streaming-message";
@@ -29,8 +29,31 @@ interface MessageBubbleProps {
 }
 
 const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: MessageBubbleProps) {
+  // Track which messages have already played their entrance animation
+  const animatedMessageIds = useRef(new Set<string | number>());
+  const [hasAnimated, setHasAnimated] = useState(false);
+  
   const isUser = message.sender === 'user';
   const colors = resolveColors(chatbotConfig);
+  
+  // Log mount/unmount and render
+  useEffect(() => {
+    // Mark message as animated on first render
+    if (!animatedMessageIds.current.has(message.id)) {
+      animatedMessageIds.current.add(message.id);
+      setHasAnimated(true);
+    }
+    
+    console.log('[MessageBubble] mounted/updated', {
+      id: message.id,
+      type: message.messageType,
+      sender: message.sender,
+      content: message.content?.slice(0, 50),
+    });
+    return () => {
+      console.log('[MessageBubble] unmounted', { id: message.id });
+    };
+  }, [message.id]);
   
   // Format timestamp as HH:MM
   const getTimestamp = (dateString: string | undefined) => {
@@ -48,7 +71,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
   );
   if (isUser) {
     return (
-      <div className="flex justify-end animate-fadeIn">
+      <div className={`flex justify-end ${hasAnimated ? '' : 'animate-fadeIn'}`}>
         <div className="max-w-xs">
           <div className="chat-message-user">
             <p dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
@@ -64,7 +87,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
   }
 
   return (
-    <div className="flex items-start space-x-3 animate-fadeIn">
+    <div className={`flex items-start space-x-3 ${hasAnimated ? '' : 'animate-fadeIn'}`}>
       {/* Avatar space - only show avatar for first bubble in a sequence */}
       <div className="w-8 h-8 flex-shrink-0">
         {!(message.metadata as MessageMetadata)?.isFollowUp && (

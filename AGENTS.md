@@ -1,10 +1,36 @@
-# Overview
+# Workflow Policy for Beast Mode
+
+You are in Beast Mode now.
+
+<tool_preambles>
+- Always begin by rephrasing the user's goal in a friendly, clear, and concise manner, before calling any tools.
+- Each time you call a tool, provide the user with a one-sentence narration of why you are calling the tool. You do NOT need to tell them WHAT you are doing, just WHY you are doing it.
+    - CORRECT: "First, let me open the webview template to see how to add a UI control for showing the "refresh available" indicator and trigger refresh from the webview."
+    - INCORRECT: "I'll open the webview template to see how to add a UI control for showing the "refresh available" indicator and trigger refresh from the webview. I'm going to read settingsWebview.html."
+- ALWAYS use a todo list to track your progress using the todo list tool.
+- NEVER end your turn with a verbose explanation of what you did or what you changed. Instead, summarize your completed work in 3 sentences or less.
+</tool_preambles>
+
+You MUST follow the following workflow for all tasks:
+
+# Workflow
+1. Understand the problem deeply. Carefully read the issue and think critically about what is required. Use sequential thinking to break down the problem into manageable parts. Consider the following:
+   - What is the expected behavior?
+   - What are the edge cases?
+   - What are the potential pitfalls?
+   - How does this fit into the larger context of the codebase?
+   - What are the dependencies and interactions with other parts of the code?
+2. Investigate the codebase. Explore relevant files, search for key functions, and gather context. Read files with enough context lines > 1000
+3. Develop a clear, step-by-step plan. Break down the fix into manageable, incremental steps. DO NOT DISPLAY THIS PLAN IN CHAT.
+4. Implement the fix incrementally. Make small, testable code changes.
+5. Debug as needed. Use debugging techniques to isolate and resolve issues.
+6. Test frequently. Run tests after each change to verify correctness.
+7. Iterate until the root cause is fixed and all tests pass.
+8. Reflect and validate comprehensively. After tests pass, think about the original intent, write additional tests to ensure correctness, and remember there are hidden tests that must also pass before the solution is truly complete.
+
+# Project Overview
 
 This project is a full-stack React chat widget application featuring an Express.js backend and a React frontend. Its primary purpose is to provide an embeddable customer support chat widget for any website. The widget supports rich messaging, including text, interactive cards, menus, and quick replies, aiming to offer a comprehensive and customizable communication tool for businesses. The vision is to enable seamless integration of sophisticated chat functionalities, enhancing user engagement and support capabilities across various web platforms.
-
-## User Preferences
-
-Preferred communication style: Like talking to a software developer, technical and detailed.
 
 ## System Architecture
 
@@ -236,11 +262,9 @@ Uses `chatbotGuid` from URL params or config to load chatbot settings.
 5. Used for: avatars, background images, uploaded documents for RAG
 
 
-# Source Code Tree
-
 {
   "title": "Directory Tree",
-  "generatedAt": "2026-01-12T13:24:27.066Z",
+  "generatedAt": "2026-01-13T13:11:14.843Z",
   "simpleMode": true,
   "directoryTree": {
     "client": {
@@ -259,6 +283,10 @@ Uses `chatbotGuid` from URL params or config to load chatbot settings.
                 "chat": {
                   "type": "directory",
                   "children": {
+                    "ChatWidgetPortal.tsx": {
+                      "type": "file",
+                      "path": "client/src/components/chat/ChatWidgetPortal.tsx"
+                    },
                     "about-view.tsx": {
                       "type": "file",
                       "path": "client/src/components/chat/about-view.tsx"
@@ -620,6 +648,10 @@ Uses `chatbotGuid` from URL params or config to load chatbot settings.
             "contexts": {
               "type": "directory",
               "children": {
+                "chat-session-context.tsx": {
+                  "type": "file",
+                  "path": "client/src/contexts/chat-session-context.tsx"
+                },
                 "theme-context.tsx": {
                   "type": "file",
                   "path": "client/src/contexts/theme-context.tsx"
@@ -697,6 +729,10 @@ Uses `chatbotGuid` from URL params or config to load chatbot settings.
                 "utils.ts": {
                   "type": "file",
                   "path": "client/src/lib/utils.ts"
+                },
+                "widgetQueryClient.ts": {
+                  "type": "file",
+                  "path": "client/src/lib/widgetQueryClient.ts"
                 }
               }
             },

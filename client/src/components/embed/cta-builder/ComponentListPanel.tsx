@@ -24,6 +24,7 @@ export const ComponentListPanel: React.FC<ComponentListPanelProps> = ({
   config,
   actions,
 }) => {
+  const componentsList = components ?? [];
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [containerSettingsExpanded, setContainerSettingsExpanded] = useState(false);
 
@@ -180,7 +181,7 @@ export const ComponentListPanel: React.FC<ComponentListPanelProps> = ({
         overflowY: 'auto',
         padding: '8px',
       }}>
-        {components.length === 0 ? (
+        {componentsList.length === 0 ? (
           <div style={{
             padding: '24px 12px',
             textAlign: 'center',
@@ -192,7 +193,7 @@ export const ComponentListPanel: React.FC<ComponentListPanelProps> = ({
             Click "Add Component" to start.
           </div>
         ) : (
-          components.map((component, index) => {
+          componentsList.map((component, index) => {
             const metadata = getComponentMetadata(component.type);
             const isSelected = component.id === selectedId;
             const isVisible = component.visible !== false;
@@ -292,7 +293,7 @@ export const ComponentListPanel: React.FC<ComponentListPanelProps> = ({
                         e.stopPropagation();
                         actions.moveComponent(component.id, 'down');
                       }}
-                      disabled={index === components.length - 1}
+                      disabled={index === componentsList.length - 1}
                       style={{
                         flex: 1,
                         padding: '6px',
@@ -300,8 +301,8 @@ export const ComponentListPanel: React.FC<ComponentListPanelProps> = ({
                         border: '1px solid #d1d5db',
                         borderRadius: '4px',
                         backgroundColor: '#fff',
-                        cursor: index === components.length - 1 ? 'not-allowed' : 'pointer',
-                        opacity: index === components.length - 1 ? 0.5 : 1,
+                        cursor: index === componentsList.length - 1 ? 'not-allowed' : 'pointer',
+                        opacity: index === componentsList.length - 1 ? 0.5 : 1,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

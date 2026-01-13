@@ -50,15 +50,26 @@ export default function EmbedDesignEditPage() {
   const saveMutation = useMutation({
     mutationFn: async (data: EmbedDesignFormData): Promise<any> => {
       // Structure data for backend API
+      // Prefer theme values from CTA config when present so iframe container
+      // settings edited inside the CTA editor are persisted to the top-level
+      // embed theme used by the iframe renderer.
+      const effectiveTheme = data.ctaConfig?.theme
+        ? {
+            primaryColor: data.ctaConfig.theme.primaryColor ?? data.primaryColor,
+            backgroundColor: data.ctaConfig.theme.backgroundColor ?? data.backgroundColor,
+            textColor: data.ctaConfig.theme.textColor ?? data.textColor,
+          }
+        : {
+            primaryColor: data.primaryColor,
+            backgroundColor: data.backgroundColor,
+            textColor: data.textColor,
+          };
+
       const payload = {
         name: data.name,
         description: data.description,
         designType: data.designType,
-        theme: {
-          primaryColor: data.primaryColor,
-          backgroundColor: data.backgroundColor,
-          textColor: data.textColor,
-        },
+        theme: effectiveTheme,
         ui: {
           headerText: data.headerText,
           footerText: data.footerText,
@@ -83,6 +94,11 @@ export default function EmbedDesignEditPage() {
     },
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${guid}/embeds`] });
+      // Also invalidate the specific embed query so reopening the editor fetches fresh data
+      const targetId = response?.embedId || embedId;
+      if (targetId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/chatbots/${guid}/embeds/${targetId}`] });
+      }
       toast({
         title: "Success",
         description: isNew ? "Design created successfully" : "Design updated successfully",

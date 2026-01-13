@@ -9,8 +9,7 @@ import { Link, useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useEffect } from "react";
-import ChatWidget from "@/components/chat/chat-widget";
-import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
+import { ChatWidgetPortal } from "@/components/chat/ChatWidgetPortal";
 import { Bot, MessageSquare, Plus, Settings, Palette, Globe, BarChart3, MessageCircle, TrendingUp, ExternalLink, MoreHorizontal, Layers } from "lucide-react";
 import React from "react";
 import type { RouteDefinition } from "@shared/route-metadata";
@@ -57,8 +56,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
-  // Use unified global chat session
-  const { sessionId } = useGlobalChatSession();
 
   // Update metadata on client side for CSR page
   useEffect(() => {
@@ -460,10 +457,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Chat Widget */}
-      {sessionId && selectedChatbot && selectedChatbot.isActive && (
-        <ChatWidget 
-          sessionId={sessionId}
+      {/* Chat Widget via Portal - use auto-initialized sessionId to prevent remounts */}
+      {selectedChatbot && selectedChatbot.isActive && (
+        <ChatWidgetPortal
           position="bottom-right"
           primaryColor={selectedChatbot.homeScreenConfig?.theme?.primaryColor || "#3b82f6"}
           backgroundColor={selectedChatbot.homeScreenConfig?.theme?.backgroundColor || "#ffffff"}

@@ -42,7 +42,7 @@ export const VisualCTAEditor: React.FC<VisualCTAEditorProps> = ({
 
       {/* Right Panel - Property Editor */}
       <ComponentPropertyEditor
-        component={selectedComponent}
+        component={selectedComponent ?? undefined}
         config={state.config}
         actions={actions}
         expandedGroups={state.expandedGroups}

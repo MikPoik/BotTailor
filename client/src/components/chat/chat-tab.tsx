@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, memo } from 'react';
 import { Send } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -71,13 +71,35 @@ export function ChatTab({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  const isUserNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+    const threshold = 200;
+    const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
+    return isNearBottom;
+  };
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      requestAnimationFrame(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+      });
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isStreaming]);
+  }, [messages, chatIsTyping, isStreaming]);
+
+  // Add mount/unmount detection
+  useEffect(() => {
+    console.log('[ChatTab] MOUNTED', { timestamp: Date.now() });
+    return () => {
+      console.log('[ChatTab] UNMOUNTED', { timestamp: Date.now() });
+    };
+  }, []);
 
   return (
     <>
@@ -105,7 +127,9 @@ export function ChatTab({
             </div>
           </div>
         ) : (
-          messages.map((message) => (
+          (() => {
+            console.log('[ChatTab KEYS]', messages.map(m => (m as any)._stableKey || `message-${m.id}`));
+            return messages.map((message) => (
             <MessageBubble
               key={(message as any)._stableKey || `message-${message.id}`}
               message={message}
@@ -114,7 +138,7 @@ export function ChatTab({
               chatbotConfig={chatbotConfig}
               sessionId={sessionId}
             />
-          ))
+          ))})()
         )}
 
         {(chatIsTyping || isStreaming) && <TypingIndicator chatbotConfig={chatbotConfig} />}
@@ -205,3 +229,5 @@ export function ChatTab({
     </>
   );
 }
+
+export const ChatTabMemoized = memo(ChatTab);

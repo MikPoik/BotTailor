@@ -18,12 +18,19 @@ export const RatingMessage = memo(function RatingMessage({
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
 
   const handleRatingSelect = (rating: number) => {
-    if ((window as any)?.localStorage?.getItem?.('chat_debug') === '1') {
-      console.log('[CHAT_DEBUG] rating select', rating);
-    }
+    console.log('[RatingMessage] rating selected', { rating, maxValue });
     setSelectedRating(rating);
     onOptionSelect('rating_submit', { rating }, `${rating}/${maxValue}`);
   };
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("[RatingMessage] render", {
+      ratingType,
+      selectedRating,
+      minValue,
+      maxValue,
+    });
+  }
 
   if (ratingType === 'stars') {
     return (
@@ -38,7 +45,6 @@ export const RatingMessage = memo(function RatingMessage({
                  onClick={(e) => {
                    e.preventDefault();
                    e.stopPropagation();
-                   e.nativeEvent.stopImmediatePropagation();
                    handleRatingSelect(rating);
                  }}
                  onMouseEnter={() => setHoveredRating(rating)}
@@ -73,7 +79,6 @@ export const RatingMessage = memo(function RatingMessage({
                  onClick={(e) => {
                    e.preventDefault();
                    e.stopPropagation();
-                   e.nativeEvent.stopImmediatePropagation();
                    handleRatingSelect(rating);
                  }}
                  className={`px-3 py-2 rounded-lg border transition-colors ${
@@ -98,3 +103,5 @@ export const RatingMessage = memo(function RatingMessage({
     );
   }
 });
+
+export default RatingMessage;

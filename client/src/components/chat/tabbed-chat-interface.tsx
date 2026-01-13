@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, startTransition, memo } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import HomeTab from "./home-tab";
-import { ChatTab } from "./chat-tab";
+import { ChatTabMemoized as ChatTab } from "./chat-tab";
 import { TabNavigation } from "./tab-navigation";
 import { useChat } from "@/hooks/use-chat";
 import { Message } from "@shared/schema";
@@ -54,6 +54,10 @@ const TabbedChatInterface = memo(({
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+  };
+  
   // Refs for internal state management
   const isStreamingRef = useRef(false);
   const prevMessageCountRef = useRef(0);
@@ -71,7 +75,6 @@ const TabbedChatInterface = memo(({
   
   const handleStreamError = useCallback((error: string) => {
     setIsStreaming(false);
-    console.error("Streaming error:", error);
   }, []);
   
   // Custom hooks
@@ -108,21 +111,24 @@ const TabbedChatInterface = memo(({
     readOnlyMode,
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
-  
-  // Debug: Log when messages prop changes
-  useEffect(() => {
-    console.log('[TabbedChatInterface] Messages changed:', messages.length);
-  }, [messages]);
 
-  // DEBUG: Log every render with key state values
-  console.log('[TabbedChatInterface RENDER]', {
-    sessionId,
+  // DEBUG: Log every render to see what's causing re-renders
+  console.log('[TabbedChatInterface] RENDER', {
     isStreaming,
     activeTab,
     messagesCount: messages.length,
+    messageIds: messages.map(m => m.id),
     timestamp: Date.now()
   });
-  
+
+  // DEBUG: Log mount/unmount
+  useEffect(() => {
+    console.log('[TabbedChatInterface] MOUNTED', { sessionId, timestamp: Date.now() });
+    return () => {
+      console.log('[TabbedChatInterface] UNMOUNTED', { sessionId, timestamp: Date.now() });
+    };
+  }, [sessionId]);
+
   // Initialize session when component mounts if needed
   useEffect(() => {
     if (forceInitialize || (isEmbedded && !onSessionInitialize)) {
@@ -194,19 +200,14 @@ const TabbedChatInterface = memo(({
     payload?: any,
     optionText?: string,
   ) => {
-    console.log('[handleOptionSelect START]', { optionId, optionText, timestamp: Date.now() });
-    
     if (readOnlyMode || isStreamingRef.current) return;
 
     try {
-      console.log('[handleOptionSelect] Calling selectOption...', { timestamp: Date.now() });
       selectOption(optionId, payload, optionText);
-      console.log('[handleOptionSelect] selectOption returned', { timestamp: Date.now() });
     } catch (selectError) {
-      console.warn('[SURVEY] Failed to record option selection:', selectError);
+      // Handle selection error silently
     }
 
-    console.log('[handleOptionSelect] Setting isStreaming=true', { timestamp: Date.now() });
     setIsStreaming(true);
     streamingBubblesRef.current = [];
     const displayText = optionText || optionId;
@@ -217,7 +218,7 @@ const TabbedChatInterface = memo(({
     } catch (error) {
       setIsStreaming(false);
       streamingBubblesRef.current = [];
-      console.error("Option select error:", error);
+      // Handle error silently
     }
   }, [readOnlyMode, selectOption, sendStreamingMessage, getStreamingHandlers]);
 
@@ -265,7 +266,7 @@ const TabbedChatInterface = memo(({
         .catch((error) => {
           setIsStreaming(false);
           streamingBubblesRef.current = [];
-          console.error("Start chat error:", error);
+          // Handle error silently
         });
     }, 100);
   }, [getStreamingHandlers, sendStreamingMessage]);
@@ -281,11 +282,13 @@ const TabbedChatInterface = memo(({
   // Memoize transformed messages to prevent unnecessary re-renders
   const transformedMessages = useMemo(() => {
     const transformed = messages.map((message, index) => {
+      // Use message.id as the primary key source - never fall back to index
+      // This ensures keys remain stable across renders
       const stableId = message.id !== undefined && message.id !== null 
-        ? (typeof message.id === 'string' ? parseInt((message.id as string).replace('initial-', ''), 10) || index : message.id)
-        : `fallback-${index}-${message.content?.slice(0, 20) || 'empty'}`;
+        ? message.id
+        : `fallback-${Date.now()}-${Math.random()}`;
       
-      const stableKey = `message-${stableId}`;
+      const stableKey = `message-${String(stableId)}`;
       const isNewMessage = !renderedMessageIdsRef.current.has(stableKey);
       
       if (isNewMessage) {
@@ -294,7 +297,7 @@ const TabbedChatInterface = memo(({
       
       return {
         ...message,
-        id: stableId as number,
+        id: stableId,
         _stableKey: stableKey,
         _isNew: isNewMessage,
         createdAt: typeof message.createdAt === 'string' ? new Date(message.createdAt) : message.createdAt,
@@ -320,7 +323,7 @@ const TabbedChatInterface = memo(({
   return (
     <Tabs
       value={activeTab}
-      onValueChange={setActiveTab}
+      onValueChange={handleTabChange}
       className={`flex flex-col h-full ${isEmbedded ? "embedded-tabs" : ""}`}
     >
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -357,34 +360,49 @@ const TabbedChatInterface = memo(({
             color: colors.textColor,
           }}
         >
-          <ChatTab
-            messages={transformedMessages}
-            inputMessage={inputMessage}
-            onInputChange={setInputMessage}
-            onKeyPress={handleKeyPress}
-            onSendMessage={handleSendMessage}
-            onOptionSelect={handleOptionSelect}
-            onQuickReply={handleQuickReply}
-            chatIsTyping={chatIsTyping}
-            isStreaming={isStreaming}
-            isLoading={isLoading}
-            readOnlyMode={readOnlyMode}
-            limitExceededInfo={limitExceededInfo}
-            chatbotConfig={chatbotConfig}
-            sessionId={sessionId}
-            colors={colors}
-            inputBackground={inputBackground}
-            isMobile={isMobile}
-            isEmbedded={isEmbedded}
-            contactForm={contactForm}
-            setContactForm={setContactForm}
-            contactFieldErrors={contactFieldErrors}
-            contactError={contactError}
-            isSubmittingContact={isSubmittingContact}
-            contactSubmitted={contactSubmitted}
-            onContactFormSubmit={handleContactFormSubmit}
-            isContactFormValid={isContactFormValid}
-          />
+      {(() => {
+        // DEBUG: Log ChatTab props before render
+        console.log('[ChatTab PROPS]', {
+          messagesCount: transformedMessages.length,
+          inputMessage: inputMessage.substring(0, 30),
+          isStreaming,
+          chatIsTyping,
+          isLoading,
+          readOnlyMode,
+          isMobile,
+          timestamp: Date.now()
+        });
+        return (
+      <ChatTab
+        messages={transformedMessages}
+        inputMessage={inputMessage}
+        onInputChange={setInputMessage}
+        onKeyPress={handleKeyPress}
+        onSendMessage={handleSendMessage}
+        onOptionSelect={handleOptionSelect}
+        onQuickReply={handleQuickReply}
+        chatIsTyping={chatIsTyping}
+        isStreaming={isStreaming}
+        isLoading={isLoading}
+        readOnlyMode={readOnlyMode}
+        limitExceededInfo={limitExceededInfo}
+        chatbotConfig={chatbotConfig}
+        sessionId={sessionId}
+        colors={colors}
+        inputBackground={inputBackground}
+        isMobile={isMobile}
+        isEmbedded={isEmbedded}
+        contactForm={contactForm}
+        setContactForm={setContactForm}
+        contactFieldErrors={contactFieldErrors}
+        contactError={contactError}
+        isSubmittingContact={isSubmittingContact}
+        contactSubmitted={contactSubmitted}
+        onContactFormSubmit={handleContactFormSubmit}
+        isContactFormValid={isContactFormValid}
+      />
+        );
+      })()}
         </TabsContent>
       </div>
 
