@@ -44,10 +44,12 @@ export const MenuMessage = memo(function MenuMessage({
             type="button"
             key={`menu-option-${option.id}-${index}`}
             onClick={(e) => {
+              console.log('[MenuMessage CLICK]', { optionId: option.id, label, timestamp: Date.now() });
               e.preventDefault();
               e.stopPropagation();
               // Fire immediately - no state, no delays, matches quick reply pattern
               onOptionSelect(option.id, option.payload, label);
+              console.log('[MenuMessage CLICK] After onOptionSelect', { timestamp: Date.now() });
             }}
             className="px-3 py-1 text-sm rounded-full transition-colors"
             style={{

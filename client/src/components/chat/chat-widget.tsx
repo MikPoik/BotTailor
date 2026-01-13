@@ -86,6 +86,17 @@ function ChatWidget({
   // Use a stable key that doesn't change on every render
   const chatInterfaceKey = useMemo(() => `chat-${currentSessionId}`, [currentSessionId]);
 
+  // DEBUG: Log every render with key state values
+  console.log('[ChatWidget RENDER]', {
+    isOpen,
+    isClosing,
+    isAnimatingOpen,
+    isMobile,
+    currentSessionId,
+    providedSessionId,
+    timestamp: Date.now()
+  });
+
   useEffect(() => {
     if (!widgetDebug()) return;
     debugLog('ChatWidget mount', { sessionId: currentSessionId, embedded: isEmbedded });

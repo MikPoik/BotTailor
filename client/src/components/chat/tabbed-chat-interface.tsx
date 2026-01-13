@@ -106,6 +106,15 @@ const TabbedChatInterface = memo(({
   useEffect(() => {
     console.log('[TabbedChatInterface] Messages changed:', messages.length);
   }, [messages]);
+
+  // DEBUG: Log every render with key state values
+  console.log('[TabbedChatInterface RENDER]', {
+    sessionId,
+    isStreaming,
+    activeTab,
+    messagesCount: messages.length,
+    timestamp: Date.now()
+  });
   
   // Initialize session when component mounts if needed
   useEffect(() => {
@@ -178,14 +187,19 @@ const TabbedChatInterface = memo(({
     payload?: any,
     optionText?: string,
   ) => {
+    console.log('[handleOptionSelect START]', { optionId, optionText, timestamp: Date.now() });
+    
     if (readOnlyMode || isStreamingRef.current) return;
 
     try {
+      console.log('[handleOptionSelect] Calling selectOption...', { timestamp: Date.now() });
       selectOption(optionId, payload, optionText);
+      console.log('[handleOptionSelect] selectOption returned', { timestamp: Date.now() });
     } catch (selectError) {
       console.warn('[SURVEY] Failed to record option selection:', selectError);
     }
 
+    console.log('[handleOptionSelect] Setting isStreaming=true', { timestamp: Date.now() });
     setIsStreaming(true);
     streamingBubblesRef.current = [];
     const displayText = optionText || optionId;
