@@ -40,11 +40,17 @@ export function EmbedMessages({ messages, isLoading, isTyping, config, onOptionS
       {messages.map((message, idx) => {
         const prev = messages[idx - 1];
         const next = messages[idx + 1];
-        const isBot = message.sender === 'bot';
-        const showAvatar = isBot && (!prev || prev.sender !== 'bot');
-        // Show timestamp if next is not same sender or not a follow-up (i.e., new response or sender)
+        // Treat both 'assistant' and 'bot' as assistant for legacy support
+        const isAssistant = message.sender === 'assistant' || message.sender === 'bot';
+        const prevIsAssistant = prev && (prev.sender === 'assistant' || prev.sender === 'bot');
+        const nextIsAssistant = next && (next.sender === 'assistant' || next.sender === 'bot');
+        const showAvatar = isAssistant && (!prev || !prevIsAssistant);
+        // Check if next message is a follow-up in the same assistant response
         const isFollowUp = next && next.metadata && typeof next.metadata === 'object' && 'isFollowUp' in next.metadata ? (next.metadata as any).isFollowUp : false;
-        const showTimestamp = !next || next.sender !== message.sender || !isFollowUp;
+        // Only show timestamp for last assistant bubble in sequence
+        const isLastInSequence = isAssistant && (!next || !nextIsAssistant || !isFollowUp);
+        // For assistant messages, only show timestamp on last in sequence; for user messages, show if next is different sender
+        const showTimestamp = isAssistant ? isLastInSequence : (!next || next.sender !== message.sender);
         return (
           <MessageBubble
             key={message.id}
@@ -54,6 +60,7 @@ export function EmbedMessages({ messages, isLoading, isTyping, config, onOptionS
             chatbotConfig={config.chatbotConfig}
             showAvatar={showAvatar}
             showTimestamp={showTimestamp}
+            isLastInSequence={isLastInSequence}
           />
         );
       })}
