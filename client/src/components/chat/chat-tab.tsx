@@ -129,6 +129,26 @@ export function ChatTab({
         ) : (
           (() => {
             console.log('[ChatTab KEYS]', messages.map(m => (m as any)._stableKey || `message-${m.id}`));
+            
+            // Helper to check if two messages are in the same response sequence
+            const isSameSequence = (current: any, next: any) => {
+              if (!next) return false;
+              const currentIsAssistant = current.sender === 'assistant' || current.sender === 'bot';
+              const nextIsAssistant = next.sender === 'assistant' || next.sender === 'bot';
+              if (!currentIsAssistant || !nextIsAssistant) return false;
+              
+              // Check explicit isFollowUp flag first
+              const nextMetadata = (typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
+              if (nextMetadata.isFollowUp === true) return true;
+              
+              // Fallback: check if timestamps are within 60 seconds (same response)
+              const currentTime = current.createdAt ? new Date(current.createdAt).getTime() : 0;
+              const nextTime = next.createdAt ? new Date(next.createdAt).getTime() : 0;
+              if (currentTime && nextTime && Math.abs(nextTime - currentTime) < 60000) return true;
+              
+              return false;
+            };
+            
             return messages.map((message, idx) => {
               const prev = messages[idx - 1];
               const next = messages[idx + 1];
@@ -137,11 +157,8 @@ export function ChatTab({
               const prevIsAssistant = prev && (prev.sender === 'assistant' || prev.sender === 'bot');
               // Show avatar if this is an assistant message and either it's the first message, or the previous message is not assistant
               const showAvatar = isAssistant && (!prev || !prevIsAssistant);
-              // Defensive: always treat metadata as object
-              const nextMetadata = (next && typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
-              const nextIsAssistant = next && (next.sender === 'assistant' || next.sender === 'bot');
-              // Only show timestamp for last assistant bubble in sequence
-              const isLastInSequence = isAssistant && (!next || !nextIsAssistant || !nextMetadata.isFollowUp);
+              // Only show timestamp for last assistant bubble in sequence (use sequence detection)
+              const isLastInSequence = isAssistant && !isSameSequence(message, next);
               // For assistant messages, only show timestamp on last in sequence; for user messages, show if next is different sender
               const showTimestamp = isAssistant ? isLastInSequence : (!next || next.sender !== message.sender);
               return (

@@ -146,17 +146,29 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
         {messages.map((message, idx) => {
           const prev = messages[idx - 1];
+          const next = messages[idx + 1];
           // Treat both 'assistant' and 'bot' as assistant for legacy support
           const isAssistant = message.sender === 'assistant' || message.sender === 'bot';
           const prevIsAssistant = prev && (prev.sender === 'assistant' || prev.sender === 'bot');
+          const nextIsAssistant = next && (next.sender === 'assistant' || next.sender === 'bot');
           // Show avatar if this is an assistant message and either it's the first message, or the previous message is not assistant
           const showAvatar = isAssistant && (!prev || !prevIsAssistant);
-          const next = messages[idx + 1];
-          // Defensive: always treat metadata as object
-          const nextMetadata = (next && typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
-          // Show timestamp if this is the last in a contiguous group of same-sender and same-response messages
-          // Only show timestamp for last assistant bubble in sequence, and only once for the whole group
-          const isLastInSequence = isAssistant && (!next || !(next.sender === 'assistant' || next.sender === 'bot') || !(nextMetadata as { isFollowUp?: boolean }).isFollowUp);
+          
+          // Helper to check if two messages are in the same response sequence
+          const isSameSequence = () => {
+            if (!next || !nextIsAssistant) return false;
+            // Check explicit isFollowUp flag first
+            const nextMeta = (typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
+            if ((nextMeta as { isFollowUp?: boolean }).isFollowUp === true) return true;
+            // Fallback: check if timestamps are within 60 seconds (same response)
+            const currentTime = message.createdAt ? new Date(message.createdAt).getTime() : 0;
+            const nextTime = next.createdAt ? new Date(next.createdAt).getTime() : 0;
+            if (currentTime && nextTime && Math.abs(nextTime - currentTime) < 60000) return true;
+            return false;
+          };
+          
+          // Only show timestamp for last assistant bubble in sequence
+          const isLastInSequence = isAssistant && !isSameSequence();
           const showTimestamp = isAssistant ? isLastInSequence : (!next || next.sender !== message.sender);
           return (
             <MessageBubble

@@ -45,10 +45,22 @@ export function EmbedMessages({ messages, isLoading, isTyping, config, onOptionS
         const prevIsAssistant = prev && (prev.sender === 'assistant' || prev.sender === 'bot');
         const nextIsAssistant = next && (next.sender === 'assistant' || next.sender === 'bot');
         const showAvatar = isAssistant && (!prev || !prevIsAssistant);
-        // Check if next message is a follow-up in the same assistant response
-        const isFollowUp = next && next.metadata && typeof next.metadata === 'object' && 'isFollowUp' in next.metadata ? (next.metadata as any).isFollowUp : false;
+        
+        // Helper to check if two messages are in the same response sequence
+        const isSameSequence = () => {
+          if (!next || !nextIsAssistant) return false;
+          // Check explicit isFollowUp flag first
+          const nextMeta = (typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
+          if ((nextMeta as any).isFollowUp === true) return true;
+          // Fallback: check if timestamps are within 60 seconds (same response)
+          const currentTime = message.createdAt ? new Date(message.createdAt).getTime() : 0;
+          const nextTime = next.createdAt ? new Date(next.createdAt).getTime() : 0;
+          if (currentTime && nextTime && Math.abs(nextTime - currentTime) < 60000) return true;
+          return false;
+        };
+        
         // Only show timestamp for last assistant bubble in sequence
-        const isLastInSequence = isAssistant && (!next || !nextIsAssistant || !isFollowUp);
+        const isLastInSequence = isAssistant && !isSameSequence();
         // For assistant messages, only show timestamp on last in sequence; for user messages, show if next is different sender
         const showTimestamp = isAssistant ? isLastInSequence : (!next || next.sender !== message.sender);
         return (
