@@ -159,8 +159,11 @@ export function ChatTab({
               const showAvatar = isAssistant && (!prev || !prevIsAssistant);
               // Only show timestamp for last assistant bubble in sequence (use sequence detection)
               const isLastInSequence = isAssistant && !isSameSequence(message, next);
-              // For assistant messages, only show timestamp on last in sequence; for user messages, show if next is different sender
-              const showTimestamp = isAssistant ? isLastInSequence : (!next || next.sender !== message.sender);
+              // For assistant messages: suppress timestamp during streaming to avoid flash, only show after complete
+              // For user messages: show if next is different sender
+              const showTimestamp = isAssistant 
+                ? (isLastInSequence && !isStreaming) 
+                : (!next || next.sender !== message.sender);
               return (
                 <MessageBubble
                   key={(message as any)._stableKey || `message-${message.id}`}

@@ -61,8 +61,11 @@ export function EmbedMessages({ messages, isLoading, isTyping, config, onOptionS
         
         // Only show timestamp for last assistant bubble in sequence
         const isLastInSequence = isAssistant && !isSameSequence();
-        // For assistant messages, only show timestamp on last in sequence; for user messages, show if next is different sender
-        const showTimestamp = isAssistant ? isLastInSequence : (!next || next.sender !== message.sender);
+        // For assistant messages: suppress timestamp during typing/streaming to avoid flash, only show after complete
+        // For user messages: show if next is different sender
+        const showTimestamp = isAssistant 
+          ? (isLastInSequence && !isTyping) 
+          : (!next || next.sender !== message.sender);
         return (
           <MessageBubble
             key={message.id}
