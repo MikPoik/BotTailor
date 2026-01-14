@@ -195,13 +195,11 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
           </div>
         )}
 
-        {/* Timestamp (only for non-streaming messages) */}
-        {/* Timestamp (only for non-streaming messages, and only if last in sequence for assistant) */}
-        {showTimestamp && !isStreamingMetadata(message.metadata) && timeAgo &&
-          ((!isAssistant) || (isAssistant && isLastInSequence)) && (
-            <span className="text-xs text-muted-foreground mt-1 block">
-              {timeAgo}
-            </span>
+        {/* Timestamp - trust showTimestamp prop from parent (handles sequence detection) */}
+        {showTimestamp && !isStreamingMetadata(message.metadata) && timeAgo && (
+          <span className="text-xs text-muted-foreground mt-1 block">
+            {timeAgo}
+          </span>
         )}
         {/*
           NOTE: For correct timestamp logic, ensure backend always uses sender: 'assistant' for assistant messages
@@ -211,11 +209,12 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Only re-render if message content changed - ignore parent state changes
+  // Re-render if message content or timestamp visibility changed
   return (
     prevProps.message.id === nextProps.message.id &&
     prevProps.message.content === nextProps.message.content &&
-    prevProps.sessionId === nextProps.sessionId
+    prevProps.sessionId === nextProps.sessionId &&
+    prevProps.showTimestamp === nextProps.showTimestamp
   );
 });
 
