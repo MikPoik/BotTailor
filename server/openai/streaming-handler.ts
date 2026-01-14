@@ -452,19 +452,30 @@ export async function* generateStreamingResponse(
               if (yieldedBubbleIndices.has(i)) {
                 continue;
               }
-              
-              const bubble = bubbles[i];
-              
+              const isLast = i === bubbles.length - 1;
+              let bubble = { ...bubbles[i] };
+              // Always set sender: 'assistant' for assistant bubbles
+              if (!bubble.sender || bubble.sender === 'bot') {
+                bubble.sender = 'assistant';
+              }
+              // Set isFollowUp: true for all but the last assistant bubble
+              if (bubble.sender === 'assistant' && !isLast) {
+                bubble.metadata = { ...(bubble.metadata || {}), isFollowUp: true };
+              } else if (bubble.sender === 'assistant' && isLast) {
+                if (bubble.metadata && 'isFollowUp' in bubble.metadata) {
+                  // Remove isFollowUp from last bubble if present
+                  const { isFollowUp, ...rest } = bubble.metadata;
+                  bubble.metadata = rest;
+                }
+              }
               // Skip menu and multiselect_menu bubbles during streaming
               // They will be processed in the final step to ensure completeness
               if (bubble.messageType === "menu" || bubble.messageType === "multiselect_menu") {
                 console.log(`[OpenAI] Skipping menu bubble ${i + 1} during streaming - will process in final step`);
                 continue;
               }
-              
               if (isBubbleComplete(bubble)) {
                 console.log(`[OpenAI] Streaming bubble ${i + 1}: ${bubble.messageType}`);
-                
                 await applyBubbleDelay();
                 yield { type: "bubble", bubble };
                 yieldedBubbleIndices.add(i);
@@ -619,19 +630,33 @@ export async function* generateStreamingResponse(
       // Try to salvage the response
       const salvaged = attemptResponseSalvage(accumulatedContent);
       if (salvaged) {
-        for (let i = 0; i < salvaged.bubbles.length; i++) {
-          // Skip already yielded bubbles
+        for (let i = 0; i < validated.bubbles.length; i++) {
+          // Skip if this bubble was already yielded during streaming
           if (yieldedBubbleIndices.has(i)) {
             continue;
           }
-          
-          const bubble = salvaged.bubbles[i];
-          console.log(`[OpenAI] Salvaged bubble ${i + 1}: ${bubble.messageType}`);
+          const isLast = i === validated.bubbles.length - 1;
+          let bubble = { ...validated.bubbles[i] };
+          // Always set sender: 'assistant' for assistant bubbles
+          if (!bubble.sender || bubble.sender === 'bot') {
+            bubble.sender = 'assistant';
+          }
+          // Set isFollowUp: true for all but the last assistant bubble
+          if (bubble.sender === 'assistant' && !isLast) {
+            bubble.metadata = { ...(bubble.metadata || {}), isFollowUp: true };
+          } else if (bubble.sender === 'assistant' && isLast) {
+            if (bubble.metadata && 'isFollowUp' in bubble.metadata) {
+              // Remove isFollowUp from last bubble if present
+              const { isFollowUp, ...rest } = bubble.metadata;
+              bubble.metadata = rest;
+            }
+          }
+          console.log(`[OpenAI] Final bubble ${i + 1}: ${bubble.messageType}`);
+          if (yieldedBubbleIndices.size > 0) {
+            await new Promise((resolve) => setTimeout(resolve, BUBBLE_DELAY_MS));
+          }
           yield { type: "bubble", bubble };
         }
-        
-        console.log("[OpenAI] Successfully salvaged response");
-        yield { type: "complete", content: "streaming_complete" };
         
         // Clean up completed survey sessions to prevent repeated injection
         await cleanupCompletedSurveySession(sessionId);

@@ -121,12 +121,7 @@ const StreamingMessage = memo(function StreamingMessage({
           </div>
         )}
 
-        {/* Show timestamp when streaming is complete */}
-        {(currentChunkIndex >= chunks.length || streamingComplete) && (
-          <span className="text-xs text-neutral-500 mt-1 block">
-            {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
-          </span>
-        )}
+        {/* Timestamp is now handled by MessageBubble, not here */}
     </div>
   );
 });

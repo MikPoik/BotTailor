@@ -334,13 +334,23 @@ export function setupChatRoutes(app: Express) {
       const isNewSession = !session;
 
       if (!session) {
-        session = await storage.createChatSession({
-          sessionId,
-          chatbotConfigId: chatbotConfigId || null,
-        });
+        try {
+          session = await storage.createChatSession({
+            sessionId,
+            chatbotConfigId: chatbotConfigId || null,
+          });
+        } catch (err: any) {
+          // Handle duplicate key error gracefully
+          if (err && err.code === '23505') {
+            // Duplicate sessionId, fetch and return existing session
+            session = await storage.getChatSession(sessionId);
+          } else {
+            throw err;
+          }
+        }
 
         // Send welcome message for new sessions
-        if (chatbotConfigId) {
+        if (chatbotConfigId && isNewSession) {
           try {
             const chatbotConfig = await storage.getChatbotConfig(chatbotConfigId);
             if (chatbotConfig && chatbotConfig.welcomeMessage) {
@@ -360,7 +370,7 @@ export function setupChatRoutes(app: Express) {
       }
 
       res.json({ session });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating chat session:", error);
       res.status(500).json({ message: "Failed to create chat session" });
     }
@@ -896,6 +906,7 @@ async function handleStreamingResponse(
               id: createdMessage.id,
               sessionId: createdMessage.sessionId,
               createdAt: createdMessage.createdAt,
+              sender: createdMessage.sender || 'bot',
             },
           })}\n\n`,
         );

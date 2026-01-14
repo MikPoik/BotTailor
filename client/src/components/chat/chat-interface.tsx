@@ -144,16 +144,34 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
     <>
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message}
-            onOptionSelect={handleOptionSelect}
-            onQuickReply={handleQuickReply}
-            chatbotConfig={chatbotConfig}
-            sessionId={sessionId}
-          />
-        ))}
+        {messages.map((message, idx) => {
+          const prev = messages[idx - 1];
+          // Treat both 'assistant' and 'bot' as assistant for legacy support
+          const isAssistant = message.sender === 'assistant' || message.sender === 'bot';
+          const prevIsAssistant = prev && (prev.sender === 'assistant' || prev.sender === 'bot');
+          // Show avatar if this is an assistant message and either it's the first message, or the previous message is not assistant
+          const showAvatar = isAssistant && (!prev || !prevIsAssistant);
+          const next = messages[idx + 1];
+          // Defensive: always treat metadata as object
+          const nextMetadata = (next && typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
+          // Show timestamp if this is the last in a contiguous group of same-sender and same-response messages
+          const showTimestamp = !next || next.sender !== message.sender || !(nextMetadata as { isFollowUp?: boolean }).isFollowUp;
+          // Only show timestamp for last assistant bubble in sequence
+          const isLastInSequence = isAssistant && (!next || !(next.sender === 'assistant' || next.sender === 'bot') || !(nextMetadata as { isFollowUp?: boolean }).isFollowUp);
+          return (
+            <MessageBubble
+              key={message.id}
+              message={{ ...message, metadata: message.metadata || {} }}
+              onOptionSelect={handleOptionSelect}
+              onQuickReply={handleQuickReply}
+              chatbotConfig={chatbotConfig}
+              sessionId={sessionId}
+              showAvatar={showAvatar}
+              isLastInSequence={isLastInSequence}
+              showTimestamp={showTimestamp}
+            />
+          );
+        })}
 
         {(isTyping || isStreaming) && <TypingIndicator chatbotConfig={chatbotConfig} />}
         <div ref={messagesEndRef} />

@@ -37,15 +37,26 @@ export function EmbedMessages({ messages, isLoading, isTyping, config, onOptionS
         </div>
       )}
 
-      {messages.map((message) => (
-        <MessageBubble
-          key={message.id}
-          message={message}
-          onOptionSelect={onOptionSelect}
-          onQuickReply={onQuickReply}
-          chatbotConfig={config.chatbotConfig}
-        />
-      ))}
+      {messages.map((message, idx) => {
+        const prev = messages[idx - 1];
+        const next = messages[idx + 1];
+        const isBot = message.sender === 'bot';
+        const showAvatar = isBot && (!prev || prev.sender !== 'bot');
+        // Show timestamp if next is not same sender or not a follow-up (i.e., new response or sender)
+        const isFollowUp = next && next.metadata && typeof next.metadata === 'object' && 'isFollowUp' in next.metadata ? (next.metadata as any).isFollowUp : false;
+        const showTimestamp = !next || next.sender !== message.sender || !isFollowUp;
+        return (
+          <MessageBubble
+            key={message.id}
+            message={message}
+            onOptionSelect={onOptionSelect}
+            onQuickReply={onQuickReply}
+            chatbotConfig={config.chatbotConfig}
+            showAvatar={showAvatar}
+            showTimestamp={showTimestamp}
+          />
+        );
+      })}
 
       {(isTyping) && (
         <TypingIndicator chatbotConfig={config.chatbotConfig} />

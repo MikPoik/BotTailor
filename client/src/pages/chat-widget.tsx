@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import { ChatSessionProvider } from "@/contexts/chat-session-context";
 import ChatWidget from "@/components/chat/chat-widget";
 
 export default function ChatWidgetPage() {
@@ -46,7 +47,8 @@ export default function ChatWidgetPage() {
       if (storedSessionId) {
         newSessionId = storedSessionId;
       } else {
-        newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        // Use UUID for guaranteed uniqueness
+        newSessionId = crypto.randomUUID();
         safeSessionStorage.setItem(storageKey, newSessionId);
       }
     }
@@ -123,13 +125,15 @@ export default function ChatWidgetPage() {
           backgroundColor: theme.backgroundColor
         }}
       >
-        <ChatWidget
-          sessionId={sessionId}
-          primaryColor={theme.primaryColor}
-          backgroundColor={theme.backgroundColor}
-          textColor={theme.textColor}
-          chatbotConfig={chatbotConfig}
-        />
+        <ChatSessionProvider initialSessionId={sessionId}>
+          <ChatWidget
+            sessionId={sessionId}
+            primaryColor={theme.primaryColor}
+            backgroundColor={theme.backgroundColor}
+            textColor={theme.textColor}
+            chatbotConfig={chatbotConfig}
+          />
+        </ChatSessionProvider>
       </div>
     );
   }
@@ -189,7 +193,9 @@ export default function ChatWidgetPage() {
       </div>
 
       {/* Chat Widget */}
-      <ChatWidget sessionId={sessionId} />
+      <ChatSessionProvider initialSessionId={sessionId}>
+        <ChatWidget sessionId={sessionId} />
+      </ChatSessionProvider>
     </div>
   );
 }

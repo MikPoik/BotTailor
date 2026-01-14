@@ -1,4 +1,4 @@
-(function () {
+
   /**
    * Embeddable chat widget loader and runtime.
    *

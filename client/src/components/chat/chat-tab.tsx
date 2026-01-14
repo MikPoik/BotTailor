@@ -129,16 +129,34 @@ export function ChatTab({
         ) : (
           (() => {
             console.log('[ChatTab KEYS]', messages.map(m => (m as any)._stableKey || `message-${m.id}`));
-            return messages.map((message) => (
-            <MessageBubble
-              key={(message as any)._stableKey || `message-${message.id}`}
-              message={message}
-              onOptionSelect={onOptionSelect}
-              onQuickReply={onQuickReply}
-              chatbotConfig={chatbotConfig}
-              sessionId={sessionId}
-            />
-          ))})()
+            return messages.map((message, idx) => {
+              const prev = messages[idx - 1];
+              const next = messages[idx + 1];
+              // Treat both 'assistant' and 'bot' as assistant for legacy support
+              const isAssistant = message.sender === 'assistant' || message.sender === 'bot';
+              const prevIsAssistant = prev && (prev.sender === 'assistant' || prev.sender === 'bot');
+              // Show avatar if this is an assistant message and either it's the first message, or the previous message is not assistant
+              const showAvatar = isAssistant && (!prev || !prevIsAssistant);
+              // Defensive: always treat metadata as object
+              const nextMetadata = (next && typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
+              // Show timestamp if this is the last in a contiguous group of same-sender and same-response messages
+              const showTimestamp = !next || next.sender !== message.sender || !nextMetadata.isFollowUp;
+              // Only show timestamp for last assistant bubble in sequence
+              const isLastInSequence = isAssistant && (!next || !(next.sender === 'assistant' || next.sender === 'bot') || !nextMetadata.isFollowUp);
+              return (
+                <MessageBubble
+                  key={(message as any)._stableKey || `message-${message.id}`}
+                  message={{ ...message, metadata: message.metadata || {} }}
+                  onOptionSelect={onOptionSelect}
+                  onQuickReply={onQuickReply}
+                  chatbotConfig={chatbotConfig}
+                  sessionId={sessionId}
+                  showAvatar={showAvatar}
+                  isLastInSequence={isLastInSequence}
+                  showTimestamp={showTimestamp}
+                />
+              );
+            })})()
         )}
 
         {(chatIsTyping || isStreaming) && <TypingIndicator chatbotConfig={chatbotConfig} />}

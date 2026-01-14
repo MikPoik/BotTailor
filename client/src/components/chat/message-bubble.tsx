@@ -26,13 +26,18 @@ interface MessageBubbleProps {
   onQuickReply: (reply: string) => void;
   chatbotConfig?: any;
   sessionId?: string;
+  showAvatar?: boolean;
+  showTimestamp?: boolean;
+  isLastInSequence?: boolean; // Only show timestamp if true for assistant bubbles
 }
 
-const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId }: MessageBubbleProps) {
+const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQuickReply, chatbotConfig, sessionId, showAvatar: showAvatarProp, showTimestamp, isLastInSequence }: MessageBubbleProps) {
   // Track which messages have already played their entrance animation
   const animatedMessageIds = useRef(new Set<string | number>());
   const [hasAnimated, setHasAnimated] = useState(false);
   
+  // Treat both 'assistant' and 'bot' as assistant for legacy support
+  const isAssistant = message.sender === 'assistant' || message.sender === 'bot';
   const isUser = message.sender === 'user';
   const colors = resolveColors(chatbotConfig);
   
@@ -76,7 +81,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
           <div className="chat-message-user">
             <p dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
           </div>
-          {!(message.metadata as MessageMetadata)?.isFollowUp && timeAgo && (
+          {showTimestamp && timeAgo && (
             <span className="text-xs text-neutral-500 mt-1 block text-right">
               {timeAgo}
             </span>
@@ -90,13 +95,19 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
     <div className={`flex items-start space-x-3 ${hasAnimated ? '' : 'animate-fadeIn'}`}>
       {/* Avatar space - only show avatar for first bubble in a sequence */}
       <div className="w-8 h-8 flex-shrink-0">
-        {!(message.metadata as MessageMetadata)?.isFollowUp && (
-          <img 
-            src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"} 
-            alt="Bot avatar" 
-            className="w-8 h-8 rounded-full"
-          />
-        )}
+        {(() => {
+          const showAvatar = typeof showAvatarProp === 'boolean'
+            ? showAvatarProp
+            : !((message.metadata as MessageMetadata)?.isFollowUp);
+
+          return showAvatar ? (
+            <img
+              src={chatbotConfig?.avatarUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&h=256"}
+              alt="Bot avatar"
+              className="w-8 h-8 rounded-full"
+            />
+          ) : null;
+        })()}
       </div>
       <div className="flex-1">
         {/* Check if this is a streaming/multipart message */}
@@ -185,11 +196,17 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
         )}
 
         {/* Timestamp (only for non-streaming messages) */}
-        {!isStreamingMetadata(message.metadata) && !(message.metadata as MessageMetadata)?.isFollowUp && timeAgo && (
-          <span className="text-xs text-muted-foreground mt-1 block">
-            {timeAgo}
-          </span>
+        {/* Timestamp (only for non-streaming messages, and only if last in sequence for assistant) */}
+        {showTimestamp && !isStreamingMetadata(message.metadata) && timeAgo &&
+          ((!isAssistant) || (isAssistant && isLastInSequence)) && (
+            <span className="text-xs text-muted-foreground mt-1 block">
+              {timeAgo}
+            </span>
         )}
+        {/*
+          NOTE: For correct timestamp logic, ensure backend always uses sender: 'assistant' for assistant messages
+          and sets metadata: { isFollowUp: true } for all but the last in a sequence.
+        */}
       </div>
     </div>
   );

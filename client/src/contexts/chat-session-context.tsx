@@ -36,7 +36,8 @@ export function ChatSessionProvider({ children, initialSessionId }: { children: 
     }
 
     if (!sessionId) {
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Use UUID for guaranteed uniqueness
+      const newSessionId = crypto.randomUUID();
       setSessionId(newSessionId);
     }
   }, [initialSessionId, sessionId]);

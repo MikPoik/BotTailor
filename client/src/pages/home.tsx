@@ -422,7 +422,7 @@ export default function Home() {
 
       {/* Chat Widget - Mounted in isolated Portal with separate QueryClient */}
       {isHydrated && (
-        <ChatWidgetPortal />
+        <ChatWidgetPortal chatbotConfig={defaultChatbot} />
       )}
     </div>
   );
