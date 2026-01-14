@@ -139,10 +139,11 @@ export function ChatTab({
               const showAvatar = isAssistant && (!prev || !prevIsAssistant);
               // Defensive: always treat metadata as object
               const nextMetadata = (next && typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
-              // Show timestamp if this is the last in a contiguous group of same-sender and same-response messages
-              const showTimestamp = !next || next.sender !== message.sender || !nextMetadata.isFollowUp;
+              const nextIsAssistant = next && (next.sender === 'assistant' || next.sender === 'bot');
               // Only show timestamp for last assistant bubble in sequence
-              const isLastInSequence = isAssistant && (!next || !(next.sender === 'assistant' || next.sender === 'bot') || !nextMetadata.isFollowUp);
+              const isLastInSequence = isAssistant && (!next || !nextIsAssistant || !nextMetadata.isFollowUp);
+              // For assistant messages, only show timestamp on last in sequence; for user messages, show if next is different sender
+              const showTimestamp = isAssistant ? isLastInSequence : (!next || next.sender !== message.sender);
               return (
                 <MessageBubble
                   key={(message as any)._stableKey || `message-${message.id}`}
