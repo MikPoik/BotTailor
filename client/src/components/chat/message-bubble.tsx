@@ -211,14 +211,11 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Ensure we re-render if timestamp related props change
+  // Only re-render if message content changed - ignore parent state changes
   return (
     prevProps.message.id === nextProps.message.id &&
     prevProps.message.content === nextProps.message.content &&
-    prevProps.sessionId === nextProps.sessionId &&
-    prevProps.showTimestamp === nextProps.showTimestamp &&
-    prevProps.isLastInSequence === nextProps.isLastInSequence &&
-    prevProps.showAvatar === nextProps.showAvatar
+    prevProps.sessionId === nextProps.sessionId
   );
 });
 

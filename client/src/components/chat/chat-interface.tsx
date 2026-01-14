@@ -154,14 +154,10 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           const next = messages[idx + 1];
           // Defensive: always treat metadata as object
           const nextMetadata = (next && typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
-          const isNextAssistant = next && (next.sender === 'assistant' || next.sender === 'bot');
-          
+          // Show timestamp if this is the last in a contiguous group of same-sender and same-response messages
+          const showTimestamp = !next || next.sender !== message.sender || !(nextMetadata as { isFollowUp?: boolean }).isFollowUp;
           // Only show timestamp for last assistant bubble in sequence
-          // A sequence is assistant messages that are follow-ups
-          const isLastInSequence = isAssistant && (!next || !isNextAssistant || !(nextMetadata as { isFollowUp?: boolean }).isFollowUp);
-          
-          // For users, show timestamp if next message is from someone else or it's the last message
-          const showTimestamp = !isAssistant ? (!next || next.sender !== message.sender) : isLastInSequence;
+          const isLastInSequence = isAssistant && (!next || !(next.sender === 'assistant' || next.sender === 'bot') || !(nextMetadata as { isFollowUp?: boolean }).isFollowUp);
           return (
             <MessageBubble
               key={message.id}
