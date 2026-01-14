@@ -1,3 +1,17 @@
+/**
+ * SSR entry point for the React app.
+ *
+ * Responsibilities:
+ * - Exports render, generateHTML, and generateMetaTags for SSR orchestration (see server/vite.ts).
+ * - Wraps App in all required providers for SSR (QueryClient, Theme, Tooltip, Router).
+ * - Ensures correct SSR context, streaming, and hydration for both dev and prod.
+ *
+ * Constraints & Edge Cases:
+ * - SSR context may include redirectTo for server-side redirects.
+ * - Each SSR request gets a fresh QueryClient instance.
+ * - SSR must match client-side hydration (see client/src/main.tsx).
+ */
+
 import { renderToPipeableStream } from "react-dom/server";
 import { Writable } from "node:stream";
 import { Router } from "wouter";
@@ -48,6 +62,13 @@ export function render(url: string, search?: string) {
   return { stream, ssrContext };
 }
 
+/**
+ * Generates the full HTML string for SSR, resolving when stream completes.
+ * Ensures SSR context and error handling for streaming.
+ * @param url Request path
+ * @param search Query string
+ * @returns Promise<{ html, ssrContext }>
+ */
 export function generateHTML(url: string, search?: string): Promise<{ html: string; ssrContext: SSRContext }> {
   return new Promise((resolve, reject) => {
     const ssrContext: SSRContext = {};
@@ -124,11 +145,17 @@ function escapeHtml(value?: string): string {
   return value.replace(/[&<>"']/g, (char) => HTML_ESCAPE_LOOKUP[char] || char);
 }
 
+/**
+ * Generates meta tags and structured data for SSR HTML head.
+ * Uses route metadata and canonical URL logic.
+ * @param url Request path
+ * @returns HTML string of meta tags
+ */
 export function generateMetaTags(url: string): string {
   const normalizedPath = normalizeRoutePath(url);
   const metadata = getRouteMetadata(normalizedPath);
   const canonicalUrl = metadata.canonical || `https://bottailor.com${normalizedPath === '/' ? '' : normalizedPath}`;
-  
+
   const metaTags = [
     `<title>${escapeHtml(metadata.title)}</title>`,
     `<meta name="description" content="${escapeHtml(metadata.description)}" />`,
@@ -154,7 +181,7 @@ export function generateMetaTags(url: string): string {
     `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`,
   ].filter(Boolean).join('\n    ');
 
-  const structuredData = (metadata as any).structuredData ? 
+  const structuredData = (metadata as any).structuredData ?
     `\n    <!-- Structured Data -->\n    <script type="application/ld+json">\n    ${JSON.stringify((metadata as any).structuredData, null, 2)}\n    </script>` : '';
 
   return metaTags + structuredData;

@@ -1,3 +1,19 @@
+/**
+ * UI Designer artifact persistence and config generation service.
+ *
+ * Responsibilities:
+ * - Persists and versions designer artifacts (JSON layout, components, theme, settings, version).
+ * - Generates, modifies, and validates HomeScreenConfig objects for chatbot home screens.
+ * - Integrates with OpenAI for config generation and with DB for artifact storage.
+ *
+ * Contracts & Edge Cases:
+ * - Artifacts must include: version, components[], theme, settings (see docs/agents/ui-designer.md).
+ * - All components require: id, type, order, visible, props (with type-specific fields).
+ * - Server endpoints must return artifact id, version, and last-modified/version info.
+ * - All config/schema changes must be coordinated with shared/schema.ts and client embed consumers.
+ * - Idempotent save endpoints; optimistic concurrency via version/ETag.
+ * - Backwards-incompatible changes require migration/versioning and embed.js compatibility.
+ */
 import OpenAI from "openai";
 import { z } from "zod";
 import { HomeScreenConfigSchema, type HomeScreenConfig } from "@shared/schema";

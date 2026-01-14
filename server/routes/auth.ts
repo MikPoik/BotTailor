@@ -1,3 +1,18 @@
+/**
+ * Neon Auth API endpoints for authentication and user management.
+ *
+ * Responsibilities:
+ * - Exposes /api/auth/user, /api/ensure-user, and /api/auth/admin-status endpoints.
+ * - Handles lazy user creation on first access, using Neon profile data or dev dummy data.
+ * - Checks admin status by comparing user id to DEFAULT_SITE_ADMIN_USER_ID.
+ * - Integrates with neonAuthMiddleware and isAuthenticated for header-based auth.
+ *
+ * Constraints & Edge Cases:
+ * - Middleware ordering: setupNeonAuth(app) must be called before registering these routes.
+ * - In dev mode, allows profile seeding via query/body; in prod, queries neon_auth.users_sync.
+ * - Missing x-stack-user-id header returns 401; missing Neon user returns 404.
+ * - Upsert semantics mitigate concurrent user creation, but callers should ensure idempotency.
+ */
 import type { Express } from "express";
 import { storage } from "../storage";
 import { isAuthenticated } from "../neonAuth";
@@ -9,6 +24,11 @@ import { eq, and, isNull } from "drizzle-orm";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Authentication routes for Neon Auth
+/**
+ * Registers Neon Auth API endpoints on the Express app.
+ * Handles user lookup/creation and admin check, with dev/production branching.
+ * @param app Express app
+ */
 export async function setupAuthRoutes(app: Express) {
   // Helper to fetch Neon Auth user profile
   async function fetchNeonAuthUser(userId: string, profileData?: { email?: string; name?: string }) {

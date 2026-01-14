@@ -1,6 +1,27 @@
 /**
- * JSON Schema definition for OpenAI structured responses
- * Used to ensure consistent multi-bubble response format
+ * Canonical OpenAI response schema for chat widget and assistants.
+ *
+ * Responsibilities:
+ * - Defines Zod schemas for all AI message types (bubble, menu, quick reply, etc.).
+ * - Exports AIResponse, AIMessage, and related types for use across server and client.
+ * - Documents contract for streaming and non-streaming OpenAI output.
+ *
+ * Constraints & Edge Cases:
+ * - All schema changes must be coordinated with response-generator.ts, response-parser.ts, and client types.
+ * - Schema must match client-side expectations (see shared/schema.ts and docs/agents/openai.md).
+ * - Backwards-incompatible changes require migration and versioning consideration.
+ */
+/**
+ * Canonical JSON Schema for OpenAI structured responses (multi-bubble format).
+ *
+ * Responsibilities:
+ * - Defines the contract for all OpenAI model outputs (see server/ai-response-schema.ts for Zod runtime validation).
+ * - Ensures consistent shape for streaming and non-streaming AI responses (bubbles, message types, metadata).
+ * - Used for model prompt/response validation and regeneration logic.
+ *
+ * Constraints & Edge Cases:
+ * - Any change here requires coordinated updates to response-parser.ts and UI consumers.
+ * - All messageType and metadata fields must be kept in sync with server/ai-response-schema.ts and client consumers.
  */
 export const MULTI_BUBBLE_RESPONSE_SCHEMA = {
   name: "multi_bubble_response",

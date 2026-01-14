@@ -53,6 +53,38 @@ export const ContainerSettings: React.FC<ContainerSettingsProps> = ({
       gap: '14px',
       fontSize: '12px',
     }}>
+      {/* Layout Style */}
+      <div>
+        <label style={{
+          display: 'block',
+          fontSize: '11px',
+          fontWeight: 500,
+          marginBottom: '6px',
+          color: '#374151',
+        }}>
+          Layout Style
+        </label>
+        <select
+          value={config.layout?.style || 'card'}
+          onChange={(e) => handleLayoutChange('style', e.target.value)}
+          style={{
+            width: '100%',
+            padding: '6px 10px',
+            border: '1px solid #d1d5db',
+            borderRadius: '4px',
+            fontSize: '12px',
+            backgroundColor: 'white',
+          }}
+        >
+          <option value="card">Card</option>
+          <option value="banner">Banner</option>
+          <option value="modal">Modal</option>
+          <option value="sidebar">Sidebar</option>
+        </select>
+        <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '3px' }}>
+          Choose the default container layout for this CTA (affects positioning & padding)
+        </div>
+      </div>
       {/* Background Color */}
       <div>
         <label style={{

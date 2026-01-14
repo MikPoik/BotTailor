@@ -1,3 +1,16 @@
+/**
+ * React hook for streaming and non-streaming chat API integration.
+ *
+ * Responsibilities:
+ * - Manages chat session creation, message sending, streaming, and optimistic UI updates.
+ * - Handles streaming contract (newline-delimited data: frames, JSON event shapes) and deduplication.
+ * - Provides read-only/limit-exceeded state, session storage fallbacks, and error handling.
+ *
+ * Constraints & Edge Cases:
+ * - Streaming contract must match server (see server/openai/streaming-handler.ts).
+ * - Storage access is guarded for sandboxed embed hosts.
+ * - Optimistic UI and streaming state must be coordinated for correct user experience.
+ */
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

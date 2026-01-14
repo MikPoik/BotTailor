@@ -1,6 +1,15 @@
 /**
- * Root component for the React frontend application.
- * Sets up routing, providers (Auth, Theme, Query), and global UI elements.
+ * Root component for the React frontend application (Vite + React 18).
+ *
+ * Responsibilities:
+ * - Sets up routing, providers (Auth, Theme, Query, Tooltip), and global UI elements.
+ * - Detects embed contexts (legacy and new iframe) and SSR hydration.
+ * - Handles cookie consent, analytics, and Stack Auth integration.
+ *
+ * Constraints & Edge Cases:
+ * - Must match SSR provider tree (see entry-server.tsx).
+ * - Embed mode is detected via query param or window globals; disables chrome and analytics.
+ * - SSR hydration and client mount must be coordinated for correct UI state.
  */
 import React, { Suspense, useEffect,useRef } from "react";
 import { Switch, Route, useLocation } from "wouter";

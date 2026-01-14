@@ -1,3 +1,19 @@
+/**
+ * Stripe-backed billing and subscription management API routes.
+ *
+ * Responsibilities:
+ * - Exposes endpoints for plan listing, current subscription, checkout, plan modification, cancellation, and resuming.
+ * - Handles Stripe Checkout session creation, free plan logic, and local DB reconciliation.
+ * - Exports webhookHandler for Stripe event processing (mounted at /api/webhook, expects raw body).
+ * - Provides dev-only plan seeding endpoint (/seed-plans) and integrates with storage helpers for all DB updates.
+ *
+ * Constraints & Edge Cases:
+ * - STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be set; throws if missing.
+ * - Webhook handler must be mounted at /api/webhook with raw body parsing (see server/index.ts).
+ * - Free plan is handled locally (no Stripe session); downgrades/cancellations update both Stripe and DB.
+ * - All plan/product IDs must match Stripe dashboard and env vars.
+ * - Idempotency: all handlers check existing DB state before creating/updating records.
+ */
 import express, { Router } from "express";
 import Stripe from "stripe";
 import { storage } from "../storage";

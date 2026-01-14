@@ -1,5 +1,30 @@
+/**
+ * Shared AI response schema for OpenAI and assistant integrations.
+ *
+ * Responsibilities:
+ * - Exports Zod schemas and types for AIResponse, AIMessage, and related message types.
+ * - Used by both OpenAI and non-OpenAI (e.g., assistant) response generators.
+ * - Documents contract for all AI message shapes and validation.
+ *
+ * Constraints & Edge Cases:
+ * - All schema changes must be coordinated with server/openai/schema.ts and client types.
+ * - Must remain in sync with OpenAI and assistant output expectations.
+ * - Backwards-incompatible changes require migration/versioning consideration.
+ */
 import { z } from "zod";
 
+/**
+ * Zod runtime schema and types for AI multi-bubble responses.
+ *
+ * Responsibilities:
+ * - Provides runtime validation for all OpenAI model outputs (see server/openai/schema.ts for canonical JSON schema).
+ * - Defines all message types, metadata, and invariants for chat, card, menu, survey, and form bubbles.
+ * - Used for streaming and non-streaming response validation, regeneration, and UI contract enforcement.
+ *
+ * Constraints & Edge Cases:
+ * - Any change here must be coordinated with server/openai/schema.ts and client consumers.
+ * - All messageType and metadata fields must be kept in sync with OpenAI prompt/response logic and UI.
+ */
 // Define the button schema for interactive elements
 const ButtonSchema = z.object({
   id: z.string(),

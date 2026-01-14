@@ -1,3 +1,15 @@
+/**
+ * Singleton OpenAI client and configuration helpers for AI orchestration.
+ *
+ * Responsibilities:
+ * - Provides a singleton OpenAI client instance for all API calls.
+ * - Ensures OPENAI_API_KEY is set and throws if missing.
+ * - Used by all OpenAI domain modules for model calls.
+ *
+ * Constraints & Edge Cases:
+ * - Throws if OPENAI_API_KEY is not set in the environment.
+ * - Client is lazily initialized and reused for efficiency.
+ */
 import OpenAI from "openai";
 
 let openaiClient: OpenAI | null = null;

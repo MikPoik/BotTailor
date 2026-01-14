@@ -1,6 +1,15 @@
 /**
- * Storage interface and implementation for the application.
- * Handles database operations for users, chat sessions, messages, and configurations.
+ * Storage interface and implementation for all persistent app data.
+ *
+ * Responsibilities:
+ * - Defines the IStorage contract for all DB operations (users, chat sessions, messages, configs, website content, surveys, subscriptions).
+ * - Implements all storage logic using Drizzle ORM and shared schema types (see shared/schema.ts).
+ * - Used by all server routes and services for data access and mutation.
+ *
+ * Constraints & Edge Cases:
+ * - Any schema change requires updates to shared/schema.ts, migrations/, and this file.
+ * - All contract changes must be reflected in consumers (routes, services, tests).
+ * - Storage methods must handle multi-tenant and user isolation, and support all required query patterns.
  */
 import {
   users,

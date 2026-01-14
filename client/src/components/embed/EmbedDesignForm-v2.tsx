@@ -42,6 +42,7 @@ interface EmbedDesignFormProps {
   submitButtonText?: string;
   onChange?: (data: EmbedDesignFormData) => void;
   chatbotName?: string;
+  onPreview?: () => void;
 }
 
 export function EmbedDesignForm({
@@ -51,6 +52,7 @@ export function EmbedDesignForm({
   submitButtonText = "Create Design",
   onChange,
   chatbotName = "Support",
+  onPreview,
 }: EmbedDesignFormProps) {
   const [activeTab, setActiveTab] = useState<"design" | "cta">("design");
   const [ctaSubTab, setCtaSubTab] = useState<"visual" | "ai" | "json">("visual");
@@ -213,6 +215,29 @@ export function EmbedDesignForm({
         {/* Design Tab */}
         {activeTab === "design" && (
           <div className="space-y-6">
+            {/* Design Preview Button (moved to top) */}
+            <div className="flex justify-end mb-4">
+              <button
+                type="button"
+                onClick={onPreview}
+                style={{
+                  padding: "6px 16px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  backgroundColor: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1d4ed8")}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#2563eb")}
+              >
+                <span role="img" aria-label="Preview">👁️</span> Preview Design
+              </button>
+            </div>
+
             {/* Basic Info */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Design Info</h3>
@@ -376,6 +401,29 @@ export function EmbedDesignForm({
                   </Label>
                 </div>
               </div>
+            </div>
+
+            {/* Design Preview Button */}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={onPreview}
+                style={{
+                  padding: "6px 16px",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  backgroundColor: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1d4ed8")}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#2563eb")}
+              >
+                <span role="img" aria-label="Preview">👁️</span> Preview Design
+              </button>
             </div>
           </div>
         )}

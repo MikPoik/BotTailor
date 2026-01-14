@@ -1,3 +1,19 @@
+/**
+ * Embed design orchestration, payload preparation, and host integration service.
+ *
+ * Responsibilities:
+ * - Handles creation, update, retrieval, and deletion of embed designs and components.
+ * - Prepares embeddable payloads for public/protected embeds, enforcing host integration rules.
+ * - Integrates with Drizzle ORM and shared schema for DB operations.
+ * - Used by embed routes and UI designer for all embed-related persistence and rendering.
+ *
+ * Contracts & Edge Cases:
+ * - All schema changes must be reflected in shared/schema.ts and DB migrations.
+ * - API contracts must be kept in sync with client and embed consumers.
+ * - Embed config must match documented keys (apiUrl, widgetId, embedKey, theme overrides, etc.).
+ * - Enforces ownership and protected access for private embeds (embedKey/token required).
+ * - Backwards-incompatible changes require migration/versioning and embed.js compatibility.
+ */
 import { db } from "./db";
 import { embedDesigns, embedDesignComponents, chatbotConfigs, CTAConfig } from "@shared/schema";
 import { eq, and } from "drizzle-orm";

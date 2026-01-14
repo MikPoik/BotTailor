@@ -1,3 +1,16 @@
+/**
+ * React hook for client-side authentication state.
+ *
+ * Responsibilities:
+ * - Surfaces user, isAuthenticated, isLoading, and error state for the app.
+ * - Integrates with Stack Auth and attaches x-stack-user-id header for API requests.
+ * - Handles SSR and embedded widget modes (skips auth in embedded mode).
+ *
+ * Constraints & Edge Cases:
+ * - SSR returns unauthenticated state (no browser APIs).
+ * - Embedded mode disables auth entirely.
+ * - Must match server-side header and user contract.
+ */
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";

@@ -1,3 +1,14 @@
+/**
+ * React hook for handling streaming chat message logic.
+ *
+ * Responsibilities:
+ * - Encapsulates streaming message send, bubble tracking, and cache integration.
+ * - Provides handlers for bubble receipt, completion, and error state.
+ *
+ * Constraints & Edge Cases:
+ * - Streaming contract must match server (see use-chat.ts and server/openai/streaming-handler.ts).
+ * - Bubble tracking is local to the hook; cache updates are handled by use-chat.ts.
+ */
 import { useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Message } from '@shared/schema';

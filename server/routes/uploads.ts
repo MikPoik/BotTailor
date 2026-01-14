@@ -1,3 +1,17 @@
+/**
+ * HTTP endpoints for file upload initiation, presign, and completion.
+ *
+ * Responsibilities:
+ * - Exposes API routes for direct, presigned, and multipart uploads (see docs/agents/storage.md).
+ * - Returns concise JSON: success/failure, fileId, public url or uploadUrl/presigned data.
+ * - Validates file size, MIME type, and extension; enforces security and operational constraints.
+ *
+ * Contracts & Edge Cases:
+ * - All upload endpoints must match client contract for upload flows and response shapes.
+ * - Presigned/multipart endpoints must handle CORS and required headers for provider uploads.
+ * - Security: validate and scan untrusted uploads before making public; enforce size/type limits.
+ * - All changes must preserve public/embed asset compatibility and follow CORS/security best practices.
+ */
 import type { Express } from "express";
 import { upload, uploadAvatar, uploadBackgroundImage, getFileFromStorage } from "../upload-service";
 import { isAuthenticated } from "../neonAuth";

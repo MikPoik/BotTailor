@@ -1,3 +1,16 @@
+/**
+ * System prompt and context builder for OpenAI chat orchestration.
+ *
+ * Responsibilities:
+ * - Builds complete system prompts including website RAG and survey context.
+ * - Optimizes search queries for vector search and context injection.
+ * - Exposes helpers for website context, survey context, and prompt assembly.
+ *
+ * Constraints & Edge Cases:
+ * - Website context uses vector search and may include recent conversation history.
+ * - Survey context is injected as needed for survey flows.
+ * - All prompt/context changes must be coordinated with downstream parser and validator logic.
+ */
 import { storage } from "../storage";
 import { buildSystemPrompt, buildSurveyContext } from "../ai-response-schema";
 

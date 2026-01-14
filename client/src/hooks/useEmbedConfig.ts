@@ -1,3 +1,16 @@
+/**
+ * React hooks for embed configuration and theming.
+ *
+ * Responsibilities:
+ * - Fetches embed config by embedId for public embed page.
+ * - Provides helpers for reading config from window globals (legacy and new iframe embeds).
+ * - Exposes theme and scroll helpers for embed UI.
+ *
+ * Constraints & Edge Cases:
+ * - Must support both legacy and new embed config globals.
+ * - Theme application is container-scoped, not global.
+ * - Scroll handling must prevent bubbling to parent in iframe.
+ */
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 

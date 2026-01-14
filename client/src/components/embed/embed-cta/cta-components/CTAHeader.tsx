@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CTAComponent } from '@shared/schema';
 import { applyComponentStyle } from '../style-utils';
 
@@ -37,15 +37,30 @@ export const CTAHeader: React.FC<CTAHeaderProps> = ({ component }) => {
 
   const titleColor = (component.style as any)?.textColor || (component.style as any)?.color;
 
+  const titleRef = useRef<HTMLElement | null>(null);
+  const subtitleRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // If a title color is provided, set it with !important to override global h1 !important rule
+    if (titleColor) {
+      try {
+        titleRef.current?.style.setProperty('color', titleColor, 'important');
+        subtitleRef.current?.style.setProperty('color', titleColor, 'important');
+      } catch (e) {
+        // ignore if DOM not available
+      }
+    }
+  }, [titleColor]);
+
   return (
     <div className={headerClass} style={headerStyle}>
       {title && (
-        <h1 className="cta-header-title" style={titleColor ? { color: titleColor + ' !important' } : {}}>
+        <h1 ref={titleRef as any} className="cta-header-title" style={titleColor ? { color: titleColor } : {}}>
           {title}
         </h1>
       )}
       {subtitle && (
-        <p className="cta-header-subtitle" style={titleColor ? { color: titleColor + ' !important', opacity: 0.8 } : { opacity: 0.8 }}>
+        <p ref={subtitleRef as any} className="cta-header-subtitle" style={titleColor ? { color: titleColor, opacity: 0.8 } : { opacity: 0.8 }}>
           {subtitle}
         </p>
       )}

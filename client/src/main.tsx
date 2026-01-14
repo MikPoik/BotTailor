@@ -1,3 +1,15 @@
+/**
+ * Client entry point for the React app (CSR/SSR hydration).
+ *
+ * Responsibilities:
+ * - Mounts or hydrates the App with all providers (QueryClient, Theme, Tooltip, Router).
+ * - Detects SSR content and hydrates if present, otherwise mounts for CSR.
+ * - Ensures client-side hydration matches SSR output (see entry-server.tsx).
+ *
+ * Constraints & Edge Cases:
+ * - Must match provider tree and structure of SSR entry (entry-server.tsx).
+ * - SSR detection is based on root element content.
+ */
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { Router } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";

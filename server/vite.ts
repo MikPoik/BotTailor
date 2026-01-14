@@ -1,4 +1,18 @@
-
+/**
+ * Vite/SSR orchestration and static asset serving for the application.
+ *
+ * Responsibilities:
+ * - Provides helpers to set up Vite dev middleware (development) and static asset serving (production).
+ * - Loads and invokes SSR entry points from client/src/entry-server.tsx.
+ * - Ensures correct aliasing and plugin config for Vite, and proper middleware ordering.
+ * - Handles HTML template injection for SSR, meta tags, and style hydration.
+ *
+ * Constraints & Edge Cases:
+ * - Vite dev middleware is only enabled in development, after all other routes.
+ * - SSR entry module must export generateHTML and generateMetaTags.
+ * - Static assets are served from dist/public in production.
+ * - SSR decision is made via shouldSSR() exported from the routes/registry.
+ */
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
@@ -20,6 +34,16 @@ interface RenderWithSSROptions {
   styleHref?: string;
 }
 
+/**
+ * Renders the HTML template with SSR, injecting meta tags and styles.
+ * Throws if SSR entry module does not export required functions.
+ * @param template HTML template string
+ * @param pathname Request path
+ * @param search Query string
+ * @param ssrModule SSR entry module (must export generateHTML, generateMetaTags)
+ * @param styleHref Optional stylesheet href for SSR hydration
+ * @returns { html, ssrContext }
+ */
 async function renderTemplateWithSSR({
   template,
   pathname,
@@ -57,6 +81,10 @@ async function renderTemplateWithSSR({
   return { html, ssrContext };
 }
 
+/**
+ * Logs server messages with timestamp and source.
+ * Used for SSR, Vite, and Express observability.
+ */
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -68,6 +96,13 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+/**
+ * Sets up Vite dev middleware for SSR in development mode.
+ * Ensures correct plugin config, aliasing, and HMR.
+ * Should be called only after all other routes are registered.
+ * @param app Express app
+ * @param server HTTP server instance
+ */
 export async function setupVite(app: Express, server: Server) {
   const { createServer: createViteServer, createLogger } = await import("vite");
   const viteConfig = {

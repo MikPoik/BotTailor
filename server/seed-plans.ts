@@ -1,4 +1,18 @@
-//Run with `npx tsx server/seed-plans.ts`
+/**
+ * Idempotent subscription plan seeder for billing domain.
+ *
+ * Responsibilities:
+ * - Seeds all subscription plans in the DB, mapping to Stripe price/product IDs from env vars.
+ * - Updates existing plans or creates new ones as needed (idempotent).
+ * - Used by /seed-plans endpoint in dev and as a standalone script (see README).
+ *
+ * Constraints & Edge Cases:
+ * - All plan/product IDs must match Stripe dashboard and env vars.
+ * - STRIPE_SECRET_KEY and plan envs must be set for production use.
+ * - Currency and billing interval are hardcoded (eur/month); update with care.
+ * - Should be run in CI or staging before enabling production checkout flows.
+ */
+// Run with `npx tsx server/seed-plans.ts`
 
 import { db } from "./db";
 import { subscriptionPlans } from "@shared/schema";

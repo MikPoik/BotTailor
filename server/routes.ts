@@ -1,5 +1,14 @@
-// Legacy routes file - now using modular structure in routes/ directory
-// This file is kept for backward compatibility and will be gradually phased out
+/**
+ * Legacy routes entry point (backward compatibility).
+ *
+ * Responsibilities:
+ * - Delegates to modular route registration in server/routes/index.ts.
+ * - Kept for backward compatibility; new routes should use modular structure.
+ *
+ * Constraints & Edge Cases:
+ * - Will be phased out; do not add new logic here.
+ * - All route registration is handled by server/routes/index.ts.
+ */
 
 import type { Express } from "express";
 import { createServer, type Server } from "http";

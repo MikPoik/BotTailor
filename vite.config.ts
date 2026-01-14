@@ -1,3 +1,16 @@
+/**
+ * Vite build configuration for client and SSR builds.
+ *
+ * Responsibilities:
+ * - Configures plugins, aliases, and build output for both client and SSR.
+ * - Handles dev/prod branching, REPL/Cartographer plugin, and Stack integration.
+ * - Ensures correct output paths and entrypoints for Docker and Fly.io deploys.
+ *
+ * Constraints & Edge Cases:
+ * - Must keep alias and output paths in sync with Dockerfile and server/vite.ts.
+ * - SSR and client builds must both be produced for production deploys.
+ * - NODE_ENV and REPL_ID affect plugin config and build output.
+ */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";

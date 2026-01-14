@@ -1,3 +1,16 @@
+#
+# Multi-stage Dockerfile for building and running the production app image.
+#
+# Responsibilities:
+# - Builds the Node.js app with all dependencies and production assets.
+# - Uses a throw-away build stage to reduce final image size.
+# - Sets up environment variables and exposes port 5000 for Fly.io or other hosts.
+#
+# Constraints & Edge Cases:
+# - NODE_ENV, VITE_*, and other env vars must be set for correct build/runtime.
+# - Do not store secrets in the image; use provider secret stores for production keys.
+# - Build artifacts must match Vite and server build outputs expected by the entrypoint.
+#
 # syntax = docker/dockerfile:1
 
 # Adjust NODE_VERSION as desired

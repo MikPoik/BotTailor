@@ -1,3 +1,17 @@
+/**
+ * File upload orchestration and storage integration for API endpoints.
+ *
+ * Responsibilities:
+ * - Handles avatar/background uploads, file storage, and retrieval for user and chatbot assets.
+ * - Integrates with S3-compatible Google Cloud Storage (GCS) using AWS SDK.
+ * - Ensures required environment variables and bucket configuration are present.
+ * - Used by upload routes and other services for file persistence and retrieval.
+ *
+ * Constraints & Edge Cases:
+ * - All required GCP env vars must be set; throws/warns if missing.
+ * - Client initialization and bucket checks are performed at runtime.
+ * - Supports multipart and signed upload flows as required by API.
+ */
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 import { Request } from "express";

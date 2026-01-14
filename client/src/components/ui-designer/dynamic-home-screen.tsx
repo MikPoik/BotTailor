@@ -1,3 +1,17 @@
+/**
+ * DynamicHomeScreen: Renders UI Designer artifact configs as live home screens.
+ *
+ * Responsibilities:
+ * - Dynamically renders HomeScreenConfig (layout, theme, components) as interactive UI.
+ * - Resolves theme/colors from embed config, designer theme, or preview overrides.
+ * - Handles topic/action click events for integration with chat widget.
+ *
+ * Contracts & Edge Cases:
+ * - Config must match artifact contract (see docs/agents/ui-designer.md): version, components[], theme, settings.
+ * - All components require: id, type, order, visible, props.
+ * - Handles missing/invalid config fields gracefully (renders skeletons or fallback UI).
+ * - Must remain compatible with evolving artifact/component schema.
+ */
 import React, { useState, useEffect } from 'react';
 import { renderComponent } from "./component-registry";
 import { Skeleton } from "@/components/ui/skeleton";

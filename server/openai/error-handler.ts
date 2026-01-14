@@ -1,7 +1,22 @@
 import type { AIResponse } from "../ai-response-schema";
 
 /**
- * Generate fallback response for error cases
+ * OpenAI error handling and fallback response logic for API endpoints.
+ *
+ * Responsibilities:
+ * - Generates fallback AIResponse for error cases (malformed, partial, or failed model output).
+ * - Attempts to salvage single-message or plain text responses from malformed output.
+ * - Used by response-parser and streaming handlers to ensure robust API contracts.
+ *
+ * Constraints & Edge Cases:
+ * - Fallback response must always be a valid AIResponse (single text bubble).
+ * - Salvage logic must handle both object and string output.
+ */
+
+/**
+ * Generates a fallback AIResponse for error cases (malformed/failed output).
+ * Always returns a valid single text bubble.
+ * @returns AIResponse
  */
 export function generateFallbackResponse(): AIResponse {
   return {

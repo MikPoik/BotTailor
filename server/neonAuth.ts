@@ -1,3 +1,15 @@
+/**
+ * Neon Auth middleware and helpers for API authentication.
+ *
+ * Responsibilities:
+ * - Extracts user identity from x-stack-user-id header (Stack Auth integration).
+ * - Provides isAuthenticated middleware for protected routes (returns 401 if missing).
+ * - Globally wires auth middleware at app startup (see server/index.ts).
+ *
+ * Constraints & Edge Cases:
+ * - x-stack-user-id header is required for authenticated flows; public/embed routes relax auth.
+ * - Middleware must be registered before protected routes.
+ */
 import type { Express, RequestHandler } from "express";
 
 /**

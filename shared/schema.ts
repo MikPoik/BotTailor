@@ -20,7 +20,12 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
-// Neon Auth managed schema - reference only, not for migrations
+// Neon Auth managed schema (reference only, not for migrations)
+/**
+ * Neon Auth users_sync table (external, not managed by app migrations).
+ * Used in production to look up Neon profile data for authentication endpoints.
+ * @see server/routes/auth.ts for usage and edge cases.
+ */
 export const neonAuthSchema = pgSchema("neon_auth");
 export const neonAuthUsers = neonAuthSchema.table("users_sync", {
   id: text("id").primaryKey(),
@@ -32,7 +37,11 @@ export const neonAuthUsers = neonAuthSchema.table("users_sync", {
   updatedAt: timestamp("updated_at"),
 });
 
-// App-specific user data (references Neon Auth users by ID)
+/**
+ * App-specific user table (references Neon Auth users by ID).
+ * Used for all application-level user data and lazy creation on first access.
+ * @see server/routes/auth.ts for lazy creation and upsert semantics.
+ */
 export const users = pgTable("users", {
   id: text("id").primaryKey().notNull(), // References neon_auth.users_sync.id
   email: varchar("email"),

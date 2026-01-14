@@ -1,3 +1,17 @@
+/**
+ * Component registry and dynamic renderer for UI Designer home screen components.
+ *
+ * Responsibilities:
+ * - Maps HomeScreenComponent types to React components for dynamic rendering.
+ * - Provides icon mapping and prop validation for all supported component types.
+ * - Used by DynamicHomeScreen to render designer artifacts.
+ *
+ * Contracts & Edge Cases:
+ * - All component types/props must match artifact contract (see docs/agents/ui-designer.md).
+ * - Registry must be updated when adding new component types or props.
+ * - Handles missing/invalid component types or props gracefully.
+ * - Must remain compatible with evolving artifact/component schema.
+ */
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

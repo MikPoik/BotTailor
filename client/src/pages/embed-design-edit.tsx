@@ -4,7 +4,7 @@ import { useParams, useLocation } from "wouter";
 import { EmbedDesignForm, type EmbedDesignFormData } from "@/components/embed/EmbedDesignForm-v2";
 import { EmbedDesignPreview } from "@/components/embed/EmbedDesignPreview";
 import { Button } from "@/components/ui/button";
-import { Loader, Eye } from "lucide-react";
+import { Loader, Eye, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -103,9 +103,7 @@ export default function EmbedDesignEditPage() {
         title: "Success",
         description: isNew ? "Design created successfully" : "Design updated successfully",
       });
-      // Use the embedId from the response to ensure correct navigation
-      const targetEmbedId = response.embedId || embedId;
-      navigate(`/chatbot/${guid}/embed-designs`);
+      // Do not navigate away after save
     },
     onError: (error: any) => {
       toast({
@@ -205,9 +203,19 @@ export default function EmbedDesignEditPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2">
+        <div className="mb-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/chatbot/${guid}/embed-designs`)}
+            className="gap-2 px-4 py-2 text-base font-medium"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to Designs
+          </Button>
+        </div>
         <div>
           <h1 className="text-3xl font-bold">
             {isNew ? "Create New Design" : "Edit Design"}
@@ -218,14 +226,6 @@ export default function EmbedDesignEditPage() {
               : `Editing: ${design?.name || ""}`}
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => setPreviewOpen(true)}
-          className="gap-2"
-        >
-          <Eye className="w-4 h-4" />
-          Preview
-        </Button>
       </div>
 
       {/* Form */}
@@ -254,6 +254,7 @@ export default function EmbedDesignEditPage() {
               onChange={setFormValues}
               isLoading={isPending}
               submitButtonText={isNew ? "Create Design" : "Save Changes"}
+              onPreview={() => setPreviewOpen(true)}
             />
           </div>
         </div>

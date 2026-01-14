@@ -1,3 +1,16 @@
+/**
+ * Non-streaming OpenAI response generator for chat, survey, and assistants.
+ *
+ * Responsibilities:
+ * - Calls OpenAI API for non-streaming completions (survey, prompt, multi-bubble).
+ * - Validates and parses model output into AIResponse (multi-bubble format).
+ * - Handles error, fallback, and regeneration logic for failed completions.
+ *
+ * Constraints & Edge Cases:
+ * - Uses parseOpenAIResponse for strict validation; fallback logic on parse/validation failure.
+ * - All message type/schema changes must be coordinated with schema.ts and response-parser.ts.
+ * - Throws if OPENAI_API_KEY is missing or OpenAI is not configured.
+ */
 import { getOpenAIClient, isOpenAIConfigured } from "./client";
 import { MULTI_BUBBLE_RESPONSE_SCHEMA } from "./schema";
 import { buildCompleteSystemPrompt } from "./context-builder";

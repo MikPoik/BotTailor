@@ -1,10 +1,41 @@
+/**
+ * Parses and validates OpenAI model output into AIResponse (multi-bubble format).
+ *
+ * Responsibilities:
+ * - Converts raw OpenAI completions into structured AIResponse objects.
+ * - Enforces schema contract (see schema.ts) for all message types.
+ * - Handles malformed, partial, or unexpected model output robustly.
+ *
+ * Constraints & Edge Cases:
+ * - All schema changes must be coordinated with schema.ts and response-generator.ts.
+ * - Throws or returns error objects on parse/validation failure.
+ * - Used by both streaming and non-streaming OpenAI handlers.
+ */
 import { parse } from "best-effort-json-parser";
 import { AIResponseSchema, type AIResponse } from "../ai-response-schema";
 import { handleParseError, attemptResponseSalvage } from "./error-handler";
 import { storage } from "../storage";
 
 /**
- * Parse accumulated OpenAI response content into validated AIResponse
+ * OpenAI response parser and streaming content handler.
+ *
+ * Responsibilities:
+ * - Parses and validates accumulated OpenAI model output (JSON or streaming) into AIResponse objects.
+ * - Uses best-effort parsing and normalization, with fallback and salvage logic for malformed/partial output.
+ * - Integrates with error-handler for fallback and salvage, and logs parse results for observability.
+ *
+ * Constraints & Edge Cases:
+ * - Streaming chat endpoints expect multi-bubble framing; any format change requires coordinated client/server updates.
+ * - Malformed or partial output triggers salvage or fallback logic.
+ * - All DTOs/types must match shared and server/ai-response-schema.ts contracts.
+ */
+
+/**
+ * Parses accumulated OpenAI response content into a validated AIResponse.
+ * Normalizes messageType variants and validates against schema.
+ * Falls back to error handler on parse/validation failure.
+ * @param accumulatedContent Raw model output (string)
+ * @returns Validated AIResponse
  */
 export function parseOpenAIResponse(accumulatedContent: string): AIResponse {
   try {

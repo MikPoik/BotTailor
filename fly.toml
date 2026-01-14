@@ -1,3 +1,15 @@
+#
+# Fly.io deployment configuration for the app.
+#
+# Responsibilities:
+# - Configures app name, region, build, and HTTP service for Fly.io hosting.
+# - Sets internal port, HTTPS enforcement, machine scaling, and VM resources.
+#
+# Constraints & Edge Cases:
+# - Must match Dockerfile and server port (5000) for correct routing.
+# - All secrets and env vars must be set via Fly.io secrets, not in this file.
+# - Update memory/CPU as needed for production load.
+#
 
 # fly.toml app configuration file generated for bottailor on 2025-09-10T11:12:59Z
 #

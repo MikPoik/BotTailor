@@ -143,8 +143,13 @@ export default function UIDesigner() {
 
   // Initialize with existing config or default
   useEffect(() => {
+    let config: HomeScreenConfig | null = null;
     if (chatbot?.homeScreenConfig) {
-      const config = chatbot.homeScreenConfig as HomeScreenConfig;
+      config = chatbot.homeScreenConfig as HomeScreenConfig;
+    } else if (chatbot) {
+      config = getDefaultConfig();
+    }
+    if (config) {
       setCurrentConfig(config);
       setConfigKey(prev => prev + 1); // Force initial render
 

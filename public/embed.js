@@ -1,4 +1,19 @@
 (function () {
+  /**
+   * Embeddable chat widget loader and runtime.
+   *
+   * Responsibilities:
+   * - Loads and initializes the chat widget in host pages, merging config from options and window globals.
+   * - Validates required config (apiUrl, /widget/ path), loads CSS, and creates the widget DOM.
+   * - Handles debug logging, event listeners, and widget lifecycle.
+   *
+   * Constraints & Edge Cases:
+   * - apiUrl must be provided and include /widget/ path for correct operation.
+   * - Prevents multiple initializations unless _forceReinit is set.
+   * - Waits for DOMContentLoaded before injecting widget.
+   * - All config and event contracts must match client/src/hooks/useEmbedConfig.ts and server API.
+   */
+(function () {
   "use strict";
 
   // Chatbot Widget Embedder

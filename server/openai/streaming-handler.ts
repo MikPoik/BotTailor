@@ -1,3 +1,16 @@
+/**
+ * Streaming OpenAI chat completion handler for chat widget API.
+ *
+ * Responsibilities:
+ * - Streams OpenAI completions as newline-prefixed data: frames (see openai.md for contract).
+ * - Emits JSON event shapes: bubble, complete, error, limit_exceeded.
+ * - Handles client disconnects, OpenAI errors, and streaming edge cases.
+ *
+ * Constraints & Edge Cases:
+ * - Must match client-side streaming contract in use-chat.ts (see docs/agents/openai.md).
+ * - Handles partial/incomplete frames, OpenAI rate limits, and malformed output.
+ * - All changes to frame/event shapes require updates to both server and client contracts.
+ */
 import { getOpenAIClient, isOpenAIConfigured } from "./client";
 import { MULTI_BUBBLE_RESPONSE_SCHEMA } from "./schema";
 import { buildCompleteSystemPrompt } from "./context-builder";
