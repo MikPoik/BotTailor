@@ -181,14 +181,17 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           const isLastInSequence = isAssistant && !isSameSequence();
           
           // For assistant messages: suppress timestamp ONLY if the response is currently streaming
-          // AND it's a "fresh" message (less than 2 minutes old).
-          // Historical messages from previous turns will always be older than this during a new interaction.
-          const isFreshMessage = message.createdAt 
-            ? (new Date().getTime() - new Date(message.createdAt).getTime()) < 120000 
-            : true;
+          // and this message is part of the ACTIVE response cycle.
+          // We identify active response messages as those that don't have a user message following them yet.
+          const isBeforeUserMessage = (() => {
+            for (let i = idx + 1; i < messages.length; i++) {
+              if (messages[i].sender === 'user') return true;
+            }
+            return false;
+          })();
 
           const showTimestamp = isAssistant 
-            ? (isLastInSequence && (!isStreaming || !isFreshMessage)) 
+            ? (isLastInSequence && (!isStreaming || isBeforeUserMessage)) 
             : (!next || next.sender !== message.sender);
           return (
             <MessageBubble
