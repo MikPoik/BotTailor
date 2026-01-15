@@ -82,7 +82,7 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
             <p dangerouslySetInnerHTML={{ __html: parseMarkdown(message.content) }} />
           </div>
           {showTimestamp && timeAgo && (
-            <span className="text-xs text-neutral-500 mt-1 block text-right">
+            <span className="text-xs text-muted-foreground mt-1 block text-right">
               {timeAgo}
             </span>
           )}
