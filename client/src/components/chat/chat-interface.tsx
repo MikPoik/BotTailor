@@ -156,26 +156,35 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           
           // Helper to check if two messages are in the same response sequence
           const isSameSequence = () => {
-            if (!next || !nextIsAssistant) return false;
-            // Check explicit isFollowUp flag first
+            if (!next) return false;
+            
+            // Treat both 'assistant' and 'bot' as assistant
+            const isMsgAssistant = message.sender === 'assistant' || message.sender === 'bot';
+            const isNextAssistant = next.sender === 'assistant' || next.sender === 'bot';
+            
+            // If sender changes, not the same sequence
+            if (isMsgAssistant !== isNextAssistant) return false;
+
+            // Check explicit isFollowUp flag
             const nextMeta = (typeof next.metadata === 'object' && next.metadata) ? next.metadata : {};
             if ((nextMeta as { isFollowUp?: boolean }).isFollowUp === true) return true;
+            
             // Fallback: check if timestamps are within 60 seconds (same response)
             const currentTime = message.createdAt ? new Date(message.createdAt).getTime() : 0;
             const nextTime = next.createdAt ? new Date(next.createdAt).getTime() : 0;
             if (currentTime && nextTime && Math.abs(nextTime - currentTime) < 60000) return true;
+            
             return false;
           };
           
           // Only show timestamp for last assistant bubble in sequence
           const isLastInSequence = isAssistant && !isSameSequence();
-          // Check if this specific message is currently streaming
-          const isStreamingMessage = (message.metadata as any)?.isStreaming === true;
           
-          // For assistant messages: suppress timestamp ONLY if the message is actually streaming
-          // For user messages: show if next is different sender
+          // For assistant messages: suppress timestamp ONLY if the response is currently streaming
+          // and this message is part of that response (i.e. it's near the end)
+          const isRecentMessage = idx >= messages.length - 3; // Safety margin for multi-bubble streams
           const showTimestamp = isAssistant 
-            ? (isLastInSequence && !isStreamingMessage) 
+            ? (isLastInSequence && (!isStreaming || !isRecentMessage)) 
             : (!next || next.sender !== message.sender);
           return (
             <MessageBubble
