@@ -606,7 +606,7 @@ export async function* generateStreamingResponse(
           continue;
         }
         
-        const bubble = { ...validated.bubbles[i] };
+        const bubble = { ...validated.bubbles[i] } as any;
         // Ensure consistent sender for assistant bubbles
         if (!bubble.sender || bubble.sender === 'bot') {
           bubble.sender = 'assistant';
@@ -641,7 +641,7 @@ export async function* generateStreamingResponse(
             continue;
           }
           const isLast = i === salvaged.bubbles.length - 1;
-          let bubble = { ...salvaged.bubbles[i] };
+          let bubble = { ...salvaged.bubbles[i] } as any;
           // Always set sender: 'assistant' for assistant bubbles
           if (!bubble.sender || bubble.sender === 'bot') {
             bubble.sender = 'assistant';
