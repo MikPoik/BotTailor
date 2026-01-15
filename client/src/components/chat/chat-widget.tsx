@@ -310,7 +310,7 @@ function ChatWidget({
         />
 
         {/* Mobile chat interface */}
-        <div className={`fixed inset-0 z-50 bg-white flex flex-col ${
+        <div className={`fixed inset-0 z-50 bg-white flex flex-col transform-gpu will-change-transform ${
           isClosing 
             ? 'animate-slideDown' 
             : isAnimatingOpen ? 'animate-slideUp' : ''

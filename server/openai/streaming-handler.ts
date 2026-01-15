@@ -606,7 +606,12 @@ export async function* generateStreamingResponse(
           continue;
         }
         
-        const bubble = validated.bubbles[i];
+        const bubble = { ...validated.bubbles[i] };
+        // Ensure consistent sender for assistant bubbles
+        if (!bubble.sender || bubble.sender === 'bot') {
+          bubble.sender = 'assistant';
+        }
+        
         console.log(`[OpenAI] Final bubble ${i + 1}: ${bubble.messageType}`);
 
         if (yieldedBubbleIndices.size > 0) {

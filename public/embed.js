@@ -308,6 +308,9 @@
       // Inject CSS variables for theme support
       this.injectThemeVariables();
 
+      // Check if container already exists
+      if (document.getElementById("chatwidget-container")) return;
+
       // Create iframe container
       const container = document.createElement("div");
       container.id = "chatwidget-container";
@@ -319,7 +322,10 @@
       container.style.bottom = "24px";
       container.style.fontFamily =
         '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      container.style.display = "none"; // Hide by default until we confirm chatbot is active
+      container.style.display = "none"; // Initially hidden, will show after styles/config load
+      container.style.opacity = "0";
+      container.style.transition = "opacity 0.3s ease-in";
+      
       if (this.config.position === "bottom-right") {
         container.style.right = "24px";
       } else {
@@ -487,6 +493,14 @@
       document.body.appendChild(overlay);
       document.body.appendChild(mobileIframe);
       document.body.appendChild(container);
+
+      // Reveal with animation
+      requestAnimationFrame(() => {
+        container.style.display = "block";
+        requestAnimationFrame(() => {
+          container.style.opacity = "1";
+        });
+      });
 
       // Fetch and display initial messages or show default
       this.loadInitialMessages(messageBubble);

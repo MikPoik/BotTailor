@@ -259,51 +259,50 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         const chunk = decoder.decode(value);
         buffer += chunk;
 
-        // Process complete lines from buffer
-        const lines = buffer.split('\n');
+      // Process complete lines from buffer
+      const lines = buffer.split('\n');
 
-        // Keep the last line in buffer if it doesn't end with newline
-        // (it might be incomplete)
-        buffer = lines.pop() || '';
+      // Keep the last line in buffer if it doesn't end with newline
+      // (it might be incomplete)
+      buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const jsonData = line.slice(6).trim();
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const jsonData = line.slice(6).trim();
 
-              // Skip empty data lines
-              if (!jsonData) continue;
+            // Skip empty data lines
+            if (!jsonData) continue;
 
-              const data = JSON.parse(jsonData);
+            const data = JSON.parse(jsonData);
 
-              if (data.type === 'bubble' && data.message) {
-                const receiveTime = new Date().toISOString();
-                console.log(`[STREAM] ${receiveTime} Received bubble:`, data.message.id, data.message.messageType);
-                logDebug(`${receiveTime} stream bubble`, data.message.id);
+            if (data.type === 'bubble' && data.message) {
+              const receiveTime = new Date().toISOString();
+              console.log(`[STREAM] ${receiveTime} Received bubble:`, data.message.id, data.message.messageType);
+              logDebug(`${receiveTime} stream bubble`, data.message.id);
+              
+              // Always append the bubble to cache for embed/widget
+              queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
+                const currentMessages = old?.messages || [];
                 
-                // Always append the bubble to cache for embed/widget
-                queryClient.setQueryData(['/api/chat', sessionId, 'messages'], (old: any) => {
-                  if (!old) return { messages: [data.message] };
-                  
-                  // Check if this message already exists by ID (deduplicate)
-                  const messageExists = old.messages.some((m: Message) => m.id === data.message.id);
-                  if (messageExists) {
-                    return old; // Don't modify if message already exists
-                  }
-                  
-                  // If this is a user message from server, remove optimistic user message
-                  // Always create a new array to ensure React Query detects the change
-                  let messages = [...old.messages];
-                  if (data.message.sender === 'user') {
-                    messages = messages.filter((m: Message) => 
-                      !((m.metadata as any)?.isOptimistic && m.sender === 'user')
-                    );
-                  }
-                  return { messages: [...messages, data.message] };
-                });
+                // Check if this message already exists by ID (deduplicate)
+                const messageExists = currentMessages.some((m: Message) => m.id === data.message.id);
+                if (messageExists) {
+                  return old; // Don't modify if message already exists
+                }
+                
+                // If this is a user message from server, remove optimistic user message
+                let updatedMessages = [...currentMessages];
+                if (data.message.sender === 'user') {
+                  updatedMessages = updatedMessages.filter((m: Message) => 
+                    !((m.metadata as any)?.isOptimistic && m.sender === 'user')
+                  );
+                }
+                return { messages: [...updatedMessages, data.message] };
+              });
 
-                onBubbleReceived?.(data.message);
-              } else if (data.type === 'complete') {
+              onBubbleReceived?.(data.message);
+            } else if (data.type === 'complete') {
                 logDebug('stream complete');
                 setIsTyping(false);
                 // Don't add messages again - they're already in cache from bubbles
