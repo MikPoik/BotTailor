@@ -185,8 +185,13 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           // Historical messages from previous turns are those that have at least one 'user' message after them.
           const isHistorical = messages.slice(idx + 1).some(m => m.sender === 'user');
           const showTimestamp = isAssistant 
-            ? (isLastInSequence && (!isStreaming || isHistorical)) 
+            ? (isLastInSequence && (isHistorical || !isStreaming)) 
             : (!next || next.sender !== message.sender);
+          
+          // DEBUG
+          if (isAssistant && isLastInSequence) {
+            console.log(`[Timestamp Debug] msg:${message.id} isHistorical:${isHistorical} isStreaming:${isStreaming} showTimestamp:${showTimestamp}`);
+          }
           return (
             <MessageBubble
               key={message.id}
