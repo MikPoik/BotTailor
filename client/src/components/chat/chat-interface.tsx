@@ -182,16 +182,10 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           
           // For assistant messages: suppress timestamp ONLY if the response is currently streaming
           // and this message is part of the ACTIVE response cycle.
-          // We identify active response messages as those that don't have a user message following them yet.
-          const isBeforeUserMessage = (() => {
-            for (let i = idx + 1; i < messages.length; i++) {
-              if (messages[i].sender === 'user') return true;
-            }
-            return false;
-          })();
-
+          // Historical messages from previous turns are those that have at least one 'user' message after them.
+          const isHistorical = messages.slice(idx + 1).some(m => m.sender === 'user');
           const showTimestamp = isAssistant 
-            ? (isLastInSequence && (!isStreaming || isBeforeUserMessage)) 
+            ? (isLastInSequence && (!isStreaming || isHistorical)) 
             : (!next || next.sender !== message.sender);
           return (
             <MessageBubble
