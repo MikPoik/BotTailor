@@ -277,7 +277,7 @@ Example for regular greetings and options:
   "bubbles": [
     {"messageType": "text", "content": "Hi there! 👋"},
     {"messageType": "text", "content": "How can I help you today? Would you like to learn more about:", "metadata": {"expectedMenuOptions": 3, "contentIntent": "greeting_menu"}},
-    {"messageType": "menu", "content": "", "metadata": {"options": [
+    {"messageType": "menu", "content": "Please choose an option:", "metadata": {"options": [
       {"id": "services", "text": "Our Services", "action": "select"},
       {"id": "pricing", "text": "Pricing Information", "action": "select"},
       {"id": "contact", "text": "Get in Touch", "action": "select"}
