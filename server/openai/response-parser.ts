@@ -224,6 +224,17 @@ function normalizeType(type: any): string {
 
 function normalizeBubble(b: any): any {
   if (!b || typeof b !== 'object') return b;
+  
+  // Handle metadata-only bubbles that AI sometimes generates for tracking/validation
+  // These bubbles often lack messageType and content
+  if (!b.messageType && b.metadata && Object.keys(b.metadata).length > 0) {
+    return {
+      ...b,
+      messageType: 'system',
+      content: b.content || ''
+    };
+  }
+
   const messageType = normalizeType(b.messageType);
   return { ...b, messageType };
 }
