@@ -181,10 +181,14 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           const isLastInSequence = isAssistant && !isSameSequence();
           
           // For assistant messages: suppress timestamp ONLY if the response is currently streaming
-          // and this message is part of that response (i.e. it's near the end)
-          const isRecentMessage = idx >= messages.length - 3; // Safety margin for multi-bubble streams
+          // AND it's a "fresh" message (less than 2 minutes old).
+          // Historical messages from previous turns will always be older than this during a new interaction.
+          const isFreshMessage = message.createdAt 
+            ? (new Date().getTime() - new Date(message.createdAt).getTime()) < 120000 
+            : true;
+
           const showTimestamp = isAssistant 
-            ? (isLastInSequence && (!isStreaming || !isRecentMessage)) 
+            ? (isLastInSequence && (!isStreaming || !isFreshMessage)) 
             : (!next || next.sender !== message.sender);
           return (
             <MessageBubble
