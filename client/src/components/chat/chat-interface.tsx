@@ -169,11 +169,13 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           
           // Only show timestamp for last assistant bubble in sequence
           const isLastInSequence = isAssistant && !isSameSequence();
-          // For assistant messages: suppress timestamp ONLY for the active streaming message
+          // Check if this specific message is currently streaming
+          const isStreamingMessage = (message.metadata as any)?.isStreaming === true;
+          
+          // For assistant messages: suppress timestamp ONLY if the message is actually streaming
           // For user messages: show if next is different sender
-          const isLastMessageInList = idx === messages.length - 1;
           const showTimestamp = isAssistant 
-            ? (isLastInSequence && (!isLastMessageInList || !isStreaming)) 
+            ? (isLastInSequence && !isStreamingMessage) 
             : (!next || next.sender !== message.sender);
           return (
             <MessageBubble
