@@ -187,11 +187,6 @@ export default function ChatInterface({ sessionId, isMobile, isPreloaded = false
           const showTimestamp = isAssistant 
             ? (isLastInSequence && (isHistorical || !isStreaming)) 
             : (!next || next.sender !== message.sender);
-          
-          // DEBUG
-          if (isAssistant && isLastInSequence) {
-            console.log(`[Timestamp Debug] msg:${message.id} isHistorical:${isHistorical} isStreaming:${isStreaming} showTimestamp:${showTimestamp}`);
-          }
           return (
             <MessageBubble
               key={message.id}

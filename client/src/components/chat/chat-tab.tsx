@@ -159,10 +159,12 @@ export function ChatTab({
               const showAvatar = isAssistant && (!prev || !prevIsAssistant);
               // Only show timestamp for last assistant bubble in sequence (use sequence detection)
               const isLastInSequence = isAssistant && !isSameSequence(message, next);
-              // For assistant messages: suppress timestamp during streaming to avoid flash, only show after complete
-              // For user messages: show if next is different sender
+              // For assistant messages: suppress timestamp ONLY if the response is currently streaming
+              // and this message is part of the ACTIVE response cycle.
+              // Historical messages from previous turns are those that have at least one 'user' message after them.
+              const isHistorical = messages.slice(idx + 1).some(m => m.sender === 'user');
               const showTimestamp = isAssistant 
-                ? (isLastInSequence && !isStreaming) 
+                ? (isLastInSequence && (isHistorical || !isStreaming)) 
                 : (!next || next.sender !== message.sender);
               return (
                 <MessageBubble

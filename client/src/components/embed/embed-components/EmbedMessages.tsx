@@ -61,10 +61,12 @@ export function EmbedMessages({ messages, isLoading, isTyping, config, onOptionS
         
         // Only show timestamp for last assistant bubble in sequence
         const isLastInSequence = isAssistant && !isSameSequence();
-        // For assistant messages: suppress timestamp during typing/streaming to avoid flash, only show after complete
-        // For user messages: show if next is different sender
+        // For assistant messages: suppress timestamp ONLY if the response is currently streaming
+        // and this message is part of the ACTIVE response cycle.
+        // Historical messages from previous turns are those that have at least one 'user' message after them.
+        const isHistorical = messages.slice(idx + 1).some(m => m.sender === 'user');
         const showTimestamp = isAssistant 
-          ? (isLastInSequence && !isTyping) 
+          ? (isLastInSequence && (isHistorical || !isTyping)) 
           : (!next || next.sender !== message.sender);
         return (
           <MessageBubble
