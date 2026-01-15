@@ -630,13 +630,13 @@ export async function* generateStreamingResponse(
       // Try to salvage the response
       const salvaged = attemptResponseSalvage(accumulatedContent);
       if (salvaged) {
-        for (let i = 0; i < validated.bubbles.length; i++) {
+        for (let i = 0; i < salvaged.bubbles.length; i++) {
           // Skip if this bubble was already yielded during streaming
           if (yieldedBubbleIndices.has(i)) {
             continue;
           }
-          const isLast = i === validated.bubbles.length - 1;
-          let bubble = { ...validated.bubbles[i] };
+          const isLast = i === salvaged.bubbles.length - 1;
+          let bubble = { ...salvaged.bubbles[i] };
           // Always set sender: 'assistant' for assistant bubbles
           if (!bubble.sender || bubble.sender === 'bot') {
             bubble.sender = 'assistant';
