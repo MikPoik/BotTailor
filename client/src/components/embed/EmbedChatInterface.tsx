@@ -419,13 +419,9 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     (new URLSearchParams(window.location.search).get("embedded") === "true" ||
      (window as any).__EMBED_CONFIG__?.embedded === true);
 
-  // Use stable memoized config props to avoid child re-renders when parent re-renders
+  // Use stable memoized config props to avoid child re-renders
   const stableCTAConfig = useMemo(() => {
-    try {
-      return config.ctaConfig ? JSON.parse(JSON.stringify(config.ctaConfig)) : undefined;
-    } catch (e) {
-      return config.ctaConfig;
-    }
+    return config.ctaConfig;
   }, [config.ctaConfig]);
 
   const stableConfig = useMemo(() => ({

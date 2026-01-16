@@ -186,6 +186,9 @@ export const CTAView: React.FC<CTAViewProps> = ({
         overflow: 'auto',
         ...backgroundStyle,
         position: 'relative',
+        // Critical: prevent flash by setting opacity inline for embedded mode
+        opacity: embedded ? 1 : undefined,
+        transform: embedded ? 'none' : undefined,
       }}
     >
       {/* Overlay layer for background images */}
