@@ -210,14 +210,43 @@ export function useEmbedSession() {
     return null;
   }
 
-  // Get from window config first
-  if ((window as any).__EMBED_CONFIG__?.sessionId) {
-    return (window as any).__EMBED_CONFIG__.sessionId;
+  const win = window as any;
+
+  // If server injected a sessionId, prefer it (server-controlled sessions)
+  if (win.__EMBED_CONFIG__?.sessionId) {
+    return win.__EMBED_CONFIG__.sessionId;
   }
 
-  // Generate if not in config
+  // Determine embed mode and storage key
+  const isEmbedded =
+    new URLSearchParams(window.location.search).get("embedded") === "true" ||
+    win.__EMBED_CONFIG__?.embedded === true;
+
+  const storageKey = isEmbedded ? "embed-session-id" : "global-chat-session-id";
+
   if (!sessionIdRef.current) {
-    sessionIdRef.current = `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    let stored: string | null = null;
+    try {
+      stored = sessionStorage.getItem(storageKey);
+    } catch (e) {
+      stored = null;
+    }
+
+    if (stored) {
+      sessionIdRef.current = stored;
+    } else {
+      const newId =
+        typeof crypto !== "undefined" && (crypto as any).randomUUID
+          ? (crypto as any).randomUUID()
+          : `session-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+
+      sessionIdRef.current = newId;
+      try {
+        sessionStorage.setItem(storageKey, newId);
+      } catch (e) {
+        // ignore storage failures in sandboxed environments
+      }
+    }
   }
 
   return sessionIdRef.current;

@@ -146,7 +146,13 @@ const TabbedChatInterface = memo(({
 
   // Scroll functionality
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container) {
+      // Scroll the messages container itself to avoid scrolling the main page
+      container.scrollTop = container.scrollHeight;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: 'nearest' });
+    }
   };
 
   const isUserNearBottom = () => {

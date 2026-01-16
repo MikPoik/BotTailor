@@ -145,7 +145,15 @@
     },
 
     generateSessionId: function () {
-      return `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        try {
+          return crypto.randomUUID();
+        } catch (e) {
+          // fallback to string-based id below
+        }
+      }
+
+      return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     },
 
     // Safe sessionStorage access that handles sandboxed environments

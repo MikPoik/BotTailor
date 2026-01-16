@@ -306,7 +306,7 @@ function ChatWidget({
 
     try {
       // Update provider context so other parts of the widget see the new id
-      setProviderSessionId(newId);
+      if (setProviderSessionId) setProviderSessionId(newId);
     } catch (e) {
       // If provider isn't available for some reason, fall back to local state
     }

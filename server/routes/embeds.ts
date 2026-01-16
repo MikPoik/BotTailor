@@ -94,7 +94,9 @@ export function setupEmbedRoutes(app: Express) {
       }
 
       // Generate or use provided session ID
-      const finalSessionId = (sessionId as string) || `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const finalSessionId = (sessionId as string) || ((typeof globalThis !== 'undefined' && (globalThis as any).crypto && (globalThis as any).crypto.randomUUID)
+        ? (globalThis as any).crypto.randomUUID()
+        : `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
       const isMobile = mobile === "true";
 
       // Extract theme colors

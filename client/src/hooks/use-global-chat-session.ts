@@ -37,14 +37,23 @@ export function useGlobalChatSession() {
     return newSessionId;
   });
 
-  // Setter that persists to sessionStorage as well as updating state
+  // Setter that persists to sessionStorage. Do NOT update React state to avoid
+  // forcing a full-page re-render of consumers that only read the id.
+  // If other parts of the app need to react to changes, they should listen
+  // for the `global-chat-session-changed` event dispatched here.
+  const sessionRef = { current: sessionId } as { current: string };
   const setGlobalSessionId = (id: string) => {
     try {
       safeSessionStorage.setItem(GLOBAL_SESSION_STORAGE_KEY, id);
     } catch (e) {
       // ignore storage errors
     }
-    setSessionId(id);
+    sessionRef.current = id;
+    try {
+      window.dispatchEvent(new CustomEvent('global-chat-session-changed', { detail: { id } }));
+    } catch (e) {
+      // ignore if window not available or event dispatch fails
+    }
   };
 
   return { sessionId, setSessionId: setGlobalSessionId };
