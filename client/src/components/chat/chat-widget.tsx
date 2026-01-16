@@ -95,8 +95,8 @@ function ChatWidget({
     }
   }, [currentSessionId, chatbotConfigId, queryClient]);
 
-  // Use a stable key that doesn't change on every render
-  const chatInterfaceKey = useMemo(() => `chat-${currentSessionId}`, [currentSessionId]);
+  // Use a stable key so changing sessions won't unmount the UI subtree
+  const chatInterfaceKey = 'chat-interface';
 
   // Don't render widget if chatbot is inactive
   if (activeChatbotConfig && !activeChatbotConfig.isActive) {
@@ -274,20 +274,50 @@ function ChatWidget({
     }, 400); // Match animation duration
   };
 
-  const refreshSession = (reason: string = 'manual') => {
-    // Do NOT delete messages from DB. Instead, create a new in-memory session id
-    // so future messages are persisted under a new session. This preserves
-    // historical messages for analytics while resetting the active conversation.
+  const refreshSession = async (reason: string = 'manual') => {
+    // Generate a fresh server-backed session id
     const newId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
       ? (crypto as any).randomUUID()
       : `session-${Math.random().toString(36).slice(2)}-${Date.now()}`;
 
-    // Update state to remount chat interface with new session id
+    // Create the session on the server immediately so subsequent requests use it
+    try {
+      await apiRequest('POST', '/api/chat/session', {
+        sessionId: newId,
+        chatbotConfigId: chatbotConfigId || null,
+      });
+    } catch (e) {
+      console.warn('[ChatWidget] refreshSession: failed to create server session', e);
+    }
+
+    // Clear caches and UI state for the previous session so the UI appears reset
+    try {
+      queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
+      queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId] });
+    } catch (e) {
+      console.warn('[ChatWidget] refreshSession: failed to remove old queries', e);
+    }
+
+    // Set the new session id that will be used for subsequent API calls
     setCurrentSessionId(newId);
 
-    // Remove any cached queries for the old session so UI resets immediately
-    queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId, 'messages'] });
-    queryClient.removeQueries({ queryKey: ['/api/chat', currentSessionId] });
+    // Seed the messages cache for the new session with an empty array so children
+    // render an empty conversation without needing an unmount/remount cycle.
+    try {
+      queryClient.setQueryData(['/api/chat', newId, 'messages'], { messages: [] });
+    } catch (e) {
+      // Non-fatal
+    }
+
+    // Reset local UI state without forcing a full subtree unmount
+    setVisibleMessages([]);
+    setInitialMessages([]);
+    messageTimeouts.current.forEach((t) => clearTimeout(t));
+    messageTimeouts.current = [];
+    setHasNewMessage(false);
+    setShowAbout(false);
+    // Note: streaming cancellation is handled by the underlying hooks; avoid
+    // forcibly unmounting the TabbedChatInterface so UX remains smooth.
   };
 
 
