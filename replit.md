@@ -1,4 +1,4 @@
-# Project: Enchanted Chat Widget
+# Project: BotTailor Chat Widget Platform
 
 Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RAG-powered assistants, and dynamic UI customization.
 
@@ -28,26 +28,15 @@ Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RA
 - **Backend**: Express.js (ESM), Node.js 20
   - **Modular Routing**: Registration order is critical (Embeds -> Public -> Webhooks)
   - **AI Engine**: Advanced OpenAI integration (`server/openai/`) featuring multi-bubble parsing, validation, and structured output via `json_schema`
-- **Data**: Neon PostgreSQL via Drizzle ORM. Uses `pgvector` for semantic search (1536 dims, ada-002 embeddings)
+- **Data**: Neon PostgreSQL via Drizzle ORM. Uses `pgvector` for semantic search (1536 dims, text-embeddings)
 - **Auth**: Header-based Neon auth (`x-stack-user-id` header) with lazy user creation
 - **Billing**: Stripe-backed subscriptions with webhook handlers at `/api/webhook`
 
-## Required Environment Variables
-
-| Variable | Purpose |
-|----------|---------|
-| `DATABASE_URL` | Neon PostgreSQL connection string (required) |
-| `OPENAI_API_KEY` | OpenAI API access (required) |
-| `STRIPE_SECRET_KEY` | Stripe billing integration |
-| `STRIPE_WEBHOOK_SECRET` | Webhook signature verification |
-| `PRICE_SUB_BASIC`, `PROD_SUB_BASIC` | Stripe plan IDs |
-| `PRICE_SUB_PREMIUM`, `PROD_SUB_PREMIUM` | Stripe plan IDs |
-| `DEFAULT_SITE_ADMIN_USER_ID` | Admin user identification |
-| `APP_URL` | Production URL for redirects |
-| Storage credentials (S3/GCS) | For file uploads |
-
 ## Core Features & Logic
 
+- **Chat Widget System**: Runtime React application serving as the guest-facing interface.
+  - Supports multiple layout variants: `MinimalEmbed`, `CompactEmbed`, `FullEmbed`.
+  - Implements persistent session management and message synchronization.
 - **UI Designer**: AI-powered home screen builder
   - Generates `HomeScreenConfig` (JSON) via `/api/ui-designer/generate`
   - Supports dynamic theme resolution (Embed Params > Designer Config > CSS Defaults)
@@ -100,27 +89,16 @@ Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RA
 6. **Auth**: Protected routes must use `isAuthenticated` middleware.
 7. **Webhooks**: Mount at `/api/webhook` and preserve raw body parsing before `express.json()`.
 
-## Next Agent Checklist
+## Agent Checklist
 
 1. **Read Domain Docs**: Start with `/docs/agents/` files relevant to your task
 2. **Define Contract**: Update `shared/schema.ts` for any new types
 3. **Sync Server**: Update `server/openai/` parsers, validators, and routes
 4. **Sync Client**: Update `client/src/hooks/use-chat.ts` and UI components
-5. **Verify Embeds**: Test changes in both direct access and iframe modes using `public/embed.js`
-6. **Check Middleware**: Webhook routes must handle raw bodies before `express.json()`
-7. **Test Both Modes**: Verify in dev (`NODE_ENV=development`) and simulate prod behavior
-
-## Running the Project
-
-- **Workflow**: `npm run dev` starts Express backend + Vite frontend on port 5000
-- **Dev vs Prod**: Vite middleware runs only in development; production serves static `dist/public` assets
-
-## Recent Changes
-
-_(Track modifications with dates here)_
-
----
+5. **Check Middleware**: Webhook routes must handle raw bodies before `express.json()`
 
 ## User Preferences
 
-_(Document user coding style, workflow preferences, and tool choices here)_
+- Agent must alway rephrase my prompt to output-based-goal
+- Use kebab-case for file naming convention
+- Maintain modular design
