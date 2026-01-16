@@ -16,9 +16,10 @@ export const getHeaderTextColor = (primary: string) => (
   isLightColor(primary) ? '#1f2937' : '#ffffff'
 );
 
-export function useApplyDocumentColors(resolvedBackgroundColor: string, resolvedTextColor: string, isClient: boolean) {
+export function useApplyDocumentColors(resolvedBackgroundColor: string, resolvedTextColor: string, isClient: boolean, isEmbedded: boolean = false) {
   useEffect(() => {
-    if (!isClient) return;
+    // Only apply document-level colors for embedded/full-page widget mode.
+    if (!isClient || !isEmbedded) return;
     const prevBodyBg = document.body.style.backgroundColor;
     const prevHtmlBg = document.documentElement.style.backgroundColor;
     const prevBodyColor = document.body.style.color;
@@ -35,7 +36,7 @@ export function useApplyDocumentColors(resolvedBackgroundColor: string, resolved
       document.body.style.color = prevBodyColor;
       document.documentElement.style.color = prevHtmlColor;
     };
-  }, [isClient, resolvedBackgroundColor, resolvedTextColor]);
+  }, [isClient, resolvedBackgroundColor, resolvedTextColor, isEmbedded]);
 }
 
 function buildViewportFixCSS() {
@@ -289,13 +290,14 @@ function buildThemeCSS(primary: string, background: string, text: string, header
   `;
 }
 
-export function useInjectChatTheme(primary: string, background: string, text: string) {
+export function useInjectChatTheme(primary: string, background: string, text: string, isEmbedded: boolean = false) {
   useEffect(() => {
-    const themeKey = `${primary}-${background}-${text}`;
+    const themeKey = `${primary}-${background}-${text}-${isEmbedded}`;
     const currentThemeKey = document.documentElement.getAttribute('data-chat-theme-key');
     if (currentThemeKey === themeKey) return;
 
-    if (!document.getElementById('chat-widget-viewport-fix')) {
+    // Only inject the viewport/global fixes when running as an embedded full-page widget.
+    if (isEmbedded && !document.getElementById('chat-widget-viewport-fix')) {
       const viewportFix = document.createElement('style');
       viewportFix.id = 'chat-widget-viewport-fix';
       viewportFix.textContent = buildViewportFixCSS();
@@ -321,5 +323,5 @@ export function useInjectChatTheme(primary: string, background: string, text: st
         el.remove();
       }
     };
-  }, [primary, background, text]);
+  }, [primary, background, text, isEmbedded]);
 }

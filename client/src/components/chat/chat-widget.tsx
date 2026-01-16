@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useChatSession } from "@/contexts/chat-session-context";
+import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 import WidgetHeader from "./widget/WidgetHeader";
 import InitialMessageBubbles from "./widget/InitialMessageBubbles";
 import FloatingBubble from "./widget/FloatingBubble";
@@ -127,10 +129,11 @@ function ChatWidget({
     activeChatbotConfig?.theme?.textColor ||
     activeChatbotConfig?.theme?.chat?.text ||
     '#1f2937';
+  // Inject chat theme CSS and viewport fixes (only apply global viewport fixes when embedded)
+  useInjectChatTheme(resolvedPrimaryColor, resolvedBackgroundColor, resolvedTextColor, isEmbedded);
 
-  // Apply background/text color to document to avoid flash
-  useApplyDocumentColors(resolvedBackgroundColor, resolvedTextColor, isClient);
-
+  // Apply background/text color to document to avoid flash (only when embedded)
+  useApplyDocumentColors(resolvedBackgroundColor, resolvedTextColor, isClient, isEmbedded);
 
   // Load initial messages from chatbot config
   useEffect(() => {
@@ -141,8 +144,6 @@ function ChatWidget({
       setInitialMessages(messages);
     }
   }, [chatbotConfig]);
-
-  // Safe sessionStorage access for initial message persistence
   const safeSessionStorageForMessages = {
     getItem: (key: string): string | null => {
       if (isEmbedded) return null; // Skip sessionStorage in embedded mode
@@ -274,6 +275,9 @@ function ChatWidget({
     }, 400); // Match animation duration
   };
 
+  const { setSessionId: setProviderSessionId } = useChatSession();
+  const { setSessionId: setGlobalSessionId } = useGlobalChatSession();
+
   const refreshSession = async (reason: string = 'manual') => {
     // Generate a fresh server-backed session id
     const newId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
@@ -298,8 +302,27 @@ function ChatWidget({
       console.warn('[ChatWidget] refreshSession: failed to remove old queries', e);
     }
 
-    // Set the new session id that will be used for subsequent API calls
+    try {
+      // Update provider context so other parts of the widget see the new id
+      setProviderSessionId(newId);
+    } catch (e) {
+      // If provider isn't available for some reason, fall back to local state
+    }
     setCurrentSessionId(newId);
+
+    // Persist new id via the global hook so other components adopt it
+    try {
+      if (setGlobalSessionId) {
+        setGlobalSessionId(newId);
+      } else {
+        const storageKey = isEmbedded ? 'embed-session-id' : 'global-chat-session-id';
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem(storageKey, newId);
+        }
+      }
+    } catch (e) {
+      // ignore storage failures (sandboxed frames)
+    }
 
     // Seed the messages cache for the new session with an empty array so children
     // render an empty conversation without needing an unmount/remount cycle.
