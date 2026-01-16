@@ -13,7 +13,7 @@ interface ChatSessionContextValue {
   setSessionId: (id: string) => void;
 }
 
-const ChatSessionContext = createContext<ChatSessionContextValue | null>(null);
+export const ChatSessionContext = createContext<ChatSessionContextValue | null>(null);
 
 /**
  * ChatSessionProvider

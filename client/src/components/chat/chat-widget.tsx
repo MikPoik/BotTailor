@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, memo, useContext } from "react";
 import { MessageCircle, MessageCircleMore , X, Minimize2, RefreshCw, HelpCircle } from "lucide-react";
 import TabbedChatInterface from "./tabbed-chat-interface";
 import AboutView from "./about-view";
@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useChatSession } from "@/contexts/chat-session-context";
+import { useChatSession, ChatSessionContext } from "@/contexts/chat-session-context";
 import { useGlobalChatSession } from "@/hooks/use-global-chat-session";
 import WidgetHeader from "./widget/WidgetHeader";
 import InitialMessageBubbles from "./widget/InitialMessageBubbles";
@@ -275,7 +275,9 @@ function ChatWidget({
     }, 400); // Match animation duration
   };
 
-  const { setSessionId: setProviderSessionId } = useChatSession();
+  // Use context directly so component can be used outside a ChatSessionProvider
+  const providerContext = useContext(ChatSessionContext);
+  const setProviderSessionId = providerContext?.setSessionId;
   const { setSessionId: setGlobalSessionId } = useGlobalChatSession();
 
   const refreshSession = async (reason: string = 'manual') => {
