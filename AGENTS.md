@@ -1,131 +1,103 @@
-## Widget & Embed System
+# Project: BotTailor Chat Widget Platform
 
-### Overview
-The embeddable chat widget is the core delivery mechanism for the platform. It supports both legacy and new (iframe-based) embed modes, with robust configuration, theming, and dynamic UI.
+Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RAG-powered assistants, and dynamic UI customization.
 
-### Embed Detection & Modes
-- **Legacy Mode:** Detected via `embedded=true` query param or `window.__CHAT_WIDGET_CONFIG__` global. Used for backward compatibility.
-- **New Mode:** Detected via `window.__EMBED_CONFIG__` global. Supports advanced UI designer, theming, and layout.
-- **Detection Logic:** Both client and server check for these globals/params to determine mode and config source. See `client/src/hooks/useEmbedConfig.ts` and `public/embed.js`.
+## Quick Start for New Agents
 
-### Configuration & Theming
-- **Config Priority:** Theme and UI config are resolved in this order:
-	1. **Embed Params** (e.g., `--chat-primary-color` CSS var, query params)
-	2. **Designer Config** (from UI Designer, e.g., `homeScreenConfig`, `embedDesigns`)
-	3. **CSS Defaults** (hardcoded fallback values)
-- **Theme Application:** CSS variables are injected at the container level for isolation. See `useWidgetTheme.ts` and `useEmbedTheme`.
-- **Dynamic UI:** Home screen and CTA layouts are generated as JSON (`HomeScreenConfig`, `CTAConfig`) and rendered dynamically.
+1. **Read this file first** for architecture overview and rules
+2. **Consult `/docs/agents/*.md`** for detailed domain-specific documentation:
+   - `architecture.md` - Full runtime and module map
+   - `openai.md` - AI orchestration, streaming, parsing, validation
+   - `database.md` - Schema, Drizzle ORM, migrations
+   - `frontend.md` - React/Vite client, hooks, embed modes
+   - `auth.md` - Neon auth header-based authentication
+   - `billing.md` - Stripe subscriptions and webhooks
+   - `embed-designs.md` - Embeddable widget payloads and host integration
+   - `ui-designer.md` - Designer artifacts and component contracts
+   - `survey-designer.md` - Survey creation, validation, analytics
+   - `storage.md` - Uploads, storage adapters, presigned URLs
+   - `api.md` - HTTP routes, middleware, error handling
+   - `infra.md` - Dockerfile, Fly.io, deployment
 
-### Streaming Protocol
-- **Protocol:** Newline-prefixed JSON frames (`bubble`, `complete`, `error`, etc.) are streamed from the server. The client parses and renders these in real time.
-- **Contract:** Any change to the streaming protocol must be reflected in both `server/openai/streaming-handler.ts` and client streaming hooks/components (e.g., `use-chat.ts`, `StreamingMessage.tsx`).
+## Architecture & Tech Stack
 
-### Message Types & JSON Structure
-- **Supported Types:** `text`, `card`, `menu`, `multiselect_menu`, `rating`, `image`, `quickReplies`, `form`, `form_submission`.
-- **Rich Messaging:** Each type is defined in `shared/schema.ts` and rendered in `client/src/components/chat/`.
-- **UI Designer Components:** Home screen supports `header`, `topic_grid`, `quick_actions`, `footer`, etc.
+- **Frontend**: React 18, Vite, Tailwind CSS, shadcn/ui
+  - **State**: TanStack Query (Server), custom hooks (`use-chat`, `useStreamingMessage`) for UI state
+  - **Routing**: `wouter` with sophisticated context detection (legacy Widget vs. iframe embeds)
+  - **SSR**: Optional SSR via `client/src/entry-server.tsx` (exports `generateHTML`, `render`, `generateMetaTags`)
+- **Backend**: Express.js (ESM), Node.js 20
+  - **Modular Routing**: Registration order is critical (Embeds -> Public -> Webhooks)
+  - **AI Engine**: Advanced OpenAI integration (`server/openai/`) featuring multi-bubble parsing, validation, and structured output via `json_schema`
+- **Data**: Neon PostgreSQL via Drizzle ORM. Uses `pgvector` for semantic search (1536 dims, text-embeddings)
+- **Auth**: Header-based Neon auth (`x-stack-user-id` header) with lazy user creation
+- **Billing**: Stripe-backed subscriptions with webhook handlers at `/api/webhook`
 
-### Key Files
-- `public/embed.js`: Loads and initializes the widget, merges config, injects CSS, and manages lifecycle in host pages.
-- `client/src/hooks/useEmbedConfig.ts`: Reads config from window globals, fetches by embedId, and applies theme.
-- `client/src/components/chat/`: All widget UI, message rendering, and portal logic.
-- `client/src/index.css`: Widget-specific and embedded-mode CSS rules.
+## Core Features & Logic
+ - **Chat Widget System**: Runtime React application serving as the guest-facing interface: `/client/components/chat/widget`.
+ - Supports multiple layout variants: `Desktop`, `Mobile`.
+ - Implements session management and message synchronization.
+ - **UI Designer**: AI-powered home screen builder
+  - Generates `HomeScreenConfig` (JSON) via `/api/ui-designer/generate`
+  - Supports dynamic theme resolution (Embed Params > Designer Config > CSS Defaults)
+  - Components: `header`, `topic_grid`, `quick_actions`, `footer`, `category_tabs`
+- **Streaming System**: Custom newline-prefixed JSON protocol
+  - Server emits: `bubble`, `complete`, `error`, `limit_exceeded`, `end` frames
+  - Client (`StreamingMessage.tsx`) handles interleaved text and interactive elements
+- **Rich Messaging**: JSON-defined bubble types: `card`, `menu`, `multiselect_menu`, `rating`, `form`, `quickReplies`, `image`, `text`
+- **RAG System**: Semantic search using `storage.searchSimilarContent` against chunked website data
+- **Survey Engine**: Progressive JSON-defined questionnaires with branching logic (`conditionalFlow`) and AI validation
+- **Embed Designs & CTA**: 
+  - Managed via `embed_designs` and `embed_design_components` tables
+  - Supports custom colors, UI component visibility, and persistent CTA configurations
+  - **Visual CTA Editor**: Located in `client/src/components/embed/cta-builder/`
 
-### Implementation Rules
-- **Schema First:** All message/config changes must start in `shared/schema.ts`.
-- **Contract Sync:** Any change to message or config JSON must be synced across client and server.
-- **Theme Consistency:** Always use CSS variables and `resolveColors` logic for visual consistency.
-- **Session Isolation:** Widget session state is isolated from the host app; see `chat-session-context.tsx` and `widgetQueryClient.ts`.
-- **No Global Side Effects:** Theme and scroll logic must be container-scoped in embeds.
-- **Testing:** Always test both legacy and new embed modes for any UI or contract change.
+## Critical File Map
 
-# Enchanted Chat Widget: AI Chat Platform — Agent Onboarding Guide
+| File/Directory | Purpose |
+|----------------|---------|
+| `shared/schema.ts` | **Source of truth** for all DB schemas, Zod schemas, and rich message contracts |
+| `server/storage.ts` | IStorage interface implementation for all DB operations |
+| `server/db.ts` | Neon serverless pool + Drizzle client |
+| `server/openai/` | Core AI logic (streaming, validation, regeneration, context building) |
+| `server/openai/schema.ts` | `MULTI_BUBBLE_RESPONSE_SCHEMA` for structured AI output |
+| `server/openai/response-parser.ts` | JSON parsing, normalization, `isBubbleComplete()` |
+| `server/openai/streaming-handler.ts` | Streaming generator with regeneration/salvage logic |
+| `server/neonAuth.ts` | Auth middleware (`isAuthenticated`, `neonAuthMiddleware`) |
+| `server/routes/subscription.ts` | Stripe billing routes and webhook handler |
+| `client/src/components/chat/` | Widget UI and message rendering logic |
+| `client/src/components/embed/` | Runtime components for embed shell |
+| `client/src/hooks/use-chat.ts` | Manages streaming state and message history |
+| `public/embed.js` | Ship-to-host script that initializes widget on 3rd-party pages |
 
+## Implementation Details & Patterns
 
-## Project Overview
-This is a full-stack TypeScript monorepo for an embeddable AI chat widget. It features:
-- **Frontend:** React 18 + Vite (SSR/CSR)
-- **Backend:** Express (ESM)
-- **Database:** Neon/Postgres with Drizzle ORM and pgvector for semantic search
-- **AI:** OpenAI SDK with streaming, validation, and modular prompt/context logic
-- **Key Features:** UI designer, RAG-powered assistants, dynamic UI, progressive surveys, file uploads, and subscription billing
+- **User Sync**: On login, `POST /api/ensure-user` syncs Neon Auth profiles to the `users` table
+- **Theme Priority**: 1. Embed Params (`--chat-primary-color`), 2. Designer Config, 3. CSS Defaults
+- **Embed Logic**: `window.__EMBED_CONFIG__` (new design system) vs. `embedded=true` (Widget system)
+- **AI Validation**: Uses `survey-menu-validator.ts` and `dynamic-content-validator.ts` to ensure structured outputs
+- **Webhook Raw Body**: `/api/webhook` routes require raw body for Stripe signature verification - middleware ordering matters
+- **CORS**: Permissive CORS enabled for embed widget cross-origin usage
 
+## Development Rules
 
-## Core Features & Flows
-- **Schema-First Contracts:** All message, survey, DB, and UI contracts are defined in `shared/schema.ts`. This is the canonical source for types, validation, and DB structure. **Always update this file first for any new type, field, or contract.**
-- **Streaming System:** The server streams newline-prefixed JSON frames (types: `bubble`, `complete`, `error`, etc.) for chat. The client parses and renders these frames in real time. **If you change the streaming contract, update both `server/openai/streaming-handler.ts` and client streaming hooks.**
-- **UI Designer:** AI generates `HomeScreenConfig` and `CTAConfig` JSON for widget layout; theme resolution is prioritized. All UI config is validated by Zod schemas in `schema.ts`.
-- **Rich Messaging Contract:** `schema.ts` defines all message, bubble, and survey types. **Any change must be mirrored in server validators/parsers and client renderers/hooks.**
-- **RAG (Retrieval-Augmented Generation):** Uses semantic search on website data before AI generation; results are validated and integrated into prompts. See `server/openai/context-builder.ts`.
-- **Survey Engine:** JSON-driven, progressive, and branching surveys; sessions are stored and validated. Survey types and flows are defined in `schema.ts`.
-- **Embeds & Widget Modes:** Supports new and legacy embed modes; relies on permissive CORS. Embed detection logic is in both client and server.
-- **Auth & User Sync:** Neon-based auth/session middleware; user profiles are synced on login. See `server/neonAuth.ts` and `client/src/hooks/useAuth.ts`.
-- **Uploads & Storage:** S3 and image processing via sharp; upload endpoints and storage abstraction in `server/storage.ts`.
-- **Billing & Webhooks:** Stripe integration; webhook endpoints require raw request body and correct middleware order. See `server/index.ts` for middleware ordering.
+1. **Schema First**: Update `shared/schema.ts` before any feature work. This is the canonical contract.
+2. **JSON Contracts**: Any change to message/config JSON must be synced across client (`use-chat.ts`, components) and server (`streaming-handler.ts`, `response-parser.ts`).
+3. **Validation**: AI responses MUST be validated via Zod schemas before being used or stored.
+4. **Theming**: Always use HSL variables and `resolveColors` logic for visual consistency.
+5. **Error Handling**: Use `server/openai/error-handler.ts` for AI salvage/fallback logic.
+6. **Auth**: Protected routes must use `isAuthenticated` middleware.
+7. **Webhooks**: Mount at `/api/webhook` and preserve raw body parsing before `express.json()`.
 
+## Agent Checklist
 
-## Key Files & Their Roles
-- `shared/schema.ts`: **Canonical source for all contracts** (messages, surveys, DB schema, UI config, Zod validation). Update this first for any new type/field.
-- `server/index.ts`: Main server entry, middleware ordering, Vite integration, CORS, webhook raw body handling.
-- `server/openai/`: Modular AI logic (prompt/context building, streaming, parsing, validation, error handling). Extend/override here for custom AI flows.
-- `client/src/hooks/use-chat.ts`, `client/src/hooks/use-streaming-message.tsx`: Chat logic and streaming hooks (client). **Must match server streaming contract.**
-- `client/src/chat/`, `client/src/ui-designer/`: UI rendering, embed behavior, dynamic UI from JSON config.
-- `server/storage.ts`, `server/db.ts`: Storage API and DB access patterns (S3, sharp, Drizzle ORM).
-- `server/ui-designer-service.ts`: Server-side UI designer logic (AI-driven UI generation).
-- `client/src/entry-server.tsx`, `client/src/main.tsx`: Client entry points for SSR/CSR. **Provider trees must match for hydration.**
-- `public/embed.js`, `public/embed.css`: Public assets for widget embedding (legacy and new modes).
-- `vite.config.ts`, `Dockerfile`, `fly.toml`: Build and deployment tooling.
+1. **Read Domain Docs**: Start with `/docs/agents/` files relevant to your task
+2. **Define Contract**: Update `shared/schema.ts` for any new types
+3. **Sync Server**: Update `server/openai/` parsers, validators, and routes
+4. **Sync Client**: Update `client/src/hooks/use-chat.ts` and UI components
+5. **Check Middleware**: Webhook routes must handle raw bodies before `express.json()`
 
+## User Preferences
 
-## Conventions & Best Practices
-- **Schema-first:** Update `shared/schema.ts` before implementing any message, survey, DB, or UI schema change. This is the single source of truth for all contracts.
-- **Contract Sync:** **After updating `schema.ts`, update all server validators/parsers and client renderers/hooks to match.**
-- **Streaming Contract:** If you change the streaming protocol (frame types, shape), update both `server/openai/streaming-handler.ts` and client streaming hooks.
-- **Middleware Ordering:** Register webhook raw-body handler before `express.json()`; Vite dev middleware after API routes.
-- **Provider Parity:** Ensure provider trees match between `entry-server.tsx` and `main.tsx` for SSR/CSR hydration.
-- **Validation-first:** Always validate AI outputs using Zod validators before accepting/storing.
-- **Reuse Hooks/Utilities:** Use hooks/lib, avoid ad-hoc global state.
-- **No dist/ edits:** Do not edit or commit compiled artifacts.
-- **CORS:** Do not change to strict without verifying embed compatibility.
-
-
-
-## Troubleshooting
-- **Streaming issues:** Ensure server emits newline-prefixed JSON frames; client parser matches format. Update both sides if contract changes.
-- **Webhook signature failures:** Confirm `/api/webhook` uses `express.raw` before `express.json`.
-- **Schema/validation errors:** Check `shared/schema.ts` and server/client validators for mismatches.
-- **SSR hydration issues:** Provider trees must match between `entry-server.tsx` and `main.tsx`.
-- **Testing:** Use Playwright with API mocks to avoid cost in CI.
-- **Heavy data tasks:** Use sampled datasets in dev.
-
-
----
-
-## Quickstart for Coding Agents
-
-1. **Start with `shared/schema.ts`:** Define or update all new message, survey, DB, or UI types here. This is the canonical contract for the entire system.
-2. **Sync Contracts:** After updating `schema.ts`, update all server-side validators/parsers and client-side renderers/hooks to match the new/changed types.
-3. **Streaming Contract:** If you change the streaming protocol (frame types, JSON shape), update both `server/openai/streaming-handler.ts` and client streaming hooks (`use-chat.ts`, etc.).
-4. **Provider Trees:** Ensure provider trees match between `client/src/entry-server.tsx` and `client/src/main.tsx` for SSR/CSR hydration.
-5. **Validation:** Always validate AI outputs using Zod validators before accepting or storing them.
-6. **Testing:** Add/extend tests for new flows. Use Playwright with API mocks for CI.
-7. **Check Middleware:** For webhooks, ensure raw body parsing is before JSON parsing in `server/index.ts`.
-8. **No dist/ edits:** Never edit or commit compiled artifacts.
-
-## Checklist: Adding New Message/Survey Types or DB Fields
-
-- [ ] Update/add type in `shared/schema.ts` (Zod + DB + API contract)
-- [ ] Update server-side validators/parsers (e.g., `server/openai/response-parser.ts`)
-- [ ] Update client-side renderers/hooks (e.g., `use-chat.ts`, UI components)
-- [ ] Add/extend tests (unit, integration, Playwright)
-- [ ] Update docs if needed
-- [ ] Run `npm run check` and verify all tests pass
-
-## OpenAI Service Modularity
-
-- Extend/override AI prompt/context logic in `server/openai/` (see `context-builder.ts`, `response-generator.ts`, etc.).
-- All AI output must be validated before use (see Zod schemas in `schema.ts`).
-- RAG (retrieval-augmented generation) is handled in `context-builder.ts` and integrated into prompts.
-
----
-For any feature change, **always start with `shared/schema.ts`**, then update server validators/parsers, then client renderers/hooks, and add tests. Run `npm run check`.
+- Agent must alway rephrase my prompt to output-based-goal
+- Use kebab-case for file naming convention
+- Maintain modular design

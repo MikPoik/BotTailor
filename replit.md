@@ -23,7 +23,7 @@ Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RA
 
 - **Frontend**: React 18, Vite, Tailwind CSS, shadcn/ui
   - **State**: TanStack Query (Server), custom hooks (`use-chat`, `useStreamingMessage`) for UI state
-  - **Routing**: `wouter` with sophisticated context detection (legacy vs. iframe embeds)
+  - **Routing**: `wouter` with sophisticated context detection (legacy Widget vs. iframe embeds)
   - **SSR**: Optional SSR via `client/src/entry-server.tsx` (exports `generateHTML`, `render`, `generateMetaTags`)
 - **Backend**: Express.js (ESM), Node.js 20
   - **Modular Routing**: Registration order is critical (Embeds -> Public -> Webhooks)
@@ -33,11 +33,10 @@ Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RA
 - **Billing**: Stripe-backed subscriptions with webhook handlers at `/api/webhook`
 
 ## Core Features & Logic
-
-- **Chat Widget System**: Runtime React application serving as the guest-facing interface.
-  - Supports multiple layout variants: `MinimalEmbed`, `CompactEmbed`, `FullEmbed`.
-  - Implements persistent session management and message synchronization.
-- **UI Designer**: AI-powered home screen builder
+ - **Chat Widget System**: Runtime React application serving as the guest-facing interface: `/client/components/chat/widget`.
+ - Supports multiple layout variants: `Desktop`, `Mobile`.
+ - Implements session management and message synchronization.
+ - **UI Designer**: AI-powered home screen builder
   - Generates `HomeScreenConfig` (JSON) via `/api/ui-designer/generate`
   - Supports dynamic theme resolution (Embed Params > Designer Config > CSS Defaults)
   - Components: `header`, `topic_grid`, `quick_actions`, `footer`, `category_tabs`
