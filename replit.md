@@ -37,9 +37,18 @@ Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RA
 - `client/src/components/ui-designer/`: Dynamic home screen rendering engine.
 - `client/src/hooks/use-chat.ts`: Manages streaming state and message history.
 
+## Implementation Details & Patterns
+- **User Sync**: On login, `POST /api/ensure-user` syncs Stack Auth profiles to the `users` table.
+- **RAG Search**: AI responses fetch relevant website chunks via `storage.searchSimilarContent` before generating answers.
+- **Survey Flow**: Managed via `surveySessions` table; tracks progress and AI-driven transitions.
+- **Theme Priority**: 1. Embed Params (`--chat-primary-color`), 2. Designer Config, 3. CSS Defaults.
+- **Message Types**: Support for `text`, `card`, `menu`, `multiselect_menu`, `rating`, `image`, `quickReplies`, `form`, and `form_submission`.
+- **Embed Logic**: `window.__EMBED_CONFIG__` (new design system) vs. `embedded=true` (legacy widget).
+
 ## Development Rules
 - **Schema First**: Update `shared/schema.ts` before any feature work.
 - **JSON Contracts**: Any change to message/config JSON must be synced across client and server.
 - **Validation**: AI responses are validated via `survey-menu-validator.ts` and `dynamic-content-validator.ts`.
 - **Theming**: Always use HSL variables and `resolveColors` logic for visual consistency.
-- **Embeds**: Detect context via `window.__EMBED_CONFIG__` or `embedded=true` query param.
+- **Error Handling**: Use `server/openai/error-handler.ts` for AI salvage/fallback logic.
+- **Real-time**: Uses HTTP polling/streaming, not WebSockets.
