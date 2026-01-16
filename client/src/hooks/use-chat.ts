@@ -89,6 +89,10 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     staleTime: Infinity, // Session data is stable, never auto-refetch
     refetchOnWindowFocus: false, // Prevent refetch on iframe focus changes
     refetchOnMount: false, // Prevent refetch on component remounts
+    onSuccess: (data) => {
+      logDebug('session query success', { sessionId, chatbotConfigId, data });
+      console.debug('[useChat] session fetched', { sessionId, data });
+    }
   });
 
   // Detect embedding modes
@@ -129,6 +133,10 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     // notifyOnChangeProps removed to enable real-time streaming bubble updates
     structuralSharing: true, // Re-enable structural sharing to maintain object references
     // placeholderData removed - it was preventing cache updates from showing during streaming
+    onSuccess: (data) => {
+      logDebug('messages query success', { sessionId, data });
+      console.debug('[useChat] messages fetched', { sessionId, messagesLen: data?.messages?.length });
+    }
   });
 
   // Memoize filtered messages to prevent unnecessary re-renders

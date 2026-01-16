@@ -19,6 +19,10 @@
   background-color: var(--embed-bg, #ffffff);
   color: var(--embed-text, #1f2937);
   /* Note: position:fixed is only applied via inline styles in iframe context */
+  /* Containment and compositing hints to avoid parent repaints that can cause CTA flashes */
+  contain: paint;
+  will-change: opacity, transform, background-color;
+  transform: translateZ(0);
 }
 
 /* ============================================

@@ -40,6 +40,61 @@ export const CTAView: React.FC<CTAViewProps> = ({
 }) => {
   if (!config?.enabled) return null;
 
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    console.debug('[CTAView] mount', { embedded, components: config.components?.length });
+
+    // MutationObserver to detect DOM-level changes that could cause flash
+    const el = containerRef.current;
+    if (el) {
+      const logMutation = (mut: MutationRecord) => {
+        try {
+          const info: any = {
+            type: mut.type,
+            target: (mut.target as HTMLElement)?.id || (mut.target as HTMLElement)?.className || mut.target.nodeName,
+            attributeName: mut.attributeName,
+            addedNodes: mut.addedNodes ? Array.from(mut.addedNodes).map(n => (n as HTMLElement).nodeName + (n as HTMLElement && (n as HTMLElement).className ? ' ' + (n as HTMLElement).className : '')) : [],
+            removedNodes: mut.removedNodes ? Array.from(mut.removedNodes).map(n => (n as HTMLElement).nodeName) : [],
+          };
+          console.debug('[CTAView][mutation]', info);
+        } catch (e) {
+          console.debug('[CTAView][mutation] error reading mutation', e);
+        }
+      };
+
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) logMutation(m);
+
+        // Also log a lightweight snapshot of computed style changes
+        try {
+          const cs = window.getComputedStyle(el);
+          console.debug('[CTAView][mutation] computed', { opacity: cs.opacity, display: cs.display, visibility: cs.visibility });
+        } catch (e) {
+          // ignore
+        }
+      });
+
+      observer.observe(el, { attributes: true, childList: true, subtree: true, attributeOldValue: true });
+
+      // Listen for postMessage events which might trigger rerenders from parent
+      const onMessage = (ev: MessageEvent) => {
+        console.debug('[CTAView][message] received', { data: ev.data, origin: ev.origin });
+      };
+      window.addEventListener('message', onMessage);
+
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('message', onMessage);
+        console.debug('[CTAView] unmount');
+      };
+    }
+
+    return () => {
+      console.debug('[CTAView] unmount (no element)');
+    };
+  }, [embedded, config.components?.length]);
+
   // Get layout CSS classes
   const layoutClass = `cta-layout-${config.layout?.style || 'card'}`;
   const positionClass = embedded ? '' : `cta-position-${config.layout?.position || 'center'}`;
@@ -121,7 +176,7 @@ export const CTAView: React.FC<CTAViewProps> = ({
 
   return (
     <div 
-      className={`cta-view ${embedded ? 'embedded' : ''} ${animateIn ? 'animate-in' : ''}`} 
+      className={`cta-view ${embedded ? 'embedded' : ''} ${animateIn && !embedded ? 'animate-in' : ''}`} 
       style={{
         ...themeStyle,
         display: 'flex',

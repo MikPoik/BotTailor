@@ -29,15 +29,23 @@ export function ChatSessionProvider({ children, initialSessionId }: { children: 
 
   // Initialize session ID on mount or when initialSessionId changes
   useEffect(() => {
+    console.debug('[ChatSessionProvider] mount', { initialSessionId, currentSessionId: sessionId });
+
     // If caller provided a sessionId and it differs from current state, adopt it
     if (initialSessionId && initialSessionId !== sessionId) {
+      console.debug('[ChatSessionProvider] adopting initialSessionId', { initialSessionId, prev: sessionId });
       setSessionId(initialSessionId);
       return;
     }
 
     if (!sessionId) {
       // Use UUID for guaranteed uniqueness
-      const newSessionId = crypto.randomUUID();
+      const newSessionId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID) ? (crypto as any).randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+      console.debug('[ChatSessionProvider] generating new sessionId', { newSessionId });
       setSessionId(newSessionId);
     }
   }, [initialSessionId, sessionId]);
