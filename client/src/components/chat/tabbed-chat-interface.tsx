@@ -112,22 +112,10 @@ const TabbedChatInterface = memo(({
     limitExceededInfo,
   } = useChat(sessionId, chatbotConfigId);
 
-  // DEBUG: Log every render to see what's causing re-renders
-  console.log('[TabbedChatInterface] RENDER', {
-    isStreaming,
-    activeTab,
-    messagesCount: messages.length,
-    messageIds: messages.map(m => m.id),
-    timestamp: Date.now()
-  });
+  // ...existing code...
 
   // DEBUG: Log mount/unmount
-  useEffect(() => {
-    console.log('[TabbedChatInterface] MOUNTED', { sessionId, timestamp: Date.now() });
-    return () => {
-      console.log('[TabbedChatInterface] UNMOUNTED', { sessionId, timestamp: Date.now() });
-    };
-  }, [sessionId]);
+  // ...existing code...
 
   // Initialize session when component mounts if needed
   useEffect(() => {
@@ -360,19 +348,6 @@ const TabbedChatInterface = memo(({
             color: colors.textColor,
           }}
         >
-      {(() => {
-        // DEBUG: Log ChatTab props before render
-        console.log('[ChatTab PROPS]', {
-          messagesCount: transformedMessages.length,
-          inputMessage: inputMessage.substring(0, 30),
-          isStreaming,
-          chatIsTyping,
-          isLoading,
-          readOnlyMode,
-          isMobile,
-          timestamp: Date.now()
-        });
-        return (
       <ChatTab
         messages={transformedMessages}
         inputMessage={inputMessage}
@@ -401,8 +376,6 @@ const TabbedChatInterface = memo(({
         onContactFormSubmit={handleContactFormSubmit}
         isContactFormValid={isContactFormValid}
       />
-        );
-      })()}
         </TabsContent>
       </div>
 

@@ -56,13 +56,7 @@ export function FullEmbed({
     setShowWelcome(false);
   };
 
-  // Debug footer visibility
-  console.log('[FullEmbed] Footer config:', {
-    footerText: config.ui.footerText,
-    hideBranding: config.ui.hideBranding,
-    shouldShowFooter: !!(config.ui.footerText || !config.ui.hideBranding),
-    brandingText: !config.ui.hideBranding ? "Powered by BotTailor" : undefined
-  });
+  // ...existing code...
 
   return (
     <div 

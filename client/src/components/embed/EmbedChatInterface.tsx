@@ -161,13 +161,7 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
   const [input, setInput] = useState("");
 
   useEffect(() => {
-    console.log('[EmbedChatInterface] Config received:', {
-      designType: config.designType,
-      hasHeader: !!config.ui.headerText,
-      hasFooter: !!config.ui.footerText,
-      theme: config.theme,
-      ctaEnabled: config.ctaConfig?.enabled
-    });
+    // ...existing code...
   }, [config]);
 
   useEmbedTheme(config.theme);
@@ -192,7 +186,7 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
 
   // Debug: Log when messages change
   useEffect(() => {
-    console.log('[EmbedChatInterface] Messages changed:', messages.length);
+    // ...existing code...
   }, [messages]);
 
   useEffect(() => {

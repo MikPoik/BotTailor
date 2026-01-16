@@ -41,23 +41,13 @@ const MessageBubble = memo(function MessageBubble({ message, onOptionSelect, onQ
   const isUser = message.sender === 'user';
   const colors = resolveColors(chatbotConfig);
   
-  // Log mount/unmount and render
+  // Mark message as animated on first render
   useEffect(() => {
-    // Mark message as animated on first render
     if (!animatedMessageIds.current.has(message.id)) {
       animatedMessageIds.current.add(message.id);
       setHasAnimated(true);
     }
-    
-    console.log('[MessageBubble] mounted/updated', {
-      id: message.id,
-      type: message.messageType,
-      sender: message.sender,
-      content: message.content?.slice(0, 50),
-    });
-    return () => {
-      console.log('[MessageBubble] unmounted', { id: message.id });
-    };
+    return () => {};
   }, [message.id]);
   
   // Format timestamp as HH:MM

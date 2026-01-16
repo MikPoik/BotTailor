@@ -93,13 +93,7 @@ export function ChatTab({
     scrollToBottom();
   }, [messages, chatIsTyping, isStreaming]);
 
-  // Add mount/unmount detection
-  useEffect(() => {
-    console.log('[ChatTab] MOUNTED', { timestamp: Date.now() });
-    return () => {
-      console.log('[ChatTab] UNMOUNTED', { timestamp: Date.now() });
-    };
-  }, []);
+  // ...existing code...
 
   return (
     <>
@@ -128,8 +122,6 @@ export function ChatTab({
           </div>
         ) : (
           (() => {
-            console.log('[ChatTab KEYS]', messages.map(m => (m as any)._stableKey || `message-${m.id}`));
-            
             // Helper to check if two messages are in the same response sequence
             const isSameSequence = (current: any, next: any) => {
               if (!next) return false;

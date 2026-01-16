@@ -208,13 +208,13 @@ export const CTAPreview: React.FC<CTAPreviewProps> = ({
               chatbotName={chatbotName}
               embedded={true}
               onPrimaryButtonClick={() => {
-                console.log('Primary button clicked in preview');
+                // ...existing code...
               }}
               onSecondaryButtonClick={() => {
-                console.log('Secondary button clicked in preview');
+                // ...existing code...
               }}
               onClose={() => {
-                console.log('CTA closed in preview');
+                // ...existing code...
               }}
             />
           ) : (

@@ -48,18 +48,11 @@ export const MenuMessage = memo(function MenuMessage({
   const [otherText, setOtherText] = useState("");
 
   useEffect(() => {
-    console.log('[MenuMessage] mounted/updated', { optionCount: options.length, timestamp: Date.now() });
-    return () => {
-      console.log('[MenuMessage] UNMOUNTING', { optionCount: options.length, timestamp: Date.now() });
-    };
+    // ...existing code...
+    return () => {};
   }, [options.length]);
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("[MenuMessage] render", { 
-      optionCount: options.length,
-      selectedOtherId 
-    });
-  }
+  // ...existing code...
 
   return (
     <div className="space-y-2">
@@ -73,11 +66,6 @@ export const MenuMessage = memo(function MenuMessage({
             <button
               type="button"
               onClick={(e) => {
-                console.log('[MenuMessage] option clicked', { 
-                  optionId: option.id, 
-                  label,
-                  isOther 
-                });
                 e.preventDefault();
                 e.stopPropagation();
                 if (isOther) {
@@ -129,10 +117,6 @@ export const MenuMessage = memo(function MenuMessage({
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (otherText.trim()) {
-                    console.log("[MenuMessage] other text submitted", { 
-                      optionId: option.id,
-                      text: otherText 
-                    });
                     onOptionSelect(
                       option.id,
                       { freeText: otherText.trim() },

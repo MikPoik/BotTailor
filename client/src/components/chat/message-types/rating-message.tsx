@@ -18,19 +18,11 @@ export const RatingMessage = memo(function RatingMessage({
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
 
   const handleRatingSelect = (rating: number) => {
-    console.log('[RatingMessage] rating selected', { rating, maxValue });
     setSelectedRating(rating);
     onOptionSelect('rating_submit', { rating }, `${rating}/${maxValue}`);
   };
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("[RatingMessage] render", {
-      ratingType,
-      selectedRating,
-      minValue,
-      maxValue,
-    });
-  }
+  // ...existing code...
 
   if (ratingType === 'stars') {
     return (

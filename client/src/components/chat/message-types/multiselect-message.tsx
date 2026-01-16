@@ -51,7 +51,6 @@ export const MultiselectMessage = memo(function MultiselectMessage({
   const [otherText, setOtherText] = useState("");
 
   const toggleSelection = (optionId: string) => {
-    console.log("[MultiselectMessage] toggling option", { optionId });
     setSelectedIds((prev) => {
       if (prev.includes(optionId)) {
         return prev.filter((id) => id !== optionId);
@@ -72,14 +71,7 @@ export const MultiselectMessage = memo(function MultiselectMessage({
     selectedIds.length <= maxSelections &&
     (!hasOtherSelected || otherText.trim());
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("[MultiselectMessage] render", {
-      selectedCount: selectedIds.length,
-      minSelections,
-      maxSelections,
-      canSubmit,
-    });
-  }
+  // ...existing code...
 
   return (
     <div className="space-y-3">
@@ -179,10 +171,6 @@ export const MultiselectMessage = memo(function MultiselectMessage({
           type="button"
           onClick={(e) => {
             e.preventDefault();
-            console.log("[MultiselectMessage] submit clicked", {
-              selectedIds,
-              canSubmit,
-            });
             if (canSubmit) {
               const selectedOptions = selectedIds.map((id) => {
                 const opt = options.find((o: any) => o.id === id);
