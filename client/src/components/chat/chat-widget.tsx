@@ -281,10 +281,17 @@ function ChatWidget({
   const { setSessionId: setGlobalSessionId } = useGlobalChatSession();
 
   const refreshSession = async (reason: string = 'manual') => {
-    // Generate a fresh server-backed session id
+    // Generate a fresh server-backed session id (RFC4122 v4)
+    const uuidv4 = () =>
+      'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+
     const newId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
       ? (crypto as any).randomUUID()
-      : `session-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+      : uuidv4();
 
     // Create the session on the server immediately so subsequent requests use it
     try {

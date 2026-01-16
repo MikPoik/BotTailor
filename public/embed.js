@@ -145,15 +145,21 @@
     },
 
     generateSessionId: function () {
+      // Prefer native UUID when available, fall back to RFC4122 v4 generator
       if (typeof crypto !== 'undefined' && crypto.randomUUID) {
         try {
           return crypto.randomUUID();
         } catch (e) {
-          // fallback to string-based id below
+          // fallback to random generator below
         }
       }
 
-      return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // RFC4122 v4 fallback
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
     },
 
     // Safe sessionStorage access that handles sandboxed environments

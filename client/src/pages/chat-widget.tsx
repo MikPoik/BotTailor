@@ -35,20 +35,58 @@ export default function ChatWidgetPage() {
     // Session ID handling with sessionStorage persistence for development mode
     const injectedConfig = (window as any).__CHAT_WIDGET_CONFIG__;
     let newSessionId: string;
-    
-    if (embedded && injectedConfig?.sessionId) {
-      // Use session ID from server injection (already optimized for embedded mode)
-      newSessionId = injectedConfig.sessionId;
+
+    if (embedded) {
+      // Prefer explicit sessionId passed via URL (host embed script sets this)
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlSession = urlParams.get('sessionId');
+      if (urlSession) {
+        newSessionId = urlSession;
+        try {
+          sessionStorage.setItem('embed-session-id', newSessionId);
+        } catch (e) {
+          // ignore storage failures in sandboxed environments
+        }
+      } else if (injectedConfig?.sessionId) {
+        // Use session ID from server injection (already optimized for embedded mode)
+        newSessionId = injectedConfig.sessionId;
+      } else {
+        // Fallback: generate RFC4122 v4 UUID
+        const uuidv4 = () =>
+          "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          });
+
+        newSessionId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+          ? (crypto as any).randomUUID()
+          : uuidv4();
+
+        try {
+          sessionStorage.setItem('embed-session-id', newSessionId);
+        } catch (e) {}
+      }
     } else {
       // Development mode: Use global session storage for consistency
       const storageKey = 'global-chat-session-id';
       const storedSessionId = safeSessionStorage.getItem(storageKey);
-      
+
       if (storedSessionId) {
         newSessionId = storedSessionId;
       } else {
-        // Use UUID for guaranteed uniqueness
-        newSessionId = crypto.randomUUID();
+        // Use RFC4122 v4 UUID for guaranteed uniqueness
+        const uuidv4 = () =>
+          "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          });
+
+        newSessionId = (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+          ? (crypto as any).randomUUID()
+          : uuidv4();
+
         safeSessionStorage.setItem(storageKey, newSessionId);
       }
     }

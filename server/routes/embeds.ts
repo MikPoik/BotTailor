@@ -94,9 +94,14 @@ export function setupEmbedRoutes(app: Express) {
       }
 
       // Generate or use provided session ID
-      const finalSessionId = (sessionId as string) || ((typeof globalThis !== 'undefined' && (globalThis as any).crypto && (globalThis as any).crypto.randomUUID)
+      // Prefer native UUID when available, otherwise generate RFC4122 v4
+      const finalSessionId = (sessionId as string) || (typeof globalThis !== 'undefined' && (globalThis as any).crypto && (globalThis as any).crypto.randomUUID
         ? (globalThis as any).crypto.randomUUID()
-        : `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c: string) {
+            const r = (Math.random() * 16) | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }));
       const isMobile = mobile === "true";
 
       // Extract theme colors

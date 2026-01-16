@@ -32,7 +32,18 @@ export function useGlobalChatSession() {
       return storedSessionId;
     }
 
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const uuidv4 = () =>
+      'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+
+    const newSessionId =
+      typeof crypto !== 'undefined' && (crypto as any).randomUUID
+        ? (crypto as any).randomUUID()
+        : uuidv4();
+
     safeSessionStorage.setItem(GLOBAL_SESSION_STORAGE_KEY, newSessionId);
     return newSessionId;
   });

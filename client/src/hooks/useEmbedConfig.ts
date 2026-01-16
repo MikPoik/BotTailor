@@ -224,6 +224,18 @@ export function useEmbedSession() {
 
   const storageKey = isEmbedded ? "embed-session-id" : "global-chat-session-id";
 
+  // Prefer explicit sessionId in URL query (used by host embed script)
+  const urlSessionId = new URLSearchParams(window.location.search).get("sessionId");
+  if (urlSessionId) {
+    sessionIdRef.current = urlSessionId;
+    try {
+      sessionStorage.setItem(storageKey, urlSessionId);
+    } catch (e) {
+      // ignore storage failures in sandboxed environments
+    }
+    return urlSessionId;
+  }
+
   if (!sessionIdRef.current) {
     let stored: string | null = null;
     try {
@@ -235,10 +247,17 @@ export function useEmbedSession() {
     if (stored) {
       sessionIdRef.current = stored;
     } else {
+      const uuidv4 = () =>
+        "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+
       const newId =
         typeof crypto !== "undefined" && (crypto as any).randomUUID
           ? (crypto as any).randomUUID()
-          : `session-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+          : uuidv4();
 
       sessionIdRef.current = newId;
       try {
