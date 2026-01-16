@@ -35,20 +35,6 @@ export function useEmbedStage({ embedId, ctaConfig }: UseEmbedStageOptions): Use
 
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!ctaConfig?.enabled) {
-      setStage('chat');
-      return;
-    }
-
-    if (ctaConfig.settings?.showOncePerSession) {
-      const dismissed = sessionStorage.getItem(getSessionStorageKey(embedId));
-      if (dismissed === 'true') {
-        setStage('chat');
-        return;
-      }
-    }
-  }, [ctaConfig, embedId]);
 
   const transitionToChat = useCallback((predefinedMessage?: string) => {
     if (ctaConfig?.settings?.showOncePerSession) {

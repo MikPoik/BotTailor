@@ -186,8 +186,8 @@ const EmbedChatInterfaceRenderer = memo(function EmbedChatInterfaceRenderer({
           right: 0,
           bottom: 0,
           zIndex: 9999,
-          backgroundColor: config.theme?.backgroundColor || 'var(--embed-bg, #ffffff)'
-        } : { backgroundColor: config.theme?.backgroundColor || 'var(--embed-bg, #ffffff)' }}
+          backgroundColor: 'transparent'
+        } : { backgroundColor: 'transparent' }}
       >
         <CTAView
           config={ctaConfig}
@@ -312,6 +312,7 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     console.debug('[EmbedChatInterface] stage or session changed', { stage, sessionId });
   }, [stage, sessionId]);
 
+  const shouldInitChat = stage === 'chat';
   const {
     messages,
     sendStreamingMessage,
@@ -319,7 +320,7 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     selectOption,
     isLoading,
     isTyping,
-  } = useChat(sessionId || "", config.chatbotConfigId);
+  } = useChat(shouldInitChat ? (sessionId || "") : "", shouldInitChat ? config.chatbotConfigId : undefined);
 
   // Detailed re-render tracing: compare snapshot to previous render and trace stack
   const prevSnapshotRef = useRef<any>(null);
