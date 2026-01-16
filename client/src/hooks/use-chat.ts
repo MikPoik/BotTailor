@@ -241,7 +241,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         throw new Error('No reader available');
       }
 
-      console.log('[STREAM] Starting to read stream at:', new Date().toISOString());
+      //console.log('[STREAM] Starting to read stream at:', new Date().toISOString());
       let buffer = ''; // Buffer for incomplete lines
       let chunkCount = 0;
 
@@ -250,9 +250,9 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
         const { done, value } = await reader.read();
         const readEndTime = new Date().toISOString();
         chunkCount++;
-        console.log(`[STREAM CHUNK ${chunkCount}] Read at ${readStartTime}, received at ${readEndTime}, size: ${value?.length || 0} bytes`);
+        //console.log(`[STREAM CHUNK ${chunkCount}] Read at ${readStartTime}, received at ${readEndTime}, size: ${value?.length || 0} bytes`);
         if (done) {
-          console.log('[STREAM] Stream reading complete at:', new Date().toISOString(), 'Total chunks:', chunkCount);
+          //console.log('[STREAM] Stream reading complete at:', new Date().toISOString(), 'Total chunks:', chunkCount);
           break;
         }
 
@@ -278,7 +278,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
 
             if (data.type === 'bubble' && data.message) {
               const receiveTime = new Date().toISOString();
-              console.log(`[STREAM] ${receiveTime} Received bubble:`, data.message.id, data.message.messageType);
+              //console.log(`[STREAM] ${receiveTime} Received bubble:`, data.message.id, data.message.messageType);
               logDebug(`${receiveTime} stream bubble`, data.message.id);
               
               // Always append the bubble to cache for embed/widget
