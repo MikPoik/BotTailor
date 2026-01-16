@@ -28,27 +28,34 @@ Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RA
   - `quickReplies`: Floating action chips.
 - **RAG System**: Semantic search using `storage.searchSimilarContent` against chunked website data.
 - **Survey Engine**: Progressive JSON-defined questionnaires with branching logic and AI validation.
+- **Embed Designs**: Managed via `embed_designs` table. Supports custom colors, UI components visibility, and CTA configurations.
 
 ## Critical File Map
-- `shared/schema.ts`: Source of truth for all DB and Zod schemas.
+- `shared/schema.ts`: **Source of truth** for all DB, Zod schemas, and rich message contracts.
 - `server/storage.ts`: IStorage interface implementation for all DB operations.
-- `server/openai/`: Core AI logic (streaming, validation, regeneration).
+- `server/openai/`: Core AI logic (streaming, validation, regeneration, context building).
 - `client/src/components/chat/`: Widget UI and message rendering logic.
 - `client/src/components/ui-designer/`: Dynamic home screen rendering engine.
 - `client/src/hooks/use-chat.ts`: Manages streaming state and message history.
+- `client/src/pages/`: Contains dashboard, analytics, builder, and widget-specific pages.
 
 ## Implementation Details & Patterns
-- **User Sync**: On login, `POST /api/ensure-user` syncs Stack Auth profiles to the `users` table.
+- **User Sync**: On login, `POST /api/ensure-user` syncs Neon Auth profiles to the `users` table.
 - **RAG Search**: AI responses fetch relevant website chunks via `storage.searchSimilarContent` before generating answers.
-- **Survey Flow**: Managed via `surveySessions` table; tracks progress and AI-driven transitions.
-- **Theme Priority**: 1. Embed Params (`--chat-primary-color`), 2. Designer Config, 3. CSS Defaults.
-- **Message Types**: Support for `text`, `card`, `menu`, `multiselect_menu`, `rating`, `image`, `quickReplies`, `form`, and `form_submission`.
-- **Embed Logic**: `window.__EMBED_CONFIG__` (new design system) vs. `embedded=true` (legacy widget).
+- **Theme Priority**: 1. Embed Params (`--chat-primary-color`), 2. Designer Config (`embed_designs` or `homeScreenConfig`), 3. CSS Defaults.
+- **Embed Logic**: `window.__EMBED_CONFIG__` (new design system) vs. `embedded=true` (legacy widget). `public/embed.js` handles initialization.
 
 ## Development Rules
-- **Schema First**: Update `shared/schema.ts` before any feature work.
-- **JSON Contracts**: Any change to message/config JSON must be synced across client and server.
-- **Validation**: AI responses are validated via `survey-menu-validator.ts` and `dynamic-content-validator.ts`.
+- **Schema First**: Update `shared/schema.ts` before any feature work. This is the canonical contract.
+- **JSON Contracts**: Any change to message/config JSON must be synced across client (`use-chat.ts`, components) and server (`streaming-handler.ts`, `response-parser.ts`).
+- **Validation**: AI responses MUST be validated via Zod schemas before being used or stored.
 - **Theming**: Always use HSL variables and `resolveColors` logic for visual consistency.
 - **Error Handling**: Use `server/openai/error-handler.ts` for AI salvage/fallback logic.
 - **Real-time**: Uses HTTP polling/streaming, not WebSockets.
+
+## Next Agent Checklist
+1. **Define Contract**: Start in `shared/schema.ts`.
+2. **Sync Server**: Update `server/openai/` parsers and routes.
+3. **Sync Client**: Update `client/src/hooks/use-chat.ts` and UI components.
+4. **Verify Embeds**: Test changes in both direct access and iframe modes.
+5. **Check Middleware**: Webhook routes must handle raw bodies before `express.json()`.
