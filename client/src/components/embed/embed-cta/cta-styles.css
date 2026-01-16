@@ -51,11 +51,32 @@
   background-color: var(--cta-bg);
   color: var(--cta-text);
   font-family: inherit;
-  animation: cta-fade-in 0.3s ease-in-out;
+  /* Start hidden to avoid a visible flash before JS mounts. The animation
+     will be applied client-side by adding the `animate-in` class. */
+  opacity: 0;
+  transform: translateY(10px);
 }
 
+/* Apply animation only when the client explicitly adds the class. This
+   prevents the fade animation from triggering due to late-loaded CSS or
+   post-mount reflows which can cause a one-time flash. */
+.cta-view.animate-in {
+  animation: cta-fade-in 0.3s ease-in-out forwards;
+}
+
+/* Embedded mode: avoid animating on initial load inside an iframe/host page.
+   Show the CTA immediately to prevent the parent background showing before
+   other parts fade in (this was causing the perceived "flash"). */
 .cta-view.embedded {
   min-height: auto;
+  opacity: 1;
+  transform: none;
+  /* Prevent the animate-in class from triggering an animation in embedded mode */
+  animation: none !important;
+}
+
+.cta-view.embedded.animate-in {
+  animation: none !important;
 }
 
 @keyframes cta-fade-in {

@@ -64,23 +64,38 @@ export const CTAView: React.FC<CTAViewProps> = ({
     ? config.layout.backgroundOverlay.opacity ?? 0.3
     : 0;
 
-  // Theme CSS variables applied via useEffect below
-  const themeStyle: React.CSSProperties = {};
+  // Theme CSS variables — set inline so they're available on first paint
+  const themeStyle: React.CSSProperties & Record<string, string> = {};
+  if (config.theme) {
+    if (config.theme.primaryColor) themeStyle['--cta-primary'] = config.theme.primaryColor;
+    if (config.theme.backgroundColor) themeStyle['--cta-bg'] = config.theme.backgroundColor;
+    if (config.theme.textColor) themeStyle['--cta-text'] = config.theme.textColor;
+  }
 
-  // Apply theme colors
+  // No global document-level mutation — theme vars are applied inline via `themeStyle`
+
+  // Ensure animation runs only after client mount to avoid a flash on initial paint
+  // For embedded CTAs we want instant visibility (no animation), so default to `true`
+  const [animateIn, setAnimateIn] = React.useState<boolean>(embedded ? true : false);
   React.useEffect(() => {
-    if (config.theme) {
-      if (config.theme.primaryColor) {
-        document.documentElement.style.setProperty('--cta-primary', config.theme.primaryColor);
-      }
-      if (config.theme.backgroundColor) {
-        document.documentElement.style.setProperty('--cta-bg', config.theme.backgroundColor);
-      }
-      if (config.theme.textColor) {
-        document.documentElement.style.setProperty('--cta-text', config.theme.textColor);
-      }
+    if (embedded) return; // already visible in embedded mode
+
+    let id: number | undefined;
+    if (typeof requestAnimationFrame !== 'undefined') {
+      id = requestAnimationFrame(() => setAnimateIn(true));
+      return () => {
+        if (typeof cancelAnimationFrame !== 'undefined' && typeof id === 'number') {
+          cancelAnimationFrame(id);
+        }
+      };
+    } else {
+      id = window.setTimeout(() => setAnimateIn(true), 0);
+      return () => {
+        if (typeof id === 'number') clearTimeout(id);
+      };
     }
-  }, [config.theme]);
+  }, [embedded]);
+
 
   // Handle primary button click
   const handlePrimaryClick = () => {
@@ -106,7 +121,7 @@ export const CTAView: React.FC<CTAViewProps> = ({
 
   return (
     <div 
-      className={`cta-view ${embedded ? 'embedded' : ''}`} 
+      className={`cta-view ${embedded ? 'embedded' : ''} ${animateIn ? 'animate-in' : ''}`} 
       style={{
         ...themeStyle,
         display: 'flex',
