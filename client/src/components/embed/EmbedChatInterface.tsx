@@ -186,8 +186,8 @@ const EmbedChatInterfaceRenderer = memo(function EmbedChatInterfaceRenderer({
           right: 0,
           bottom: 0,
           zIndex: 9999,
-          backgroundColor: 'transparent'
-        } : { backgroundColor: 'transparent' }}
+          backgroundColor: ctaConfig.theme?.backgroundColor || 'transparent'
+        } : { backgroundColor: ctaConfig.theme?.backgroundColor || 'transparent' }}
       >
         <CTAView
           config={ctaConfig}
