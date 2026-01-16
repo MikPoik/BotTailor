@@ -93,7 +93,7 @@ export function HeaderComponent({ component, resolvedColors }: ComponentRegistry
 
   return (
     <div 
-      className="border-b border-neutral-200 p-6 relative"
+      className="border-b border-neutral-200 p-6 relative w-full max-w-full overflow-hidden"
       style={{
         backgroundColor: headerBgColor,
         color: headerTextColor,
@@ -235,13 +235,13 @@ export function TopicGridComponent({ component, onTopicClick, resolvedColors }: 
   if (!topics || topics.length === 0) return null;
 
   return (
-    <div className="p-4 space-y-3" style={{ backgroundColor: hasBackgroundImage ? 'transparent' : backgroundColor, color: textColor }}>
+    <div className="p-4 space-y-3 w-full max-w-full overflow-hidden" style={{ backgroundColor: hasBackgroundImage ? 'transparent' : backgroundColor, color: textColor }}>
       {title && (
         <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
           {title}
         </h3>
       )}
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 gap-3 w-full max-w-full overflow-hidden">
         {topics.map((topic: any) => (
           <button
             key={topic.id}
@@ -361,13 +361,13 @@ export function QuickActionsComponent({ component, onActionClick, resolvedColors
   };
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="p-4 space-y-3 w-full max-w-full overflow-hidden">
       {title && (
         <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: textColor }}>
           {title}
         </h3>
       )}
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 gap-3 w-full max-w-full overflow-hidden">
         {actions.map((action: any) => {
           // Check if action has its own itemStyle override
           const actionStyle = action.itemStyle || itemStyle;
@@ -417,7 +417,7 @@ export function FooterComponent({ component, resolvedColors }: ComponentRegistry
 
   return (
     <div 
-      className="text-center py-4 px-4 border-t mt-auto"
+      className="text-center py-4 px-4 border-t mt-auto w-full max-w-full overflow-hidden"
       style={{
         backgroundColor,
         color: textColor,

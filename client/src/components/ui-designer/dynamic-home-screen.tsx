@@ -111,7 +111,7 @@ export default function DynamicHomeScreen({
 
   return (
     <div
-      className={`h-full overflow-y-auto ${className || ''} relative flex flex-col min-h-full`}
+      className={`h-full w-full overflow-x-hidden overflow-y-auto ${className || ''} relative flex flex-col min-h-full`}
       style={{
         backgroundColor: colors.backgroundColor,
         color: colors.textColor,
