@@ -1,42 +1,45 @@
 # Project: Enchanted Chat Widget
 
-Full-stack React/Express application for embeddable customer support chat widgets with AI-driven RAG and survey capabilities.
+Full-stack AI-driven customer support ecosystem featuring embeddable widgets, RAG-powered assistants, and dynamic UI customization.
 
-## Architecture
+## Architecture & Tech Stack
 - **Frontend**: React 18, Vite, Tailwind CSS, shadcn/ui.
-  - **Routing**: `wouter` with a logic-heavy `client/src/App.tsx` that handles legacy vs. new embed contexts.
-  - **State**: `TanStack Query` for server state, custom hooks for widget logic (`use-chat.ts`, `useStreamingMessage.ts`).
-  - **Auth**: `Stack Auth` integrated with a backend sync endpoint (`/api/ensure-user`).
+  - **State**: TanStack Query (Server), custom hooks (`use-chat`, `useStreamingMessage`) for UI state.
+  - **Routing**: `wouter` with sophisticated context detection (legacy vs. iframe embeds).
 - **Backend**: Express.js (ESM), Node.js 20.
-  - **Modular Routes**: Managed in `server/routes/index.ts`. Registration order is critical (Embeds > Public > Webhooks).
-  - **AI Engine**: Comprehensive OpenAI integration in `server/openai/` handling streaming, RAG via `pgvector`, and dynamic CTA generation.
-  - **Storage**: `DatabaseStorage` in `server/storage.ts` implementing a rigid `IStorage` interface.
-- **Database**: Neon PostgreSQL via `Drizzle ORM`. Uses `vector` types for semantic search.
+  - **Modular Routing**: Registration order is critical (Embeds -> Public -> Webhooks).
+  - **AI Engine**: Advanced OpenAI integration (`server/openai/`) featuring multi-bubble parsing and validation.
+- **Data**: Neon PostgreSQL via Drizzle ORM. Uses `pgvector` for semantic search.
+
+## Core Features & Logic
+- **UI Designer**: AI-powered home screen builder.
+  - Generates `HomeScreenConfig` (JSON) via `/api/ui-designer/generate`.
+  - Supports dynamic theme resolution (Embed Params > Designer Config > CSS Defaults).
+  - Components: `header`, `topic_grid`, `quick_actions`, `footer`.
+- **Streaming System**: Custom newline-prefixed JSON protocol.
+  - Server emits: `bubble`, `complete`, `error` frames.
+  - Client (`StreamingMessage.tsx`) handles interleaved text and interactive elements.
+- **Rich Messaging**: JSON-defined bubble types:
+  - `card`: Image + Title + Actions.
+  - `menu`: Single-choice select.
+  - `multiselect_menu`: Multiple-choice with min/max constraints.
+  - `rating`: Star/Number/Scale feedback.
+  - `form`: Interactive field collection (text, email, textarea).
+  - `quickReplies`: Floating action chips.
+- **RAG System**: Semantic search using `storage.searchSimilarContent` against chunked website data.
+- **Survey Engine**: Progressive JSON-defined questionnaires with branching logic and AI validation.
 
 ## Critical File Map
-- `shared/schema.ts`: Source of truth for DB tables and Zod schemas.
-- `server/storage.ts`: All DB interactions must go through the `DatabaseStorage` class.
-- `server/routes/`: Separate files for `auth`, `chat`, `surveys`, `embeds`, `websites`.
-- `client/src/components/chat/`: Legacy widget UI components.
-- `client/src/components/embed/`: New iframe design system and `cta-builder`.
-- `client/src/hooks/useAuth.ts`: Bridge between Stack Auth and local database state.
+- `shared/schema.ts`: Source of truth for all DB and Zod schemas.
+- `server/storage.ts`: IStorage interface implementation for all DB operations.
+- `server/openai/`: Core AI logic (streaming, validation, regeneration).
+- `client/src/components/chat/`: Widget UI and message rendering logic.
+- `client/src/components/ui-designer/`: Dynamic home screen rendering engine.
+- `client/src/hooks/use-chat.ts`: Manages streaming state and message history.
 
-## Implementation Guidelines
-- **Database First**: Any new feature starts with a schema update in `shared/schema.ts`.
-- **Type Safety**: Use exported types from schema (`User`, `ChatbotConfig`, etc.) throughout the stack.
-- **API Pattern**: Routes validate with Zod → Call `storage` methods → Return typed responses.
-- **UI Consistency**: Follow shadcn/ui patterns. Use HSL variables in `index.css` for theming.
-- **Polling**: Chat uses HTTP polling for message sync. Do not attempt to implement WebSockets without explicit instruction.
-- **Embed Logic**: Distinguish contexts using `window.__EMBED_CONFIG__` (new) or `embedded=true` (legacy).
-
-## Key Workflows
-1. **User Sync**: On login, the frontend calls `POST /api/ensure-user` to sync Stack Auth profiles to the `users` table.
-2. **RAG Search**: AI responses utilize `storage.searchSimilarContent` to fetch relevant website chunks before generating answers.
-3. **Survey Flow**: Managed via `surveySessions` table; tracks progress and AI-driven transitions within the chat.
-4. **CTA Builder**: A specialized editor for creating interactive components stored as JSON in `chatbotConfigs.homeScreenConfig`.
-
-## Recent Architecture Decisions
-- **Vector Search**: Using `pgvector` for semantic RAG instead of simple keyword search.
-- **Modular Routing**: Switched to a decentralized route registration to prevent `server/routes.ts` bloat.
-- **Theme Priority**: 1. Embed Params, 2. DB Config, 3. CSS Defaults.
-- **Rich Messaging**: Supported types include `card`, `menu`, `rating`, `form`, and `multiselect`.
+## Development Rules
+- **Schema First**: Update `shared/schema.ts` before any feature work.
+- **JSON Contracts**: Any change to message/config JSON must be synced across client and server.
+- **Validation**: AI responses are validated via `survey-menu-validator.ts` and `dynamic-content-validator.ts`.
+- **Theming**: Always use HSL variables and `resolveColors` logic for visual consistency.
+- **Embeds**: Detect context via `window.__EMBED_CONFIG__` or `embedded=true` query param.
