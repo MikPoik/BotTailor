@@ -54,8 +54,13 @@ import Terms from "@/pages/terms";
 
 function HandlerRoutes() {
   const [location] = useLocation();
+  // Handler routes (auth callbacks) rely on Stack SDK and should run only
+  // on the client where the provider can be mounted. Use `ClientOnly` to
+  // avoid calling provider hooks during SSR or before provider readiness.
   return (
-    <StackHandler app={stackClientApp} location={location} fullPage />
+    <ClientOnly>
+      <StackHandler app={stackClientApp} location={location} fullPage />
+    </ClientOnly>
   );
 }
 
@@ -74,34 +79,12 @@ function AuthenticatedRouter() {
   const isEmbedDesign = typeof window !== 'undefined' ? (window.location.pathname?.startsWith('/embed') && configEmbedFlag) : false;
   const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign || (inIframe && configEmbedFlag);
 
-  // Move user sync into a small Suspense-aware helper so that `useUser` can suspend
-  // without causing a synchronous update to suspend the entire router.
-  function UserSync({ embedded }: { embedded: boolean }) {
-    const stackUser = useUser();
-    useEffect(() => {
-      if (stackUser && !embedded) {
-        const userEmail = stackUser.primaryEmail || undefined;
-        const userName = stackUser.displayName || stackUser.primaryEmail?.split('@')[0] || undefined;
+  // NOTE: `UserSync` used to live here, but mounting it inside the router
+  // could call provider-only hooks before `StackProvider` was mounted during
+  // a re-render. We instead mount a client-only `UserSync` inside the
+  // `StackProvider` branch to ensure the provider exists when hooks run.
 
-        apiRequest("POST", "/api/ensure-user", {
-          email: userEmail,
-          name: userName,
-        }).catch((error) => {
-          console.warn("[USER SYNC] Failed to sync user to database:", error);
-        });
-      }
-    }, [stackUser?.id, embedded]);
-
-    return null;
-  }
-
-  // Render the sync inside a small Suspense boundary so a suspend doesn't replace the UI
-  // Note: Suspense fallback is null to avoid visual changes in embed mode
-  const UserSyncBoundary = isEmbedded ? (
-    <React.Suspense fallback={null}><UserSync embedded={isEmbedded} /></React.Suspense>
-  ) : (
-    <React.Suspense fallback={<div style={{ display: 'none' }} />}><UserSync embedded={isEmbedded} /></React.Suspense>
-  );
+  // (User sync is mounted inside the StackProvider branch below.)
 
 
   // If chat-widget embed is active (legacy), use ChatWidget routes.
@@ -123,7 +106,6 @@ function AuthenticatedRouter() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     }>
-      {UserSyncBoundary}
       <AuthenticatedRouterContent />
     </ClientOnly>
   );
@@ -339,23 +321,93 @@ function App() {
   const isEmbedDesign = typeof window !== 'undefined' ? (window.location.pathname?.startsWith('/embed') && configEmbedFlag) : false;
   const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign || (inIframe && configEmbedFlag);
 
+  // Track whether we should initialize Stack on the client. Keep this false during
+  // initial hydration so the server-rendered markup (without StackTheme) matches
+  // and avoid hydration mismatches/warnings. However, when the current path is
+  // a Stack handler route (e.g., `/handler/callback`) we need the provider
+  // immediately to process auth redirects — initialize accordingly.
+  const isHandlerPathOnClient = typeof window !== 'undefined' && window.location.pathname.startsWith('/handler');
+  const [stackReady, setStackReady] = React.useState<boolean>(isHandlerPathOnClient);
+
+  React.useEffect(() => {
+    setStackReady(true);
+    try {
+      (window as any).__STACK_INITIALIZED__ = true;
+      // Notify any listeners (e.g., `useAuth`) that Stack is ready
+      window.dispatchEvent(new Event('stack-initialized'));
+    } catch (e) {
+      /* noop */
+    }
+  }, []);
+
   return (
     <ClientOnly fallback={isEmbedded ? null : (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )}>
-      <StackProvider app={stackClientApp}>
-        <StackTheme>
+      {stackReady ? (
+        // Client after mount: initialize StackProvider so stack-related hooks/providers can run
+        <StackProvider app={stackClientApp}>
+          <StackTheme>
+            <Toaster />
+
+            {/* Mount user sync only once the provider is present */}
+            <React.Suspense fallback={null}>
+              <UserSyncInsideProvider />
+            </React.Suspense>
+
+            <Router />
+            {!isEmbedded && consent === null && (
+              <CookieConsentModal onConsent={setConsent} />
+            )}
+          </StackTheme>
+        </StackProvider>
+      ) : (
+        // Server and during initial hydration: render without StackProvider/StackTheme
+        // to avoid client-only side-effects that would mismatch server markup.
+        <ThemeProvider>
           <Toaster />
           <Router />
           {!isEmbedded && consent === null && (
             <CookieConsentModal onConsent={setConsent} />
           )}
-        </StackTheme>
-      </StackProvider>
+        </ThemeProvider>
+      )}
     </ClientOnly>
   );
+}
+
+
+// Synchronized user sync component that runs only when the StackProvider
+// is available. Keeps provider-dependent hooks inside the provider tree.
+function UserSyncInsideProvider() {
+  // Client-only guard
+  if (typeof window === 'undefined') return null;
+
+  // Embedded mode skip
+  const urlEmbedded = typeof window !== 'undefined' ?
+    new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
+  const configEmbedded = typeof window !== 'undefined' ?
+    (window as any).__CHAT_WIDGET_CONFIG__?.embedded : false;
+  const isEmbedded = urlEmbedded || configEmbedded;
+
+  const stackUser = useUser();
+  useEffect(() => {
+    if (stackUser && !isEmbedded) {
+      const userEmail = stackUser.primaryEmail || undefined;
+      const userName = stackUser.displayName || stackUser.primaryEmail?.split('@')[0] || undefined;
+
+      apiRequest("POST", "/api/ensure-user", {
+        email: userEmail,
+        name: userName,
+      }).catch((error) => {
+        console.warn("[USER SYNC] Failed to sync user to database:", error);
+      });
+    }
+  }, [stackUser?.id, isEmbedded]);
+
+  return null;
 }
 
 export default App;

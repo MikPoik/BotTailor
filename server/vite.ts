@@ -225,7 +225,9 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // Production build assets are placed in the top-level `dist/public` folder
+  // (vite build -> dist/public). Resolve against repo root accordingly.
+  const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
   const indexPath = path.resolve(distPath, "index.html");
 
   if (!fs.existsSync(distPath) || !fs.existsSync(indexPath)) {
@@ -235,12 +237,35 @@ export function serveStatic(app: Express) {
   }
 
   const baseTemplate = fs.readFileSync(indexPath, "utf-8");
-  const ssrEntryPath = path.resolve(import.meta.dirname, "server", "entry-server.js");
+
+  // The SSR entry can be emitted to a few different locations depending on build tooling
+  // (e.g. vite ssr build -> dist/entry-server.js). Check several candidate paths and
+  // fail with a clear message if not found.
+  const candidateSsrPaths = [
+    path.resolve(import.meta.dirname, "..", "dist", "entry-server.js"),
+    path.resolve(import.meta.dirname, "..", "dist", "server", "entry-server.js"),
+    path.resolve(import.meta.dirname, "..", "dist", "server", "entry-server.mjs"),
+  ];
+
+  let ssrEntryPath: string | null = null;
+  for (const p of candidateSsrPaths) {
+    if (fs.existsSync(p)) {
+      ssrEntryPath = p;
+      break;
+    }
+  }
+
+  if (!ssrEntryPath) {
+    throw new Error(
+      `Could not find SSR entry build. Looked for: ${candidateSsrPaths.join(", ")}`,
+    );
+  }
+
   let ssrModulePromise: Promise<SSRModule> | null = null;
 
   const loadProdSSRModule = async () => {
     if (!ssrModulePromise) {
-      ssrModulePromise = import(pathToFileURL(ssrEntryPath).href) as Promise<SSRModule>;
+      ssrModulePromise = import(pathToFileURL(ssrEntryPath as string).href) as Promise<SSRModule>;
     }
     return ssrModulePromise;
   };

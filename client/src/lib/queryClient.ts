@@ -106,6 +106,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Defensive: react-query may sometimes call the query function with an
+    // unexpected/undefined `queryKey` during transient startup. Avoid crashing
+    // by returning `null` when the key isn't an array.
+    if (!Array.isArray(queryKey)) {
+      return null as any;
+    }
+
     // Use absolute URL when widget is embedded to avoid CORS issues
     const baseUrl = getBaseUrl();
     const url = queryKey.join("/");

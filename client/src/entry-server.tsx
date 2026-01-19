@@ -43,7 +43,7 @@ export function render(url: string, search?: string) {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider>
-          <Router ssrPath={url} ssrSearch={search}>
+          <Router ssrPath={url} ssrSearch={search} {...({ ssrContext } as any)}>
             <App />
           </Router>
         </ThemeProvider>
@@ -87,7 +87,7 @@ export function generateHTML(url: string, search?: string): Promise<{ html: stri
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ThemeProvider>
-            <Router ssrPath={url} ssrSearch={search}>
+            <Router ssrPath={url} ssrSearch={search} {...({ ssrContext } as any)}>
               <App />
             </Router>
           </ThemeProvider>

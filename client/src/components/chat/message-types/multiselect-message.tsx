@@ -1,4 +1,5 @@
 import { memo, useState } from "react";
+import { logger } from "@/lib/logger";
 import { Check, Send } from "lucide-react";
 import { MultiselectMenuMetadata } from "@/types/message-metadata";
 import { Input } from "@/components/ui/input";
@@ -88,7 +89,8 @@ export const MultiselectMessage = memo(function MultiselectMessage({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log("[MultiselectMessage] option clicked", {
+                  // Debug logging - gated by logger to avoid noisy production logs
+                  logger.debug && logger.debug("[MultiselectMessage] option clicked", {
                     optionId: option.id,
                     label,
                     currentlySelected: isSelected,

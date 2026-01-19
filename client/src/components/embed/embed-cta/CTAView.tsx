@@ -43,55 +43,18 @@ export const CTAView: React.FC<CTAViewProps> = ({
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
-    console.debug('[CTAView] mount', { embedded, components: config.components?.length });
-
-    // MutationObserver to detect DOM-level changes that could cause flash
+    // Minimal lifecycle logging only; remove noisy mutation observers used during debugging.
     const el = containerRef.current;
-    if (el) {
-      const logMutation = (mut: MutationRecord) => {
-        try {
-          const info: any = {
-            type: mut.type,
-            target: (mut.target as HTMLElement)?.id || (mut.target as HTMLElement)?.className || mut.target.nodeName,
-            attributeName: mut.attributeName,
-            addedNodes: mut.addedNodes ? Array.from(mut.addedNodes).map(n => (n as HTMLElement).nodeName + (n as HTMLElement && (n as HTMLElement).className ? ' ' + (n as HTMLElement).className : '')) : [],
-            removedNodes: mut.removedNodes ? Array.from(mut.removedNodes).map(n => (n as HTMLElement).nodeName) : [],
-          };
-          console.debug('[CTAView][mutation]', info);
-        } catch (e) {
-          console.debug('[CTAView][mutation] error reading mutation', e);
-        }
-      };
+    if (!el) return;
 
-      const observer = new MutationObserver((mutations) => {
-        for (const m of mutations) logMutation(m);
-
-        // Also log a lightweight snapshot of computed style changes
-        try {
-          const cs = window.getComputedStyle(el);
-          console.debug('[CTAView][mutation] computed', { opacity: cs.opacity, display: cs.display, visibility: cs.visibility });
-        } catch (e) {
-          // ignore
-        }
-      });
-
-      observer.observe(el, { attributes: true, childList: true, subtree: true, attributeOldValue: true });
-
-      // Listen for postMessage events which might trigger rerenders from parent
-      const onMessage = (ev: MessageEvent) => {
-        console.debug('[CTAView][message] received', { data: ev.data, origin: ev.origin });
-      };
-      window.addEventListener('message', onMessage);
-
-      return () => {
-        observer.disconnect();
-        window.removeEventListener('message', onMessage);
-        console.debug('[CTAView] unmount');
-      };
-    }
+    // Listen for postMessage events quietly (no verbose logging)
+    const onMessage = (_ev: MessageEvent) => {
+      // Intentionally left blank; hook exists for future integration (no log)
+    };
+    window.addEventListener('message', onMessage);
 
     return () => {
-      console.debug('[CTAView] unmount (no element)');
+      window.removeEventListener('message', onMessage);
     };
   }, [embedded, config.components?.length]);
 

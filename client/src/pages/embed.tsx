@@ -40,10 +40,6 @@ export default function EmbedPage() {
     }
   }, [config?.chatbotName]);
 
-  // Debug: log when the resolved embed config becomes available
-  useEffect(() => {
-    console.debug('[EmbedPage] memoizedConfig', { embedId: memoizedConfig?.embedId, ctaEnabled: !!memoizedConfig?.ctaConfig?.enabled });
-  }, [memoizedConfig]);
 
   // Loading/error handling: avoid rendering a fallback default config while
   // the real config is still loading. Rendering a local default then

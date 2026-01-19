@@ -14,6 +14,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { logger } from "@/lib/logger";
 import { Message, ChatSession } from "@shared/schema";
 import { useChatSession } from "@/contexts/chat-session-context";
 
@@ -28,7 +29,8 @@ const chatDebug = () => {
 
 const logDebug = (...args: any[]) => {
   if (chatDebug()) {
-    console.log('[CHAT_DEBUG]', ...args);
+    // Use debug logger (off in production) to avoid noisy console output
+    logger.debug('[CHAT_DEBUG]', ...args);
   }
 };
 
@@ -91,7 +93,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     refetchOnMount: false, // Prevent refetch on component remounts
     onSuccess: (data: any) => {
       logDebug('session query success', { sessionId, chatbotConfigId, data });
-      console.debug('[useChat] session fetched', { sessionId, data });
+      logger.debug('[useChat] session fetched', { sessionId, data });
     }
   };
   const { data: session, isLoading: isSessionLoading } = useQuery(sessionQueryOptions);
@@ -136,7 +138,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     // placeholderData removed - it was preventing cache updates from showing during streaming
     onSuccess: (data: any) => {
       logDebug('messages query success', { sessionId, data });
-      console.debug('[useChat] messages fetched', { sessionId, messagesLen: data?.messages?.length });
+      logger.debug('[useChat] messages fetched', { sessionId, messagesLen: data?.messages?.length });
     }
   };
   const { data: messagesData, isLoading: isMessagesLoading, dataUpdatedAt } = useQuery(messagesQueryOptions);

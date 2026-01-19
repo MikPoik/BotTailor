@@ -12,6 +12,7 @@
  * - Scroll handling must prevent bubbling to parent in iframe.
  */
 import { useQuery } from "@tanstack/react-query";
+import { logger as importLogger } from "@/lib/logger";
 import { useEffect, useRef } from "react";
 
 import { CTAConfig } from "@shared/schema";
@@ -112,7 +113,8 @@ export function useEmbedTheme(theme: EmbedConfig["theme"]) {
       if (theme?.primaryColor) html.style.setProperty("--embed-primary", theme.primaryColor);
     } catch (e) {
       // Ignore errors in tight sandboxed or CSP locked environments
-      console.debug("useEmbedTheme: failed to set theme vars", e);
+      // Use debug logger to avoid noisy output in production
+      importLogger?.debug?.("useEmbedTheme: failed to set theme vars", e);
     }
 
     return () => {
