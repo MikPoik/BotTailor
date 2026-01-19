@@ -145,8 +145,8 @@ export function setupEmbedRoutes(app: Express) {
         }
 
         // Preload CTA background image (if present) to avoid a repaint/flash when it finishes loading
-        const preloadLink = design.ctaConfig && design.ctaConfig.layout && design.ctaConfig.layout.backgroundImage
-          ? `<link rel="preload" href="${design.ctaConfig.layout.backgroundImage}" as="image">`
+        const preloadLink = (design.ctaConfig as any)?.layout?.backgroundImage
+          ? `<link rel="preload" href="${(design.ctaConfig as any).layout.backgroundImage}" as="image">`
           : ``;
 
         // Inject session data and embed config into the HTML

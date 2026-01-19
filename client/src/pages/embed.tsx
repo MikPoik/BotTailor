@@ -1,5 +1,5 @@
 import { useParams } from "wouter";
-import { useEmbedConfigFromWindow, useEmbedConfig } from "@/hooks/useEmbedConfig";
+import { useEmbedConfigFromWindow, useEmbedConfig, useEmbedSession } from "@/hooks/useEmbedConfig";
 import { EmbedChatInterface } from "@/components/embed/EmbedChatInterface";
 import { useEffect, useMemo } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -110,10 +110,13 @@ export default function EmbedPage() {
     ctaConfig: undefined,
   };
 
+  // Prefer explicit session resolution via hook (respects URL param, injected window config, or stored session)
+  const embeddedSession = useEmbedSession();
+
   return (
     <QueryClientProvider client={widgetQueryClient}>
       <ThemeProvider>
-        <ChatSessionProvider initialSessionId={memoizedConfig?.sessionId || windowConfig?.sessionId}>
+        <ChatSessionProvider initialSessionId={embeddedSession}>
           <EmbedChatInterface config={memoizedConfig ?? defaultConfig} apiUrl={apiUrl} />
         </ChatSessionProvider>
       </ThemeProvider>

@@ -323,7 +323,7 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
   } = useChat(shouldInitChat ? (sessionId || "") : "", shouldInitChat ? config.chatbotConfigId : undefined);
 
   // Detailed re-render tracing: compare snapshot to previous render and trace stack
-  const prevSnapshotRef = useRef<any>(null);
+  const prevSnapshotRef = useRef<Record<string, any> | null>(null);
   useEffect(() => {
     const snapshot = {
       render: renderCountRef.current,
@@ -342,9 +342,9 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
 
     const prev = prevSnapshotRef.current;
     if (prev) {
-      const diffs: any = {};
-      for (const k of Object.keys(snapshot)) {
-        if (snapshot[k] !== prev[k]) diffs[k] = { prev: prev[k], next: snapshot[k] };
+      const diffs: Record<string, { prev: any; next: any }> = {};
+      for (const k of Object.keys(snapshot) as Array<keyof typeof snapshot>) {
+        if (snapshot[k] !== prev[k]) diffs[String(k)] = { prev: prev[k], next: snapshot[k] };
       }
       if (Object.keys(diffs).length > 0) {
         console.debug('[EmbedChatInterface] re-render snapshot diffs', diffs);

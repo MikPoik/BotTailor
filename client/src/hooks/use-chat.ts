@@ -75,7 +75,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   };
 
   // Initialize session - only create when explicitly requested
-  const { data: session, isLoading: isSessionLoading } = useQuery({
+  const sessionQueryOptions = {
     queryKey: ['/api/chat/session', sessionId, chatbotConfigId],
     queryFn: async () => {
       logDebug('fetch session', { sessionId, chatbotConfigId });
@@ -89,11 +89,12 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     staleTime: Infinity, // Session data is stable, never auto-refetch
     refetchOnWindowFocus: false, // Prevent refetch on iframe focus changes
     refetchOnMount: false, // Prevent refetch on component remounts
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       logDebug('session query success', { sessionId, chatbotConfigId, data });
       console.debug('[useChat] session fetched', { sessionId, data });
     }
-  });
+  };
+  const { data: session, isLoading: isSessionLoading } = useQuery(sessionQueryOptions);
 
   // Detect embedding modes
   const isEmbedDesign = typeof window !== 'undefined'
@@ -105,7 +106,7 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
   const isEmbedded = isEmbedDesign || isLegacyChatEmbed;
 
   // Get messages
-  const { data: messagesData, isLoading: isMessagesLoading, dataUpdatedAt } = useQuery({
+  const messagesQueryOptions = {
     queryKey: ['/api/chat', sessionId, 'messages'],
     queryFn: async () => {
       // Use absolute URL when widget is embedded
@@ -127,17 +128,18 @@ export function useChat(sessionId: string, chatbotConfigId?: number) {
     refetchOnWindowFocus: false, // Prevent refetch on iframe focus changes (causes flash)
     refetchOnMount: false, // Prevent refetch on component remounts
     refetchOnReconnect: false, // Prevent refetch on network reconnect
-    refetchInterval: false, // Disable polling
-    refetchIntervalInBackground: false,
+    refetchInterval: false as const, // Disable polling
+    refetchIntervalInBackground: false as const,
     // Allow notifications for streaming updates in all embed modes
     // notifyOnChangeProps removed to enable real-time streaming bubble updates
     structuralSharing: true, // Re-enable structural sharing to maintain object references
     // placeholderData removed - it was preventing cache updates from showing during streaming
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       logDebug('messages query success', { sessionId, data });
       console.debug('[useChat] messages fetched', { sessionId, messagesLen: data?.messages?.length });
     }
-  });
+  };
+  const { data: messagesData, isLoading: isMessagesLoading, dataUpdatedAt } = useQuery(messagesQueryOptions);
 
   // Memoize filtered messages to prevent unnecessary re-renders
   const messages: Message[] = useMemo(() => {
