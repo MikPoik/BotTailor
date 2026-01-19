@@ -76,10 +76,64 @@ export function useEmbedConfigFromWindow(): EmbedConfig | null {
  * Injects CSS variables that can be used by components
  */
 export function useEmbedTheme(theme: EmbedConfig["theme"]) {
-  // This function is intentionally a no-op in hook form
-  // Theme colors should only be applied to the specific embed container
-  // via inline styles in the component, NOT globally to document/body
-  // See EmbedChatInterface.tsx for container-scoped color application
+  // Apply theme colors in embedded (iframe) mode to avoid flash
+  // We keep this embedded-only and restore original values on unmount
+  // so we don't pollute host pages in preview/development mode.
+  
+  if (typeof window === "undefined") return null;
+
+  const isEmbedded =
+    new URLSearchParams(window.location.search).get("embedded") === "true" ||
+    (window as any).__EMBED_CONFIG__?.embedded === true;
+
+  // Only manipulate document-level styles in embedded mode
+  if (!isEmbedded) return null;
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+
+    // Save originals so we can restore on cleanup
+    const original = {
+      htmlVars: {
+        bg: html.style.getPropertyValue("--embed-bg"),
+        text: html.style.getPropertyValue("--embed-text"),
+        primary: html.style.getPropertyValue("--embed-primary"),
+      },
+      bodyBg: body.style.backgroundColor,
+    };
+
+    try {
+      if (theme?.backgroundColor) {
+        html.style.setProperty("--embed-bg", theme.backgroundColor);
+        body.style.backgroundColor = theme.backgroundColor;
+      }
+      if (theme?.textColor) html.style.setProperty("--embed-text", theme.textColor);
+      if (theme?.primaryColor) html.style.setProperty("--embed-primary", theme.primaryColor);
+    } catch (e) {
+      // Ignore errors in tight sandboxed or CSP locked environments
+      console.debug("useEmbedTheme: failed to set theme vars", e);
+    }
+
+    return () => {
+      try {
+        // Restore original vars (empty string means remove inline var)
+        if (original.htmlVars.bg) html.style.setProperty("--embed-bg", original.htmlVars.bg);
+        else html.style.removeProperty("--embed-bg");
+
+        if (original.htmlVars.text) html.style.setProperty("--embed-text", original.htmlVars.text);
+        else html.style.removeProperty("--embed-text");
+
+        if (original.htmlVars.primary) html.style.setProperty("--embed-primary", original.htmlVars.primary);
+        else html.style.removeProperty("--embed-primary");
+
+        body.style.backgroundColor = original.bodyBg;
+      } catch (e) {
+        // Ignore restore errors
+      }
+    };
+  }, [theme]);
+
   return null;
 }
 
@@ -152,49 +206,47 @@ export function useEmbedLayout() {
     const html = document.documentElement;
     const body = document.body;
 
-    // Store original styles
-    const originalHtmlStyle = {
-      height: html.style.height,
-      width: html.style.width,
-      margin: html.style.margin,
-      padding: html.style.padding,
-      overflow: html.style.overflow,
-    };
+    // Store original inline style text so we can restore in one operation
+    const originalHtmlCss = html.getAttribute('style') || '';
+    const originalBodyCss = body.getAttribute('style') || '';
 
-    const originalBodyStyle = {
-      height: body.style.height,
-      width: body.style.width,
-      margin: body.style.margin,
-      padding: body.style.padding,
-      overflow: body.style.overflow,
-    };
+    // Compose a single cssText for layout to avoid multiple sequential attribute mutations
+    const newHtmlCss = `${originalHtmlCss} height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden;`;
+    const newBodyCss = `${originalBodyCss} height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden;`;
 
-    // Apply embed styles only in embedded mode
-    html.style.height = "100%";
-    html.style.width = "100%";
-    html.style.margin = "0";
-    html.style.padding = "0";
-    html.style.overflow = "hidden";
+    try {
+      if (html.getAttribute('style') !== newHtmlCss) html.setAttribute('style', newHtmlCss);
+      if (body.getAttribute('style') !== newBodyCss) body.setAttribute('style', newBodyCss);
+    } catch (e) {
+      // Best-effort: ignore CSP or sandbox restrictions
+      try {
+        html.style.height = "100%";
+        html.style.width = "100%";
+        html.style.margin = "0";
+        html.style.padding = "0";
+        html.style.overflow = "hidden";
 
-    body.style.height = "100%";
-    body.style.width = "100%";
-    body.style.margin = "0";
-    body.style.padding = "0";
-    body.style.overflow = "hidden";
+        body.style.height = "100%";
+        body.style.width = "100%";
+        body.style.margin = "0";
+        body.style.padding = "0";
+        body.style.overflow = "hidden";
+      } catch (e2) {
+        // ignore
+      }
+    }
 
     return () => {
-      // Restore original styles on unmount
-      html.style.height = originalHtmlStyle.height;
-      html.style.width = originalHtmlStyle.width;
-      html.style.margin = originalHtmlStyle.margin;
-      html.style.padding = originalHtmlStyle.padding;
-      html.style.overflow = originalHtmlStyle.overflow;
+      // Restore original inline styles in a single operation
+      try {
+        if (originalHtmlCss) html.setAttribute('style', originalHtmlCss);
+        else html.removeAttribute('style');
 
-      body.style.height = originalBodyStyle.height;
-      body.style.width = originalBodyStyle.width;
-      body.style.margin = originalBodyStyle.margin;
-      body.style.padding = originalBodyStyle.padding;
-      body.style.overflow = originalBodyStyle.overflow;
+        if (originalBodyCss) body.setAttribute('style', originalBodyCss);
+        else body.removeAttribute('style');
+      } catch (e) {
+        // ignore restore errors
+      }
     };
   }, []);
 }

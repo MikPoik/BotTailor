@@ -1,7 +1,7 @@
 import { useParams } from "wouter";
 import { useEmbedConfigFromWindow, useEmbedConfig, useEmbedSession } from "@/hooks/useEmbedConfig";
 import { EmbedChatInterface } from "@/components/embed/EmbedChatInterface";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { widgetQueryClient } from "@/lib/widgetQueryClient";
 import { ChatSessionProvider } from "@/contexts/chat-session-context";
@@ -48,9 +48,22 @@ export default function EmbedPage() {
   // Loading/error handling: avoid rendering a fallback default config while
   // the real config is still loading. Rendering a local default then
   // replacing it with the real config causes a visible re-render/flash.
+  const [showLoader, setShowLoader] = useState(false);
+  useEffect(() => {
+    let t: number | undefined;
+    if (configLoading || isFetching || !embedId) {
+      // Only show the spinner after a short delay to avoid a brief flash
+      t = window.setTimeout(() => setShowLoader(true), 120);
+    } else {
+      setShowLoader(false);
+    }
+    return () => { if (t) window.clearTimeout(t); };
+  }, [configLoading, isFetching, embedId]);
+
   if (!memoizedConfig) {
     // If we're still fetching (or no embedId was provided), show a loading state
     if (configLoading || isFetching || !embedId) {
+      if (!showLoader) return null; // don't render loader for quick loads
       return (
         <div className="flex items-center justify-center h-screen bg-white">
           <div className="flex flex-col items-center gap-4">

@@ -72,6 +72,12 @@ const EmbedChatInterfaceRenderer = memo(function EmbedChatInterfaceRenderer({
   renderRef.current += 1;
   console.debug('[EmbedChatInterfaceRenderer] render', { render: renderRef.current, stage, isEmbedded, ctaEnabled: !!ctaConfig?.enabled, messagesLen: messages?.length });
 
+  // Local ref for the root container to avoid constantly changing inline styles
+  const containerRefLocal = useRef<HTMLElement | null>(null);
+  // Track previously applied inline style values to avoid DOM churn
+  const prevInlineStyleRef = useRef<string | null>(null);
+  const prevStyleKeysRef = useRef<string[] | null>(null);
+
   // Log computed styles, inline style attribute and innerHTML snapshots for critical elements to detect visual changes outside React lifecycle
   const _lastStyleSnapshotRef = (useRef as any) as { current?: any };
   useEffect(() => {
@@ -134,11 +140,29 @@ const EmbedChatInterfaceRenderer = memo(function EmbedChatInterfaceRenderer({
         const observer = new MutationObserver((mutations) => {
           for (const m of mutations) {
             try {
+              const targetEl = m.target as HTMLElement | null;
+              const currentStyle = targetEl ? targetEl.getAttribute('style') : null;
+
+              // Detect if a spinner was added/changed and log more detail for diagnosis
+              const addedSpinner = Array.from(m.addedNodes || [])
+                .filter(n => n && (n as HTMLElement).className && String((n as HTMLElement).className).includes('animate-spin') || String((n as HTMLElement).className).includes('embed-loading-spinner'));
+
+              if (addedSpinner.length > 0) {
+                for (const n of addedSpinner) {
+                  try {
+                    const el = n as HTMLElement;
+                    console.debug('[EmbedChatInterfaceRenderer][spinner-added]', { node: el, className: el.className, html: el.outerHTML.slice(0,300) });
+                    console.trace('[EmbedChatInterfaceRenderer][spinner-added] stack');
+                  } catch (e) {}
+                }
+              }
+
               const changed = {
                 type: m.type,
-                target: (m.target as HTMLElement)?.id || (m.target as HTMLElement)?.className || m.target.nodeName,
+                target: targetEl ? (targetEl.id || targetEl.className || targetEl.nodeName) : m.target.nodeName,
                 attributeName: m.attributeName,
                 oldValue: m.oldValue,
+                newValue: currentStyle,
               };
               console.debug(`[EmbedChatInterfaceRenderer][mutation:${name}]`, changed);
               console.trace(`[EmbedChatInterfaceRenderer][mutation:${name}] stack trace`);
@@ -175,19 +199,12 @@ const EmbedChatInterfaceRenderer = memo(function EmbedChatInterfaceRenderer({
   });
 
   if (stage === 'cta' && ctaConfig?.enabled) {
+    // Render without inline style updates; apply minimal DOM-only style changes via ref to avoid frequent attribute churn
     return (
       <div
         className="embed-chat-interface embed-cta-stage"
         data-design-type={config.designType}
-        style={isEmbedded ? {
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 9999,
-          backgroundColor: ctaConfig.theme?.backgroundColor || 'transparent'
-        } : { backgroundColor: ctaConfig.theme?.backgroundColor || 'transparent' }}
+        ref={(el) => { containerRefLocal.current = el as HTMLElement; }}
       >
         <CTAView
           config={ctaConfig}
@@ -226,16 +243,8 @@ const EmbedChatInterfaceRenderer = memo(function EmbedChatInterfaceRenderer({
   return (
     <div
       className="embed-chat-interface"
-      ref={messagesRef}
+      ref={(el) => { messagesRef.current = el as HTMLDivElement; containerRefLocal.current = el as HTMLElement; }}
       data-design-type={config.designType}
-      style={isEmbedded ? {
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 9999,
-      } : undefined}
     >
       {config.designType === "minimal" && <MinimalEmbed {...variantProps} />}
       {config.designType === "compact" && <CompactEmbed {...variantProps} />}
@@ -273,6 +282,9 @@ EmbedChatInterfaceRenderer.displayName = 'EmbedChatInterfaceRenderer';
 export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  // Refs for minimal DOM-style updates to avoid repaint flashes (parent scope)
+  const prevInlineStyleRef = useRef<string | null>(null);
+  const prevStyleKeysRef = useRef<string[] | null>(null);
   const [input, setInput] = useState("");
 
   useEffect(() => {
@@ -434,6 +446,78 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
     chatbotConfigId: config.chatbotConfigId,
     ctaConfig: stableCTAConfig,
   }), [config.embedId, config.designType, config.theme, config.ui, config.components, config.chatbotConfigId, stableCTAConfig]);
+
+  // Apply minimal DOM-style updates only when necessary to avoid repaint flashes
+  useEffect(() => {
+    const el = (messagesRef.current as HTMLElement | null) || (containerRef.current as HTMLElement | null);
+    if (!el) return;
+
+    const desired: Record<string, string> = {};
+
+    if (stage === 'cta' && stableCTAConfig?.enabled) {
+      if (isEmbedded) {
+        desired.position = 'fixed';
+        desired.top = '0';
+        desired.left = '0';
+        desired.right = '0';
+        desired.bottom = '0';
+        desired.zIndex = '9999';
+      }
+      if (stableCTAConfig?.theme?.backgroundColor) desired.backgroundColor = stableCTAConfig.theme.backgroundColor;
+    } else if (isEmbedded) {
+      desired.position = 'fixed';
+      desired.top = '0';
+      desired.left = '0';
+      desired.right = '0';
+      desired.bottom = '0';
+      desired.zIndex = '9999';
+    }
+
+    const serialized = JSON.stringify(desired);
+    if (prevInlineStyleRef.current === serialized) {
+      // Still ensure CTA remains visible if active by applying strong inline priority
+      if (stage === 'cta' && stableCTAConfig?.enabled) {
+        try {
+          el.style.setProperty('display', 'block', 'important');
+          el.style.setProperty('visibility', 'visible', 'important');
+          el.style.setProperty('opacity', '1', 'important');
+        } catch (e) {}
+      }
+      return; // no-op if styles identical
+    }
+
+    // Remove previously set keys not present in desired
+    const prevKeys = prevStyleKeysRef.current || [];
+    const newKeys = Object.keys(desired);
+    for (const k of prevKeys) {
+      if (!newKeys.includes(k)) {
+        try { 
+          // Remove inline property
+          (el.style as any)[k] = '';
+          // Remove possible !important set previously
+          el.style.removeProperty(k);
+        } catch (e) {}
+      }
+    }
+
+    // Apply new styles
+    for (const k of newKeys) {
+      try { (el.style as any)[k] = desired[k]; } catch (e) {}
+    }
+
+    // If we're in CTA stage, force visibility using !important to avoid transient hide by React
+    if (stage === 'cta' && stableCTAConfig?.enabled) {
+      try {
+        el.style.setProperty('display', 'block', 'important');
+        el.style.setProperty('visibility', 'visible', 'important');
+        el.style.setProperty('opacity', '1', 'important');
+      } catch (e) {}
+    }
+
+    prevInlineStyleRef.current = serialized;
+    prevStyleKeysRef.current = newKeys;
+  }, [stage, isEmbedded, stableCTAConfig?.enabled, stableCTAConfig?.theme?.backgroundColor]);
+
 
   // Return memoized renderer with all props
   return (

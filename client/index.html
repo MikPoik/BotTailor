@@ -70,6 +70,32 @@
         }
       })();
     </script>
+
+    <!-- Immediate embed-theme paint: apply CSS variables and body background before React mounts to avoid white flash -->
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var isEmbedded = params.get('embedded') === 'true' || (window.__EMBED_CONFIG__ && window.__EMBED_CONFIG__.embedded === true);
+          if (!isEmbedded) return;
+
+          var theme = (window.__EMBED_CONFIG__ && window.__EMBED_CONFIG__.theme) || {};
+
+          if (theme.backgroundColor) {
+            document.documentElement.style.setProperty('--embed-bg', theme.backgroundColor);
+            document.body.style.backgroundColor = theme.backgroundColor;
+          }
+          if (theme.textColor) {
+            document.documentElement.style.setProperty('--embed-text', theme.textColor);
+          }
+          if (theme.primaryColor) {
+            document.documentElement.style.setProperty('--embed-primary', theme.primaryColor);
+          }
+        } catch (e) {
+          // ignore errors in hosts with strict CSP or sandbox
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

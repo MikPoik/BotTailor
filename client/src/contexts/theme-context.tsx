@@ -44,11 +44,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       } else {
         newTheme = theme;
       }
+
+      // Avoid unnecessary DOM mutations which can cause layout churn/flash
+      const currentTheme = (root.dataset && root.dataset.theme) || (root.classList.contains('dark') ? 'dark' : (root.classList.contains('light') ? 'light' : undefined));
+      if (currentTheme === newTheme) {
+        // Still update state for consumers (no re-render if same)
+        setResolvedTheme(newTheme);
+        return;
+      }
       
       setResolvedTheme(newTheme);
-      root.classList.remove('light', 'dark');
-      root.classList.add(newTheme);
-      root.dataset.theme = newTheme;
+      // Replace classes only when different to prevent remove/add flicker
+      try {
+        root.classList.remove('light', 'dark');
+        root.classList.add(newTheme);
+        root.dataset.theme = newTheme;
+      } catch (e) {
+        // Ignore DOM write failures in locked environments
+      }
     };
 
     updateTheme();

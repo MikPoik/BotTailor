@@ -67,28 +67,42 @@ function AuthenticatedRouter() {
     new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
   const chatEmbedFlag = typeof window !== 'undefined' ?
     (window as any).__CHAT_WIDGET_CONFIG__?.embedded === true : false;
-  const isEmbedDesign = typeof window !== 'undefined' ?
-    !!(window as any).__EMBED_CONFIG__ : false;
-  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign;
+  // Only treat as embed design if an embed config is present AND the route is an /embed page.
+  // Also treat iframe hosts that inject `__EMBED_CONFIG__` as embedded.
+  const inIframe = typeof window !== 'undefined' && (window.self !== window.top);
+  const configEmbedFlag = typeof window !== 'undefined' ? !!(window as any).__EMBED_CONFIG__ : false;
+  const isEmbedDesign = typeof window !== 'undefined' ? (window.location.pathname?.startsWith('/embed') && configEmbedFlag) : false;
+  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign || (inIframe && configEmbedFlag);
 
-  // Sync user to database on login (right after Stack Auth authentication)
-  const stackUser = useUser();
-  useEffect(() => {
-    if (stackUser && !isEmbedded) {
-      // Call /api/ensure-user to sync/create user in app database
-      // Send user profile data for development mode
-      const userEmail = stackUser.primaryEmail || undefined;
-      const userName = stackUser.displayName || stackUser.primaryEmail?.split('@')[0] || undefined;
-      
-      apiRequest("POST", "/api/ensure-user", {
-        email: userEmail,
-        name: userName,
-      }).catch((error) => {
-        console.warn("[USER SYNC] Failed to sync user to database:", error);
-        // Don't throw - user will still be able to use the app, just without sync
-      });
-    }
-  }, [stackUser?.id, isEmbedded]);
+  // Move user sync into a small Suspense-aware helper so that `useUser` can suspend
+  // without causing a synchronous update to suspend the entire router.
+  function UserSync({ embedded }: { embedded: boolean }) {
+    const stackUser = useUser();
+    useEffect(() => {
+      if (stackUser && !embedded) {
+        const userEmail = stackUser.primaryEmail || undefined;
+        const userName = stackUser.displayName || stackUser.primaryEmail?.split('@')[0] || undefined;
+
+        apiRequest("POST", "/api/ensure-user", {
+          email: userEmail,
+          name: userName,
+        }).catch((error) => {
+          console.warn("[USER SYNC] Failed to sync user to database:", error);
+        });
+      }
+    }, [stackUser?.id, embedded]);
+
+    return null;
+  }
+
+  // Render the sync inside a small Suspense boundary so a suspend doesn't replace the UI
+  // Note: Suspense fallback is null to avoid visual changes in embed mode
+  const UserSyncBoundary = isEmbedded ? (
+    <React.Suspense fallback={null}><UserSync embedded={isEmbedded} /></React.Suspense>
+  ) : (
+    <React.Suspense fallback={<div style={{ display: 'none' }} />}><UserSync embedded={isEmbedded} /></React.Suspense>
+  );
+
 
   // If chat-widget embed is active (legacy), use ChatWidget routes.
   // For new embed designs, continue to normal router so /embed/:embedId works.
@@ -109,19 +123,61 @@ function AuthenticatedRouter() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     }>
+      {UserSyncBoundary}
       <AuthenticatedRouterContent />
     </ClientOnly>
   );
 }
 
 function AuthenticatedRouterContent() {
+  // If we're in embed designs (iframe) we must avoid calling auth hooks that may suspend
+  // during client startup. Embed pages intentionally skip auth.
+  const urlEmbedded = typeof window !== 'undefined' ?
+    new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
+  const inIframe = typeof window !== 'undefined' && (window.self !== window.top);
+  const configEmbedFlag = typeof window !== 'undefined' ? !!(window as any).__EMBED_CONFIG__ : false;
+  const isEmbedDesign = typeof window !== 'undefined' ? (window.location.pathname?.startsWith('/embed') && configEmbedFlag) : false;
+  const isEmbedded = urlEmbedded || isEmbedDesign || (inIframe && configEmbedFlag);
+
+  // If embedded, skip auth check entirely to avoid useUser/useAuth suspensions
+  if (isEmbedded) {
+    // Embedded: only render public/handler routes, skip auth-only routes to avoid useUser/useAuth
+    return (
+      <Switch>
+        <Route path="/handler/*" component={HandlerRoutes} />
+
+        {/* Public routes - available to all */}
+        <Route path="/" component={Home} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/docs" component={Docs} />
+        <Route path="/pricing" component={Pricing} />
+        <Route path="/widget" component={ChatWidget} />
+        <Route path="/chat-widget" component={ChatWidget} />
+        <Route path="/embed/:embedId" component={EmbedPage} />
+
+        {/* Support route alias */}
+        <Route path="/support" component={Docs} />
+
+        {/* Catch-all 404 route - must be last */}
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  // Non-embedded: safe to call auth hook (may suspend) since we render full app UI
   const { isAuthenticated, isLoading } = useAuth();
   const [location] = useLocation();
   const currentPath = location ?? '/';
   const normalizedLocation = normalizeRoutePath(currentPath);
   const isPublicRoute = shouldSSR(normalizedLocation);
 
-  if (isLoading && !isPublicRoute) {
+  // Only block rendering while auth loads for clearly protected routes (dashboard/chatbot management)
+  const protectedPrefixes = ['/dashboard', '/chatbots', '/chatbot', '/subscription'];
+  const isProtectedRoute = protectedPrefixes.some(p => normalizedLocation.startsWith(p));
+
+  if (isLoading && isProtectedRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -183,18 +239,19 @@ function Router() {
     new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
   const chatEmbedFlag = typeof window !== 'undefined' ?
     (window as any).__CHAT_WIDGET_CONFIG__?.embedded === true : false;
-  const isEmbedDesign = typeof window !== 'undefined' ?
-    !!(window as any).__EMBED_CONFIG__ : false;
-  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign;
+  // Only treat as embed design if an embed config is present AND the route is an /embed page
+  // Also treat iframe hosts that inject `__EMBED_CONFIG__` as embedded.
+  const inIframe = typeof window !== 'undefined' && (window.self !== window.top);
+  const configEmbedFlag = typeof window !== 'undefined' ? !!(window as any).__EMBED_CONFIG__ : false;
+  const isEmbedDesign = typeof window !== 'undefined' ? (window.location.pathname?.startsWith('/embed') && configEmbedFlag) : false;
+  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign || (inIframe && configEmbedFlag);
 
   if (isEmbedded) {
-    // CRITICAL: Keep Suspense for lazy-loaded components but use invisible fallback
-    // This prevents "component suspended" errors while avoiding visible loading states
-    return (
-      <Suspense fallback={<div style={{ display: 'none' }} />}>
-        <AuthenticatedRouter />
-      </Suspense>
-    );
+    // In embedded mode we must NOT use a top-level Suspense fallback that hides the
+    // entire router (e.g. `display: none`) because React will temporarily hide the
+    // whole subtree during suspensions, causing the CTA to flash. Let inner routes
+    // and components manage their own suspenses instead.
+    return <AuthenticatedRouter />;
   }
 
   return (
@@ -276,8 +333,11 @@ function App() {
   // Only show modal if not embedded widget and consent not given
   const urlEmbedded = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('embedded') === 'true' : false;
   const chatEmbedFlag = typeof window !== 'undefined' ? (window as any).__CHAT_WIDGET_CONFIG__?.embedded === true : false;
-  const isEmbedDesign = typeof window !== 'undefined' ? !!(window as any).__EMBED_CONFIG__ : false;
-  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign;
+  // Only treat as embed design if an embed config is present AND the route is an /embed page
+  const inIframe = typeof window !== 'undefined' && (window.self !== window.top);
+  const configEmbedFlag = typeof window !== 'undefined' ? !!(window as any).__EMBED_CONFIG__ : false;
+  const isEmbedDesign = typeof window !== 'undefined' ? (window.location.pathname?.startsWith('/embed') && configEmbedFlag) : false;
+  const isEmbedded = urlEmbedded || chatEmbedFlag || isEmbedDesign || (inIframe && configEmbedFlag);
 
   return (
     <ClientOnly fallback={isEmbedded ? null : (
