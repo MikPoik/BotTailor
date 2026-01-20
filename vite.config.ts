@@ -39,6 +39,7 @@ export default defineConfig(async () => {
         "@assets": path.resolve(import.meta.dirname, "attached_assets"),
       },
     },
+    logLevel: 'warn',
     ssr: {
       noExternal: ["@stackframe/react", "@stackframe/stack-ui"],
     },

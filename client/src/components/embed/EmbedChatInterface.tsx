@@ -421,12 +421,12 @@ export function EmbedChatInterface({ config, apiUrl }: EmbedChatInterfaceProps) 
       try { (el.style as any)[k] = desired[k]; } catch (e) {}
     }
 
-    // If we're in CTA stage, force visibility using !important to avoid transient hide by React
+    // If we're in CTA stage, force visibility to avoid transient hide by React
     if (stage === 'cta' && stableCTAConfig?.enabled) {
       try {
-        el.style.setProperty('display', 'block', 'important');
-        el.style.setProperty('visibility', 'visible', 'important');
-        el.style.setProperty('opacity', '1', 'important');
+        el.style.setProperty('display', 'block');
+        el.style.setProperty('visibility', 'visible');
+        el.style.setProperty('opacity', '1');
       } catch (e) {}
     }
 
